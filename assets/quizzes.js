@@ -1,0 +1,113 @@
+/* Quiz centre · BioScience Vista (marking is done on the server by submit_quiz) */
+(function () {
+  var S = window.BVS, E = S.E, app = document.getElementById('app'), timer = null, ME;
+  var EXAM = app.getAttribute('data-mode') === 'exam', NOUN = EXAM ? 'exam' : 'quiz', HOME = EXAM ? '/exams/' : '/quizzes/';
+  S.guard(app).then(function (me) { ME = me; route(); window.addEventListener('hashchange', route); })
+    .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
+
+  function route() { clearInterval(timer); var id = location.hash.slice(1); return id ? open(id) : list(); }
+  function fail(r) { app.innerHTML = '<section class="panel"><p class="msg">' + E(S.nice(r.error || r)) + '</p><p><a href="#">← All ' + NOUN + 's</a></p></section>'; }
+
+  function list() {
+    app.innerHTML = '<p class="muted">Loading quizzes…</p>';
+    Promise.all([
+      S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results, topics(name)').eq('published', true).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false }),
+      S.db.from('quiz_attempts').select('id,quiz_id,status,score,max_score,submitted_at,released').eq('student_id', ME.user.id)
+    ]).then(function (x) {
+      if (x[0].error) return fail(x[0]);
+      var qs = x[0].data || [], at = x[1].data || [], now = new Date();
+      if (ME.staff) qs = qs.filter(function () { return true; });
+      function card(q) {
+        var mine = at.filter(function (a) { return a.quiz_id === q.id; }), done = mine.filter(function (a) { return a.status !== 'in_progress'; }), live = mine.filter(function (a) { return a.status === 'in_progress'; })[0];
+        var open = (!q.opens_at || new Date(q.opens_at) <= now) && (!q.due_at || new Date(q.due_at) >= now), left = q.max_attempts - mine.length;
+        var best = done.reduce(function (b, a) { var st = !q.show_results && !a.released ? 'held' : a.status; return a.score != null && (b == null || +a.score > b.score) ? { score: +a.score, max: +a.max_score, status: st } : b; }, null);
+        var btn = live ? '<a class="btn main sm" href="#' + q.id + '">Continue</a>' : open && left > 0 ? '<a class="btn main sm" href="#' + q.id + '">' + (done.length ? 'Try again' : 'Start') + '</a>' : done.length ? '<a class="btn sm" href="#' + q.id + '">See my result</a>' : '<span class="pill">' + (q.opens_at && new Date(q.opens_at) > now ? 'Opens ' + E(S.when(q.opens_at)) : 'Closed') + '</span>';
+        return '<article class="task"><div class="top2"><b>' + E(q.title) + '</b>' + (best ? '<span class="score">' + (best.status === 'held' ? 'Waiting for your teacher' : best.status === 'needs_marking' ? 'Being marked' : best.score + ' / ' + best.max) + '</span>' : '') + '</div>' +
+          '<span class="small muted">' + [q.topics && q.topics.name, q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : 'No time limit', q.due_at ? 'Due ' + S.when(q.due_at) : '', q.max_attempts + ' attempt' + (q.max_attempts > 1 ? 's' : '')].filter(Boolean).map(E).join(' · ') + '</span>' +
+          (q.instructions ? '<p class="small">' + E(q.instructions) + '</p>' : '') + '<div class="acts">' + btn + '</div></article>';
+      }
+      var todo = qs.filter(function (q) { return !at.some(function (a) { return a.quiz_id === q.id && a.status !== 'in_progress'; }); }), past = qs.filter(function (q) { return todo.indexOf(q) < 0; });
+      app.innerHTML = '<div class="row2"><div><p class="label">' + (EXAM ? 'Online exams' : 'Quiz centre') + '</p><h2>Your ' + NOUN + 's</h2></div><a class="btn sm" href="/dashboard/">My dashboard</a></div>' +
+        (ME.staff ? '<p class="panel tint small">You are signed in as a teacher. Students only see ' + NOUN + 's set for their class. Build and set them in the <a href="/staff/#quizzes">Teacher dashboard</a>.</p>' : '') +
+        (!ME.cls && !ME.staff ? '<p class="panel tint">Join a class on <a href="/dashboard/">your dashboard</a> to see your ' + NOUN + 's.</p>' : '') +
+        '<section class="grp"><h3 class="sec-h">To do</h3>' + (todo.length ? todo.map(card).join('') : '<p class="emptybox">Nothing to do right now.</p>') + '</section>' +
+        (past.length ? '<section class="grp"><h3 class="sec-h">Completed</h3>' + past.map(card).join('') + '</section>' : '');
+    });
+  }
+
+  function open(qid) {
+    app.innerHTML = '<p class="muted">Opening ' + NOUN + '…</p>';
+    Promise.all([
+      S.db.from('quizzes').select('*').eq('id', qid).maybeSingle(),
+      S.db.from('quiz_attempts').select('*').eq('quiz_id', qid).eq('student_id', ME.user.id).order('started_at', { ascending: false })
+    ]).then(function (x) {
+      var q = x[0].data, at = x[1].data || []; if (!q) return fail((EXAM ? 'Exam' : 'Quiz') + ' not found.');
+      var live = at.filter(function (a) { return a.status === 'in_progress'; })[0], done = at.filter(function (a) { return a.status !== 'in_progress'; });
+      var canStart = at.length < q.max_attempts;
+      if (live) return paper(q, live.id);
+      if (done.length && !(canStart && new URLSearchParams(location.search).get('again'))) return review(q, done[0], canStart);
+      app.innerHTML = '<section class="panel"><p class="label">' + (EXAM ? 'Exam' : 'Quiz') + '</p><h2>' + E(q.title) + '</h2>' + (q.instructions ? '<p>' + E(q.instructions) + '</p>' : '') +
+        (EXAM ? '<p class="panel tint small"><b>Exam conditions.</b> Work on your own. Once you start, the timer keeps running even if you close the page, and the exam is handed in automatically when time runs out.</p>' : '') + '<ul class="small"><li>' + (q.time_limit_minutes ? 'You have <b>' + q.time_limit_minutes + ' minutes</b>. The timer keeps running if you close the page.' : 'There is no time limit.') + '</li><li>Attempts allowed: ' + q.max_attempts + ' (used ' + at.length + ')</li><li>Your answers are saved on this device as you go. Press <b>Submit</b> when you finish.</li></ul>' +
+        '<div class="acts"><button class="btn main" id="go" type="button">' + (EXAM ? 'Start exam' : 'Start quiz') + '</button><a class="btn" href="#">Back</a></div><p class="msg" id="m"></p></section>';
+      app.querySelector('#go').onclick = function () { this.disabled = true; S.db.rpc('start_quiz', { qid: qid }).then(function (r) { if (r.error) { app.querySelector('#m').textContent = S.nice(r.error); return; } paper(q, r.data); }); };
+    });
+  }
+
+  function key(a) { return 'bvq-' + a; }
+  function paper(q, attempt) {
+    S.db.rpc('quiz_paper', { attempt: attempt }).then(function (r) {
+      if (r.error) return fail(r);
+      var qs = r.data || [], saved = {}; try { saved = JSON.parse(localStorage.getItem(key(attempt)) || '{}'); } catch (e) {}
+      var secs = qs.length ? qs[0].seconds_left : null;
+      app.innerHTML = '<form id="qf" class="grp"><div class="row2 sticky-top"><div><p class="label">' + E(q.title) + '</p><b id="cnt"></b></div>' + (secs != null ? '<span class="timer" id="tm" aria-live="off"></span>' : '') + '</div>' +
+        qs.map(function (x, i) {
+          var name = 'q-' + x.question_id, opts = x.options || [], v = saved[x.question_id];
+          return '<fieldset class="q" data-id="' + x.question_id + '"><legend>' + (/^\d+\s*\([a-z]\)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + E(x.prompt) + ' <span class="pill">' + x.marks + ' mark' + (x.marks > 1 ? 's' : '') + '</span></legend>' +
+            (x.image_url ? '<img src="' + E(x.image_url) + '" alt="Diagram for question ' + (i + 1) + '" style="max-width:100%;max-height:320px;border-radius:8px">' : '') +
+            (x.kind === 'short' ? '<textarea name="' + name + '" rows="' + (x.marks >= 6 ? 12 : x.marks >= 3 ? 7 : 3) + '" placeholder="Type your answer' + (x.marks >= 3 ? ' (worth ' + x.marks + ' marks: give ' + x.marks + ' clear points)' : '') + '">' + E(v || '') + '</textarea>' :
+              opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"' + (String(v) === String(j) ? ' checked' : '') + '> ' + E(o) + '</label>'; }).join('')) + '</fieldset>';
+        }).join('') + '<div class="acts"><button class="btn main" type="submit">Submit answers</button><a class="btn" href="#">Save and leave</a></div><p class="msg" id="m" role="alert"></p></form>';
+      var f = app.querySelector('#qf');
+      function collect() { var g = {}; qs.forEach(function (x) { var el = f.querySelector('[name="q-' + x.question_id + '"]' + (x.kind === 'short' ? '' : ':checked')); if (el && el.value !== '') g[x.question_id] = x.kind === 'short' ? el.value : +el.value; }); return g; }
+      function count() { var n = Object.keys(collect()).length; app.querySelector('#cnt').textContent = n + ' of ' + qs.length + ' answered'; }
+      f.addEventListener('input', function () { try { localStorage.setItem(key(attempt), JSON.stringify(collect())); } catch (e) {} count(); }); count();
+      var sent = false;
+      function submit(auto) {
+        if (sent) return; var g = collect(), miss = qs.length - Object.keys(g).length;
+        if (!auto && miss && !confirmInline(miss)) return;
+        sent = true; clearInterval(timer); app.querySelector('#m').className = 'msg'; app.querySelector('#m').textContent = auto ? 'Time is up. Submitting…' : 'Submitting…';
+        S.db.rpc('submit_quiz', { attempt: attempt, given: g }).then(function (res) {
+          if (res.error) { sent = false; app.querySelector('#m').textContent = S.nice(res.error); return; }
+          try { localStorage.removeItem(key(attempt)); } catch (e) {}
+          S.db.from('quiz_attempts').select('*').eq('id', attempt).maybeSingle().then(function (a) { review(q, a.data, false, res.data); });
+        });
+      }
+      var warned = false;
+      function confirmInline(miss) { if (warned) return true; warned = true; var m = app.querySelector('#m'); m.className = 'msg'; m.textContent = miss + ' question' + (miss > 1 ? 's are' : ' is') + ' not answered. Press Submit again to hand in anyway.'; return false; }
+      f.onsubmit = function (e) { e.preventDefault(); submit(false); };
+      if (secs != null) {
+        var end = Date.now() + secs * 1000, tm = app.querySelector('#tm');
+        var tick = function () { var s = Math.max(0, Math.round((end - Date.now()) / 1000)); tm.textContent = '⏱ ' + Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); tm.classList.toggle('low', s < 60); if (!s) submit(true); };
+        tick(); timer = setInterval(tick, 1000);
+      }
+    });
+  }
+
+  function review(q, a, canRetry, res) {
+    if (!a) return list();
+    var det = a.detail || [], hide = !q.show_results && !a.released;
+    S.db.rpc('quiz_paper', { attempt: a.id }).then(function (r) {
+      var qs = r.data || [], by = {}; det.forEach(function (d) { by[d.question_id] = d; });
+      var pc = S.pct(+a.score, +a.max_score);
+      app.innerHTML = '<section class="panel tint"><p class="label">' + E(q.title) + '</p><h2>' + (hide ? 'Submitted ✓' : a.status === 'needs_marking' ? 'Submitted: ' + E(a.score) + ' / ' + E(a.max_score) + ' so far' : 'Your score: ' + E(a.score) + ' / ' + E(a.max_score) + (pc != null ? ' (' + pc + '%)' : '')) + '</h2>' +
+        (hide ? '<p>Your answers are saved. Your teacher will check them and release your mark; it will appear here and on your dashboard.</p>' : a.status === 'needs_marking' ? '<p>Your written answers will be marked by your teacher. Your total will update on your dashboard.</p>' : '') +
+        '<div class="acts"><a class="btn sm" href="#">All ' + NOUN + 's</a><a class="btn sm" href="/dashboard/">My dashboard</a>' + (canRetry ? '<a class="btn main sm" href="?again=1#' + q.id + '">Try again</a>' : '') + '</div></section>' +
+        (hide ? '' : qs.map(function (x, i) { var d = by[x.question_id] || {}, given = (a.answers || {})[x.question_id];
+          var ok = d.got != null && +d.got === +d.max, part = d.got != null && +d.got > 0 && !ok;
+          return '<article class="q ' + (d.got == null ? '' : ok ? 'good' : part ? 'part' : 'bad') + '"><p>' + (/^\d+\s*\([a-z]\)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + E(x.prompt) + ' <span class="pill">' + (d.got == null ? 'to be marked' : E(d.got) + ' / ' + E(d.max)) + '</span></p>' +
+            '<p class="small"><b>Your answer:</b> ' + (given == null || given === '' ? '<i>no answer</i>' : x.kind === 'short' ? E(given) : E((x.options || [])[given])) + '</p>' +
+            (d.explanation ? '<p class="small fb ai">' + E(d.explanation) + '</p>' : '') + (d.comment ? '<div class="fb tch"><h4>Teacher comment</h4>' + E(d.comment) + '</div>' : '') + '</article>'; }).join(''));
+      window.scrollTo(0, 0);
+    });
+  }
+})();

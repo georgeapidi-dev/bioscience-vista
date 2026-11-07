@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Class lessons · BioScience Vista</title>
+<style>
+:root{--bg:#f6f8f6;--card:#fff;--ink:#1f2a24;--muted:#5d6b62;--green:#1b6b3a;--line:#d5e0d8;--red:#b03a2e}
+@media (prefers-color-scheme:dark){:root{--bg:#111714;--card:#1a221d;--ink:#e6efe9;--muted:#9fb0a5;--green:#5fbf83;--line:#2f3d34;--red:#e7786c}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding:16px}
+#gate{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;display:none}
+h1{margin:0 0 4px;font-size:1.35rem}p{margin:0 0 14px;color:var(--muted);font-size:.92rem}
+label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px}
+input[type=password]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus,button:focus-visible{outline:2px solid var(--green);outline-offset:1px}
+.rem{display:flex;gap:8px;align-items:center;margin:10px 0 14px;font-size:.9rem;color:var(--ink)}
+button{width:100%;font:inherit;font-weight:600;border:0;border-radius:9px;padding:11px;background:var(--green);color:#fff;cursor:pointer}
+@media (prefers-color-scheme:dark){button{color:#0d1510}}
+#err{color:var(--red);font-size:.88rem;min-height:1.3em;margin-top:8px}
+#wait{color:var(--muted)}
+</style></head><body>
+<div id="wait">Opening…</div>
+<form id="gate" autocomplete="off"><h1>BioScience Vista lessons</h1><p>Type the class password your teacher gave you.</p>
+<label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
+<label class="rem"><input type="checkbox" id="rem" checked> Remember on this device</label>
+<button type="submit">Open</button><div id="err" role="alert"></div><p style="margin:14px 0 0;font-size:.85rem"><a href="/" style="color:var(--green)">← BioScience Vista home</a></p></form>
+<script>
+var P = {"salt": "ZnqsY0CCPCJbekqm3hRWow==", "iv": "NJkl2g+c0RCYXpML", "it": 150000, "ct": "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"};
+(function () {
+  if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
+  var K = 'mas-key-' + P.salt.slice(0, 12), te = new TextDecoder();
+  function u8(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+  function b64(buf) { var a = new Uint8Array(buf), s = ''; for (var i = 0; i < a.length; i++) s += String.fromCharCode(a[i]); return btoa(s); }
+  function get(k) { try { return localStorage.getItem(k) || sessionStorage.getItem(k); } catch (e) { return null; } }
+  function put(k, v, keep) { try { (keep ? localStorage : sessionStorage).setItem(k, v); } catch (e) {} }
+  function open(key) {
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8(P.iv) }, key, u8(P.ct)).then(function (pt) {
+      var html = te.decode(pt); document.open(); document.write(html); document.close(); });
+  }
+  function raw(b) { return crypto.subtle.importKey('raw', u8(b), 'AES-GCM', true, ['decrypt']); }
+  function show() { document.getElementById('wait').style.display = 'none'; document.getElementById('gate').style.display = 'block'; document.getElementById('pw').focus(); }
+  if (!window.crypto || !crypto.subtle) { document.getElementById('wait').textContent = 'This browser cannot open the lessons. Please use Chrome, Edge, Safari or Firefox.'; return; }
+  var saved = get(K);
+  (saved ? raw(saved).then(open) : Promise.reject()).catch(show);
+  document.getElementById('gate').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var err = document.getElementById('err'), btn = this.querySelector('button'), keep = document.getElementById('rem').checked; err.textContent = ''; btn.disabled = true; btn.textContent = 'Checking…';
+    crypto.subtle.importKey('raw', new TextEncoder().encode(document.getElementById('pw').value), 'PBKDF2', false, ['deriveKey'])
+      .then(function (base) { return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: u8(P.salt), iterations: P.it, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, true, ['decrypt']); })
+      .then(function (key) { return crypto.subtle.exportKey('raw', key).then(function (r) { return open(key).then(function () { put(K, b64(r), keep); }); }); })
+      .catch(function () { btn.disabled = false; btn.textContent = 'Open'; err.textContent = 'That password is not right. Check with your teacher.'; });
+  });
+})();
+</script></body></html>
