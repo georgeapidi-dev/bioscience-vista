@@ -63,7 +63,7 @@
   BV.loginForm = function (el, done) {
     el.innerHTML = '<form class="form narrow" id="bvlogin"><h2>Sign in</h2><p class="muted small">Use your name exactly as you type it in lessons, your class, and the personal code your teacher gave you.</p>' +
       '<label class="f">Your name<input id="ln" autocomplete="name" required></label><label class="f">Class<select id="lc" required><option value="">Choose your class</option></select></label>' +
-      '<label class="f">Personal code<input id="lk" inputmode="numeric" autocomplete="off" required></label><label class="chk"><input type="checkbox" id="lr" checked> Remember me on this device</label>' +
+      '<label class="f">Personal code<input id="lk" type="text" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required></label><label class="chk"><input type="checkbox" id="lr" checked> Remember me on this device</label>' +
       '<button class="btn main" type="submit">Sign in</button><p class="msg" id="lm" role="alert"></p></form>';
     var sel = el.querySelector('#lc');
     (BV.classes || []).forEach(function (c) { sel.add(new Option(c, c)); });
