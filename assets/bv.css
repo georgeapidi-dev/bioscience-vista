@@ -267,3 +267,4 @@ details.tp[open]>summary::before{transform:rotate(90deg)}
 .lgrid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));margin:6px 0 10px}
 .lcard{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);text-decoration:none}
 .lcard:hover{border-color:var(--c)}.lcard .ic{font-size:1.4rem}.lcard b{display:block}.lcard .bar{margin-top:4px}.lcard .go{font-weight:700;color:var(--c);white-space:nowrap}
+.savebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}.savebar select,.savebar input{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--raised);color:var(--ink)}
