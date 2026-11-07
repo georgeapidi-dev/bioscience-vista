@@ -5,7 +5,7 @@
   /* ---------- saving: PNG, JPG or PDF; share sheet on phones and tablets; copy to clipboard ---------- */
   function slug(t, d) { return ((t || '').trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').slice(0, 60) || d) + '-' + new Date().toISOString().slice(0, 10); }
   function compose(src, title, foot) {   // white background, optional title above and text lines below
-    var k = src.width / (src.clientWidth || src.width), pad = 16 * k, th = title ? 34 * k : 0, fl = (foot || []).filter(Boolean), fh = fl.length ? (fl.length * 19 + 14) * k : 0;
+    var k = src._k || src.width / (src.clientWidth || src.width), pad = 16 * k, th = title ? 34 * k : 0, fl = (foot || []).filter(Boolean), fh = fl.length ? (fl.length * 19 + 14) * k : 0;
     var c = document.createElement('canvas'); c.width = src.width + pad * 2; c.height = src.height + pad * 2 + th + fh;
     var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.fillStyle = '#172033'; g.textBaseline = 'middle';
     if (title) { g.font = '700 ' + Math.round(18 * k) + 'px Atkinson Hyperlegible, Arial'; g.textAlign = 'center'; g.fillText(title, c.width / 2, pad + th / 2); }
@@ -39,16 +39,15 @@
   function saveBar(o) {   // o: {canvas, title(), foot(), fmt, save, copy, msg, name}
     var say = function (t, bad) { o.msg.textContent = t; o.msg.className = 'small ' + (bad ? 'bad-t' : 'muted'); };
     o.save.addEventListener('click', function () {
-      var f = o.fmt.value, c = compose(o.canvas, o.title(), o.foot ? o.foot() : []);
+      var f = o.fmt.value, ft = o.foot ? o.foot() : [], c = compose(typeof o.canvas === 'function' ? o.canvas() : o.canvas, o.title(), ft);
       blobOf(c, f).then(function (b) { deliver(b, slug(o.fname ? o.fname() : o.title(), o.name) + '.' + f, say); }).catch(function () { say('Could not create the file. Try PNG.', true); });
     });
     o.copy.addEventListener('click', function () {
       if (!navigator.clipboard || !window.ClipboardItem) return say('Copying images is not supported in this browser — use Download.', true);
-      var c = compose(o.canvas, o.title(), o.foot ? o.foot() : []);
+      var ft = o.foot ? o.foot() : [], c = compose(typeof o.canvas === 'function' ? o.canvas() : o.canvas, o.title(), ft);
       navigator.clipboard.write([new ClipboardItem({ 'image/png': blobOf(c, 'png') })]).then(function () { say('Copied — paste it into your document or slides.'); }, function () { say('Copy was blocked — use Download instead.', true); });
     });
   }
-
   /* ---------- scientific calculator ---------- */
   var calc = $('#calc');
   if (calc) {
@@ -92,11 +91,11 @@
       var den = n * sxx - sx * sx; if (!den) return null; var m = (n * sxy - sx * sy) / den, c = (sy - m * sx) / n;
       var r = (n * sxy - sx * sy) / Math.sqrt(den * (n * syy - sy * sy)); return { m: m, c: c, r2: isFinite(r) ? r * r : 1 };
     }
-    function nice(span) { var p = Math.pow(10, Math.floor(Math.log10(span / 8))), f = span / 8 / p; return p * (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10); }
+    function nice(span, n) { n = n || 8; var p = Math.pow(10, Math.floor(Math.log10(span / n))), f = span / n / p; return p * (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10); }
     function draw() {
-      var W = gc.clientWidth, H = Math.round(W * 0.62), dpr = window.devicePixelRatio || 1; gc.width = W * dpr; gc.height = H * dpr; gc.style.height = H + 'px';
+      var W = gc.clientWidth, H = Math.round(W * (W < 600 ? 0.95 : 0.62)), dpr = window.devicePixelRatio || 1; gc.width = W * dpr; gc.height = H * dpr; gc.style.height = H + 'px';
       var g = gc.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
-      var fns = [].slice.call(document.querySelectorAll('.gfn')).map(function (i) { return i.value.trim(); }), pts = parseData();
+      var blank = $('#gblank').checked, fns = blank ? [] : [].slice.call(document.querySelectorAll('.gfn')).map(function (i) { return i.value.trim(); }), pts = blank ? [] : parseData();
       var x0 = +$('#gx0').value, x1 = +$('#gx1').value; if (!(x1 > x0)) { x0 = -10; x1 = 10; }
       if (pts.length) {   // lab data: the x-axis always stretches to show every point
         var xs = pts.map(function (p) { return p[0]; }), dx0 = Math.min.apply(null, xs), dx1 = Math.max.apply(null, xs);
@@ -106,10 +105,13 @@
       var ys = []; pts.forEach(function (p) { ys.push(p[1]); });
       comp.forEach(function (f) { if (typeof f === 'function') for (var i = 0; i <= 200; i++) { var v = f(x0 + (x1 - x0) * i / 200); if (isFinite(v)) ys.push(v); } });
       var y0 = +$('#gy0').value, y1 = +$('#gy1').value;
+      if (blank && !(y1 > y0)) { y0 = 0; y1 = 10; }
       if (!(y1 > y0)) { y0 = ys.length ? Math.min.apply(null, ys) : -10; y1 = ys.length ? Math.max.apply(null, ys) : 10; if (y0 === y1) { y0 -= 1; y1 += 1; } var pad = (y1 - y0) * 0.08; y0 -= pad; y1 += pad; if (y0 > 0 && y0 < (y1 - y0) * 0.5) y0 = 0; }
       var gt = ($('#gtitle').value || '').trim(), L = 58, R = 16, T = gt ? 40 : 18, B = 46, X = function (x) { return L + (x - x0) / (x1 - x0) * (W - L - R); }, Y = function (y) { return H - B - (y - y0) / (y1 - y0) * (H - T - B); };
       g.font = '12px Atkinson Hyperlegible, Arial'; g.fillStyle = '#5a6478'; g.strokeStyle = '#e5e7eb'; g.lineWidth = 1;
-      var sx = nice(x1 - x0), sy = nice(y1 - y0);
+      var sx = nice(x1 - x0, Math.max(4, Math.min(10, Math.round((W - L - R) / 60)))), sy = nice(y1 - y0, Math.max(4, Math.min(10, Math.round((H - T - B) / 36))));
+      if (blank) { g.strokeStyle = '#f1f5f9'; for (var mx = Math.ceil(x0 / (sx / 5)) * sx / 5; mx <= x1 + 1e-9; mx += sx / 5) { g.beginPath(); g.moveTo(X(mx), T); g.lineTo(X(mx), H - B); g.stroke(); }
+        for (var my = Math.ceil(y0 / (sy / 5)) * sy / 5; my <= y1 + 1e-9; my += sy / 5) { g.beginPath(); g.moveTo(L, Y(my)); g.lineTo(W - R, Y(my)); g.stroke(); } g.strokeStyle = '#cbd5e1'; }
       for (var x = Math.ceil(x0 / sx) * sx; x <= x1 + 1e-9; x += sx) { g.beginPath(); g.moveTo(X(x), T); g.lineTo(X(x), H - B); g.stroke(); g.textAlign = 'center'; g.fillText(+x.toPrecision(6), X(x), H - B + 16); }
       for (var y = Math.ceil(y0 / sy) * sy; y <= y1 + 1e-9; y += sy) { g.beginPath(); g.moveTo(L, Y(y)); g.lineTo(W - R, Y(y)); g.stroke(); g.textAlign = 'right'; g.fillText(+y.toPrecision(6), L - 6, Y(y) + 4); }
       g.strokeStyle = '#334155'; g.lineWidth = 1.4; g.beginPath(); g.moveTo(L, T); g.lineTo(L, H - B); g.lineTo(W - R, H - B); g.stroke();
@@ -132,12 +134,53 @@
           info.push('<span style="color:#7c3aed">- -</span> Best fit: y = ' + (+fr.m.toPrecision(4)) + 'x ' + (fr.c < 0 ? '− ' : '+ ') + Math.abs(+fr.c.toPrecision(4)) + ' · gradient ' + (+fr.m.toPrecision(4)) + ' · R² = ' + fr.r2.toFixed(4)); }
         info.push('<span style="color:#e4572e">●</span> ' + pts.length + ' data points');
       }
-      g.restore(); $('#ginfo').innerHTML = info.join('<br>') || 'Type a function or paste data, then press Plot.';
+      g.restore(); $('#ginfo').innerHTML = info.join('<br>') || (blank ? 'Blank graph paper: press ✍ Draw on graph to plot points, draw lines and write labels.' : 'Type a function or paste data, then press Plot.');
+      paintInk();
       legend = info.map(function (h) { var d = document.createElement('div'); d.innerHTML = h; return d.textContent.replace(/^■ /, '— ').replace(/^- - /, '- - ').replace(/^● /, '• '); });
     }
+
+    /* ---- drawing by hand on the graph: pen, ruler line, point, text, eraser (kept as shapes, so they survive resizing) ---- */
+    var ink = $('#gink'), strokes = [], inkOn = false, itool = 'pen', icol = '#172033', cur = null;
+    function paintInk() {
+      var W = gc.clientWidth, H = gc.clientHeight, dpr = window.devicePixelRatio || 1; ink.width = W * dpr; ink.height = H * dpr; ink.style.height = H + 'px';
+      var g = ink.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H); g.lineCap = 'round'; g.lineJoin = 'round';
+      strokes.concat(cur ? [cur] : []).forEach(function (st) {
+        var P = function (q) { return [q[0] * W, q[1] * H]; }; g.strokeStyle = g.fillStyle = st.c; g.lineWidth = st.w;
+        if (st.t === 'pen' || st.t === 'line') { g.beginPath(); st.p.forEach(function (q, i) { var a = P(q); if (i) g.lineTo(a[0], a[1]); else g.moveTo(a[0], a[1]); }); g.stroke(); }
+        else if (st.t === 'pt') { var a = P(st.p[0]), r = 5; g.lineWidth = 2.2; g.beginPath(); g.moveTo(a[0] - r, a[1] - r); g.lineTo(a[0] + r, a[1] + r); g.moveTo(a[0] + r, a[1] - r); g.lineTo(a[0] - r, a[1] + r); g.stroke(); }
+        else if (st.t === 'text') { var b = P(st.p[0]); g.font = '600 15px Atkinson Hyperlegible, Arial'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(st.s, b[0], b[1]); }
+      });
+    }
+    function fr(e) { var r = ink.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; }
+    function near(q) {   // the stroke closest to a point (for the eraser)
+      var W = gc.clientWidth, H = gc.clientHeight, best = -1, bd = 18;
+      strokes.forEach(function (st, i) { st.p.forEach(function (a) { var d = Math.hypot((a[0] - q[0]) * W, (a[1] - q[1]) * H); if (d < bd) { bd = d; best = i; } });
+        if (st.t === 'line' && st.p.length === 2) { var A = st.p[0], B = st.p[1], dx = (B[0] - A[0]) * W, dy = (B[1] - A[1]) * H, l = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, (((q[0] - A[0]) * W) * dx + ((q[1] - A[1]) * H) * dy) / l));
+          var d2 = Math.hypot((A[0] - q[0]) * W + t * dx, (A[1] - q[1]) * H + t * dy); if (d2 < bd) { bd = d2; best = i; } } });
+      return best;
+    }
+    ink.addEventListener('pointerdown', function (e) {
+      if (!inkOn) return; e.preventDefault(); var q = fr(e); ink.setPointerCapture(e.pointerId);
+      if (itool === 'eraser') { var i = near(q); if (i >= 0) { strokes.splice(i, 1); paintInk(); } return; }
+      if (itool === 'pt') { strokes.push({ t: 'pt', c: icol, w: 2, p: [q] }); paintInk(); return; }
+      if (itool === 'text') { var t = prompt('Text to write on the graph (labels, gradient working, units…):'); if (t) { strokes.push({ t: 'text', c: icol, w: 1, p: [q], s: t }); paintInk(); } return; }
+      cur = { t: itool, c: icol, w: itool === 'pen' ? 2.5 : 2, p: [q, q] };
+      if (itool === 'pen') cur.p = [q];
+    });
+    ink.addEventListener('pointermove', function (e) { if (!cur) return; var q = fr(e); if (cur.t === 'pen') cur.p.push(q); else cur.p[1] = q; paintInk(); });
+    var end = function () { if (cur) { strokes.push(cur); cur = null; paintInk(); } }; ink.addEventListener('pointerup', end); ink.addEventListener('pointercancel', end);
+    $('#gtools').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.id === 'ginkon') { inkOn = !inkOn; b.setAttribute('aria-pressed', inkOn); ink.style.pointerEvents = inkOn ? 'auto' : 'none'; $('#gtools').classList.toggle('on', inkOn); b.textContent = inkOn ? '✋ Stop drawing' : '✍ Draw on graph'; }
+      if (b.dataset.it) { itool = b.dataset.it; $('#gtools').querySelectorAll('[data-it]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); }
+      if (b.dataset.ic) { icol = b.dataset.ic; $('#gtools').querySelectorAll('[data-ic]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); }
+      if (b.id === 'giundo') { strokes.pop(); paintInk(); }
+      if (b.id === 'giclear' && strokes.length && confirm('Remove everything you drew on the graph?')) { strokes = []; paintInk(); }
+    });
+    function merged() { var c = document.createElement('canvas'); c.width = gc.width; c.height = gc.height; var g = c.getContext('2d'); g.drawImage(gc, 0, 0); g.drawImage(ink, 0, 0, gc.width, gc.height); c._k = window.devicePixelRatio || 1; return c; }
     var legend = [];
     $('#gplot').onclick = draw;
-    saveBar({ canvas: gc, name: 'graph', fmt: $('#gfmt'), save: $('#gsave'), copy: $('#gcopy'), msg: $('#gmsg'), title: function () { return ''; }, fname: function () { return $('#gtitle').value; }, foot: function () { draw(); return legend.concat(['BioScience Vista graph plotter']); } });
+    saveBar({ canvas: merged, name: 'graph', fmt: $('#gfmt'), save: $('#gsave'), copy: $('#gcopy'), msg: $('#gmsg'), title: function () { return ''; }, fname: function () { return $('#gtitle').value; }, foot: function () { draw(); return legend.concat(['BioScience Vista graph plotter']); } });
     $('#gcsv').addEventListener('click', function () {
       var pts = parseData(), say = function (t) { $('#gmsg').textContent = t; $('#gmsg').className = 'small muted'; };
       if (!pts.length) { say('Type or paste some lab data first.'); return; }

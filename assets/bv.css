@@ -268,3 +268,15 @@ details.tp[open]>summary::before{transform:rotate(90deg)}
 .lcard{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);text-decoration:none}
 .lcard:hover{border-color:var(--c)}.lcard .ic{font-size:1.4rem}.lcard b{display:block}.lcard .bar{margin-top:4px}.lcard .go{font-weight:700;color:var(--c);white-space:nowrap}
 .savebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}.savebar select,.savebar input{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--raised);color:var(--ink)}
+.bk-mode{display:grid;gap:10px}@media (min-width:640px){.bk-mode{grid-template-columns:1fr 1fr}.bk-mode legend{grid-column:1/-1}}
+#bk fieldset{border:0;padding:0;margin:0;display:grid;gap:10px}#bk legend{margin-bottom:6px}
+.bk-opt{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;background:var(--raised)}
+.bk-opt span{display:grid;gap:3px}.bk-opt:has(input:checked){border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 18%,transparent)}
+.bk-slots{display:grid;gap:8px}@media (min-width:640px){.bk-slots{grid-template-columns:repeat(3,1fr)}}
+.bk-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.bk-row{padding:8px 0;border-top:1px solid var(--line);align-items:flex-start}
+.bkcard{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--raised);display:grid;gap:8px}
+.bkcard.new{border-left:4px solid var(--c)}
+.gstack{position:relative}.gink{position:absolute;inset:0;width:100%;pointer-events:none;touch-action:none;border-radius:12px}
+.gtools{margin-bottom:8px}.gtools .gti{display:none;flex-wrap:wrap;gap:6px}.gtools.on .gti{display:flex}.gtools.on~.gstack .gink{cursor:crosshair;outline:2px dashed var(--c);outline-offset:-2px}
+#offbar{position:sticky;top:0;z-index:60;background:#172033;color:#fff;font:600 .85rem var(--body);padding:8px 16px;text-align:center}

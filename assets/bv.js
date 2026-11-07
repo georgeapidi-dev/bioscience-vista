@@ -4,6 +4,27 @@
   // menu + theme
   var mb = document.querySelector('.menu-btn'), nav = document.getElementById('mainnav');
   if (mb && nav) mb.addEventListener('click', function () { var o = nav.classList.toggle('open'); mb.setAttribute('aria-expanded', o); });
+
+  /* installable app: service worker + install prompt (Android, Windows, Mac, Chromebook); iPhone uses Share → Add to Home Screen */
+  var standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  BV.app = { installed: standalone, can: false, ios: /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1), ev: null,
+    install: function () { if (!BV.app.ev) return Promise.resolve(false); BV.app.ev.prompt(); return BV.app.ev.userChoice.then(function (c) { BV.app.ev = null; BV.app.can = false; return c.outcome === 'accepted'; }); } };
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault(); BV.app.ev = e; BV.app.can = true; document.dispatchEvent(new Event('bv-installable'));
+    if (nav && !document.getElementById('navInstall')) { var b = document.createElement('a'); b.href = '#'; b.id = 'navInstall'; b.textContent = '📲 Install app';
+      b.onclick = function (x) { x.preventDefault(); BV.app.install().then(function (ok) { if (ok) b.remove(); }); }; nav.insertBefore(b, nav.querySelector('.cta-nav')); }
+  });
+  window.addEventListener('appinstalled', function () { BV.app.installed = true; var b = document.getElementById('navInstall'); if (b) b.remove(); document.dispatchEvent(new Event('bv-installed')); });
+  /* offline notice */
+  function netBar() {
+    var b = document.getElementById('offbar');
+    if (navigator.onLine) { if (b) b.remove(); return; }
+    if (b) return; b = document.createElement('div'); b.id = 'offbar'; b.setAttribute('role', 'status');
+    b.innerHTML = '📴 You are offline: showing pages saved on this device. Logging in, quizzes and sending marks need internet.';
+    document.body.insertBefore(b, document.body.firstChild);
+  }
+  window.addEventListener('online', netBar); window.addEventListener('offline', netBar); netBar();
   var tb = document.getElementById('themeBtn');
   if (tb) tb.addEventListener('click', function () {
     var cur = document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');

@@ -3,8 +3,8 @@
    no service-role key or admin password is ever used in the browser. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, TOPICS = [], CLASSES = [];
-  var TABS = [['overview', 'Overview'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['content', 'Content'], ['roles', 'People & roles'], ['activity', 'Activity']];
-  var ADMIN_TABS = ['roles', 'activity'];
+  var TABS = [['overview', 'Overview'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['content', 'Content'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
+  var ADMIN_TABS = ['bookings', 'roles', 'activity'];
 
   S.guard(app, { staff: true }).then(function (me) { ME = me; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(function () { window.addEventListener('hashchange', route); route(); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
@@ -38,7 +38,7 @@
       '<nav class="tabs" aria-label="Teacher sections">' + TABS.filter(function (t) { return ADMIN_TABS.indexOf(t[0]) < 0 || ME.admin; }).map(function (t) { return '<a href="#' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</a>'; }).join('') + '</nav><div id="pane"><p class="muted">Loading…</p></div>';
     app.innerHTML = head; app.querySelector('#so').onclick = S.signOut;
     var pane = app.querySelector('#pane');
-    ({ overview: overview, approvals: approvals, activity: activity, lessons: lessons, classes: classes, students: students, quizzes: quizzes, marking: marking, content: content, roles: roles }[tab] || overview)(pane, h.slice(1));
+    ({ overview: overview, approvals: approvals, activity: activity, lessons: lessons, classes: classes, students: students, quizzes: quizzes, marking: marking, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
   }
 
   /* ---------- overview ---------- */
@@ -48,7 +48,8 @@
       S.db.from('quiz_attempts').select('id', { count: 'exact', head: true }).eq('status', 'needs_marking'),
       S.db.from('student_results').select('title,score,max_score,recorded_at,student_id').order('recorded_at', { ascending: false }).limit(12),
       S.db.from('quizzes').select('id', { count: 'exact', head: true }).eq('published', true),
-      S.db.from('pending_accounts').select('student_id', { count: 'exact', head: true })
+      S.db.from('pending_accounts').select('student_id', { count: 'exact', head: true }),
+      ME.admin ? S.db.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'new') : Promise.resolve({ count: 0 })
     ]).then(function (x) {
       var nPend = x[4].count || 0;
       var st = (x[0].data || []).filter(function (s) { return s.student_id !== ME.user.id && s.class_id; }), names = {}; st.forEach(function (s) { names[s.student_id] = s.full_name; });
@@ -56,6 +57,7 @@
       var waiting = st.filter(function (s) { return !s.approved; }).length;
       p.innerHTML = '<div class="stats"><div class="stat"><span class="small muted">Students</span><b>' + st.length + '</b></div><div class="stat"><span class="small muted">Classes</span><b>' + CLASSES.length + '</b></div>' +
         '<div class="stat"><span class="small muted">Class average</span><b>' + (avg == null ? '–' : avg + '%') + '</b></div><div class="stat"><span class="small muted">Answers to mark</span><b><a href="#marking">' + (x[1].count || 0) + '</a></b></div></div>' +
+        (x[5] && x[5].count ? '<p class="panel tint"><b>' + x[5].count + ' new lesson booking' + (x[5].count > 1 ? 's' : '') + '.</b> <a class="btn main sm" href="#bookings">Reply to bookings</a></p>' : '') +
         (nPend ? '<p class="panel tint"><b>' + nPend + ' new account' + (nPend > 1 ? 's are' : ' is') + ' waiting for approval.</b> <a class="btn main sm" href="#approvals">Review and approve</a></p>' : '') +
         (!CLASSES.length ? '<p class="panel tint">Start by <a href="#classes">creating a class</a>. Each class gets a join code that students type when they register.</p>' : '') +
         '<div class="two"><section class="panel"><h3>Latest results</h3>' + ((x[2].data || []).length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Task</th><th>Score</th><th>When</th></tr>' + x[2].data.map(function (r) { return '<tr><td>' + E(names[r.student_id] || '–') + '</td><td>' + E(r.title) + '</td><td>' + (r.score == null ? '–' : E(r.score) + '/' + E(r.max_score)) + '</td><td class="small">' + E(S.when(r.recorded_at)) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="muted">No results yet.</p>') + '</section>' +
@@ -534,6 +536,62 @@
         (list.length ? '<div class="tablewrap"><table class="marks"><tr><th>When</th><th>What</th><th>Who</th><th>Page / class</th><th>Device</th><th>Came from</th></tr>' + list.map(function (e) {
           return '<tr><td class="small">' + E(S.when(e.at)) + '</td><td>' + (label[e.kind] || E(e.kind)) + '</td><td>' + (e.user_id ? E(nm[e.user_id] || 'account') : '<span class="muted">visitor</span>') + '</td><td class="small">' + E(e.path || '') + '</td><td class="small">' + E(e.kind === 'login' ? (/Mobi|Android|iPhone/i.test(e.device || '') ? 'phone' : 'computer') : (e.device || '')) + '</td><td class="small">' + E(e.referrer || '') + '</td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">Nothing in the last 7 days yet.</p>') +
         '<p class="small muted">Visits record the page, time, device type and the site a visitor came from. No IP addresses are stored. Showing the last 7 days.</p>';
+    });
+  }
+
+  /* ---------- private lesson bookings (admin) ---------- */
+  function bookings(p, args) {
+    var show = args[0] || 'new', LBL = { new: 'New', confirmed: 'Confirmed', done: 'Completed', declined: 'Declined', cancelled: 'Cancelled' };
+    var PLAN = { single: 'One lesson', weekly: 'Weekly lessons', exam_prep: 'Exam preparation' };
+    var nice = function (v) { try { return new Date(v).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch (e) { return v; } };
+    S.db.from('bookings').select('*').order('created_at', { ascending: false }).limit(300).then(function (r) {
+      if (!ok(r)) return;
+      var all = r.data || [], cnt = {}; all.forEach(function (b) { cnt[b.status] = (cnt[b.status] || 0) + 1; });
+      var list = all.filter(function (b) { return show === 'all' || b.status === show; });
+      p.innerHTML = '<div class="row2"><p class="muted">Requests from the <a href="/book/" target="_blank">Book a lesson</a> page. Only admins can see them.</p></div>' +
+        '<nav class="tabs">' + ['new', 'confirmed', 'done', 'declined', 'all'].map(function (k) { return '<a href="#bookings/' + k + '" aria-selected="' + (k === show) + '">' + (k === 'all' ? 'All' : LBL[k]) + ' (' + (k === 'all' ? all.length : cnt[k] || 0) + ')</a>'; }).join('') + '</nav>' +
+        (list.length ? list.map(function (b) {
+          var slots = (b.slots || []).map(function (s) { return s.at || s; });
+          var phone = (b.phone || '').replace(/[^\d+]/g, '').replace(/^\+/, '').replace(/^0/, '254');
+          return '<article class="bkcard ' + b.status + '" data-id="' + b.id + '"><div class="row2"><span><b>' + E(b.subject) + '</b>' + (b.level ? ' · ' + E(b.level) : '') + ' <span class="pill">' + (b.mode === 'virtual' ? '💻 Virtual' : '🏫 Face to face') + '</span></span><span class="pill">' + E(LBL[b.status] || b.status) + '</span></div>' +
+            '<div class="small"><b>' + E(b.contact_name) + '</b>' + (b.booker === 'parent' ? ' (parent of ' + E(b.student_name || 'student') + ')' : '') + ' · <a href="mailto:' + E(b.email) + '">' + E(b.email) + '</a>' + (b.phone ? ' · ' + E(b.phone) : '') + '</div>' +
+            '<div class="small muted">' + E(PLAN[b.plan] || b.plan) + ' · ' + b.duration_min + ' min' + (b.location ? ' · ' + E(b.location) : '') + ' · sent ' + E(S.when(b.created_at)) + (b.timezone ? ' · their time zone ' + E(b.timezone) : '') + '</div>' +
+            (b.message ? '<p class="small" style="white-space:pre-wrap">' + E(b.message) + '</p>' : '') +
+            '<div class="two"><label class="f">Lesson time<select class="bslot">' + slots.map(function (s) { return '<option value="' + E(s) + '"' + (s === b.confirmed_slot ? ' selected' : '') + '>' + E(nice(s)) + '</option>'; }).join('') +
+              '<option value="other"' + (b.confirmed_slot && slots.indexOf(b.confirmed_slot) < 0 ? ' selected' : '') + '>Another time…</option></select><input class="bother" type="datetime-local" value="' + (b.confirmed_slot && slots.indexOf(b.confirmed_slot) < 0 ? dt(b.confirmed_slot) : '') + '"' + (b.confirmed_slot && slots.indexOf(b.confirmed_slot) < 0 ? '' : ' hidden') + '></label>' +
+            (b.mode === 'virtual' ? '<label class="f">Meeting link<input class="blink" type="url" placeholder="https://meet.google.com/…" value="' + E(b.meeting_link || '') + '"></label>' : '<span></span>') + '</div>' +
+            '<label class="f">Private note (fee agreed, topics…)<textarea class="bnote" rows="2">' + E(b.teacher_note || '') + '</textarea></label>' +
+            '<div class="cta"><button class="btn main sm" data-act="confirmed" type="button">Confirm</button><button class="btn sm" data-act="done" type="button">Mark completed</button><button class="btn sm" data-act="declined" type="button">Decline</button><button class="btn sm" data-act="save" type="button">Save note</button>' +
+            '<a class="btn sm" data-reply="mail" href="#">✉ Email reply</a>' + (phone ? '<a class="btn sm" data-reply="wa" href="#" data-phone="' + E(phone) + '">WhatsApp</a>' : '') + '<button class="btn sm" data-act="delete" type="button">Delete</button></div></article>';
+        }).join('') : '<p class="emptybox">No ' + (show === 'all' ? '' : (LBL[show] || '').toLowerCase() + ' ') + 'bookings.</p>');
+      p.querySelectorAll('.bslot').forEach(function (sel) { sel.onchange = function () { sel.parentNode.querySelector('.bother').hidden = sel.value !== 'other'; }; });
+      p.querySelectorAll('.bkcard').forEach(function (card) {
+        var b = all.filter(function (x) { return x.id === card.getAttribute('data-id'); })[0];
+        var slot = function () { var v = card.querySelector('.bslot').value; return v === 'other' ? iso(card.querySelector('.bother').value) : v; };
+        var link = function () { var l = card.querySelector('.blink'); return l ? l.value.trim() : null; };
+        var text = function (st) {
+          var first = (b.booker === 'parent' ? b.contact_name : b.contact_name).split(' ')[0], when = slot() ? nice(slot()) : '';
+          if (st === 'declined') return 'Dear ' + first + ',\n\nThank you for your request for ' + b.subject + ' lessons. Unfortunately I am not available at the times you suggested. Could you send me a few other times that suit you?\n\nBest wishes,\nGeorge Apidi\nBioScience Vista';
+          return 'Dear ' + first + ',\n\nThank you for booking ' + b.subject + ' lessons' + (b.student_name ? ' for ' + b.student_name : '') + '. I am happy to confirm your lesson on ' + when + ' (' + b.duration_min + ' minutes).\n\n' +
+            (b.mode === 'virtual' ? 'Join here: ' + (link() || '[meeting link]') + '\n\n' : 'Venue: ' + (b.location || '[venue]') + '\n\n') + 'Fee: [fee]\n\nPlease reply if you need to change anything.\n\nBest wishes,\nGeorge Apidi\nBioScience Vista';
+        };
+        card.querySelectorAll('[data-reply]').forEach(function (a) { a.onclick = function (e) { e.preventDefault();
+          var st = b.status === 'declined' ? 'declined' : 'confirmed', t = text(st);
+          if (a.getAttribute('data-reply') === 'mail') location.href = 'mailto:' + encodeURIComponent(b.email) + '?subject=' + encodeURIComponent((st === 'declined' ? 'Your lesson request: ' : 'Lesson confirmed: ') + b.subject) + '&body=' + encodeURIComponent(t);
+          else window.open('https://wa.me/' + a.getAttribute('data-phone') + '?text=' + encodeURIComponent(t), '_blank', 'noopener'); }; });
+        card.querySelectorAll('[data-act]').forEach(function (btn) { btn.onclick = function () {
+          var act = btn.getAttribute('data-act'), note = card.querySelector('.bnote').value.trim() || null;
+          if (act === 'delete') { if (!confirm('Delete this booking request for good?')) return; S.db.from('bookings').delete().eq('id', b.id).then(function (r) { if (ok(r, 'Booking deleted')) bookings(p, args); }); return; }
+          var upd = { teacher_note: note, confirmed_slot: slot() || null, meeting_link: link() || null };
+          if (act !== 'save') upd.status = act;
+          if (act === 'confirmed' && !upd.confirmed_slot) { toast('Choose the lesson time first.', true); return; }
+          S.db.from('bookings').update(upd).eq('id', b.id).then(function (r) {
+            if (!ok(r, act === 'save' ? 'Saved' : 'Marked ' + (LBL[act] || act).toLowerCase() + (act === 'confirmed' ? ' — now send the reply' : ''))) return;
+            if (act === 'confirmed' || act === 'declined') { b.status = act; b.confirmed_slot = upd.confirmed_slot; b.meeting_link = upd.meeting_link; card.className = 'bkcard ' + act; card.querySelector('.row2 > .pill:last-child').textContent = LBL[act]; var em = card.querySelector('[data-reply=mail]'); if (em) em.focus(); }
+            else bookings(p, args);
+          });
+        }; });
+      });
     });
   }
 })();
