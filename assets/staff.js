@@ -1,4 +1,4 @@
-/* Teacher dashboard · BioScience Vista
+/* Teacher dashboard · Learnova
    Everything here runs with the teacher's own login. Row Level Security decides what each teacher can read or change;
    no service-role key or admin password is ever used in the browser. */
 (function () {
@@ -307,24 +307,27 @@
         '<p class="small muted">' + [qs.length + ' questions', total + ' marks', q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' minutes' : 'No time limit', (q.max_attempts || 1) + ' attempt' + (q.max_attempts > 1 ? 's' : ''), q.published ? 'Published' : 'Draft: students cannot see it yet'].join(' · ') + '</p></section>' +
         (qs.length ? '' : '<p class="emptybox">No questions yet.</p>') +
         '<form id="pvf" class="grp">' + qs.map(function (z, i) {
-          var name = 'pv-' + z.id, opts = z.options || [];
-          return '<fieldset class="q" data-id="' + z.id + '"><legend>' + num(z.prompt, i) + E(z.prompt) + ' <span class="pill">' + z.marks + ' mark' + (z.marks > 1 ? 's' : '') + '</span></legend>' +
-            (z.image_url ? '<img src="' + E(z.image_url) + '" alt="" style="max-width:100%;max-height:320px;border-radius:8px">' : '') +
-            (z.kind === 'short' ? '<textarea name="' + name + '" rows="' + (z.marks >= 6 ? 10 : z.marks >= 3 ? 6 : 3) + '" placeholder="Type an answer to test the marking"></textarea>'
+          var name = 'pv-' + z.id, opts = z.options || [], md = BVT.parse(z.prompt).mode, drawn = z.kind === 'short' && /^(graph|draw|annotate)$/.test(md);
+          return '<fieldset class="q" data-id="' + z.id + '"><legend>' + num(z.prompt, i) + BVT.rich(z.prompt, true) + ' <span class="pill">' + z.marks + ' mark' + (z.marks > 1 ? 's' : '') + '</span>' + (md ? ' <span class="pill">' + E(BVT.MODES[md]) + '</span>' : '') + '</legend>' +
+            (z.image_url && md !== 'annotate' ? '<img src="' + E(z.image_url) + '" alt="" style="max-width:100%;max-height:420px;border-radius:8px">' : '') +
+            (drawn ? '<div data-pad="' + z.id + '"></div>' :
+             z.kind !== 'short' && md === 'dropdown' ? '<select class="qdrop" name="' + name + '"><option value="">Choose an answer…</option>' + opts.map(function (o, j) { return '<option value="' + j + '">' + L.charAt(j) + '. ' + E(o) + '</option>'; }).join('') + '</select>' :
+             z.kind === 'short' ? '<textarea name="' + name + '" rows="' + (z.marks >= 6 ? 10 : z.marks >= 3 ? 6 : 3) + '" placeholder="Type an answer to test the marking"></textarea>'
               : opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"> <b>' + L.charAt(j) + '.</b> ' + E(o) + '</label>'; }).join('')) +
             '<div class="pvres" hidden></div></fieldset>';
         }).join('') +
         '<div class="acts"><button class="btn main" type="submit">Check my answers</button><a class="btn" href="#quizzes/' + id + '">Back to editing</a></div><p class="msg ok" id="pvm" role="status"></p></form>';
+      qs.forEach(function (z) { var h = p.querySelector('[data-pad="' + z.id + '"]'); if (h) { var pr = BVT.parse(z.prompt); BVT.pad(h, { mode: pr.mode, x: pr.x, y: pr.y, image: z.image_url }); } });
       p.querySelector('#pvf').onsubmit = function (e) {
         e.preventDefault(); var got = 0;
         qs.forEach(function (z) {
           var fs = p.querySelector('[data-id="' + z.id + '"]'), res = fs.querySelector('.pvres'), an = z.ans || {}, g = 0;
           if (z.kind === 'short') {
-            var v = fs.querySelector('textarea').value, sc = an.mark_scheme || an.model_answer || '', s = Q.suggest(v, sc, z.marks); g = s.got || 0;
+            var v = fs.querySelector('textarea') ? fs.querySelector('textarea').value : '', sc = an.mark_scheme || an.model_answer || '', s = Q.suggest(v, sc, z.marks); g = s.got || 0;
             res.innerHTML = '<p class="small"><b>Suggested mark: ' + (s.got == null ? '–' : s.got) + ' / ' + z.marks + '</b> (you confirm written marks in Marking)</p>' +
               (sc ? '<p class="small"><b>Mark scheme:</b><br>' + E(sc).replace(/\n/g, '<br>') + '</p>' : '<p class="small bad-t">No mark scheme for this question yet: it will be marked by hand.</p>');
           } else {
-            var c = fs.querySelector('input:checked'), right = an.correct_option; g = c && right != null && +c.value === +right ? z.marks : 0;
+            var c = fs.querySelector('input:checked') || (fs.querySelector('select.qdrop') && fs.querySelector('select.qdrop').value !== '' ? fs.querySelector('select.qdrop') : null), right = an.correct_option; g = c && right != null && +c.value === +right ? z.marks : 0;
             res.innerHTML = right == null || right < 0 ? '<p class="small bad-t">No correct answer is ticked for this question yet.</p>'
               : '<p class="small ' + (g ? 'ok-t' : 'bad-t') + '"><b>' + (g ? '✓ Correct' : c ? '✗ Not correct' : 'Not answered') + '.</b> Answer: ' + L.charAt(right) + '. ' + E((z.options || [])[right] || '') + '</p>' + (an.explanation ? '<p class="small">' + E(an.explanation) + '</p>' : '');
           }
@@ -336,7 +339,7 @@
   }
 
   /* ---------- marking: automatic suggestions, teacher confirms and releases ---------- */
-  function num(prompt, i) { return /^\d+\s*\([a-z]\)/i.test(prompt || '') ? '' : '<b>' + (i + 1) + '.</b> '; }
+  function num(prompt, i) { return /^\d+\s*(\([a-z]\)|\.\s)/i.test(prompt || '') ? '' : '<b>' + (i + 1) + '.</b> '; }
   function loadQuiz(quizId) {
     return S.db.from('quiz_questions').select('position, questions(*, question_answers(*))').eq('quiz_id', quizId).order('position').then(function (r) {
       return (r.data || []).map(function (z) { var o = z.questions || {}, an = o.question_answers || {}; if (Array.isArray(an)) an = an[0] || {}; o.ans = an; return o; });
@@ -395,8 +398,8 @@
           qs.filter(function (q) { return q.kind !== 'info'; }).map(function (q, i) { var d = by[q.id] || {}, g = (a.answers || {})[q.id], an = q.ans || {}, written = q.kind === 'short';
             var pic = /^data:image\//.test(g || ''), sug = written ? (pic ? { got: null, hits: [] } : Q.suggest(g || '', an.mark_scheme || an.model_answer || '', q.marks)) : null, pts = written ? Q.points(an.mark_scheme || an.model_answer || '') : [], lv = written ? Q.levels(an.rubric) : [];
             var val = d.got != null ? d.got : sug && sug.got != null ? sug.got : '';
-            return '<article class="q ' + (d.got == null ? '' : +d.got === +d.max ? 'good' : +d.got > 0 ? 'part' : 'bad') + '" data-q="' + q.id + '"><p>' + num(q.prompt, i) + E(q.prompt) + ' <span class="pill">' + (q.marks ? q.marks + ' mark' + (q.marks > 1 ? 's' : '') : 'not graded') + '</span></p>' +
-              '<div class="fb"><h4>Student answer</h4>' + (g == null || g === '' ? '<i>no answer</i>' : pic ? '<img class="hw" alt="Handwritten answer" src="' + E(g) + '">' : written ? '<p style="white-space:pre-wrap">' + E(g) + '</p>' : E((q.options || [])[g]) + (g === an.correct_option ? ' ✓' : ' ✗ (correct: ' + E((q.options || [])[an.correct_option]) + ')')) + '</div>' +
+            return '<article class="q ' + (d.got == null ? '' : +d.got === +d.max ? 'good' : +d.got > 0 ? 'part' : 'bad') + '" data-q="' + q.id + '"><div>' + num(q.prompt, i) + BVT.rich(q.prompt, true) + ' <span class="pill">' + (q.marks ? q.marks + ' mark' + (q.marks > 1 ? 's' : '') : 'not graded') + '</span></div>' + (q.image_url && !pic ? '<img src="' + E(q.image_url) + '" alt="" style="max-width:320px;max-height:200px;border-radius:8px">' : '') +
+              '<div class="fb"><h4>Student answer</h4>' + (g == null || g === '' ? '<i>no answer</i>' : pic ? '<img class="hw" alt="Student drawing or handwriting" src="' + E(g) + '" style="max-width:100%;border:1px solid var(--line);border-radius:8px">' : written ? '<p style="white-space:pre-wrap">' + E(g) + '</p>' : E((q.options || [])[g]) + (g === an.correct_option ? ' ✓' : ' ✗ (correct: ' + E((q.options || [])[an.correct_option]) + ')')) + '</div>' +
               (pts.length ? '<div class="small"><b>Mark scheme</b>' + pts.map(function (t, k) { return '<div>' + (pic ? '• ' : sug.hits[k] ? '<span class="ok-t">✓</span> ' : '<span class="bad-t">✗</span> ') + E(t) + '</div>'; }).join('') + (d.got == null && sug.got != null ? '<p class="muted">Suggested: ' + sug.got + ' / ' + q.marks + ' (check it)</p>' : '') + '</div>' : '') +
               (lv.length ? '<div class="small"><b>Rubric</b> (click a level)' + lv.map(function (l) { return '<div><button type="button" class="btn sm" data-lv="' + l.hi + '">' + (l.lo === l.hi ? l.lo : l.lo + '–' + l.hi) + '</button> ' + E(l.text) + '</div>'; }).join('') + '</div>' : '') +
               repeatsOf(a, q) +
@@ -684,9 +687,9 @@
         var link = function () { var l = card.querySelector('.blink'); return l ? l.value.trim() : null; };
         var text = function (st) {
           var first = (b.booker === 'parent' ? b.contact_name : b.contact_name).split(' ')[0], when = slot() ? nice(slot()) : '';
-          if (st === 'declined') return 'Dear ' + first + ',\n\nThank you for your request for ' + b.subject + ' lessons. Unfortunately I am not available at the times you suggested. Could you send me a few other times that suit you?\n\nBest wishes,\nGeorge Apidi\nBioScience Vista';
+          if (st === 'declined') return 'Dear ' + first + ',\n\nThank you for your request for ' + b.subject + ' lessons. Unfortunately I am not available at the times you suggested. Could you send me a few other times that suit you?\n\nBest wishes,\nGeorge Apidi\nLearnova';
           return 'Dear ' + first + ',\n\nThank you for booking ' + b.subject + ' lessons' + (b.student_name ? ' for ' + b.student_name : '') + '. I am happy to confirm your lesson on ' + when + ' (' + b.duration_min + ' minutes).\n\n' +
-            (b.mode === 'virtual' ? 'Join here: ' + (link() || '[meeting link]') + '\n\n' : 'Venue: ' + (b.location || '[venue]') + '\n\n') + 'Fee: [fee]\n\nPlease reply if you need to change anything.\n\nBest wishes,\nGeorge Apidi\nBioScience Vista';
+            (b.mode === 'virtual' ? 'Join here: ' + (link() || '[meeting link]') + '\n\n' : 'Venue: ' + (b.location || '[venue]') + '\n\n') + 'Fee: [fee]\n\nPlease reply if you need to change anything.\n\nBest wishes,\nGeorge Apidi\nLearnova';
         };
         card.querySelectorAll('[data-reply]').forEach(function (a) { a.onclick = function (e) { e.preventDefault();
           var st = b.status === 'declined' ? 'declined' : 'confirmed', t = text(st);

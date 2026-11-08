@@ -1,4 +1,4 @@
-/* Learning centre and simulation library · BioScience Vista */
+/* Learning centre and simulation library · Learnova */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), mode = app.getAttribute('data-mode');
   var KIND = { file: '📄', folder: '📁', video: '🎬', link: '🔗', slides: '🖥', worksheet: '📝', 'past paper': '📚' };
@@ -80,7 +80,7 @@
           (list.length ? '<div class="courses">' + list.map(function (s) { var sb = s.topics && s.topics.subjects;
             return '<a class="course" style="--k:' + E(sb ? sb.colour : '#15803d') + '" href="' + E(s.url) + '"' + (s.is_internal ? '' : ' target="_blank" rel="noopener"') + '>' +
               (s.thumbnail_url ? '<img src="' + E(s.thumbnail_url) + '" alt="" loading="lazy" style="width:100%;height:140px;object-fit:cover;border-radius:10px;background:var(--surface)">' : '<span class="ic">🔬</span>') +
-              '<span class="label" style="color:var(--k)">' + E(s.topics ? s.topics.name : (s.is_internal ? 'BioScience Vista lab' : s.source || 'External')) + '</span><b>' + E(s.title) + '</b><span class="muted">' + E(s.description || '') + '</span>' +
+              '<span class="label" style="color:var(--k)">' + E(s.topics ? s.topics.name : (s.is_internal ? 'Learnova lab' : s.source || 'External')) + '</span><b>' + E(s.title) + '</b><span class="muted">' + E(s.description || '') + '</span>' +
               '<span class="go">' + (s.is_internal ? 'Open lab →' : 'Open on ' + E(s.source || 'website') + ' ↗') + '</span></a>'; }).join('') + '</div>' : '<p class="emptybox">No simulations match.</p>');
         app.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { f = b.getAttribute('data-f'); draw(); }; });
         var qi = app.querySelector('#q'); qi.oninput = function () { q = qi.value.toLowerCase().trim(); draw(); var n = app.querySelector('#q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); };

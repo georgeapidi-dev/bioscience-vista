@@ -1,4 +1,4 @@
-/* Parent page: a read-only view of each linked child's marks, lesson progress and teacher feedback · BioScience Vista */
+/* Parent page: a read-only view of each linked child's marks, lesson progress and teacher feedback · Learnova */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), BV = window.BV || {};
   if (!S.on) return S.notReady(app);

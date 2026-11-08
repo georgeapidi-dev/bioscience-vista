@@ -1,4 +1,4 @@
-/* Get the app page · BioScience Vista */
+/* Get the app page · Learnova */
 (function () {
   var A = (window.BV && BV.app) || {}, box = document.getElementById('appcta'), ua = navigator.userAgent;
   var os = A.ios ? 'ios' : /android/i.test(ua) ? 'android' : 'desktop';
@@ -7,7 +7,7 @@
     if (A.installed) { box.innerHTML = '<p class="msg ok">✅ You are using the installed app.</p>'; return; }
     if (A.can) { box.innerHTML = '<button class="btn main" type="button" id="inst">📲 Install app</button><span class="small muted">Free · about 1 MB</span>';
       document.getElementById('inst').onclick = function () { A.install().then(function (ok) { draw(ok ? 'done' : ''); }); }; return; }
-    if (msg === 'done') { box.innerHTML = '<p class="msg ok">✅ Installed. Open BioScience Vista from your home screen or desktop.</p>'; return; }
+    if (msg === 'done') { box.innerHTML = '<p class="msg ok">✅ Installed. Open Learnova from your home screen or desktop.</p>'; return; }
     box.innerHTML = os === 'ios'
       ? '<p class="msg">On iPhone and iPad: tap <b>Share</b> (□↑) in Safari, then <b>Add to Home Screen</b>.</p>'
       : '<p class="msg">Your browser has not offered the install button yet. Follow the steps for your device below, or open this page in Chrome or Edge.</p>';

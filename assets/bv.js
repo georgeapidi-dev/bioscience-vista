@@ -1,4 +1,4 @@
-/* BioScience Vista shared script · by George Apidi */
+/* Learnova shared script · by George Apidi */
 (function () {
   var BV = window.BV = window.BV || {};
   // menu + theme

@@ -1,4 +1,4 @@
-/* Teacher console · BioScience Vista · by George Apidi */
+/* Teacher console · Learnova · by George Apidi */
 (function () {
   var app = document.getElementById('app'), E = BV.esc, D = null, tab = 'marks', cur = 0, showCodes = false;
   var key = function () { return BV.store('bv-tk'); };
@@ -221,7 +221,7 @@
       function render() {
         ed.innerHTML = '<section class="panel"><h3>' + (pg === 'home' ? 'Announcements box' : 'Page heading') + '</h3><input id="it" placeholder="Title" value="' + E(C.intro.title) + '"><textarea id="id" rows="2" placeholder="Description">' + E(C.intro.desc) + '</textarea></section>' +
           C.sections.map(function (s, si) { return '<section class="panel" data-sec="' + si + '"><div class="row2"><input data-sn="' + si + '" value="' + E(s.name) + '" style="max-width:420px;font-weight:700"><div class="acts"><button type="button" data-smv="-1" data-s="' + si + '">↑</button><button type="button" data-smv="1" data-s="' + si + '">↓</button><button type="button" data-sdel="' + si + '">Delete section</button></div></div><div class="res">' + s.items.map(function (it, ii) { return itemH(it, si, ii); }).join('') + '</div><button class="btn sm" type="button" data-add="' + si + '">+ Add ' + (pg === 'home' ? 'announcement' : 'resource') + '</button></section>'; }).join('') +
-          '<div class="cta"><button class="btn sm" type="button" id="adds">+ Add section</button></div><div class="cta"><button class="btn main" type="button" id="pub">Save and publish</button></div><p class="msg" id="pm"></p><p class="small muted">Changes go live as soon as you save. Uploaded files are stored in your Google Drive folder "BioScience Vista uploads" and shared as view-only links.</p>';
+          '<div class="cta"><button class="btn sm" type="button" id="adds">+ Add section</button></div><div class="cta"><button class="btn main" type="button" id="pub">Save and publish</button></div><p class="msg" id="pm"></p><p class="small muted">Changes go live as soon as you save. Uploaded files are stored in your Google Drive folder "Learnova uploads" and shared as view-only links.</p>';
         bind();
       }
       function read() {

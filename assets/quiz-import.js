@@ -1,4 +1,4 @@
-/* BioScience Vista · quiz tools: read PDF / Word files, find questions, read mark schemes, suggest marks, question editor cards.
+/* Learnova · quiz tools: read PDF / Word files, find questions, read mark schemes, suggest marks, question editor cards.
    Everything runs in the teacher's browser; files are never uploaded anywhere. */
 (function () {
   var Q = window.BVQ = {};
@@ -365,10 +365,12 @@
       return '<label class="chk" style="border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-weight:700" title="' + E(o) + '"><input type="radio" name="' + name + '" value="' + k + '" data-ok' + (k === correct ? ' checked' : '') + '> ' + L + '</label>'; }).join('');
   }
   Q.abcd = abcd;
+  function T() { return window.BVT; }
   Q.card = function (q, i, opts) {
     opts = opts || {};
     var optsText = (q.options || []).join('\n');
     var kind = q.kind || 'short', written = kind === 'short', info = kind === 'info', choice = kind === 'mcq' || kind === 'tf';
+    var pr = T() ? T().parse(q.prompt || '') : { text: q.prompt || '', mode: '', x: '', y: '' };
     var sel = function (v, t) { return '<option value="' + v + '"' + (kind === v ? ' selected' : '') + '>' + t + '</option>'; };
     return '<article class="q qe' + (info ? ' qinfo' : '') + '" data-i="' + i + '"' + (q.id ? ' data-id="' + q.id + '"' : '') + '>' +
       '<div class="row2"><div class="row2" style="justify-content:flex-start">' +
@@ -381,7 +383,15 @@
       '<button type="button" class="btn sm" data-act="del">' + (opts.delLabel || 'Delete') + '</button></div></div>' +
       (choice && q.correct < 0 && (q.options || []).length ? '<p class="small bad-t" data-need>Tick the correct answer (A, B, C, D) below the options.</p>' : '') +
       '<label class="f"><span data-show="qlabel"' + (info ? ' hidden' : '') + '>Question</span><span data-show="ilabel"' + (info ? '' : ' hidden') + '>Text students read (use **bold**; paste a YouTube or simulation link on its own line to embed it)</span>' +
-      '<textarea data-f="prompt" rows="' + Math.min(10, 2 + Math.ceil((q.prompt || '').length / 90)) + '">' + E(q.prompt) + '</textarea></label>' +
+      '<textarea data-f="prompt" rows="' + Math.min(14, 2 + Math.ceil((pr.text || '').length / 90) + (pr.text.match(/\n/g) || []).length) + '">' + E(pr.text) + '</textarea></label>' +
+      '<div class="row2 small" style="justify-content:flex-start;gap:8px;flex-wrap:wrap;margin-top:-4px"><button type="button" class="btn sm" data-tbl>▦ Insert table</button>' +
+      '<span data-tblform hidden>Rows <input data-tr type="number" min="2" max="20" value="4" style="width:60px"> Columns <input data-tc type="number" min="1" max="8" value="3" style="width:60px"> <button type="button" class="btn sm main" data-tblok>Add</button></span>' +
+      '<span class="muted">Tip: copy a table from Word or Excel and paste it into the question box.</span></div>' +
+      '<div class="small" data-tpv' + (T() && T().hasTable(pr.text) ? '' : ' hidden') + '><span class="muted">Students will see:</span><div data-tpvin>' + (T() && T().hasTable(pr.text) ? T().rich(pr.text) : '') + '</div></div>' +
+      '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>How students answer<select data-f="amode">' + [['', 'Type or handwrite'], ['graph', '📈 Draw a graph (grid with axes)'], ['draw', '✏️ Draw a diagram'], ['annotate', '🏷 Label / annotate the picture']].map(function (o) { return '<option value="' + o[0] + '"' + ((written ? pr.mode : '') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
+      '<div class="row2" data-axes' + (written && pr.mode === 'graph' ? '' : ' hidden') + ' style="justify-content:flex-start;gap:10px"><label class="f" style="flex:1">x-axis label (optional)<input data-f="ax" value="' + E(pr.x) + '" placeholder="Temperature / °C"></label><label class="f" style="flex:1">y-axis label (optional)<input data-f="ay" value="' + E(pr.y) + '" placeholder="Rate of reaction / s⁻¹"></label></div>' +
+      '<p class="small bad-t" data-annonote' + (written && pr.mode === 'annotate' && !q.image ? '' : ' hidden') + '>Add the picture students will label in the picture box below.</p>' +
+      '<label class="f" data-show="choice"' + (choice ? '' : ' hidden') + '>Show the options as<select data-f="cmode"><option value="">Tick boxes A, B, C, D</option><option value="dropdown"' + (choice && pr.mode === 'dropdown' ? ' selected' : '') + '>A drop-down list</option></select></label>' +
       '<label class="f" data-show="choice"' + (choice ? '' : ' hidden') + '>Options, one per line, in order A, B, C, D<textarea data-f="options" rows="' + Math.max(3, (q.options || []).length + 1) + '">' + E(optsText) + '</textarea></label>' +
       '<div class="f" data-show="choice"' + (choice ? '' : ' hidden') + '><span>Correct answer: tick one</span><div class="abcd" data-abcd style="display:flex;flex-wrap:wrap;gap:8px">' + abcd(q.options || [], q.correct) + '</div></div>' +
       '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Mark scheme: one marking point per line (each line = 1 mark). Use / between alternatives and + when all words are needed. Students never see this.<textarea data-f="scheme" rows="' + Math.max(3, String(q.scheme || '').split('\n').length + 1) + '" placeholder="sugar-phosphate backbone\nbases pair A+T / C+G\nhydrogen bonds between bases">' + E(q.scheme || '') + '</textarea></label>' +
@@ -426,21 +436,35 @@
       var need = el.querySelector('[data-need]'); if (need) need.hidden = c >= 0;
     }
     if (opt && box) { opt.addEventListener('input', redraw); box.addEventListener('change', function () { var need = el.querySelector('[data-need]'); if (need) need.hidden = true; }); }
-    var box = el.querySelector('[data-picbox]');
-    if (box) {
-      box.querySelector('[data-upload]').onchange = function () { takePic(el, this.files[0]); this.value = ''; };
-      box.querySelector('[data-unpic]').onclick = function () { setPic(el, ''); };
-      box.querySelector('[data-picurl]').onchange = function () { var v = this.value.trim(); if (!v || /^https?:\/\//.test(v)) setPic(el, v); };
-      box.addEventListener('dragover', function (e) { e.preventDefault(); box.style.background = 'var(--tint, #eef6ff)'; });
-      box.addEventListener('dragleave', function () { box.style.background = ''; });
-      box.addEventListener('drop', function (e) { e.preventDefault(); box.style.background = ''; var f = e.dataTransfer && e.dataTransfer.files[0]; takePic(el, f); });
+    var pbox = el.querySelector('[data-picbox]');
+    if (pbox) {
+      pbox.querySelector('[data-upload]').onchange = function () { takePic(el, this.files[0]); this.value = ''; };
+      pbox.querySelector('[data-unpic]').onclick = function () { setPic(el, ''); };
+      pbox.querySelector('[data-picurl]').onchange = function () { var v = this.value.trim(); if (!v || /^https?:\/\//.test(v)) setPic(el, v); };
+      pbox.addEventListener('dragover', function (e) { e.preventDefault(); pbox.style.background = 'var(--tint, #eef6ff)'; });
+      pbox.addEventListener('dragleave', function () { pbox.style.background = ''; });
+      pbox.addEventListener('drop', function (e) { e.preventDefault(); pbox.style.background = ''; var f = e.dataTransfer && e.dataTransfer.files[0]; takePic(el, f); });
       el.addEventListener('paste', function (e) {   // a picture pasted anywhere on this question becomes its picture
         var items = (e.clipboardData && e.clipboardData.items) || [];
         for (var k = 0; k < items.length; k++) if (items[k].kind === 'file' && /^image\//.test(items[k].type)) { e.preventDefault(); takePic(el, items[k].getAsFile()); return; }
       });
     }
+    var pt = el.querySelector('[data-f=prompt]'), tpv = el.querySelector('[data-tpv]');
+    function tprev() { if (!tpv || !T()) return; var has = T().hasTable(pt.value); tpv.hidden = !has; if (has) el.querySelector('[data-tpvin]').innerHTML = T().rich(pt.value); }
+    function insertAt(text) { var s = pt.selectionStart == null || pt._fresh !== true ? pt.value.length : pt.selectionStart, e = pt.selectionEnd == null ? s : pt.selectionEnd, before = pt.value.slice(0, s), after = pt.value.slice(e);
+      var pre = before && !/\n$/.test(before) ? '\n' : '', post = after && !/^\n/.test(after) ? '\n' : '';
+      pt.value = before + pre + text + post + after; pt.focus(); tprev(); }
+    if (pt) {
+      pt.addEventListener('input', tprev); pt.addEventListener('focus', function () { pt._fresh = true; }); pt.addEventListener('mousedown', function () { pt._fresh = true; });
+      pt.addEventListener('paste', function (e) { if (!T()) return; var txt = e.clipboardData && e.clipboardData.getData('text/plain'), tb = txt && T().tabsToTable(txt); if (tb) { e.preventDefault(); e.stopPropagation(); insertAt(tb); } });
+      var tb = el.querySelector('[data-tbl]'), tf = el.querySelector('[data-tblform]');
+      if (tb) { tb.onclick = function () { tf.hidden = !tf.hidden; }; el.querySelector('[data-tblok]').onclick = function () { insertAt(T().blankTable(+el.querySelector('[data-tr]').value, +el.querySelector('[data-tc]').value)); tf.hidden = true; }; }
+    }
+    var am = el.querySelector('[data-f=amode]');
+    function amShow() { if (!am) return; var w = el.querySelector('[data-f=kind]').value === 'short'; el.querySelector('[data-axes]').hidden = !(w && am.value === 'graph'); el.querySelector('[data-annonote]').hidden = !(w && am.value === 'annotate' && !el.querySelector('[data-f=image]').value); }
+    if (am) am.onchange = amShow;
     var k = el.querySelector('[data-f=kind]');
-    k.onchange = function () {
+    k.onchange = function () { amShow();
       var v = k.value, show = { choice: v === 'mcq' || v === 'tf', written: v === 'short', marks: v !== 'info', qlabel: v !== 'info', ilabel: v === 'info', explain: v !== 'info' };
       Object.keys(show).forEach(function (n) { el.querySelectorAll('[data-show=' + n + ']').forEach(function (x) { x.hidden = !show[n]; }); });
       el.classList.toggle('qinfo', v === 'info');
@@ -454,7 +478,8 @@
     var options = kind === 'mcq' || kind === 'tf' ? v('options').split('\n').map(function (s) { return s.trim(); }).filter(Boolean).map(function (s, k) { if (s.charAt(0) === '*') { correct = k; return s.slice(1).trim(); } return s; }) : [];
     if (correct >= options.length) correct = -1;
     var marks = parseInt(v('marks'), 10); marks = kind === 'info' ? 0 : isNaN(marks) ? 1 : Math.max(lesson ? 0 : 1, marks);
-    return { id: el.dataset.id || null, ref: v('ref'), section: v('section') || null, kind: kind, prompt: v('prompt'), options: options, correct: correct, marks: marks,
+    var mode = kind === 'short' ? v('amode') : kind === 'mcq' || kind === 'tf' ? v('cmode') : '', prompt = T() ? T().join(v('prompt'), mode, v('ax'), v('ay')) : v('prompt');
+    return { id: el.dataset.id || null, ref: v('ref'), section: v('section') || null, kind: kind, prompt: prompt, options: options, correct: correct, marks: marks,
       scheme: kind === 'short' ? v('scheme') : '', rubric: kind === 'short' ? v('rubric') : '', explanation: kind === 'info' ? '' : v('explanation'), image: v('image') };
   };
   Q.check = function (q) {

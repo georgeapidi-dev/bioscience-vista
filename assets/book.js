@@ -1,4 +1,4 @@
-/* Book a private lesson · BioScience Vista
+/* Book a private lesson · Learnova
    Requests go to the database through book_lesson(); only the site admin can read them. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app');

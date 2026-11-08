@@ -1,4 +1,4 @@
-/* Discussion forum for students · BioScience Vista */
+/* Discussion forum for students · Learnova */
 (function () {
   var app = document.getElementById('app'), E = BV.esc, board = null;
   function start() { if (!BV.me()) { BV.loginForm(app, function () { boards(); }); return; } boards(); }

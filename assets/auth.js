@@ -1,4 +1,4 @@
-/* Registration and login · BioScience Vista */
+/* Registration and login · Learnova */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), mode = app.getAttribute('data-mode');
   if (!S.on) return S.notReady(app);

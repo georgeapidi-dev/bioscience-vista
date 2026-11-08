@@ -1,4 +1,4 @@
-/* Live page content from the teacher's Site editor · BioScience Vista */
+/* Live page content from the teacher's Site editor · Learnova */
 (function () {
   var E = BV.esc;
   function autoDl(u) {

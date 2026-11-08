@@ -1,4 +1,4 @@
-/* BioScience Vista · graph and drawing tools inside every lesson (UDL: multiple means of action and expression)
+/* Learnova · graph and drawing tools inside every lesson (UDL: multiple means of action and expression)
    A floating "Graph & draw" button opens the site's Science tools (graph plotter with best fit, graph paper, drawing board,
    calculator) in a panel over the lesson, so students never leave their work. Downloads still work from inside the panel. */
 (function () {

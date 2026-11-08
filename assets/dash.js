@@ -1,4 +1,4 @@
-/* Student dashboard · BioScience Vista */
+/* Student dashboard · Learnova */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app');
   S.guard(app, { allowPending: true }).then(function (me) {

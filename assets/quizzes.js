@@ -1,5 +1,6 @@
-/* Quiz centre · BioScience Vista (marking is done on the server by submit_quiz) */
+/* Quiz centre · Learnova (marking is done on the server by submit_quiz) */
 (function () {
+  var T = window.BVT;
   var S = window.BVS, E = S.E, app = document.getElementById('app'), timer = null, ME;
   var EXAM = app.getAttribute('data-mode') === 'exam', NOUN = EXAM ? 'exam' : 'quiz', HOME = EXAM ? '/exams/' : '/quizzes/';
   S.guard(app).then(function (me) { ME = me; route(); window.addEventListener('hashchange', route); })
@@ -61,15 +62,22 @@
       var secs = qs.length ? qs[0].seconds_left : null;
       app.innerHTML = '<form id="qf" class="grp"><div class="row2 sticky-top"><div><p class="label">' + E(q.title) + '</p><b id="cnt"></b></div>' + (secs != null ? '<span class="timer" id="tm" aria-live="off"></span>' : '') + '</div>' +
         qs.map(function (x, i) {
-          var name = 'q-' + x.question_id, opts = x.options || [], v = saved[x.question_id];
-          return '<fieldset class="q" data-id="' + x.question_id + '"><legend>' + (/^\d+\s*\([a-z]\)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + E(x.prompt) + ' <span class="pill">' + x.marks + ' mark' + (x.marks > 1 ? 's' : '') + '</span></legend>' +
-            (x.image_url ? '<img src="' + E(x.image_url) + '" alt="Diagram for question ' + (i + 1) + '" style="max-width:100%;max-height:320px;border-radius:8px">' : '') +
-            (x.kind === 'short' ? '<textarea name="' + name + '" rows="' + (x.marks >= 6 ? 12 : x.marks >= 3 ? 7 : 3) + '" placeholder="Type your answer' + (x.marks >= 3 ? ' (worth ' + x.marks + ' marks: give ' + x.marks + ' clear points)' : '') + '">' + E(v || '') + '</textarea>' :
+          var name = 'q-' + x.question_id, opts = x.options || [], v = saved[x.question_id], md = T.parse(x.prompt).mode, drawn = x.kind === 'short' && /^(graph|draw|annotate)$/.test(md);
+          return '<fieldset class="q" data-id="' + x.question_id + '"><legend>' + (/^\d+\s*(\([a-z]\)|\.\s)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + T.rich(x.prompt, true) + ' <span class="pill">' + x.marks + ' mark' + (x.marks > 1 ? 's' : '') + '</span></legend>' +
+            (x.image_url && md !== 'annotate' ? '<img src="' + E(x.image_url) + '" alt="Diagram for question ' + (i + 1) + '" style="max-width:100%;max-height:420px;border-radius:8px">' : '') +
+            (drawn ? '<div data-pad="' + x.question_id + '"></div>' :
+             x.kind !== 'short' && md === 'dropdown' ? '<select class="qdrop" name="' + name + '"><option value="">Choose an answer…</option>' + opts.map(function (o, j) { return '<option value="' + j + '"' + (String(v) === String(j) ? ' selected' : '') + '>' + 'ABCDEFGH'.charAt(j) + '. ' + E(o) + '</option>'; }).join('') + '</select>' :
+             x.kind === 'short' ? '<textarea name="' + name + '" rows="' + (x.marks >= 6 ? 12 : x.marks >= 3 ? 7 : 3) + '" placeholder="Type your answer' + (x.marks >= 3 ? ' (worth ' + x.marks + ' marks: give ' + x.marks + ' clear points)' : '') + '">' + E(v || '') + '</textarea>' :
               opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"' + (String(v) === String(j) ? ' checked' : '') + '> <b>' + 'ABCDEFGH'.charAt(j) + '.</b> ' + E(o) + '</label>'; }).join('')) + '</fieldset>';
         }).join('') + '<div class="acts"><button class="btn main" type="submit">Submit answers</button><a class="btn" href="#">Save and leave</a></div><p class="msg" id="m" role="alert"></p></form>';
-      var f = app.querySelector('#qf');
-      function collect() { var g = {}; qs.forEach(function (x) { var el = f.querySelector('[name="q-' + x.question_id + '"]' + (x.kind === 'short' ? '' : ':checked')); if (el && el.value !== '') g[x.question_id] = x.kind === 'short' ? el.value : +el.value; }); return g; }
+      var f = app.querySelector('#qf'), pads = {};
+      qs.forEach(function (x) { var h = f.querySelector('[data-pad="' + x.question_id + '"]'); if (h) pads[x.question_id] = T.pad(h, { mode: T.parse(x.prompt).mode, x: T.parse(x.prompt).x, y: T.parse(x.prompt).y, image: x.image_url, value: saved[x.question_id], onchange: function () { keep(); } }); });
+      function collect() { var g = {}; qs.forEach(function (x) {
+        if (pads[x.question_id]) { var d = pads[x.question_id].get(); if (d) g[x.question_id] = d; return; }
+        var el = f.querySelector('select[name="q-' + x.question_id + '"]') || f.querySelector('[name="q-' + x.question_id + '"]' + (x.kind === 'short' ? '' : ':checked')); if (el && el.value !== '') g[x.question_id] = x.kind === 'short' ? el.value : +el.value; }); return g; }
+      var kt = null; function keep() { clearTimeout(kt); kt = setTimeout(function () { try { localStorage.setItem(key(attempt), JSON.stringify(collect())); } catch (e) {} count(); }, 400); }
       function count() { var n = Object.keys(collect()).length; app.querySelector('#cnt').textContent = n + ' of ' + qs.length + ' answered'; }
+      f.addEventListener('change', keep);
       f.addEventListener('input', function () { try { localStorage.setItem(key(attempt), JSON.stringify(collect())); } catch (e) {} count(); }); count();
       var sent = false;
       function submit(auto) {
@@ -104,8 +112,8 @@
         '<div class="acts"><a class="btn sm" href="#">All ' + NOUN + 's</a><a class="btn sm" href="/dashboard/">My dashboard</a>' + (canRetry ? '<a class="btn main sm" href="?again=1#' + q.id + '">Try again</a>' : '') + '</div></section>' +
         (hide ? '' : qs.map(function (x, i) { var d = by[x.question_id] || {}, given = (a.answers || {})[x.question_id];
           var ok = d.got != null && +d.got === +d.max, part = d.got != null && +d.got > 0 && !ok;
-          return '<article class="q ' + (d.got == null ? '' : ok ? 'good' : part ? 'part' : 'bad') + '"><p>' + (/^\d+\s*\([a-z]\)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + E(x.prompt) + ' <span class="pill">' + (d.got == null ? 'to be marked' : E(d.got) + ' / ' + E(d.max)) + '</span></p>' +
-            '<p class="small"><b>Your answer:</b> ' + (given == null || given === '' ? '<i>no answer</i>' : x.kind === 'short' ? E(given) : 'ABCDEFGH'.charAt(given) + '. ' + E((x.options || [])[given])) + '</p>' +
+          return '<article class="q ' + (d.got == null ? '' : ok ? 'good' : part ? 'part' : 'bad') + '"><div>' + (/^\d+\s*(\([a-z]\)|\.\s)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + T.rich(x.prompt, true) + ' <span class="pill">' + (d.got == null ? 'to be marked' : E(d.got) + ' / ' + E(d.max)) + '</span></div>' +
+            '<p class="small"><b>Your answer:</b> ' + (given == null || given === '' ? '<i>no answer</i>' : T.isPic(given) ? '<br><img class="hw" alt="Your drawing" src="' + E(given) + '" style="max-width:100%;border:1px solid var(--line);border-radius:8px">' : x.kind === 'short' ? E(given) : 'ABCDEFGH'.charAt(given) + '. ' + E((x.options || [])[given])) + '</p>' +
             (d.explanation ? '<p class="small fb ai">' + E(d.explanation) + '</p>' : '') + (d.comment ? '<div class="fb tch"><h4>Teacher comment</h4>' + E(d.comment) + '</div>' : '') + '</article>'; }).join(''));
       window.scrollTo(0, 0);
     });

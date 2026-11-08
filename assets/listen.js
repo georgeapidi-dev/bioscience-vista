@@ -1,4 +1,4 @@
-/* BioScience Vista · read-aloud for every interactive lesson (UDL: multiple means of representation)
+/* Learnova · read-aloud for every interactive lesson (UDL: multiple means of representation)
    Adds "🔊 Listen to this step" to each step and a 🔊 button to any notes box that has none. Uses the browser's own voice. */
 (function () {
   if (!('speechSynthesis' in window) || window.__bvListen) return; window.__bvListen = true;

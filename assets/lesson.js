@@ -1,4 +1,4 @@
-/* Interactive lesson player · BioScience Vista
+/* Interactive lesson player · Learnova
    Six inquiry steps; read or listen; answer by typing or writing by hand; work is saved as you go; teacher checks and releases marks. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, Q, ATT, items = [], ans = {}, step = 0, lessonRow = null, preview = false, dirty = false;
@@ -40,8 +40,10 @@
 
   /* text with **bold**, bullet lines, links; YouTube links become a video */
   function rich(t) {
+    if (window.BVT) t = BVT.text(t);
     return String(t || '').split(/\n{2,}/).map(function (para) {
       var lines = para.split('\n');
+      if (window.BVT && lines.some(function (l) { return /^\s*\|.*\|\s*$/.test(l); })) return BVT.rich(para);
       var yt = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})\S*$/.exec(para.trim());
       if (yt) return '<div class="vids"><iframe src="https://www.youtube-nocookie.com/embed/' + yt[1] + '" title="Lesson video" loading="lazy" allowfullscreen></iframe></div>';
       if (/^https?:\/\/\S+$/.test(para.trim())) return '<p><a class="btn sm" href="' + E(para.trim()) + '" target="_blank" rel="noopener">Open ' + (/phet|simulation|lab/i.test(para) ? 'the simulation' : 'the link') + ' ↗</a></p>';
@@ -97,12 +99,17 @@
     if (!body) return '';
     return '<div class="ansbox' + (preview ? ' tview' : '') + '"><h4>' + (preview ? '👩‍🏫 Teacher view · answer' : inRepeat(cur) ? 'Check Repeat ' + REP.n : 'Answer') + '</h4>' + body + '</div>';
   }
+  var PADS = {};
   function block(x) {
     if (x.kind === 'info') return '<article class="panel lread">' + (x.image_url ? '<img src="' + E(x.image_url) + '" alt="" loading="lazy" class="limg">' : '') + rich(x.prompt) +
       (window.speechSynthesis ? '<button type="button" class="btn sm" data-say="' + x.question_id + '">🔊 Listen</button>' : '') + '</article>';
     var qid = x.question_id, sc = x.section || 'Explore', rp = inRepeat(sc), v = rp ? REP.ans[qid] : ans[qid], lock = !preview && REVEALED[sc] && !rp || (rp && REP.saved);
     var head = '<p><b>' + x._n + '.</b> ' + rich(x.prompt).replace(/^<p>|<\/p>$/g, '') + (x.marks ? ' <span class="pill">' + x.marks + ' mark' + (x.marks > 1 ? 's' : '') + '</span>' : '') +
       (window.speechSynthesis ? ' <button type="button" class="btn sm" data-say="' + qid + '" aria-label="Read the question aloud">🔊</button>' : '') + '</p>' + (x.image_url ? '<img src="' + E(x.image_url) + '" alt="" loading="lazy" class="limg">' : '');
+    var md = window.BVT ? BVT.parse(x.prompt).mode : '';
+    if ((x.kind === 'mcq' || x.kind === 'tf') && md === 'dropdown') return '<fieldset class="q" data-q="' + qid + '"><legend class="sr">Question ' + x._n + '</legend>' + head +
+      '<select class="qdrop"' + (lock ? ' disabled' : '') + '><option value="">Choose an answer…</option>' + (x.options || []).map(function (o, j) { return '<option value="' + j + '"' + (String(v) === String(j) ? ' selected' : '') + '>' + E(o) + '</option>'; }).join('') + '</select></fieldset>' + ansBox(x);
+    if (x.kind === 'short' && /^(graph|draw|annotate)$/.test(md)) return '<div class="q' + (lock ? ' locked' : '') + '" data-q="' + qid + '" data-draw="' + md + '"' + (lock ? ' data-locked="1"' : '') + '>' + (md === 'annotate' ? head.replace(/<img [^>]*class="limg">$/, '') : head) + '<div data-pad></div></div>' + ansBox(x);
     if (x.kind === 'mcq' || x.kind === 'tf') return '<fieldset class="q" data-q="' + qid + '"><legend class="sr">Question ' + x._n + '</legend>' + head + (x.options || []).map(function (o, j) {
       return '<label class="opt"><input type="radio" name="q' + qid + '" value="' + j + '"' + (String(v) === String(j) ? ' checked' : '') + (lock ? ' disabled' : '') + '> ' + E(o) + '</label>'; }).join('') + '</fieldset>' + ansBox(x);
     var pic = isPic(v);
@@ -123,9 +130,15 @@
     var rpb = app.querySelector('#repeat'), rpa = app.querySelector('#repagain'); [rpb, rpa].forEach(function (b) { if (b) b.onclick = function () { startRepeat(); }; });
     var rps = app.querySelector('#repsave'); if (rps) rps.onclick = function () { collect(); saveRepeat(rps); };
     var rpe = app.querySelector('#repend'); if (rpe) rpe.onclick = function () { REP = { sec: null, ans: {}, n: 0, saved: false }; draw(); };
-    app.querySelectorAll('[data-say]').forEach(function (b) { b.onclick = function () { var x = items.filter(function (i) { return i.question_id === b.getAttribute('data-say'); })[0]; speak(x.prompt + (x.options && x.options.length ? '. Options: ' + x.options.join('; ') : ''), b); }; });
+    app.querySelectorAll('[data-say]').forEach(function (b) { b.onclick = function () { var x = items.filter(function (i) { return i.question_id === b.getAttribute('data-say'); })[0]; speak((window.BVT ? BVT.text(x.prompt) : x.prompt) + (x.options && x.options.length ? '. Options: ' + x.options.join('; ') : ''), b); }; });
+    PADS = {};
+    app.querySelectorAll('.q[data-draw]').forEach(function (q) {
+      var qid = q.getAttribute('data-q'), x = items.filter(function (i) { return i.question_id === qid; })[0] || {}, pr = BVT.parse(x.prompt), src = inRepeat(steps()[step]) ? REP.ans[qid] : ans[qid];
+      PADS[qid] = BVT.pad(q.querySelector('[data-pad]'), { mode: pr.mode, x: pr.x, y: pr.y, image: x.image_url, value: src, readonly: !!q.getAttribute('data-locked'), onchange: function () { dirty = true; } });
+    });
     app.querySelectorAll('.q').forEach(function (q) {
       q.addEventListener('input', function () { dirty = true; });
+      if (q.getAttribute('data-draw')) return;
       q.querySelectorAll('[data-mode]').forEach(function (b) { b.onclick = function () {
         var w = b.getAttribute('data-mode') === 'write'; q.querySelector('textarea').hidden = w; q.querySelector('.hwbox').hidden = !w;
         q.querySelectorAll('[data-mode]').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); }); if (w) pad(q.querySelector('canvas'), q); }; });
@@ -156,6 +169,8 @@
     app.querySelectorAll('.q[data-q]').forEach(function (q) {
       if (q.getAttribute('data-locked')) return;
       var qid = q.getAttribute('data-q'), r = q.querySelector('input[type=radio]:checked');
+      if (PADS[qid]) { if (PADS[qid].used()) tgt[qid] = PADS[qid].get(); return; }
+      var dd = q.querySelector('select.qdrop'); if (dd) { if (dd.value !== '') tgt[qid] = +dd.value; return; }
       if (q.querySelector('input[type=radio]')) { if (r) tgt[qid] = +r.value; return; }
       var c = q.querySelector('canvas'), writing = !q.querySelector('.hwbox').hidden;
       if (writing && c && c._used) { var tmp = document.createElement('canvas'); tmp.width = 700; tmp.height = Math.round(c.height * 700 / c.width); tmp.getContext('2d').drawImage(c, 0, 0, tmp.width, tmp.height); tgt[qid] = tmp.toDataURL('image/jpeg', 0.6); }

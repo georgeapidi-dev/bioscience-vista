@@ -1,4 +1,4 @@
-/* My learning: student dashboard · BioScience Vista */
+/* My learning: student dashboard · Learnova */
 (function () {
   var app = document.getElementById('app'), E = BV.esc, D = null, tab = 'overview';
   function start() {

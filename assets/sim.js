@@ -1,4 +1,4 @@
-/* Simulations inside interactive lessons · BioScience Vista (by George Apidi)
+/* Simulations inside interactive lessons · Learnova (by George Apidi)
    Each <div class="card sim" data-sim="NAME"> is filled with a small model students can change.
    Every control has a label, and every result is also written as text, so it works with a keyboard and screen reader. */
 (function () {

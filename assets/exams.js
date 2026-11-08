@@ -1,4 +1,4 @@
-/* Online exams for students · BioScience Vista */
+/* Online exams for students · Learnova */
 (function () {
   var app = document.getElementById('app'), E = BV.esc, timer = null;
   function start() {

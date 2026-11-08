@@ -1,4 +1,4 @@
-/* BioScience Vista · lesson add-on for the six-step lesson pages
+/* Learnova · lesson add-on for the six-step lesson pages
    1. Teacher view: a signed-in teacher sees the model answers in every step, all the time.
    2. Repeat: after a step is saved (and its model answers shown), a student can repeat it. Each repeat is marked,
       labelled "Repeat 1", "Repeat 2"… and sent to the teacher, but the first mark stays the one that counts. */

@@ -1,4 +1,4 @@
-/* Science tools: calculator, graph plotter, drawing board · BioScience Vista (uses math.js) */
+/* Science tools: calculator, graph plotter, drawing board · Learnova (uses math.js) */
 (function () {
   var $ = function (s, r) { return (r || document).querySelector(s); }, E = BV.esc;
 
@@ -180,7 +180,7 @@
     function merged() { var c = document.createElement('canvas'); c.width = gc.width; c.height = gc.height; var g = c.getContext('2d'); g.drawImage(gc, 0, 0); g.drawImage(ink, 0, 0, gc.width, gc.height); c._k = window.devicePixelRatio || 1; return c; }
     var legend = [];
     $('#gplot').onclick = draw;
-    saveBar({ canvas: merged, name: 'graph', fmt: $('#gfmt'), save: $('#gsave'), copy: $('#gcopy'), msg: $('#gmsg'), title: function () { return ''; }, fname: function () { return $('#gtitle').value; }, foot: function () { draw(); return legend.concat(['BioScience Vista graph plotter']); } });
+    saveBar({ canvas: merged, name: 'graph', fmt: $('#gfmt'), save: $('#gsave'), copy: $('#gcopy'), msg: $('#gmsg'), title: function () { return ''; }, fname: function () { return $('#gtitle').value; }, foot: function () { draw(); return legend.concat(['Learnova graph plotter']); } });
     $('#gcsv').addEventListener('click', function () {
       var pts = parseData(), say = function (t) { $('#gmsg').textContent = t; $('#gmsg').className = 'small muted'; };
       if (!pts.length) { say('Type or paste some lab data first.'); return; }
