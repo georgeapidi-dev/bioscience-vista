@@ -151,17 +151,17 @@
       select('a', 'Sample 1 (person)', [['A', 'Person A'], ['B', 'Person B'], ['C', 'Person C'], ['D', 'Person D']]) +
       select('b', 'Sample 2 (person)', [['A', 'Person A'], ['B', 'Person B'], ['C', 'Person C'], ['D', 'Person D']]) +
       slider('time', 'Time the gel runs (minutes)', 0, 60, 60) + '</div>' +
-      '<svg viewBox="0 0 400 300" role="img" aria-label="Gel with a ladder and two samples"></svg><div class="sim-out" aria-live="polite"></div>'; },
+      '<svg viewBox="0 0 400 330" role="img" aria-label="Gel with a ladder and two samples"></svg><div class="sim-out" aria-live="polite"></div>'; },
     run: function (r) {
       var t = +$(r, 'time').value, f = t / 60, A = $(r, 'a').value, B = $(r, 'b').value;
       var top = 40, H = 220;
       function y(bp) { return top + 10 + f * (Math.log10(20000) - Math.log10(bp)) / (Math.log10(20000) - Math.log10(250)) * (H - 20); }
       var lanes = [['Ladder', LADDER, '#e2e8f0'], ['Person ' + A, PEOPLE[A], '#fbbf24'], ['Person ' + B, PEOPLE[B], '#fbbf24']];
-      var svg = '<rect x="10" y="' + top + '" width="380" height="' + (H + 20) + '" rx="8" fill="#0f172a"/>';
+      var svg = '<rect x="10" y="' + top + '" width="380" height="' + (H + 50) + '" rx="8" fill="#0f172a"/>';
       lanes.forEach(function (ln, i) {
         var x = 70 + i * 120;
         svg += '<rect x="' + (x - 26) + '" y="' + (top + 4) + '" width="52" height="7" fill="#64748b"/>';
-        svg += '<text x="' + x + '" y="282" text-anchor="middle" font-size="13" fill="#0f172a">' + E(ln[0]) + '</text>';
+        svg += '<text x="' + x + '" y="312" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">' + E(ln[0]) + '</text>';
         ln[1].forEach(function (bp) { svg += '<rect x="' + (x - 22) + '" y="' + (y(bp) - 3).toFixed(1) + '" width="44" height="6" fill="' + ln[2] + '"/>'; });
       });
       svg += '<text x="200" y="30" text-anchor="middle" font-size="12" fill="#0f172a">Wells (−)  ·  moves towards +</text>';
