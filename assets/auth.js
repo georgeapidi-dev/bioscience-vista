@@ -75,18 +75,41 @@
   }
 
   // ---- login ----
-  function loginForm(msg) {
-    app.innerHTML = '<form class="form narrow" id="lf"><h2>Log in</h2><label class="f">Email<input id="le" type="email" autocomplete="email" required></label>' +
+  var ROLE = {
+    student: ['Student', 'Use the school email and password you chose when you signed up.', '<a href="/register/">New student? Create an account</a>'],
+    parent: ['Parent or carer', 'Use the email and password you chose for your parent account.', '<a href="/register/?as=parent">New parent? Create a parent account</a>'],
+    teacher: ['Teacher', 'Use your school staff email and password.', 'Teacher accounts are set up by the school.']
+  };
+  // step 1: ask who is logging in, so the right account type and page are used
+  function chooser() {
+    app.innerHTML = '<div class="form narrow" id="rolepick"><h2>Who is logging in?</h2><p class="muted small">Choose one so we open the right page for you.</p>' +
+      '<button class="btn main" type="button" data-role="student" style="display:block;width:100%;margin:10px 0;text-align:left">🎓 I am a student</button>' +
+      '<button class="btn main" type="button" data-role="parent" style="display:block;width:100%;margin:10px 0;text-align:left">👪 I am a parent or carer</button>' +
+      '<button class="btn main" type="button" data-role="teacher" style="display:block;width:100%;margin:10px 0;text-align:left">🧑‍🏫 I am a teacher</button></div>';
+    app.querySelectorAll('[data-role]').forEach(function (b) { b.addEventListener('click', function () { loginForm('', b.getAttribute('data-role')); }); });
+  }
+  // step 2: email and password for the chosen role
+  function loginForm(msg, role) {
+    role = ROLE[role] ? role : 'student';
+    var info = ROLE[role];
+    app.innerHTML = '<form class="form narrow" id="lf"><h2>Log in as ' + E(info[0]) + '</h2><p class="muted small">' + E(info[1]) + ' <a href="#" id="chg">Not you? Change</a></p>' +
+      '<label class="f">Email<input id="le" type="email" autocomplete="email" required></label>' +
       '<label class="f">Password<input id="lp" type="password" autocomplete="current-password" required></label>' +
       '<button class="btn main" type="submit">Log in</button><p class="msg" id="lm" role="alert">' + E(msg || '') + '</p>' +
-      '<p class="small"><a href="#" id="fp">Forgot your password?</a> · New student? <a href="/register/">Create an account</a></p></form>';
+      '<p class="small"><a href="#" id="fp">Forgot your password?</a> · ' + info[2] + '</p></form>';
     app.querySelector('#lf').addEventListener('submit', function (e) {
       e.preventDefault(); var m = app.querySelector('#lm'); m.className = 'msg'; m.textContent = 'Logging in…';
       S.db.auth.signInWithPassword({ email: app.querySelector('#le').value.trim(), password: app.querySelector('#lp').value }).then(function (r) {
         if (r.error) { m.textContent = /confirm/i.test(r.error.message) ? 'Please confirm your email first: open the link we sent you.' : 'Email or password is not right.'; return; }
-        S.me().then(go);
+        S.me().then(function (me) {
+          // the account must match the role chosen; otherwise sign out again
+          var ok = !!me && (role === 'teacher' ? me.staff : role === 'parent' ? me.parent : !me.staff);
+          if (ok) return go(me);
+          S.db.auth.signOut().then(function () { m.textContent = 'This is not a ' + info[0].toLowerCase() + ' account. Go back and choose the right option.'; });
+        });
       });
     });
+    app.querySelector('#chg').addEventListener('click', function (e) { e.preventDefault(); chooser(); });
     app.querySelector('#fp').addEventListener('click', function (e) {
       e.preventDefault(); var em = app.querySelector('#le').value.trim(), m = app.querySelector('#lm');
       if (!em) { m.textContent = 'Type your email above first, then click "Forgot your password?".'; return; }
@@ -101,5 +124,5 @@
     });
   }
   S.db.auth.onAuthStateChange(function (ev) { if (ev === 'PASSWORD_RECOVERY') resetForm(); });
-  S.me().then(function (me) { if (new URLSearchParams(location.search).get('reset')) return resetForm(); if (me) go(me); else loginForm(); });
+  S.me().then(function (me) { if (new URLSearchParams(location.search).get('reset')) return resetForm(); if (me) go(me); else chooser(); });
 })();
