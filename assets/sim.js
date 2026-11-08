@@ -741,6 +741,111 @@
   };
 
   /* ===== DP1 HL · A2.3 Viruses simulators ===== */
+  /* Grade 6 biology · is it alive? (MRS GREN) */
+  var LIFE = {
+    cat: ['A cat', [1, 1, 1, 1, 1, 1, 1], 'A cat carries out all seven life processes, so it is LIVING.'],
+    tree: ['A mango tree', [1, 1, 1, 1, 1, 1, 1], 'A tree is LIVING. Its movement is slow (leaves turn to the light, roots grow towards water), and it makes its own food by photosynthesis.'],
+    bact: ['A bacterium', [1, 1, 1, 1, 1, 1, 1], 'One tiny cell, but it carries out all seven processes, so a bacterium is LIVING.'],
+    seed: ['A dry bean seed', [0, 1, 0, 0, 0, 0, 0], 'A seed is ALIVE but dormant (resting). It respires very slowly; give it water and warmth and it grows and does everything else.'],
+    car: ['A car', [1, 0, 0, 0, 1, 0, 1], 'A car moves, uses fuel and gives out waste gases, but it does not grow, reproduce or sense like a living thing. It is NON-LIVING.'],
+    fire: ['A fire', [1, 1, 0, 1, 1, 0, 1], 'Fire moves, "grows", uses oxygen and gives out waste, but it is not made of cells and cannot sense or reproduce itself. It is NON-LIVING.'],
+    crystal: ['A salt crystal', [0, 0, 0, 1, 0, 0, 0], 'A crystal can get bigger, but only by adding material to the outside. It does no other life process: NON-LIVING.'],
+    wood: ['A dead log', [0, 0, 0, 0, 0, 0, 0], 'A log was once living, but it no longer carries out life processes. It is DEAD, which is different from never-living.']
+  };
+  M.alive = {
+    title: 'Is it alive? Test it against the characteristics of life (MRS GREN)',
+    html: function () { return '<div class="sim-c">' + select('lo', 'Choose a thing to test', Object.keys(LIFE).map(function (k) { return [k, LIFE[k][0]]; })) + '</div><svg viewBox="0 0 400 190" role="img" aria-label="Checklist of life processes"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var o = LIFE[$(r, 'lo').value], P = ['Movement', 'Respiration', 'Sensitivity', 'Growth', 'Reproduction', 'Excretion', 'Nutrition'], svg = '', n = 0;
+      P.forEach(function (p, i) { var y = 14 + i * 24, ok = o[1][i]; n += ok; svg += '<rect x="20" y="' + y + '" width="250" height="20" rx="5" fill="' + (ok ? '#dcfce7' : '#fee2e2') + '"/><text x="30" y="' + (y + 14) + '" font-size="12" font-weight="700" fill="#0f172a">' + p.charAt(0) + '</text><text x="46" y="' + (y + 14) + '" font-size="12">' + p.slice(1) + '</text><text x="255" y="' + (y + 15) + '" text-anchor="end" font-size="14" fill="' + (ok ? '#15803d' : '#b91c1c') + '">' + (ok ? '✓' : '✗') + '</text>'; });
+      svg += '<circle cx="335" cy="95" r="48" fill="' + (n === 7 ? '#15803d' : '#64748b') + '"/><text x="335" y="91" text-anchor="middle" fill="#fff" font-size="22" font-weight="700">' + n + ' / 7</text><text x="335" y="112" text-anchor="middle" fill="#fff" font-size="11">life processes</text>';
+      r.querySelector('svg').innerHTML = svg;
+      r.querySelector('.sim-out').innerHTML = '<b>' + o[0] + ':</b> ' + o[2] + '<br>A living thing must carry out ALL seven processes at some point in its life, and it is made of cells. Doing one or two (like a car moving) is not enough.';
+    }
+  };
+
+  /* Grade 6 biology · diffusion of food colouring at different temperatures */
+  M.difftemp = {
+    title: 'Diffusion: how fast does food colouring spread?',
+    html: function () { return '<div class="sim-c">' + slider('dt', 'Time (minutes)', 0, 10, 10) + select('dw', 'Water temperature', [['5', 'Ice-cold water (5 °C)'], ['20', 'Room temperature (20 °C)'], ['40', 'Warm water (40 °C)'], ['60', 'Hot water (60 °C)']]) + '</div><svg viewBox="0 0 400 180" role="img" aria-label="Beaker with spreading dye and a graph"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var t = +$(r, 'dt').value, T = +$(r, 'dw').value, k = 0.06 + T * 0.006;
+      function spread(tt, kk) { return 1 - Math.exp(-kk * tt); }
+      var s = spread(t, k), svg = '<path d="M30 20 v140 h150 v-140" fill="#eff6ff" stroke="#334155" stroke-width="2"/>';
+      var n = 70; for (var i = 0; i < n; i++) { var a = (i * 2.399), rr = Math.sqrt((i + 0.5) / n) * (8 + s * 64); var cx = 105 + Math.cos(a) * rr, cy = 120 + Math.sin(a) * rr * 0.6 - s * 30; cx = Math.max(36, Math.min(174, cx)); cy = Math.max(28, Math.min(154, cy)); svg += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="3.2" fill="#dc2626" opacity=".8"/>'; }
+      svg += '<text x="105" y="176" text-anchor="middle" font-size="10">' + T + ' °C, ' + t + ' min</text>';
+      svg += '<line x1="220" y1="150" x2="390" y2="150" stroke="#334155"/><line x1="220" y1="20" x2="220" y2="150" stroke="#334155"/><text x="305" y="168" text-anchor="middle" font-size="10">time (minutes)</text><text x="216" y="24" text-anchor="end" font-size="9">100%</text><text x="305" y="14" text-anchor="middle" font-size="10">% of water coloured</text>';
+      [[20, '#94a3b8'], [T, '#dc2626']].forEach(function (c, j) { var kk = 0.06 + c[0] * 0.006, pts = []; for (var m = 0; m <= (j ? t : 10); m++) pts.push((220 + m * 17).toFixed(1) + ',' + (150 - spread(m, kk) * 125).toFixed(1)); if (pts.length > 1) svg += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + c[1] + '" stroke-width="' + (j ? 3 : 2) + '"' + (j ? '' : ' stroke-dasharray="5 4"') + '/>'; });
+      r.querySelector('svg').innerHTML = svg;
+      r.querySelector('.sim-out').innerHTML = '<b>' + Math.round(s * 100) + ' %</b> of the water is coloured after ' + t + ' minute' + (t === 1 ? '' : 's') + ' at ' + T + ' °C (dashed grey line: room temperature for comparison).<br>' +
+        'The dye particles spread from where there are MANY of them (high concentration) to where there are FEW (low concentration). ' + (T > 20 ? 'In warmer water the particles have more energy and move faster, so diffusion is faster.' : T < 20 ? 'In cold water the particles move more slowly, so diffusion is slower.' : 'Try a warmer and a colder temperature and compare.') + ' Nobody stirs it: the particles move by themselves.';
+    }
+  };
+
+  /* Grade 6 biology · potato strips in salt solutions (osmosis) */
+  M.potato = {
+    title: 'Osmosis: potato strips in salt solutions',
+    html: function () { return '<div class="sim-c">' + slider('ps', 'Salt in the solution (%)', 0, 10, 0, 1) + '</div><svg viewBox="0 0 400 190" role="img" aria-label="Potato strip and graph of mass change"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r, first) {
+      var c = +$(r, 'ps').value; function ch(x) { return 12 - x * 4.2 + (x > 3 ? (x - 3) * 1.6 : 0); }
+      var d = ch(c) + (first ? 0 : (Math.random() - 0.5) * 1.2), len = 110 * (1 + d / 100 * 1.4);
+      var svg = '<rect x="20" y="20" width="160" height="110" rx="10" fill="#e0f2fe" stroke="#334155"/><text x="100" y="146" text-anchor="middle" font-size="10">' + c + ' % salt solution</text>';
+      svg += '<rect x="' + (100 - len / 2).toFixed(1) + '" y="65" width="' + len.toFixed(1) + '" height="18" rx="3" fill="' + (d > 0 ? '#fde68a' : '#e7d7a8') + '" stroke="#92400e"/>';
+      svg += '<text x="100" y="58" text-anchor="middle" font-size="10">' + (d > 1 ? 'firm, longer: TURGID cells' : d < -1 ? 'soft, bendy, shorter: cells lost water' : 'about the same') + '</text>';
+      svg += '<line x1="215" y1="95" x2="390" y2="95" stroke="#334155"/><line x1="215" y1="20" x2="215" y2="170" stroke="#334155"/><text x="211" y="24" text-anchor="end" font-size="9">+20</text><text x="211" y="98" text-anchor="end" font-size="9">0</text><text x="211" y="170" text-anchor="end" font-size="9">−30</text><text x="302" y="186" text-anchor="middle" font-size="10">salt (%)</text><text x="302" y="14" text-anchor="middle" font-size="10">% change in mass</text>';
+      var pts = []; for (var x = 0; x <= 10; x++) { pts.push((215 + x * 17).toFixed(1) + ',' + (95 - ch(x) * 3.7).toFixed(1)); } svg += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#cbd5e1" stroke-width="2"/>';
+      svg += '<circle cx="' + (215 + c * 17) + '" cy="' + (95 - d * 3.7).toFixed(1) + '" r="5" fill="#b45309"/>';
+      r.querySelector('svg').innerHTML = svg;
+      r.querySelector('.sim-out').innerHTML = '<b>Mass change: ' + (d > 0 ? '+' : '') + d.toFixed(1) + ' %</b> after 30 minutes in ' + c + ' % salt.<br>' +
+        (d > 1 ? 'The solution is more DILUTE than the potato cells, so water moved INTO the cells by osmosis. The cells became turgid (firm).' : d < -1 ? 'The solution is more CONCENTRATED than the potato cells, so water moved OUT of the cells by osmosis. The strip lost mass and went soft.' : 'The solution has about the same concentration as the cells: no overall water movement.') +
+        ' Water always moves from a dilute solution to a more concentrated one, through a partially permeable membrane. Press Run again to see that real results vary a little.';
+    }
+  };
+
+  /* Grade 6 biology · stem cells differentiate */
+  var STEM = { rbc: ['Red blood cell', 'carries oxygen; no nucleus, so more room for haemoglobin', '#dc2626'], wbc: ['White blood cell', 'fights infection', '#7c3aed'], nerve: ['Nerve cell (neurone)', 'carries electrical messages', '#2563eb'], muscle: ['Muscle cell', 'contracts to move the body', '#db2777'], skin: ['Skin cell', 'protects the body', '#ca8a04'] };
+  M.stemcell = {
+    title: 'Stem cells: divide, then differentiate',
+    html: function () { return '<div class="sim-c">' + slider('sd', 'Number of divisions', 1, 4, 3) + select('st', 'Signal the cells receive', Object.keys(STEM).map(function (k) { return [k, 'Become a ' + STEM[k][0].toLowerCase()]; })) + '</div><svg viewBox="0 0 400 180" role="img" aria-label="A stem cell dividing and differentiating"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var d = +$(r, 'sd').value, s = STEM[$(r, 'st').value], svg = '<circle cx="30" cy="90" r="16" fill="#d1fae5" stroke="#15803d" stroke-width="2"/><circle cx="30" cy="90" r="5" fill="#15803d"/><text x="30" y="125" text-anchor="middle" font-size="9">stem cell</text>';
+      var n = Math.pow(2, d), cols = d + 1, xs = function (j) { return 30 + j * (300 / cols); };
+      for (var j = 1; j <= d; j++) { var m = Math.pow(2, j); for (var i = 0; i < m; i++) { var y = 20 + (i + 0.5) * (140 / m); svg += '<circle cx="' + xs(j).toFixed(0) + '" cy="' + y.toFixed(0) + '" r="' + Math.max(4, 12 - j * 2) + '" fill="#d1fae5" stroke="#15803d"/>'; } }
+      for (var k = 0; k < n; k++) { var yy = 20 + (k + 0.5) * (140 / n), sz = Math.max(4, 12 - d * 2); svg += '<path d="M' + (xs(d) + sz + 2) + ' ' + yy.toFixed(0) + ' H' + (338 - sz) + '" stroke="#94a3b8" marker-end="url(#ar)"/>' + (k === 0 ? '<rect x="335" y="' + (yy - sz).toFixed(0) + '" width="0" height="0"/>' : '') + '<circle cx="352" cy="' + yy.toFixed(0) + '" r="' + sz + '" fill="' + s[2] + '"/>'; }
+      svg = '<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#94a3b8"/></marker></defs>' + svg + '<text x="180" y="176" text-anchor="middle" font-size="10">divide (self-renew) →  differentiate →</text>';
+      r.querySelector('svg').innerHTML = svg;
+      r.querySelector('.sim-out').innerHTML = '1 stem cell divided ' + d + ' time' + (d > 1 ? 's' : '') + ' to make <b>' + n + ' cells</b>. Then a signal made them DIFFERENTIATE (specialise) into <b>' + s[0].toLowerCase() + 's</b>: a cell that ' + s[1] + '.<br>Stem cells are UNSPECIALISED. Their special ability is to keep making more of themselves AND to turn into specialised cells. Once a cell has specialised, it usually cannot change into a different type.';
+    }
+  };
+
+  /* Grade 6 biology · levels of organisation */
+  var ORG = { dig: ['Digestive system', ['Muscle cell', 'Muscle tissue', 'Stomach', 'Digestive system', 'Human']], resp: ['Respiratory system', ['Lining cell', 'Lining tissue', 'Lung', 'Respiratory system', 'Human']], plant: ['Plant shoot system', ['Palisade cell', 'Palisade tissue', 'Leaf', 'Shoot system', 'Bean plant']], circ: ['Circulatory system', ['Heart muscle cell', 'Cardiac muscle tissue', 'Heart', 'Circulatory system', 'Human']] };
+  M.organise = {
+    title: 'Levels of organisation: from cell to organism',
+    html: function () { return '<div class="sim-c">' + select('oz', 'Example', Object.keys(ORG).map(function (k) { return [k, ORG[k][0]]; })) + slider('ol', 'Zoom out to level', 1, 5, 5) + '</div><svg viewBox="0 0 400 170" role="img" aria-label="Five levels of organisation"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var o = ORG[$(r, 'oz').value], L = +$(r, 'ol').value, names = ['Cell', 'Tissue', 'Organ', 'Organ system', 'Organism'], cols = ['#2563eb', '#0891b2', '#15803d', '#ca8a04', '#db2777'], svg = '';
+      for (var i = 0; i < 5; i++) { var x = 10 + i * 78, on = i < L; svg += '<rect x="' + x + '" y="' + (110 - i * 20) + '" width="70" height="' + (40 + i * 20) + '" rx="8" fill="' + (on ? cols[i] : '#e2e8f0') + '"/><text x="' + (x + 35) + '" y="' + (128 - i * 20) + '" text-anchor="middle" font-size="10" font-weight="700" fill="' + (on ? '#fff' : '#94a3b8') + '">' + names[i] + '</text>' + (on ? '<foreignObject x="' + (x + 3) + '" y="' + (134 - i * 20) + '" width="64" height="' + (16 + i * 20) + '"><div xmlns="http://www.w3.org/1999/xhtml" style="font:9px sans-serif;color:#fff;text-align:center">' + o[1][i] + '</div></foreignObject>' : '') + (i < 4 ? '<text x="' + (x + 74) + '" y="140" font-size="12" fill="#64748b">›</text>' : ''); }
+      r.querySelector('svg').innerHTML = svg;
+      var D = ['A CELL is the basic unit of life.', 'A TISSUE is a group of similar cells working together.', 'An ORGAN is made of different tissues working together.', 'An ORGAN SYSTEM is a group of organs working together.', 'An ORGANISM is a whole living thing; its organ systems all work together.'];
+      r.querySelector('.sim-out').innerHTML = '<b>' + names[L - 1] + ': ' + o[1][L - 1] + '.</b> ' + D[L - 1] + '<br>Order: cell → tissue → organ → organ system → organism.';
+    }
+  };
+
+  /* Grade 6 biology · vertebrate identification key */
+  M.vertkey = {
+    title: 'Vertebrate key: which group does it belong to?',
+    html: function () { return '<div class="sim-c">' + select('vc', 'Body covering', [['fur', 'Hair or fur'], ['feath', 'Feathers'], ['dry', 'Dry scales'], ['wet', 'Wet scales and fins'], ['moist', 'Moist skin, no scales']]) + select('vb', 'How it breathes', [['lungs', 'Lungs'], ['gills', 'Gills'], ['both', 'Gills as young, lungs (and skin) as adult']]) + select('ve', 'How young are produced', [['live', 'Born live, fed milk'], ['shell', 'Hard-shelled eggs'], ['leath', 'Leathery-shelled eggs on land'], ['jelly', 'Jelly-covered eggs in water']]) + '</div><svg viewBox="0 0 400 120" role="img" aria-label="Key result"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var c = $(r, 'vc').value, b = $(r, 'vb').value, e = $(r, 've').value;
+      var G = { fur: ['Mammal', 'lungs', 'live', 'lion, human, bat, whale'], feath: ['Bird', 'lungs', 'shell', 'fish eagle, ostrich, chicken'], dry: ['Reptile', 'lungs', 'leath', 'crocodile, snake, tortoise'], wet: ['Fish', 'gills', 'jelly', 'tilapia, salmon, shark'], moist: ['Amphibian', 'both', 'jelly', 'frog, toad, salamander'] }[c];
+      var ok = G[1] === b && G[2] === e, col = ok ? '#15803d' : '#b45309';
+      r.querySelector('svg').innerHTML = '<rect x="10" y="10" width="380" height="100" rx="12" fill="' + (ok ? '#dcfce7' : '#ffedd5') + '"/><text x="200" y="52" text-anchor="middle" font-size="22" font-weight="700" fill="' + col + '">' + (ok ? G[0].toUpperCase() : 'Check your features') + '</text><text x="200" y="82" text-anchor="middle" font-size="12">' + (ok ? 'Examples: ' + G[3] : 'The body covering says ' + G[0].toLowerCase() + ', but the other features do not match') + '</text>';
+      r.querySelector('.sim-out').innerHTML = (ok ? 'All three features match the <b>' + G[0].toLowerCase() + '</b> group. ' : '<b>Mismatch.</b> Body covering points to <b>' + G[0].toLowerCase() + 's</b>, which breathe with ' + { lungs: 'lungs', gills: 'gills', both: 'gills when young and lungs as adults' }[G[1]] + ' and produce young by ' + { live: 'live birth', shell: 'hard-shelled eggs', leath: 'leathery eggs on land', jelly: 'jelly-covered eggs in water' }[G[2]] + '. ') +
+        'Scientists classify animals using shared, observable features. All five groups are VERTEBRATES: they have a backbone.';
+    }
+  };
+
   /* Grade 10 evolution · peppered moth natural selection */
   M.moth = {
     title: 'Natural selection: peppered moths on light and dark trees',
