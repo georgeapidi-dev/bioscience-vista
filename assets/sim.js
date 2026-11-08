@@ -741,6 +741,101 @@
   };
 
   /* ===== DP1 HL · A2.3 Viruses simulators ===== */
+  /* Grade 10 biotechnology · yeast fermentation and temperature */
+  M.ferment = {
+    title: 'Yeast fermentation: how temperature changes the rate',
+    html: function () { return '<div class="sim-c">' + slider('ft', 'Temperature of the water bath (°C)', 0, 70, 20, 5) + select('fs', 'Sugar in the flask', [['yes', 'Glucose added'], ['no', 'No sugar (control)']]) + '</div><svg viewBox="0 0 400 165" role="img" aria-label="Yeast flask producing gas"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r, first, clicked) {
+      var T = +$(r, 'ft').value, sugar = $(r, 'fs').value === 'yes';
+      var rate = !sugar ? 0 : T <= 35 ? 22 * Math.pow(2, (T - 35) / 10) : T <= 40 ? 22 : Math.max(0, 22 * (1 - (T - 40) / 15));
+      var n = Math.round(rate * (clicked ? (0.93 + Math.random() * 0.14) : 1)), g = '';
+      g += '<path d="M60 40 h40 v30 l40 60 h-120 l40 -60 z" fill="#fef3c7" stroke="#334155" stroke-width="2"/><path d="M100 50 h60 q20 0 20 20 v40" fill="none" stroke="#334155" stroke-width="3"/>';
+      g += '<rect x="160" y="110" width="60" height="30" fill="#dbeafe" stroke="#334155"/>';
+      for (var i = 0; i < Math.min(n, 30); i++) g += '<circle cx="' + (176 + (i * 7) % 30) + '" cy="' + (128 - (i * 11) % 18) + '" r="2.5" fill="#fff" stroke="#2563eb"/>';
+      g += '<text x="80" y="148" text-anchor="middle" font-size="11">yeast + ' + (sugar ? 'glucose' : 'water only') + ' at ' + T + ' °C</text><text x="190" y="160" text-anchor="middle" font-size="10">gas bubbles through water</text>';
+      g += '<rect x="250" y="20" width="130" height="16" fill="#e2e8f0"/><rect x="250" y="20" width="' + (130 * Math.min(rate, 22) / 22) + '" height="16" fill="#16a34a"/><text x="250" y="54" font-size="12">' + n + ' CO₂ bubbles per min</text>';
+      r.querySelector('svg').innerHTML = g;
+      r.querySelector('.sim-out').innerHTML = (!sugar ? 'No sugar, no fermentation: yeast needs glucose as its respiratory substrate. This is the control.' :
+        T <= 5 ? 'Very cold: yeast enzymes have little kinetic energy, so fermentation is very slow.' : T < 35 ? 'Warmer: enzymes and substrate collide more often, so the rate rises (about doubling for every 10 °C).' :
+        T <= 40 ? 'Near the optimum (about 35–40 °C): the fastest production of carbon dioxide.' : T < 55 ? 'Too hot: yeast enzymes start to denature, so the rate falls.' : 'Enzymes denatured and yeast killed: no gas. This is why bread dough is proved somewhere warm, not hot.') +
+        '<br>Word equation: glucose → ethanol + carbon dioxide (+ energy). In bread the CO₂ makes the dough rise; in brewing the ethanol is the product.';
+    }
+  };
+
+  /* Grade 10 biotechnology · pectinase and fruit juice */
+  M.pectinase = {
+    title: 'Pectinase: getting more juice from fruit',
+    html: function () { return '<div class="sim-c">' + select('pe', 'Enzyme added to the apple pulp', [['pect', 'Pectinase'], ['boiled', 'Boiled pectinase (control)'], ['water', 'Water only (control)']]) + slider('pt', 'Temperature (°C)', 10, 70, 40, 10) + slider('pm', 'Time left before filtering (minutes)', 0, 30, 10, 5) + '</div><svg viewBox="0 0 400 140" role="img" aria-label="Juice collected"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var e = $(r, 'pe').value, T = +$(r, 'pt').value, t = +$(r, 'pm').value;
+      var act = e !== 'pect' ? 0 : T <= 45 ? Math.pow(2, (T - 45) / 10) : Math.max(0, 1 - (T - 45) / 20);
+      var vol = Math.round(8 + 22 * act * (1 - Math.exp(-t / 8))), g = '';
+      g += '<path d="M60 20 l40 50 h20 l40 -50 z" fill="#fef9c3" stroke="#334155" stroke-width="2"/><text x="110" y="15" text-anchor="middle" font-size="11">filter funnel with apple pulp</text>';
+      g += '<rect x="250" y="20" width="50" height="110" fill="#fff" stroke="#334155" stroke-width="2"/><rect x="250" y="' + (130 - vol * 3) + '" width="50" height="' + (vol * 3) + '" fill="#fbbf24" opacity=".8"/>';
+      for (var k = 0; k <= 30; k += 5) g += '<line x1="300" y1="' + (130 - k * 3) + '" x2="308" y2="' + (130 - k * 3) + '" stroke="#334155"/><text x="312" y="' + (134 - k * 3) + '" font-size="9">' + k + '</text>';
+      g += '<text x="275" y="10" text-anchor="middle" font-size="11">' + vol + ' cm³ of juice</text>';
+      r.querySelector('svg').innerHTML = g;
+      r.querySelector('.sim-out').innerHTML = (e === 'pect' ? 'Pectinase breaks down PECTIN, the "glue" in plant cell walls, so the cells release more juice and the juice is clearer.' : e === 'boiled' ? 'Boiled pectinase is denatured: its active site has lost its shape, so only a little juice drips out, as with water. This control shows the enzyme causes the extra juice.' : 'Water only: just the juice that drips out by itself.') +
+        (e === 'pect' ? ' Most juice at about 40–50 °C; more time gives more juice until all the pectin is broken down.' : '') + '<br>Fair test: same mass of apple, same volume of enzyme or water, same filtering time.';
+    }
+  };
+
+  /* Grade 10 biotechnology · selective breeding over generations */
+  M.selbreed = {
+    title: 'Selective breeding: milk yield over generations',
+    html: function () { return '<div class="sim-c">' + slider('sg', 'Generations of selective breeding', 0, 10, 0) + select('sk', 'Breeding choice', [['best', 'Breed only the cows with the highest milk yield'], ['random', 'Breed cows at random']]) + '</div><svg viewBox="0 0 400 160" role="img" aria-label="Spread of milk yields"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var g = +$(r, 'sg').value, best = $(r, 'sk').value === 'best', mean = best ? 15 + g * 1.6 : 15, sd = best ? Math.max(1.6, 3 - g * 0.12) : 3, s = '';
+      s += '<line x1="30" y1="130" x2="390" y2="130" stroke="#334155"/>';
+      for (var x = 5; x <= 40; x += 5) s += '<line x1="' + (30 + (x - 5) * 10) + '" y1="130" x2="' + (30 + (x - 5) * 10) + '" y2="134" stroke="#334155"/><text x="' + (30 + (x - 5) * 10) + '" y="146" text-anchor="middle" font-size="10">' + x + '</text>';
+      var pts = []; for (var v = 5; v <= 40; v += 0.5) { var y = Math.exp(-Math.pow(v - mean, 2) / (2 * sd * sd)) / sd; pts.push((30 + (v - 5) * 10).toFixed(1) + ',' + (130 - y * 260).toFixed(1)); }
+      s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#2563eb" stroke-width="3"/><text x="210" y="158" text-anchor="middle" font-size="10">milk yield per cow (litres per day)</text>';
+      s += '<line x1="' + (30 + (mean - 5) * 10) + '" y1="20" x2="' + (30 + (mean - 5) * 10) + '" y2="130" stroke="#dc2626" stroke-dasharray="4 3"/><text x="' + (34 + (mean - 5) * 10) + '" y="18" font-size="11">mean ' + mean.toFixed(1) + ' L</text>';
+      r.querySelector('svg').innerHTML = s;
+      r.querySelector('.sim-out').innerHTML = best ? 'Each generation, only the cows (and bulls from mothers) with the highest yield are bred. The mean yield rises and the spread narrows: the herd becomes more alike.' + (g >= 6 ? '<br><b>Risk:</b> less variation and more inbreeding: the herd is more vulnerable to new diseases and inherited disorders.' : '') + '<br>Selective breeding is slow: it takes many generations and can only use variation that already exists.'
+        : 'Random breeding: the mean stays the same, because no particular alleles are favoured.';
+    }
+  };
+
+  /* Grade 10 biotechnology · genetic engineering of human insulin */
+  var GE = ['Isolate the human insulin GENE: cut it out of human DNA with a RESTRICTION ENZYME, which leaves "sticky ends".', 'Cut a bacterial PLASMID (a small ring of DNA) with the SAME restriction enzyme, giving matching sticky ends.',
+    'Join the insulin gene into the plasmid with DNA LIGASE. The plasmid is now RECOMBINANT DNA and acts as a VECTOR.', 'Put the recombinant plasmid into a bacterium (E. coli). The bacterium is now a GENETICALLY MODIFIED ORGANISM.',
+    'Grow the bacteria in a large FERMENTER: they divide rapidly and every copy carries the gene.', 'The bacteria make human insulin, which is extracted and purified for people with diabetes. The genetic code is universal, so bacteria make the same protein.'];
+  M.gengineer = {
+    title: 'Genetic engineering: making human insulin in bacteria',
+    html: function () { return '<div class="sim-c">' + slider('gs', 'Stage (1 to 6)', 1, 6, 1) + '</div><svg viewBox="0 0 400 160" role="img" aria-label="Genetic engineering stage"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var s = +$(r, 'gs').value, g = '';
+      if (s === 1) { g += '<path d="M20 70 h360" stroke="#64748b" stroke-width="10"/><path d="M150 70 h100" stroke="#db2777" stroke-width="10"/><text x="200" y="55" text-anchor="middle" font-size="11">insulin gene</text>'; [150, 250].forEach(function (x) { g += '<path d="M' + x + ' 40 l-8 -12 M' + x + ' 40 l8 -12 M' + x + ' 40 v60" stroke="#111827" stroke-width="2" fill="none"/>'; }); g += '<text x="200" y="120" text-anchor="middle" font-size="11">✂ restriction enzyme cuts at specific base sequences</text>'; }
+      if (s >= 2 && s <= 3) { g += '<circle cx="200" cy="80" r="50" fill="none" stroke="#0369a1" stroke-width="8"' + (s === 2 ? ' stroke-dasharray="270 44"' : '') + '/>'; g += s === 3 ? '<path d="M174 34 a50 50 0 0 1 52 0" stroke="#db2777" stroke-width="8" fill="none"/><text x="200" y="20" text-anchor="middle" font-size="11">insulin gene joined in by ligase</text>' : '<text x="200" y="20" text-anchor="middle" font-size="11">plasmid cut open: sticky ends</text>'; }
+      if (s >= 4) { var n = s === 4 ? 1 : 6; for (var i = 0; i < n; i++) { var x = n === 1 ? 200 : 60 + (i % 3) * 140, y = n === 1 ? 80 : 50 + Math.floor(i / 3) * 60; g += '<rect x="' + (x - 40) + '" y="' + (y - 18) + '" width="80" height="36" rx="18" fill="#fef3c7" stroke="#92400e" stroke-width="2"/><circle cx="' + (x + 15) + '" cy="' + y + '" r="8" fill="none" stroke="#0369a1" stroke-width="3"/><path d="M' + (x + 9) + ' ' + (y - 6) + ' a8 8 0 0 1 12 0" stroke="#db2777" stroke-width="3" fill="none"/>'; if (s === 6) g += '<circle cx="' + (x - 18) + '" cy="' + (y + 4) + '" r="4" fill="#16a34a"/><circle cx="' + (x - 8) + '" cy="' + (y + 9) + '" r="4" fill="#16a34a"/>'; } }
+      r.querySelector('svg').innerHTML = g;
+      r.querySelector('.sim-out').innerHTML = '<b>Stage ' + s + '.</b> ' + GE[s - 1] + (s === 6 ? '<br><span class="small">Green dots = human insulin.</span>' : '');
+    }
+  };
+
+  /* Grade 10 biotechnology · cloning Dolly the sheep (somatic cell nuclear transfer) */
+  var DOLLY = ['Take a body (udder) cell from SHEEP A, a Finn Dorset (white face), and keep its nucleus, which has a full set of DNA.', 'Take an egg cell from SHEEP B, a Scottish Blackface, and REMOVE its nucleus (enucleated egg).',
+    'Fuse the udder cell with the empty egg using a small ELECTRIC SHOCK. The shock also starts the cell dividing.', 'The cell divides by mitosis into an EMBRYO.', 'The embryo is implanted into the uterus of SHEEP C, a surrogate mother (Scottish Blackface).',
+    'Dolly is born (1996): a white-faced Finn Dorset, genetically identical to SHEEP A, the donor of the nucleus, not to the egg donor or the surrogate. It took 277 attempts.'];
+  M.dolly = {
+    title: 'Cloning Dolly the sheep',
+    html: function () { return '<div class="sim-c">' + slider('ds', 'Stage (1 to 6)', 1, 6, 1) + '</div><svg viewBox="0 0 400 150" role="img" aria-label="Cloning stage"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var s = +$(r, 'ds').value, g = '';
+      function sheep(x, white, lab) { return '<ellipse cx="' + x + '" cy="85" rx="34" ry="22" fill="#f8fafc" stroke="#334155" stroke-width="2"/><ellipse cx="' + (x + 36) + '" cy="72" rx="12" ry="10" fill="' + (white ? '#f8fafc' : '#1f2937') + '" stroke="#334155" stroke-width="2"/><path d="M' + (x - 20) + ' 105 v18 M' + (x + 18) + ' 105 v18" stroke="#334155" stroke-width="3"/><text x="' + x + '" y="140" text-anchor="middle" font-size="10">' + lab + '</text>'; }
+      g += sheep(60, true, 'A: nucleus donor') + sheep(200, false, 'B: egg donor') + sheep(340, false, 'C: surrogate');
+      if (s >= 1) g += '<circle cx="60" cy="40" r="14" fill="#fde4f1" stroke="#be185d"/><circle cx="60" cy="40" r="6" fill="#7c3aed"/>';
+      if (s >= 2) g += '<circle cx="200" cy="40" r="16" fill="#fef9c3" stroke="#a16207"/>' + (s === 2 ? '<circle cx="214" cy="28" r="5" fill="#9ca3af"/>' : '');
+      if (s >= 3) g += '<path d="M78 40 h100" stroke="#7c3aed" stroke-width="2" stroke-dasharray="4 3"/><circle cx="200" cy="40" r="6" fill="#7c3aed"/>' + (s === 3 ? '<text x="200" y="14" text-anchor="middle" font-size="12">⚡</text>' : '');
+      if (s >= 4) g += '<g>' + [0, 1, 2, 3].map(function (k) { return '<circle cx="' + (192 + (k % 2) * 16) + '" cy="' + (32 + Math.floor(k / 2) * 16) + '" r="7" fill="#fef9c3" stroke="#a16207"/>'; }).join('') + '</g>';
+      if (s >= 5) g += '<path d="M220 40 q60 -10 110 30" stroke="#16a34a" stroke-width="2" fill="none" marker-end="url(#ar)"/><circle cx="340" cy="85" r="8" fill="#fef9c3" stroke="#a16207"/>';
+      if (s === 6) g += '<ellipse cx="300" cy="40" rx="18" ry="12" fill="#f8fafc" stroke="#334155" stroke-width="2"/><ellipse cx="320" cy="32" rx="7" ry="6" fill="#f8fafc" stroke="#334155"/><text x="300" y="18" text-anchor="middle" font-size="11">Dolly</text>';
+      r.querySelector('svg').innerHTML = '<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#16a34a"/></marker></defs>' + g;
+      r.querySelector('.sim-out').innerHTML = '<b>Stage ' + s + '.</b> ' + DOLLY[s - 1];
+    }
+  };
+
   /* B2.2.2 · Nuclear and cytoplasmic separation: gene expression with and without a nucleus */
   M.compart = {
     title: 'Transcription and translation: prokaryote or eukaryote?',
