@@ -248,6 +248,129 @@
     }
   };
 
+  /* 11 · Lock and key: does the substrate fit the active site? */
+  var FITS = { amylase: ['starch', 'glycogen'], lactase: ['lactose'], sucrase: ['sucrose'] };
+  var SHAPE = { starch: 'Starch', glycogen: 'Glycogen', lactose: 'Lactose', sucrose: 'Sucrose' };
+  M.lockkey = {
+    title: 'Enzyme and substrate: lock and key',
+    html: function () { return '<div class="sim-c">' + select('en', 'Enzyme', [['amylase', 'Amylase'], ['lactase', 'Lactase'], ['sucrase', 'Sucrase']]) +
+      select('su', 'Substrate', [['starch', 'Starch'], ['glycogen', 'Glycogen'], ['lactose', 'Lactose'], ['sucrose', 'Sucrose']]) +
+      '<label class="small"><input id="dn" type="checkbox"> Enzyme has been heated to 80 °C (denatured)</label></div>' +
+      '<svg viewBox="0 0 400 170" role="img" aria-label="Enzyme active site and substrate"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var en = $(r, 'en').value, su = $(r, 'su').value, dn = $(r, 'dn').checked;
+      var fits = !dn && FITS[en].indexOf(su) >= 0;
+      var svg = '<rect x="30" y="50" width="150" height="100" rx="18" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="3"/>' +
+        '<path d="' + (dn ? 'M 120 50 Q 150 80 120 100 Q 160 120 120 150' : 'M 120 50 L 150 90 L 120 150') + '" fill="none" stroke="#f8fafc" stroke-width="18" stroke-linecap="round"/>' +
+        '<text x="105" y="168" text-anchor="middle" font-size="12">Enzyme: ' + E(en) + (dn ? ' (denatured)' : '') + '</text>';
+      svg += fits
+        ? '<circle cx="250" cy="100" r="34" fill="#fde68a" stroke="#b7791f" stroke-width="3"/><text x="250" y="104" text-anchor="middle" font-size="12">' + SHAPE[su] + '</text>'
+        : '<circle cx="290" cy="100" r="34" fill="#fde68a" stroke="#b7791f" stroke-width="3" stroke-dasharray="6 4"/><text x="290" y="104" text-anchor="middle" font-size="12">' + SHAPE[su] + '</text>';
+      r.querySelector('svg').innerHTML = svg;
+      r.querySelector('svg').setAttribute('aria-label', fits ? 'The substrate fits the active site.' : 'The substrate does not fit the active site.');
+      r.querySelector('.sim-out').innerHTML = fits
+        ? '<b>Fits:</b> the shape of the ' + E(su) + ' matches the active site of ' + E(en) + ', so an enzyme-substrate complex forms and the reaction happens.'
+        : '<b>No fit:</b> ' + (dn ? 'heating has changed the shape of the active site, so even the right substrate cannot bind.' : E(en) + ' is specific: its active site only fits ' + E(FITS[en].map(function (x) { return SHAPE[x]; }).join(' or ')) + ', so ' + E(SHAPE[su]) + ' cannot bind.') +
+          ' <br>Enzymes are specific because only the substrate with the complementary shape can bind.';
+    }
+  };
+
+  /* 12 · Diffusion across a membrane: concentration gradient, size and temperature */
+  M.diffusion = {
+    title: 'Diffusion: moving down a concentration gradient',
+    html: function () { return '<div class="sim-c">' + slider('c1', 'Concentration on the left', 1, 10, 9) + slider('c2', 'Concentration on the right', 0, 10, 1) +
+      slider('t', 'Time (minutes)', 0, 20, 2) + select('sz', 'Molecule size', [['small', 'Small (e.g. oxygen)'], ['large', 'Large (e.g. glucose)']]) + slider('tc', 'Temperature (°C)', 5, 45, 25) + '</div>' +
+      '<svg viewBox="0 0 400 180" role="img" aria-label="Two compartments with particles"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var c1 = +$(r, 'c1').value, c2 = +$(r, 'c2').value, t = +$(r, 't').value, sz = $(r, 'sz').value, T = +$(r, 'tc').value;
+      var k = (sz === 'small' ? 0.35 : 0.12) * (1 + (T - 25) / 40);
+      var moved = (c1 - c2) / 2 * (1 - Math.exp(-k * t));
+      var L = c1 - moved, R = c2 + moved, svg = '<rect x="20" y="20" width="170" height="140" fill="#e0f2fe" stroke="#334155"/><rect x="210" y="20" width="170" height="140" fill="#e0f2fe" stroke="#334155"/>' +
+        '<line x1="200" y1="20" x2="200" y2="160" stroke="#334155" stroke-width="3" stroke-dasharray="6 4"/><text x="200" y="176" text-anchor="middle" font-size="12">Partially permeable membrane</text>';
+      function dots(n, x0) { var out = '', m = Math.round(n * 2); for (var i = 0; i < m; i++) { var cx = x0 + 15 + ((i * 37) % 140), cy = 35 + ((i * 53) % 110); out += '<circle cx="' + cx + '" cy="' + cy + '" r="4" fill="#0f766e"/>'; } return out; }
+      svg += dots(L, 20) + dots(R, 210);
+      r.querySelector('svg').innerHTML = svg;
+      var eq = Math.abs(L - R) < 0.5;
+      r.querySelector('.sim-out').innerHTML = '<b>Left: ' + L.toFixed(1) + ' · Right: ' + R.toFixed(1) + '</b> (relative concentration, after ' + t + ' min at ' + T + ' °C).' +
+        '<br>' + (eq ? 'Equilibrium: the concentrations are equal. Particles still move both ways, but there is no net movement.' :
+          'Net movement is from the higher to the lower concentration, down the gradient. It needs no energy.') +
+        '<br>' + (sz === 'small' ? 'Small molecules diffuse faster.' : 'Large molecules diffuse more slowly.') + ' Warmer particles move faster, so diffusion is faster at higher temperature.';
+    }
+  };
+
+  /* 13 · Osmosis: water moves from a dilute to a concentrated solution */
+  M.osmosis = {
+    title: 'Osmosis: which way does water move?',
+    html: function () { return '<div class="sim-c">' + slider('sol', 'Concentration of the solution (mol dm⁻³ sugar)', 0, 1, 0.3, 0.05) + '</div>' +
+      '<svg viewBox="0 0 400 180" role="img" aria-label="A plant cell in a solution"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var c = +$(r, 'sol').value, inside = 0.3, diff = inside - c, change = Math.max(-30, Math.min(30, diff * 60));
+      var R = 50 * (1 + change / 100);
+      r.querySelector('svg').innerHTML = '<rect x="20" y="10" width="360" height="160" fill="' + (c > inside ? '#fef3c7' : c < inside ? '#e0f2fe' : '#f1f5f9') + '" rx="8"/>' +
+        '<circle cx="200" cy="90" r="' + R.toFixed(1) + '" fill="#bbf7d0" stroke="#15803d" stroke-width="3"/>' +
+        '<text x="200" y="95" text-anchor="middle" font-size="12">Cell</text>' +
+        '<text x="200" y="172" text-anchor="middle" font-size="12">Solution: ' + c.toFixed(2) + ' mol dm⁻³ (cell interior about ' + inside + ')</text>';
+      var move = Math.abs(diff) < 0.02 ? 'No net movement: the solution and the cell have the same water potential (isotonic).'
+        : diff > 0 ? 'Water moves INTO the cell by osmosis: the cell swells and becomes turgid.'
+        : 'Water moves OUT of the cell by osmosis: the cell shrinks and becomes flaccid' + (c >= 0.8 ? ', and at this strength it may plasmolyse (the membrane pulls away from the wall).' : '.');
+      r.querySelector('.sim-out').innerHTML = '<b>' + E(move) + '</b><br>Water always moves from the dilute solution (high water potential) to the concentrated one (low water potential), across a partially permeable membrane. The cell interior concentration of 0.3 mol dm⁻³ is an illustrative value.';
+    }
+  };
+
+  /* 14 · Photosynthesis: light, carbon dioxide and temperature as limiting factors */
+  M.photosynth = {
+    title: 'Photosynthesis: which factor is limiting?',
+    html: function () { return '<div class="sim-c">' + slider('li', 'Light intensity (arbitrary units)', 0, 100, 60) + slider('co', 'Carbon dioxide (%)', 0, 0.1, 0.04, 0.01) + slider('tp', 'Temperature (°C)', 5, 50, 30) + '</div>' +
+      '<svg viewBox="0 0 400 220" role="img" aria-label="Rate of photosynthesis against light intensity"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var I = +$(r, 'li').value, C = +$(r, 'co').value, T = +$(r, 'tp').value;
+      var fT = Math.exp(-Math.pow((T - 35) / 12, 2));
+      var Pmax = 100 * fT;
+      function lightLim(x) { return Pmax * x / (x + 25); }
+      var cLim = Pmax * C / (C + 0.03);
+      var rate = Math.min(lightLim(I), cLim);
+      var pts = [], curve = [];
+      for (var x = 0; x <= 100; x += 2) { pts.push((40 + x * 3.4).toFixed(1) + ',' + (200 - Math.min(lightLim(x), cLim) * 1.7).toFixed(1)); }
+      r.querySelector('svg').innerHTML = '<line x1="40" y1="200" x2="380" y2="200" stroke="#334155"/><line x1="40" y1="20" x2="40" y2="200" stroke="#334155"/>' +
+        '<text x="210" y="216" text-anchor="middle" font-size="12">Light intensity</text><text x="12" y="110" font-size="12" transform="rotate(-90 12 110)" text-anchor="middle">Rate</text>' +
+        '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#0f766e" stroke-width="3"/>' +
+        '<circle cx="' + (40 + I * 3.4).toFixed(1) + '" cy="' + (200 - rate * 1.7).toFixed(1) + '" r="5" fill="#e4572e"/>';
+      var limiting = fT < 0.3 ? 'Temperature is too far from the optimum (about 35 °C): enzymes are working poorly or have denatured.'
+        : lightLim(I) <= cLim ? 'Light is the limiting factor: more light would increase the rate, but more carbon dioxide would not.'
+        : 'Carbon dioxide is the limiting factor: more light would not increase the rate; more carbon dioxide would.';
+      r.querySelector('.sim-out').innerHTML = '<b>Rate now: ' + rate.toFixed(0) + ' units.</b> ' + E(limiting) + '<br>The rate is limited by whichever factor is in shortest supply. Temperature changes the maximum rate, because the enzymes that drive the reactions are affected by it.';
+    }
+  };
+
+  /* 15 · DNA replication: template, new strand and the two copies */
+  M.replication = {
+    title: 'DNA replication: two identical copies',
+    html: function () { return '<label for="tpl">Template strand (use A, C, G and T)<input id="tpl" type="text" value="ATGCCGTAAT" maxlength="16" autocomplete="off"></label>' +
+      '<div class="sim-c">' + slider('stg', 'Stage (1 to 4)', 1, 4, 1) + '</div><svg viewBox="0 0 400 130" role="img" aria-label="Template and new strands"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var PAIR = { A: 'T', T: 'A', G: 'C', C: 'G' };
+      var tpl = ($(r, 'tpl').value || '').toUpperCase().replace(/[^ACGT]/g, '').slice(0, 16) || 'ATGCCGTAAT';
+      var stg = +$(r, 'stg').value, n = tpl.length, new1 = '', svg = '';
+      for (var i = 0; i < n; i++) new1 += PAIR[tpl[i]];
+      var shown = stg >= 2 ? new1 : '', open = stg === 1 ? Math.min(n, 4) : n;
+      for (var j = 0; j < n; j++) {
+        var x = 30 + j * 22;
+        svg += '<text x="' + x + '" y="38" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">' + tpl[j] + '</text>';
+        svg += j < open && stg >= 2 ? '<text x="' + x + '" y="88" text-anchor="middle" font-size="14" font-weight="700" fill="#b91c1c">' + shown[j] + '</text>' : '';
+        svg += '<line x1="' + x + '" y1="46" x2="' + x + '" y2="78" stroke="#94a3b8" stroke-width="1.5"/>';
+      }
+      if (stg === 1) svg += '<text x="30" y="110" font-size="12">Helicase unwinds and separates the two strands, starting here.</text>';
+      r.querySelector('svg').innerHTML = svg + '<text x="30" y="125" font-size="12" fill="#475569">Top: template strand. Bottom: new strand (built base by base).</text>';
+      var msg = [
+        'Helicase breaks the hydrogen bonds between the base pairs, so the double helix unwinds into two single strands.',
+        'DNA polymerase adds free nucleotides to the new strand, pairing A with T and G with C. It builds the new strand in the 5′ to 3′ direction.',
+        'The leading strand is made continuously. The lagging strand is made in short fragments, which are joined together later.',
+        'Two identical double helices form. Each one has one original strand and one new strand, so replication is described as semi-conservative.'
+      ][stg - 1];
+      r.querySelector('.sim-out').innerHTML = '<b>Stage ' + stg + ':</b> ' + E(msg) + '<br><b>New strand:</b> ' + E(new1) + ' (complementary to ' + E(tpl) + ').';
+    }
+  };
+
   function mount(el) {
     if (el.getAttribute('data-mounted')) return;
     var name = el.getAttribute('data-sim'), m = M[name]; if (!m) return;
