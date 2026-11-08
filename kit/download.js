@@ -3,9 +3,9 @@
 (function () {
   if (window.__dlkit) return; window.__dlkit = 1;
   var css = document.createElement("style");
-  css.textContent = "#dlkit-btn{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:9999;" +
+  css.textContent = "#dlkit-btn{width:auto!important;max-width:max-content!important;left:auto!important;margin:0!important;position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:9999;" +
     "border:0;border-radius:999px;padding:11px 18px;background:#1b6b3a;color:#fff;font:700 14px/1 system-ui,'Segoe UI',Arial,sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}" +
-    "#dlkit-pdf{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:9999;border:0;border-radius:999px;padding:11px 18px;background:#7c3aed;color:#fff;font:700 14px/1 system-ui,'Segoe UI',Arial,sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}" +
+    "#dlkit-pdf{width:auto!important;max-width:max-content!important;left:auto!important;margin:0!important;position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:9999;border:0;border-radius:999px;padding:11px 18px;background:#7c3aed;color:#fff;font:700 14px/1 system-ui,'Segoe UI',Arial,sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}" +
     "#dlkit-btn:hover{background:#14522c}#dlkit-btn:focus-visible{outline:3px solid #f4a261;outline-offset:2px}" +
     "#dlkit-toast{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(116px + env(safe-area-inset-bottom,0px));z-index:9999;max-width:300px;" +
     "background:#1f2a24;color:#fff;border-radius:10px;padding:10px 14px;font:14px/1.4 system-ui,Arial,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.25)}" +
