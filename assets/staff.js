@@ -171,12 +171,13 @@
   /* ---------- quizzes ---------- */
   function quizzes(p, args) {
     if (args[0] === 'import') return quizImport(p);
+    if (args[0] && args[1] === 'preview') return quizPreview(p, args[0]);
     if (args[0]) return quizEdit(p, args[0]);
     S.db.from('quizzes').select('id,title,published,due_at,show_results,category, quiz_classes(class_id), quiz_questions(question_id)').neq('category', 'lesson').order('created_at', { ascending: false }).then(function (r) {
       var cn = {}; CLASSES.forEach(function (c) { cn[c.id] = c.name; });
       p.innerHTML = '<div class="acts"><a class="btn main sm" href="#quizzes/import">⬆ Import from PDF or Word</a><a class="btn sm" href="#quizzes/new">＋ New quiz or exam</a></div>' +
-        ((r.data || []).length ? '<div class="tablewrap"><table class="marks"><tr><th>Title</th><th>Type</th><th>Questions</th><th>Classes</th><th>Due</th><th>Results</th><th>Status</th></tr>' + r.data.map(function (q) {
-          return '<tr><td><a href="#quizzes/' + q.id + '">' + E(q.title) + '</a></td><td>' + (q.category === 'exam' ? '🧪 Exam' : '📝 Quiz') + '</td><td>' + q.quiz_questions.length + '</td><td class="small">' + E(q.quiz_classes.map(function (c) { return cn[c.class_id] || '…'; }).join(', ') || '–') + '</td><td class="small">' + E(S.when(q.due_at) || '–') + '</td><td class="small">' + (q.show_results ? 'shown at once' : 'after you release') + '</td><td>' + (q.published ? '<span class="pill">Published</span>' : 'Draft') + '</td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No quizzes yet. Import a question paper or make one from scratch.</p>');
+        ((r.data || []).length ? '<div class="tablewrap"><table class="marks"><tr><th>Title</th><th>Type</th><th>Questions</th><th>Classes</th><th>Due</th><th>Results</th><th>Status</th><th></th></tr>' + r.data.map(function (q) {
+          return '<tr><td><a href="#quizzes/' + q.id + '">' + E(q.title) + '</a></td><td>' + (q.category === 'exam' ? '🧪 Exam' : '📝 Quiz') + '</td><td>' + q.quiz_questions.length + '</td><td class="small">' + E(q.quiz_classes.map(function (c) { return cn[c.class_id] || '…'; }).join(', ') || '–') + '</td><td class="small">' + E(S.when(q.due_at) || '–') + '</td><td class="small">' + (q.show_results ? 'shown at once' : 'after you release') + '</td><td>' + (q.published ? '<span class="pill">Published</span>' : 'Draft') + '</td><td><a class="btn sm" href="#quizzes/' + q.id + '/preview">👁 Preview</a></td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No quizzes yet. Import a question paper or make one from scratch.</p>');
     });
   }
 
@@ -210,7 +211,7 @@
     function draw() {
       var need = list.filter(function (q) { return q.kind !== 'short' && q.correct < 0; }).length, noScheme = list.filter(function (q) { return q.kind === 'short' && !q.scheme && !q.rubric; }).length;
       out.innerHTML = '<div class="row2 sticky-top"><b>' + list.length + ' questions · ' + list.reduce(function (a, q) { return a + q.marks; }, 0) + ' marks</b><div class="acts"><button class="btn sm" type="button" id="iadd">＋ Add a question</button><button class="btn main sm" type="button" id="isave">Save as a draft quiz</button></div></div>' +
-        (need ? '<p class="panel tint small">⚠ ' + need + ' multiple-choice question' + (need > 1 ? 's need' : ' needs') + ' the correct option marked with *.</p>' : '') +
+        (need ? '<p class="panel tint small">⚠ ' + need + ' multiple-choice question' + (need > 1 ? 's need' : ' needs') + ' the correct answer ticked (A, B, C or D). Attach the mark scheme above to fill them in automatically.</p>' : '') +
         (noScheme ? '<p class="panel tint small">' + noScheme + ' written question' + (noScheme > 1 ? 's have' : ' has') + ' no mark scheme yet. Add marking points or a rubric for automatic marking, or leave blank and mark by hand.</p>' : '') +
         list.map(function (q, i) { return Q.card(q, i, { join: i > 0 }); }).join('');
       out.querySelectorAll('.qe').forEach(function (el) {
@@ -237,8 +238,9 @@
       isNew ? Promise.resolve({ data: [] }) : S.db.from('quiz_classes').select('class_id').eq('quiz_id', id),
       isNew ? Promise.resolve({ data: [] }) : S.db.from('quiz_questions').select('position, questions(*, question_answers(*))').eq('quiz_id', id).order('position')]).then(function (x) {
       var q = x[0].data || {}, set = (x[1].data || []).map(function (c) { return c.class_id; }), qq = x[2].data || [];
-      var qs = qq.map(function (z, k) { var o = z.questions || {}, an = o.question_answers || {}; if (Array.isArray(an)) an = an[0] || {};
-        return { id: o.id, ref: '', kind: o.kind, prompt: o.prompt, options: o.options || [], correct: an.correct_option == null ? -1 : an.correct_option, marks: o.marks, scheme: an.mark_scheme || an.model_answer || '', rubric: an.rubric || '', explanation: an.explanation || '', image: o.image_url || '' }; });
+      var lastN = 0, qs = qq.map(function (z, k) { var o = z.questions || {}, an = o.question_answers || {}; if (Array.isArray(an)) an = an[0] || {};
+        var pm = /^(\d+)\s*(\([a-h]\)(?:\s*\([ivx]+\))?)/i.exec(o.prompt || ''), ref = pm ? pm[1] + pm[2].replace(/\s/g, '') : String(lastN + 1); lastN = pm ? +pm[1] : lastN + 1;
+        return { id: o.id, ref: ref, kind: o.kind, prompt: o.prompt, options: o.options || [], correct: an.correct_option == null ? -1 : an.correct_option, marks: o.marks, scheme: an.mark_scheme || an.model_answer || '', rubric: an.rubric || '', explanation: an.explanation || '', image: o.image_url || '' }; });
       p.innerHTML = '<p><a href="#quizzes">← All quizzes and exams</a></p><form class="panel grp" id="qf"><h3>' + (isNew ? 'New quiz or exam' : 'Settings') + '</h3>' +
         '<div class="row2"><label class="f" style="flex:1">Title<input id="t" required value="' + E(q.title) + '"></label><label class="f">Type<select id="cat"><option value="quiz"' + (q.category !== 'exam' ? ' selected' : '') + '>Quiz (Quiz centre)</option><option value="exam"' + (q.category === 'exam' ? ' selected' : '') + '>Exam (Online exams page)</option></select></label></div><label class="f">Instructions<textarea id="ins" rows="2">' + E(q.instructions || '') + '</textarea></label>' +
         '<div class="row2"><label class="f">Topic<select id="tp">' + topicOpts(q.topic_id) + '</select></label><label class="f">Time limit (minutes, blank = none)<input id="tl" type="number" min="1" value="' + E(q.time_limit_minutes || '') + '"></label><label class="f">Attempts<input id="ma" type="number" min="1" value="' + E(q.max_attempts || 1) + '"></label></div>' +
@@ -247,7 +249,10 @@
         '<fieldset><legend>Results</legend><label class="chk"><input type="radio" name="sr" value="hold"' + (q.show_results ? '' : ' checked') + '> I check and release results (recommended for written answers)</label>' +
         '<label class="chk"><input type="radio" name="sr" value="show"' + (q.show_results ? ' checked' : '') + '> Show multiple-choice scores straight after submitting</label></fieldset>' +
         '<label class="chk"><input type="checkbox" id="pb"' + (q.published ? ' checked' : '') + '> Published (students in the chosen classes can see it)</label>' +
-        '<div class="acts"><button class="btn main sm" type="submit">Save quiz</button>' + (isNew ? '' : '<a class="btn sm" href="#marking">Marking</a><button class="btn sm" type="button" id="del">Delete quiz</button>') + '</div></form>' +
+        '<div class="acts"><button class="btn main sm" type="submit">Save quiz</button>' + (isNew ? '' : '<a class="btn sm" href="#quizzes/' + id + '/preview">👁 Preview as a student</a><a class="btn sm" href="#marking">Marking</a><button class="btn sm" type="button" id="del">Delete quiz</button>') + '</div></form>' +
+        (isNew ? '' : '<section class="panel grp" id="msbox"><h3>Mark scheme</h3><p class="small muted">Attach the mark scheme and the answers are filled in for you: the correct letter (A, B, C, D) for each multiple-choice question, and the marking points for written questions. Check the question numbers match, then press Save question changes.</p>' +
+          '<div class="row2"><label class="f" style="flex:1">Mark scheme (PDF, Word or text)<input id="msf" type="file" accept=".pdf,.docx,.txt,.xlsx,.csv,application/pdf"></label><button class="btn main sm" type="button" id="msa">Apply mark scheme</button></div>' +
+          '<details><summary class="small">No file? Paste it instead</summary><textarea id="msp" rows="6" placeholder="1 B\n2 D\n3 C\n4 (a) nucleotide\n4 (b) hydrogen bonds; complementary base pairing"></textarea></details><p class="msg" id="msm" role="status"></p></section>') +
         (isNew ? '<p class="small muted">Save the quiz first, then add questions.</p>' : '<section class="grp"><div class="row2"><h3 class="sec-h">Questions (' + qs.length + ', ' + qs.reduce(function (a, z) { return a + (z.marks || 0); }, 0) + ' marks)</h3><button class="btn main sm" type="button" id="qsave">Save question changes</button></div>' +
           '<div id="qlist" class="grp">' + qs.map(function (z, i) { return Q.card(z, i, { delLabel: 'Remove' }); }).join('') + '</div>' +
           '<div class="acts"><button class="btn sm" type="button" id="qadd">＋ Add a question</button></div></section>');
@@ -267,6 +272,18 @@
       var listEl = p.querySelector('#qlist'), removed = [];
       function wire(el) { Q.wireCard(el); el.querySelector('[data-act=del]').onclick = function () { if (el.dataset.id) removed.push(el.dataset.id); el.remove(); }; }
       listEl.querySelectorAll('.qe').forEach(wire);
+      p.querySelector('#msa').onclick = function () {   // fill answers from an attached or pasted mark scheme
+        var f = p.querySelector('#msf').files[0], pasted = p.querySelector('#msp').value.trim(), m = p.querySelector('#msm');
+        if (!f && !pasted) { m.className = 'msg'; m.textContent = 'Choose the mark scheme file first, or paste it.'; return; }
+        m.className = 'msg ok'; m.textContent = 'Reading the mark scheme…';
+        (f ? Q.readFile(f) : Promise.resolve(pasted.split('\n'))).then(function (lines) {
+          var cards = [].map.call(listEl.querySelectorAll('.qe'), Q.readCard);
+          cards.forEach(function (c, k) { if (!c.ref) c.ref = String(k + 1); });
+          var used = Q.applyScheme(cards, Q.parseScheme(lines)), mc = cards.filter(function (c) { return c.kind !== 'short' && c.kind !== 'info'; }), set = mc.filter(function (c) { return c.correct >= 0; }).length;
+          listEl.innerHTML = cards.map(function (c, k) { return Q.card(c, k, { delLabel: 'Remove' }); }).join(''); listEl.querySelectorAll('.qe').forEach(wire);
+          m.className = used ? 'msg ok' : 'msg'; m.textContent = used ? 'Matched ' + used + ' of ' + cards.length + ' questions. Multiple choice with an answer ticked: ' + set + ' of ' + mc.length + '. Check them, then press Save question changes.' : 'No question numbers in the mark scheme matched these questions. Check the Number box on each question (for example 1, 2, 3(a)).';
+        }).catch(function (e) { m.className = 'msg'; m.textContent = S.nice(e); });
+      };
       p.querySelector('#qadd').onclick = function () { var d = document.createElement('div'); d.innerHTML = Q.card({ kind: 'mcq', prompt: '', options: [], correct: -1, marks: 1 }, listEl.children.length); var el = d.firstChild; listEl.appendChild(el); wire(el); el.querySelector('[data-f=prompt]').focus(); };
       p.querySelector('#qsave').onclick = function () {
         var cards = [].map.call(listEl.querySelectorAll('.qe'), Q.readCard), bad = cards.map(Q.check).filter(Boolean)[0]; if (bad) { toast(bad, true); return; }
@@ -274,6 +291,46 @@
         Q.save(S.db, cards).then(function (ids) {
           return S.db.from('quiz_questions').delete().eq('quiz_id', id).then(function () { return S.db.from('quiz_questions').insert(ids.map(function (qid, k) { return { quiz_id: id, question_id: qid, position: k + 1 }; })); });
         }).then(function (r) { if (r.error) throw r.error; toast('Questions saved'); quizEdit(p, id); }).catch(function (e) { btn.disabled = false; toast(S.nice(e), true); });
+      };
+    });
+  }
+
+  /* ---------- teacher preview: the quiz or exam as students see it; nothing is saved ---------- */
+  function quizPreview(p, id) {
+    var Q = window.BVQ, L = 'ABCDEFGH';
+    Promise.all([S.db.from('quizzes').select('*').eq('id', id).maybeSingle(), loadQuiz(id)]).then(function (x) {
+      var q = x[0].data, qs = x[1]; if (!q) { p.innerHTML = '<p class="msg">Quiz not found.</p>'; return; }
+      var exam = q.category === 'exam', total = qs.reduce(function (a, z) { return a + (z.marks || 0); }, 0);
+      p.innerHTML = '<p><a href="#quizzes/' + id + '">← Back to editing</a></p>' +
+        '<p class="panel tint small"><b>👁 Teacher preview.</b> This is what students see when they open this ' + (exam ? 'exam' : 'quiz') + '. Try it: nothing is saved and no marks are recorded. Press <b>Check my answers</b> to see how it would be marked.</p>' +
+        '<section class="panel"><p class="label">' + (exam ? 'Exam' : 'Quiz') + '</p><h2>' + E(q.title) + '</h2>' + (q.instructions ? '<p>' + E(q.instructions) + '</p>' : '') +
+        '<p class="small muted">' + [qs.length + ' questions', total + ' marks', q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' minutes' : 'No time limit', (q.max_attempts || 1) + ' attempt' + (q.max_attempts > 1 ? 's' : ''), q.published ? 'Published' : 'Draft: students cannot see it yet'].join(' · ') + '</p></section>' +
+        (qs.length ? '' : '<p class="emptybox">No questions yet.</p>') +
+        '<form id="pvf" class="grp">' + qs.map(function (z, i) {
+          var name = 'pv-' + z.id, opts = z.options || [];
+          return '<fieldset class="q" data-id="' + z.id + '"><legend>' + num(z.prompt, i) + E(z.prompt) + ' <span class="pill">' + z.marks + ' mark' + (z.marks > 1 ? 's' : '') + '</span></legend>' +
+            (z.image_url ? '<img src="' + E(z.image_url) + '" alt="" style="max-width:100%;max-height:320px;border-radius:8px">' : '') +
+            (z.kind === 'short' ? '<textarea name="' + name + '" rows="' + (z.marks >= 6 ? 10 : z.marks >= 3 ? 6 : 3) + '" placeholder="Type an answer to test the marking"></textarea>'
+              : opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"> <b>' + L.charAt(j) + '.</b> ' + E(o) + '</label>'; }).join('')) +
+            '<div class="pvres" hidden></div></fieldset>';
+        }).join('') +
+        '<div class="acts"><button class="btn main" type="submit">Check my answers</button><a class="btn" href="#quizzes/' + id + '">Back to editing</a></div><p class="msg ok" id="pvm" role="status"></p></form>';
+      p.querySelector('#pvf').onsubmit = function (e) {
+        e.preventDefault(); var got = 0;
+        qs.forEach(function (z) {
+          var fs = p.querySelector('[data-id="' + z.id + '"]'), res = fs.querySelector('.pvres'), an = z.ans || {}, g = 0;
+          if (z.kind === 'short') {
+            var v = fs.querySelector('textarea').value, sc = an.mark_scheme || an.model_answer || '', s = Q.suggest(v, sc, z.marks); g = s.got || 0;
+            res.innerHTML = '<p class="small"><b>Suggested mark: ' + (s.got == null ? '–' : s.got) + ' / ' + z.marks + '</b> (you confirm written marks in Marking)</p>' +
+              (sc ? '<p class="small"><b>Mark scheme:</b><br>' + E(sc).replace(/\n/g, '<br>') + '</p>' : '<p class="small bad-t">No mark scheme for this question yet: it will be marked by hand.</p>');
+          } else {
+            var c = fs.querySelector('input:checked'), right = an.correct_option; g = c && right != null && +c.value === +right ? z.marks : 0;
+            res.innerHTML = right == null || right < 0 ? '<p class="small bad-t">No correct answer is ticked for this question yet.</p>'
+              : '<p class="small ' + (g ? 'ok-t' : 'bad-t') + '"><b>' + (g ? '✓ Correct' : c ? '✗ Not correct' : 'Not answered') + '.</b> Answer: ' + L.charAt(right) + '. ' + E((z.options || [])[right] || '') + '</p>' + (an.explanation ? '<p class="small">' + E(an.explanation) + '</p>' : '');
+          }
+          got += g; res.hidden = false;
+        });
+        p.querySelector('#pvm').textContent = 'Preview score: ' + got + ' / ' + total + '. Nothing was saved.';
       };
     });
   }

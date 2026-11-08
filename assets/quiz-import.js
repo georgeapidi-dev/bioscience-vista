@@ -228,7 +228,10 @@
   /* ---------- 3. read a mark scheme and attach it ---------- */
   function key(num, part, sub) { return String(+num) + (part ? '(' + part.toLowerCase() + ')' : '') + (sub ? '(' + sub.toLowerCase() + ')' : ''); }
   Q.parseScheme = function (lines) {
-    lines = clean(lines); var map = {}, curKey = null;
+    var map = {}, curKey = null;
+    var joined = [];   // table cells read one per line: "1", "B" → "1 B" (before clean() drops lone numbers)
+    lines.forEach(function (l, i) { var prev = joined[joined.length - 1]; if (prev != null && /^\d{1,3}\s*[\.\)]?$/.test(prev) && /^\(?[A-Fa-f]\)?\.?$/.test(l.trim())) joined[joined.length - 1] = prev.replace(/[\.\)]$/, '') + ' ' + l.trim().replace(/[()\.]/g, '').toUpperCase(); else joined.push(l); });
+    lines = clean(joined.map(function (l) { return String(l).trim(); }).filter(Boolean));
     var REF = /^(?:(?:question|q)\s*)?(\d{1,3})\s*[\.\)]?\s*(?:\(?([a-h])\))?\s*(?:\(?((?:i{1,3}|iv|v|vi{1,3}))\))?\s*[\.\):\-–]?\s+(.*)$/i;
     var SUB = /^\(?([a-h])\)\s+(.*)$|^\(?((?:i{1,3}|iv|v|vi{1,3}))\)\s+(.*)$/i;
     var lastNum = null, lastPart = null;
@@ -299,9 +302,17 @@
 
   /* ---------- 5. editor card (import preview, quiz editor, lesson builder) ---------- */
   Q.STEPS = ['Question', 'Explore', 'Test', 'Explain', 'Challenge', 'Reflect'];
+  var RADIO = 0;
+  function abcd(options, correct) {   // one tick box per option, lettered A, B, C, D …
+    var name = 'ok' + (++RADIO);
+    if (!options.length) return '<span class="small muted">Type the options above first.</span>';
+    return options.map(function (o, k) { var L = 'ABCDEFGH'.charAt(k);
+      return '<label class="chk" style="border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-weight:700" title="' + E(o) + '"><input type="radio" name="' + name + '" value="' + k + '" data-ok' + (k === correct ? ' checked' : '') + '> ' + L + '</label>'; }).join('');
+  }
+  Q.abcd = abcd;
   Q.card = function (q, i, opts) {
     opts = opts || {};
-    var optsText = (q.options || []).map(function (o, k) { return (k === q.correct ? '*' : '') + o; }).join('\n');
+    var optsText = (q.options || []).join('\n');
     var kind = q.kind || 'short', written = kind === 'short', info = kind === 'info', choice = kind === 'mcq' || kind === 'tf';
     var sel = function (v, t) { return '<option value="' + v + '"' + (kind === v ? ' selected' : '') + '>' + t + '</option>'; };
     return '<article class="q qe' + (info ? ' qinfo' : '') + '" data-i="' + i + '"' + (q.id ? ' data-id="' + q.id + '"' : '') + '>' +
@@ -313,10 +324,11 @@
       '<div class="acts">' + (opts.join ? '<button type="button" class="btn sm" data-act="join" title="Add this text to the item above">Join with above</button>' : '') +
       (opts.lesson ? '<button type="button" class="btn sm" data-act="up" title="Move up">↑</button><button type="button" class="btn sm" data-act="down" title="Move down">↓</button>' : '') +
       '<button type="button" class="btn sm" data-act="del">' + (opts.delLabel || 'Delete') + '</button></div></div>' +
-      (choice && q.correct < 0 && (q.options || []).length ? '<p class="small bad-t">Mark the correct option: put * in front of it.</p>' : '') +
+      (choice && q.correct < 0 && (q.options || []).length ? '<p class="small bad-t" data-need>Tick the correct answer (A, B, C, D) below the options.</p>' : '') +
       '<label class="f"><span data-show="qlabel"' + (info ? ' hidden' : '') + '>Question</span><span data-show="ilabel"' + (info ? '' : ' hidden') + '>Text students read (use **bold**; paste a YouTube or simulation link on its own line to embed it)</span>' +
       '<textarea data-f="prompt" rows="' + Math.min(10, 2 + Math.ceil((q.prompt || '').length / 90)) + '">' + E(q.prompt) + '</textarea></label>' +
-      '<label class="f" data-show="choice"' + (choice ? '' : ' hidden') + '>Options, one per line. Put * in front of the correct one.<textarea data-f="options" rows="' + Math.max(3, (q.options || []).length + 1) + '">' + E(optsText) + '</textarea></label>' +
+      '<label class="f" data-show="choice"' + (choice ? '' : ' hidden') + '>Options, one per line, in order A, B, C, D<textarea data-f="options" rows="' + Math.max(3, (q.options || []).length + 1) + '">' + E(optsText) + '</textarea></label>' +
+      '<div class="f" data-show="choice"' + (choice ? '' : ' hidden') + '><span>Correct answer: tick one</span><div class="abcd" data-abcd style="display:flex;flex-wrap:wrap;gap:8px">' + abcd(q.options || [], q.correct) + '</div></div>' +
       '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Mark scheme: one marking point per line (each line = 1 mark). Use / between alternatives and + when all words are needed. Students never see this.<textarea data-f="scheme" rows="' + Math.max(3, String(q.scheme || '').split('\n').length + 1) + '" placeholder="sugar-phosphate backbone\nbases pair A+T / C+G\nhydrogen bonds between bases">' + E(q.scheme || '') + '</textarea></label>' +
       '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Rubric / level descriptors (optional, for long answers), e.g. "3-4: clear explanation with examples"<textarea data-f="rubric" rows="' + Math.max(2, String(q.rubric || '').split('\n').length + 1) + '" placeholder="1-2: identifies a relevant factor\n3-4: explains with scientific terms\n5-6: detailed, linked explanation with evidence">' + E(q.rubric || '') + '</textarea></label>' +
       '<details' + (info && q.image ? ' open' : '') + '><summary class="small">' + (info ? 'Picture (optional)' : 'Explanation and picture (optional)') + '</summary><label class="f" data-show="explain"' + (info ? ' hidden' : '') + '>Explanation shown to students after marking<textarea data-f="explanation" rows="2">' + E(q.explanation || '') + '</textarea></label>' +
@@ -324,19 +336,29 @@
         : '<label class="f">Picture address (for example from Wikimedia Commons)<input data-f="image" type="url" value="' + E(q.image || '') + '"></label>') + '</details></article>';
   };
   Q.wireCard = function (el) {
+    var opt = el.querySelector('[data-f=options]'), box = el.querySelector('[data-abcd]');
+    function redraw() {   // keep the ticks in step with the option lines; a line starting with * is ticked
+      var lines = opt.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean), cur = el.querySelector('[data-ok]:checked'), c = cur ? +cur.value : -1;
+      lines.forEach(function (s, k) { if (s.charAt(0) === '*') c = k; });
+      box.innerHTML = abcd(lines.map(function (s) { return s.replace(/^\*\s*/, ''); }), c < lines.length ? c : -1);
+      var need = el.querySelector('[data-need]'); if (need) need.hidden = c >= 0;
+    }
+    if (opt && box) { opt.addEventListener('input', redraw); box.addEventListener('change', function () { var need = el.querySelector('[data-need]'); if (need) need.hidden = true; }); }
     var up = el.querySelector('[data-unpic]'); if (up) up.onclick = function () { var w = el.querySelector('[data-pic]'); w.innerHTML = '<label class="f">Picture address (for example from Wikimedia Commons)<input data-f="image" type="url" value=""></label>'; };
     var k = el.querySelector('[data-f=kind]');
     k.onchange = function () {
       var v = k.value, show = { choice: v === 'mcq' || v === 'tf', written: v === 'short', marks: v !== 'info', qlabel: v !== 'info', ilabel: v === 'info', explain: v !== 'info' };
       Object.keys(show).forEach(function (n) { el.querySelectorAll('[data-show=' + n + ']').forEach(function (x) { x.hidden = !show[n]; }); });
       el.classList.toggle('qinfo', v === 'info');
-      if (v === 'tf' && !el.querySelector('[data-f=options]').value.trim()) el.querySelector('[data-f=options]').value = '*True\nFalse';
+      if (v === 'tf' && !el.querySelector('[data-f=options]').value.trim()) { el.querySelector('[data-f=options]').value = 'True\nFalse'; redraw(); }
     };
   };
   Q.readCard = function (el) {
     var v = function (f) { var x = el.querySelector('[data-f=' + f + ']'); return x ? x.value.trim() : ''; };
     var kind = v('kind'), correct = -1, lesson = !!el.querySelector('[data-f=section]');
+    var ticked = el.querySelector('[data-ok]:checked'); if (ticked) correct = +ticked.value;
     var options = kind === 'mcq' || kind === 'tf' ? v('options').split('\n').map(function (s) { return s.trim(); }).filter(Boolean).map(function (s, k) { if (s.charAt(0) === '*') { correct = k; return s.slice(1).trim(); } return s; }) : [];
+    if (correct >= options.length) correct = -1;
     var marks = parseInt(v('marks'), 10); marks = kind === 'info' ? 0 : isNaN(marks) ? 1 : Math.max(lesson ? 0 : 1, marks);
     return { id: el.dataset.id || null, ref: v('ref'), section: v('section') || null, kind: kind, prompt: v('prompt'), options: options, correct: correct, marks: marks,
       scheme: kind === 'short' ? v('scheme') : '', rubric: kind === 'short' ? v('rubric') : '', explanation: kind === 'info' ? '' : v('explanation'), image: v('image') };
@@ -345,7 +367,7 @@
     var name = q.kind === 'info' ? 'A reading block' + (q.section ? ' in ' + q.section : '') : 'Question ' + (q.ref || (q.section ? 'in ' + q.section : ''));
     if (!q.prompt && !(q.kind === 'info' && q.image)) return name + ' has no text.';
     if ((q.kind === 'mcq' || q.kind === 'tf') && q.options.length < 2) return name + ' needs at least two options.';
-    if ((q.kind === 'mcq' || q.kind === 'tf') && q.correct < 0) return name + ': put * in front of the correct option.';
+    if ((q.kind === 'mcq' || q.kind === 'tf') && q.correct < 0) return name + ': tick the correct answer (A, B, C or D).';
     return null;
   };
   /* save questions (new or edited) and their hidden answers; returns ids in order */
