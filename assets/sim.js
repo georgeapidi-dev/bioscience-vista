@@ -741,6 +741,47 @@
   };
 
   /* ===== DP1 HL · A2.3 Viruses simulators ===== */
+  /* Grade 10 evolution · peppered moth natural selection */
+  M.moth = {
+    title: 'Natural selection: peppered moths on light and dark trees',
+    html: function () { return '<div class="sim-c">' + select('mb', 'Tree bark', [['dark', 'Bark blackened by soot (polluted air)'], ['light', 'Pale bark with lichen (clean air)']]) + slider('mg', 'Generations', 0, 20, 20) + slider('ms', 'Strength of bird predation', 1, 3, 2) + '</div><svg viewBox="0 0 400 170" role="img" aria-label="Moths on bark"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r, first) {
+      var clicked = !first, dark = $(r, 'mb').value === 'dark', g = +$(r, 'mg').value, s = [0, 0.1, 0.2, 0.35][+$(r, 'ms').value], p = dark ? 0.05 : 0.9, hist = [p];   // p = frequency of DARK moths: rare before pollution; common when the air was cleaned up
+      for (var i = 0; i < g; i++) { var wD = dark ? 1 : 1 - s, wL = dark ? 1 - s : 1; var q = p * wD / (p * wD + (1 - p) * wL); if (clicked) q = Math.min(0.999, Math.max(0.001, q + (Math.random() - 0.5) * 0.04)); p = q; hist.push(p); }
+      var pd = p;
+      var svg = '<rect x="0" y="0" width="230" height="170" fill="' + (dark ? '#3f3f46' : '#e7e5e4') + '"/>';
+      for (var k = 0; k < 14; k++) svg += '<path d="M' + (10 + k * 16) + ' 0 v170" stroke="' + (dark ? '#27272a' : '#d6d3d1') + '" stroke-width="5"/>';
+      for (var m = 0; m < 20; m++) { var isDark = m < Math.round(pd * 20), x = 20 + (m * 47) % 190, y = 15 + (m * 29) % 140; svg += '<path d="M' + x + ' ' + y + ' l-14 -6 l2 12 z M' + x + ' ' + y + ' l14 -6 l-2 12 z" fill="' + (isDark ? '#18181b' : '#f5f5f4') + '" stroke="#71717a" stroke-width=".6"/>'; }
+      var pts = hist.map(function (v, i) { return (250 + i * (140 / 20)).toFixed(1) + ',' + (150 - v * 130).toFixed(1); }).join(' ');
+      svg += '<line x1="250" y1="150" x2="392" y2="150" stroke="#334155"/><line x1="250" y1="20" x2="250" y2="150" stroke="#334155"/><polyline points="' + pts + '" fill="none" stroke="#111827" stroke-width="3"/>';
+      svg += '<text x="320" y="166" text-anchor="middle" font-size="10">generations</text><text x="246" y="18" text-anchor="end" font-size="9">100%</text><text x="246" y="150" text-anchor="end" font-size="9">0</text><text x="320" y="12" text-anchor="middle" font-size="10">% dark moths</text>';
+      r.querySelector('svg').innerHTML = svg;
+      r.querySelector('.sim-out').innerHTML = '<b>Dark moths: ' + Math.round(pd * 100) + ' %</b> after ' + g + ' generation' + (g === 1 ? '' : 's') + '.<br>' +
+        (dark ? 'On sooty bark, pale moths stand out and are eaten by birds more often. Dark moths survive and REPRODUCE more, passing on the allele for dark colour, so it becomes more common.' : 'On pale bark (after clean-air laws), dark moths stand out and are eaten more often. Pale moths survive and reproduce more, so the dark allele becomes rarer again, as happened in Britain after the 1960s.') +
+        ' The moths did not change colour to match: the variation already existed, and the environment selected it. Individuals do not evolve; the POPULATION does.';
+    }
+  };
+
+  /* Grade 10 evolution · genetic drift in small and large populations */
+  M.gdrift = {
+    title: 'Genetic drift: chance changes in allele frequency',
+    html: function () { return '<div class="sim-c">' + select('dn', 'Population size', [['10', '10 individuals'], ['50', '50 individuals'], ['500', '500 individuals']]) + slider('dg', 'Generations', 10, 60, 40, 10) + '</div><svg viewBox="0 0 400 170" role="img" aria-label="Allele frequency over generations"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var N = +$(r, 'dn').value, G = +$(r, 'dg').value, cols = ['#2563eb', '#dc2626', '#16a34a', '#9333ea', '#ea580c'], svg = '', lost = 0, fixed = 0;
+      svg += '<line x1="40" y1="150" x2="390" y2="150" stroke="#334155"/><line x1="40" y1="15" x2="40" y2="150" stroke="#334155"/><text x="36" y="18" text-anchor="end" font-size="9">1.0</text><text x="36" y="86" text-anchor="end" font-size="9">0.5</text><text x="36" y="150" text-anchor="end" font-size="9">0</text><text x="215" y="166" text-anchor="middle" font-size="10">generations</text>';
+      for (var line = 0; line < 5; line++) {
+        var p = 0.5, pts = ['40,82.5'];
+        for (var g = 1; g <= G; g++) { var c = 0; for (var k = 0; k < 2 * N; k++) if (Math.random() < p) c++; p = c / (2 * N); pts.push((40 + g * 350 / G).toFixed(1) + ',' + (150 - p * 135).toFixed(1)); }
+        if (p === 0) lost++; if (p === 1) fixed++;
+        svg += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + cols[line] + '" stroke-width="2"/>';
+      }
+      r.querySelector('svg').innerHTML = svg;
+      r.querySelector('.sim-out').innerHTML = 'Five separate populations of ' + N + ', each starting with allele A at 0.5. No selection acts: changes are only due to CHANCE (which individuals happen to reproduce).<br>' +
+        (lost + fixed ? '<b>' + (lost + fixed) + ' of 5</b> populations lost one allele completely (frequency 0 or 1). ' : '') +
+        (N <= 10 ? 'In a very small population, drift is strong: alleles are quickly lost or fixed, so variation is lost.' : N <= 50 ? 'Drift is noticeable: frequencies wander away from 0.5.' : 'In a large population, frequencies stay close to 0.5: drift is weak.') + ' Press Run again: the result changes every time, because drift is random.';
+    }
+  };
+
   /* Grade 10 biotechnology · yeast fermentation and temperature */
   M.ferment = {
     title: 'Yeast fermentation: how temperature changes the rate',
