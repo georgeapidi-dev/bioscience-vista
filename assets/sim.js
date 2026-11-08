@@ -740,6 +740,86 @@
   };
 
   /* ===== DP1 HL · A2.3 Viruses simulators ===== */
+  /* A2.2.4–A2.2.9 · Compare cell types, including atypical eukaryotic cells */
+  var CT = {
+    // name, size, [cell wall, nucleus, mitochondria, chloroplasts, large permanent vacuole, centrioles, ribosomes, DNA form, nuclei per cell], note, drawing
+    pro: ['Prokaryote (bacterium)', '1–5 µm', ['yes: peptidoglycan', 'no: nucleoid region, naked DNA', 'no', 'no', 'no', 'no', '70S', 'circular, naked + plasmids', '0'], 'No membrane-bound organelles. Some have a capsule, pili and flagella.', 'pro'],
+    animal: ['Animal cell', '10–30 µm', ['no', 'yes', 'yes', 'no', 'no (small temporary vacuoles)', 'yes', '80S (70S in mitochondria)', 'linear, with histones', '1'], 'Irregular shape; stores glycogen; may have cilia or flagella.', 'animal'],
+    plant: ['Plant cell', '10–100 µm', ['yes: cellulose', 'yes', 'yes', 'yes (in green tissues)', 'yes', 'no', '80S (70S in mitochondria and chloroplasts)', 'linear, with histones', '1'], 'Fixed, often box shape; stores starch.', 'plant'],
+    fungus: ['Fungal cell (yeast)', '3–10 µm', ['yes: chitin', 'yes', 'yes', 'no', 'yes (often)', 'no', '80S', 'linear, with histones', '1'], 'Heterotroph; stores glycogen; no chloroplasts.', 'fungus'],
+    muscle: ['Skeletal muscle fibre (atypical)', 'up to 300 mm long', ['no', 'yes: MANY', 'yes: very many', 'no', 'no', 'yes', '80S', 'linear, with histones', 'many (multinucleate)'], 'Formed when many cells FUSE; one long fibre with many nuclei and continuous cytoplasm. Challenges the idea that a cell has one nucleus.', 'muscle'],
+    hypha: ['Aseptate fungal hypha (atypical)', 'long tubes, can be metres', ['yes: chitin', 'yes: MANY', 'yes', 'no', 'yes', 'no', '80S', 'linear, with histones', 'many'], 'No cross-walls (septa): a continuous tube of cytoplasm with many nuclei.', 'hypha'],
+    rbc: ['Red blood cell, mammal (atypical)', '7–8 µm', ['no', 'no: lost as it matures', 'no', 'no', 'no', 'no', 'none when mature', 'none', '0'], 'Biconcave disc packed with haemoglobin; no nucleus gives more room for haemoglobin, but it cannot divide or repair itself (lives about 120 days).', 'rbc'],
+    sieve: ['Phloem sieve tube element (atypical)', 'about 20 µm wide', ['yes: cellulose', 'no: lost as it matures', 'few', 'no', 'no', 'no', 'few', 'none', '0'], 'Very little cytoplasm; sieve plates join elements end to end. Depends on a companion cell next to it to stay alive.', 'sieve']
+  };
+  function drawCell(k) {
+    var s = '';
+    if (k === 'pro') s = '<rect x="110" y="40" width="180" height="90" rx="45" fill="#fef3c7" stroke="#92400e" stroke-width="5"/><rect x="104" y="34" width="192" height="102" rx="51" fill="none" stroke="#d97706" stroke-dasharray="4 4"/><path d="M150 85 q20 -25 40 0 t40 0 t20 -10" fill="none" stroke="#7c3aed" stroke-width="3"/><circle cx="250" cy="105" r="8" fill="none" stroke="#db2777" stroke-width="2.5"/><path d="M290 85 q30 -10 50 10 t40 5" fill="none" stroke="#475569" stroke-width="2"/>' + dots(140, 60, 120, 60);
+    else if (k === 'animal') s = '<path d="M120 50 q80 -30 160 0 q30 40 0 80 q-80 30 -160 0 q-30 -40 0 -80z" fill="#fde4f1" stroke="#be185d" stroke-width="2.5"/><circle cx="200" cy="88" r="22" fill="#ede5ff" stroke="#6d28d9" stroke-width="2"/><ellipse cx="150" cy="70" rx="14" ry="7" fill="#fecaca" stroke="#b91c1c"/><ellipse cx="250" cy="110" rx="14" ry="7" fill="#fecaca" stroke="#b91c1c"/>' + dots(130, 60, 140, 60);
+    else if (k === 'plant') s = '<rect x="110" y="30" width="180" height="110" fill="#dcfce7" stroke="#166534" stroke-width="6"/><rect x="150" y="50" width="100" height="70" rx="12" fill="#e0f2fe" stroke="#0369a1" stroke-width="1.5"/><circle cx="130" cy="60" r="14" fill="#ede5ff" stroke="#6d28d9" stroke-width="2"/>' + [[270, 55], [270, 115], [135, 120]].map(function (p) { return '<ellipse cx="' + p[0] + '" cy="' + p[1] + '" rx="11" ry="6" fill="#4ade80" stroke="#166534"/>'; }).join('');
+    else if (k === 'fungus') s = '<ellipse cx="200" cy="85" rx="80" ry="55" fill="#fef9c3" stroke="#854d0e" stroke-width="5"/><circle cx="185" cy="80" r="16" fill="#ede5ff" stroke="#6d28d9" stroke-width="2"/><circle cx="225" cy="98" r="14" fill="#e0f2fe" stroke="#0369a1"/><ellipse cx="270" cy="60" rx="22" ry="16" fill="#fef9c3" stroke="#854d0e" stroke-width="4"/>';
+    else if (k === 'muscle') { s = '<rect x="20" y="55" width="360" height="60" rx="12" fill="#fecdd3" stroke="#9f1239" stroke-width="2.5"/>'; for (var i = 30; i < 380; i += 8) s += '<line x1="' + i + '" y1="58" x2="' + i + '" y2="112" stroke="#f43f5e" stroke-width="' + (i % 16 ? 1 : 2.5) + '"/>'; [60, 140, 220, 300].forEach(function (x) { s += '<ellipse cx="' + x + '" cy="60" rx="14" ry="5" fill="#6d28d9"/>'; }); }
+    else if (k === 'hypha') { s = '<path d="M20 85 h300 q40 0 60 -40" fill="none" stroke="#854d0e" stroke-width="40" stroke-linecap="round"/><path d="M20 85 h300 q40 0 60 -40" fill="none" stroke="#fef9c3" stroke-width="32" stroke-linecap="round"/>'; [50, 110, 170, 230, 290].forEach(function (x) { s += '<circle cx="' + x + '" cy="85" r="7" fill="#6d28d9"/>'; }); }
+    else if (k === 'rbc') s = '<ellipse cx="200" cy="85" rx="70" ry="60" fill="#ef4444" stroke="#991b1b" stroke-width="3"/><ellipse cx="200" cy="85" rx="32" ry="27" fill="#fca5a5"/><text x="200" y="160" text-anchor="middle" font-size="12">biconcave disc, no nucleus</text>';
+    else if (k === 'sieve') s = '<rect x="80" y="20" width="110" height="140" fill="#ecfccb" stroke="#3f6212" stroke-width="5"/><rect x="190" y="20" width="60" height="140" fill="#dcfce7" stroke="#3f6212" stroke-width="3"/><circle cx="220" cy="90" r="12" fill="#ede5ff" stroke="#6d28d9" stroke-width="2"/>' + [92, 112, 132, 152, 172].map(function (x) { return '<circle cx="' + x + '" cy="20" r="4" fill="#fff" stroke="#3f6212"/>'; }).join('') + '<text x="135" y="178" text-anchor="middle" font-size="11">sieve tube element</text><text x="220" y="178" text-anchor="middle" font-size="11">companion cell</text>';
+    return s;
+    function dots(x, y, w, h) { var d = ''; for (var j = 0; j < 14; j++) d += '<circle cx="' + (x + (j * 37) % w) + '" cy="' + (y + (j * 23) % h) + '" r="2" fill="#334155"/>'; return d; }
+  }
+  M.cellcompare = {
+    title: 'Compare cells: prokaryote, plant, animal, fungus and atypical cells',
+    html: function () { var o = Object.keys(CT).map(function (k) { return [k, CT[k][0]]; });
+      return '<div class="sim-c">' + select('ca', 'Cell A', o) + select('cb', 'Cell B', o) + '</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><svg class="sa" viewBox="0 0 400 185" role="img" aria-label="Cell A"></svg><svg class="sb" viewBox="0 0 400 185" role="img" aria-label="Cell B"></svg></div><div class="sim-out" aria-live="polite" style="overflow-x:auto"></div>'; },
+    run: function (r, first) {
+      if (first) $(r, 'cb').value = 'plant';
+      var ka = $(r, 'ca').value, kb = $(r, 'cb').value, a = CT[ka], b = CT[kb], rows = ['Cell wall', 'Nucleus', 'Mitochondria', 'Chloroplasts', 'Large permanent vacuole', 'Centrioles', 'Ribosomes', 'DNA', 'Nuclei per cell'];
+      r.querySelector('.sa').innerHTML = drawCell(a[4]); r.querySelector('.sb').innerHTML = drawCell(b[4]);
+      var h = '<table style="border-collapse:collapse;width:100%;font-size:.9rem"><tr><th></th><th style="text-align:left;padding:4px">' + E(a[0]) + '</th><th style="text-align:left;padding:4px">' + E(b[0]) + '</th></tr><tr style="border-top:1px solid #cbd5e1"><th style="text-align:left;padding:4px">Typical size</th><td style="padding:4px">' + E(a[1]) + '</td><td style="padding:4px">' + E(b[1]) + '</td></tr>';
+      rows.forEach(function (n, i) { var x = a[2][i], y = b[2][i], diff = x !== y; h += '<tr style="border-top:1px solid #cbd5e1"><th style="text-align:left;padding:4px">' + n + '</th><td style="padding:4px' + (diff ? ';background:#fef9c3' : '') + '">' + E(x) + '</td><td style="padding:4px' + (diff ? ';background:#fef9c3' : '') + '">' + E(y) + '</td></tr>'; });
+      r.querySelector('.sim-out').innerHTML = h + '</table><p style="margin:6px 0 0"><b>' + E(a[0]) + ':</b> ' + E(a[3]) + '<br><b>' + E(b[0]) + ':</b> ' + E(b[3]) + '</p><p class="small" style="margin:4px 0 0">Yellow = a difference. Drawings are simplified and not to scale.</p>';
+    }
+  };
+
+  /* A2.2.12 · Endosymbiosis, step by step */
+  var ENDO = ['A large anaerobic cell (an archaean-like host) with a nucleus and endomembranes, living alongside aerobic bacteria.',
+    'Endocytosis: the host engulfs an aerobic bacterium in a vesicle, but does not digest it.',
+    'The bacterium survives and respires aerobically inside the host, supplying ATP; the host supplies food and protection. Both benefit (mutualism).',
+    'Over many generations, most of the bacterium\'s genes move to the host nucleus. It becomes a MITOCHONDRION: double membrane, own circular DNA, 70S ribosomes, divides by binary fission. All eukaryotes descend from this cell.',
+    'Later, in one lineage, a cell with mitochondria engulfs a photosynthetic cyanobacterium.',
+    'The cyanobacterium becomes a CHLOROPLAST with the same evidence: double membrane, circular DNA, 70S ribosomes, binary fission. This lineage gave rise to algae and plants.'];
+  M.endosym = {
+    title: 'Endosymbiosis: the origin of mitochondria and chloroplasts',
+    html: function () { return '<div class="sim-c">' + slider('es', 'Stage (1 to 6)', 1, 6, 1) + '</div><svg viewBox="0 0 400 200" role="img" aria-label="Endosymbiosis stage"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var s = +$(r, 'es').value, g = '';
+      g += '<ellipse cx="190" cy="105" rx="130" ry="85" fill="#fff7ed" stroke="#9a3412" stroke-width="3"/><circle cx="150" cy="100" r="28" fill="#ede5ff" stroke="#6d28d9" stroke-width="2"/><text x="150" y="104" text-anchor="middle" font-size="11">nucleus</text>';
+      function bact(x, y, col, inside, label) { return '<ellipse cx="' + x + '" cy="' + y + '" rx="26" ry="13" fill="' + col + '" stroke="#334155" stroke-width="2"/>' + (inside ? '<ellipse cx="' + x + '" cy="' + y + '" rx="31" ry="18" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="' + (inside === 2 ? '0' : '4 3') + '"/>' : '') + '<circle cx="' + (x - 6) + '" cy="' + y + '" r="5" fill="none" stroke="#dc2626" stroke-width="1.5"/>' + (label ? '<text x="' + x + '" y="' + (y + 32) + '" text-anchor="middle" font-size="11">' + label + '</text>' : ''); }
+      if (s === 1) g += bact(355, 40, '#fecaca', 0, 'aerobic bacterium');
+      if (s === 2) g += bact(290, 70, '#fecaca', 1, 'in a vesicle');
+      if (s >= 3) g += bact(230, 65, '#fecaca', s >= 4 ? 2 : 1, s >= 4 ? 'mitochondrion' : 'respires: ATP');
+      if (s >= 4) g += bact(240, 150, '#fecaca', 2, '');
+      if (s === 5) g += bact(355, 160, '#86efac', 0, 'cyanobacterium');
+      if (s === 6) g += bact(110, 160, '#86efac', 2, 'chloroplast');
+      r.querySelector('svg').innerHTML = g;
+      r.querySelector('.sim-out').innerHTML = '<b>Stage ' + s + '.</b> ' + E(ENDO[s - 1]) + (s >= 4 ? '<br><b>Evidence:</b> double membrane (the inner one from the bacterium, the outer from the vesicle) · own circular, naked DNA · 70S ribosomes · binary fission · DNA sequences most similar to bacteria.' : '') + '<br><span class="small">Red circle = circular DNA.</span>';
+    }
+  };
+
+  /* A2.2.13 · Differentiation: same genome, different genes expressed */
+  var GENES = ['Respiration enzymes', 'Ribosome proteins', 'Haemoglobin', 'Insulin', 'Myosin and actin', 'Keratin', 'Rhodopsin', 'Neurotransmitter enzymes', 'Antibody', 'Digestive enzymes'];
+  var DIFF = { rbc: ['Red blood cell (as it develops)', [0, 1, 2]], beta: ['Beta cell, pancreas', [0, 1, 3]], muscle: ['Muscle cell', [0, 1, 4]], skin: ['Skin cell', [0, 1, 5]], rod: ['Rod cell, retina', [0, 1, 6]], neuron: ['Neurone', [0, 1, 7]], plasma: ['Plasma B cell', [0, 1, 8]], gut: ['Gland cell, stomach', [0, 1, 9]] };
+  M.express = {
+    title: 'Differentiation: same genome, different genes switched on',
+    html: function () { return '<div class="sim-c">' + select('dc', 'Specialised cell', Object.keys(DIFF).map(function (k) { return [k, DIFF[k][0]]; })) + '</div><svg viewBox="0 0 400 72" role="img" aria-label="Genes in the genome"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var d = DIFF[$(r, 'dc').value], on = d[1], g = '<text x="4" y="14" font-size="12">The same DNA in every cell of the body:</text>';
+      GENES.forEach(function (n, i) { var x = 4 + i * 39, yes = on.indexOf(i) >= 0; g += '<rect x="' + x + '" y="24" width="36" height="40" rx="5" fill="' + (yes ? '#22c55e' : '#e2e8f0') + '" stroke="#334155"/><text x="' + (x + 18) + '" y="50" text-anchor="middle" font-size="13" font-weight="700">' + (i + 1) + '</text>'; });
+
+      r.querySelector('svg').innerHTML = g;
+      r.querySelector('.sim-out').innerHTML = '<span style="color:#15803d">■</span> green = switched ON (expressed) in a ' + E(d[0].toLowerCase()) + '; grey = present but switched off.<br><b>Expressed:</b> ' + on.map(function (i) { return (i + 1) + '. ' + GENES[i]; }).join('; ') + '.<br>Genes 1 and 2 are "housekeeping" genes, needed by every cell. The specialised gene gives the cell its structure and function. ' +
+        'Every cell has all ten genes: differentiation changes which genes are EXPRESSED, not which genes the cell has. Signals (for example its position in the embryo) decide the pattern.';
+    }
+  };
+
   /* A2.3.2 · Compare viruses: genome, capsid, envelope and host */
   var VIR = {
     lambda: ['Bacteriophage lambda', 'DNA', 'double-stranded', 'linear in the virion (closes into a circle in the host)', 'about 48 500 base pairs', 'icosahedral head and a long tail', 'not enveloped', 'the bacterium E. coli', 'about 60 nm head', 'Lytic or lysogenic: its DNA can join the bacterial chromosome as a prophage.'],
