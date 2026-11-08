@@ -11,14 +11,111 @@
   }
 
   /* ---------- 1. read a file into lines of text ---------- */
+  /* pictures found in files are kept here; the text holds a [[img:N]] marker where each one belongs */
+  Q.IMGS = [];
+  function keepImg(url) { Q.IMGS.push(url); return '[[img:' + (Q.IMGS.length - 1) + ']]'; }
+  function shrink(blob, max) {   // any picture → JPEG data URL no wider than max px (keeps lessons small)
+    return new Promise(function (ok, bad) {
+      var u = URL.createObjectURL(blob), im = new Image();
+      im.onload = function () { var k = Math.min(1, (max || 1000) / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); ok(c.toDataURL('image/jpeg', 0.82)); };
+      im.onerror = function () { URL.revokeObjectURL(u); bad(new Error('This picture could not be opened. Try saving it as JPG or PNG.')); };
+      im.src = u;
+    });
+  }
+  function zip(file) { return need('/assets/jszip.min.js').then(function () { return file.arrayBuffer(); }).then(function (b) { return window.JSZip.loadAsync(b); }); }
+  function xml(t) { return new DOMParser().parseFromString(t, 'application/xml'); }
+  function byTag(doc, tag) { var all = doc.getElementsByTagName('*'), out = []; for (var i = 0; i < all.length; i++) if (all[i].localName === tag) out.push(all[i]); return out; }
+  function num(a, b) { return (+(/(\d+)\.xml$/.exec(a) || [0, 0])[1]) - (+(/(\d+)\.xml$/.exec(b) || [0, 0])[1]); }
+
+  /* ---------- 1. read a file into lines of text (pictures become [[img:N]] lines) ---------- */
   Q.readFile = function (file) {
-    var name = (file.name || '').toLowerCase();
-    if (/\.pdf$/.test(name) || file.type === 'application/pdf') return readPdf(file);
-    if (/\.docx$/.test(name)) return readDocx(file);
-    if (/\.(txt|md)$/.test(name)) return file.text().then(function (t) { return clean(t.split(/\r?\n/)); });
-    if (/\.doc$/.test(name)) return Promise.reject(new Error('Old .doc files cannot be read. In Word choose File → Save As → Word Document (.docx), then upload that.'));
-    return Promise.reject(new Error('Please upload a PDF or a Word (.docx) file.'));
+    var name = (file.name || '').toLowerCase(), ext = (/\.([a-z0-9]+)$/.exec(name) || [0, ''])[1], type = file.type || '';
+    if (ext === 'pdf' || type === 'application/pdf') return readPdf(file);
+    if (ext === 'docx' || ext === 'dotx') return readDocx(file);
+    if (ext === 'pptx' || ext === 'potx' || ext === 'ppsx') return readPptx(file);
+    if (ext === 'xlsx' || ext === 'xlsm') return readXlsx(file);
+    if (ext === 'odt' || ext === 'odp' || ext === 'ods') return readOdf(file);
+    if (ext === 'csv' || ext === 'tsv') return file.text().then(function (t) { return clean(t.split(/\r?\n/).map(function (l) { return l.split(ext === 'tsv' ? '\t' : /,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(function (c) { return c.replace(/^"|"$/g, '').trim(); }).filter(Boolean).join(' | '); })); });
+    if (ext === 'html' || ext === 'htm') return file.text().then(readHtml);
+    if (ext === 'rtf') return file.text().then(function (t) { return clean(t.replace(/\\par[d]?/g, '\n').replace(/\{\\\*[^{}]*\}|\\[a-z]+-?\d* ?|[{}]/gi, '').split(/\r?\n/)); });
+    if (/^image\//.test(type) || /^(png|jpe?g|gif|webp|bmp|svg|heic|avif)$/.test(ext))
+      return shrink(file, 1200).then(function (u) { return [keepImg(u)]; });
+    if (/^(video|audio)\//.test(type) || /^(mp4|mov|avi|mkv|webm|mp3|wav|m4a|ogg)$/.test(ext))
+      return Promise.reject(new Error('Videos and sound files cannot be turned into text. Upload the video to YouTube and paste its link into the objectives box (or into the Explore step after building); it will play inside the lesson.'));
+    if (ext === 'doc' || ext === 'ppt' || ext === 'xls')
+      return Promise.reject(new Error('Old .' + ext + ' files cannot be read. Open it and choose File → Save As → ' + ({ doc: 'Word Document (.docx)', ppt: 'PowerPoint Presentation (.pptx)', xls: 'Excel Workbook (.xlsx)' })[ext] + ', then upload that.'));
+    if (/\.(zip|exe|dmg|apk|iso|rar|7z)$/.test(name)) return Promise.reject(new Error('This kind of file cannot be turned into a lesson. Upload a document, presentation, spreadsheet, web page, text file or picture.'));
+    return file.text().then(function (t) {   // anything else: use it if it is readable text
+      var bad = (t.slice(0, 4000).match(/[\u0000-\u0008\u000e-\u001f�]/g) || []).length;
+      if (bad > 20 || !t.trim()) throw new Error('This file is not a document the site can read. Upload a PDF, Word, PowerPoint, Excel, web page, text file or picture.');
+      return clean(t.split(/\r?\n/));
+    });
   };
+  function readHtml(t) {
+    var d = new DOMParser().parseFromString(t, 'text/html'), out = [];
+    d.querySelectorAll('script,style,nav,footer,noscript').forEach(function (e) { e.remove(); });
+    d.body && d.body.querySelectorAll('h1,h2,h3,h4,p,li,td,th,img,pre,blockquote').forEach(function (e) {
+      if (e.tagName === 'IMG') { var src = e.getAttribute('src') || ''; if (/^(https?:|data:image)/.test(src)) out.push(keepImg(src)); return; }
+      if (e.closest('li,td,th,p') && e.closest('li,td,th,p') !== e) return;
+      var tx = e.textContent.replace(/\s+/g, ' ').trim(); if (!tx) return;
+      out.push(/^H[1-4]$/.test(e.tagName) ? '**' + tx + '**' : (e.tagName === 'LI' ? '• ' : '') + tx);
+    });
+    return clean(out.length ? out : (d.body ? d.body.textContent : t).split(/\n/));
+  }
+  function readPptx(file) {   // one block per slide: title in bold, bullet text, then the slide's first picture
+    return zip(file).then(function (z) {
+      var slides = Object.keys(z.files).filter(function (n) { return /^ppt\/slides\/slide\d+\.xml$/.test(n); }).sort(num);
+      if (!slides.length) throw new Error('No slides found in this presentation.');
+      return Promise.all(slides.map(function (n) {
+        var rel = n.replace('slides/', 'slides/_rels/') + '.rels';
+        return Promise.all([z.file(n).async('string'), z.file(rel) ? z.file(rel).async('string') : '']).then(function (x) {
+          var doc = xml(x[0]), paras = byTag(doc, 'p').map(function (p) { return byTag(p, 't').map(function (t) { return t.textContent; }).join('').trim(); }).filter(Boolean);
+          var pic = byTag(doc, 'blip')[0], rid = pic && (pic.getAttribute('r:embed') || pic.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed')), target = null;
+          if (rid && x[1]) { var r = byTag(xml(x[1]), 'Relationship').filter(function (e) { return e.getAttribute('Id') === rid; })[0]; if (r) target = 'ppt/' + r.getAttribute('Target').replace(/^\.\.\//, ''); }
+          var media = target && z.file(target) && /\.(png|jpe?g|gif|bmp|webp)$/i.test(target) ? z.file(target).async('blob').then(function (b) { return shrink(b, 1000).catch(function () { return null; }); }) : Promise.resolve(null);
+          var nr = x[1] ? byTag(xml(x[1]), 'Relationship').filter(function (e) { return /notesSlide$/.test(e.getAttribute('Type') || ''); })[0] : null, np = nr && 'ppt/' + nr.getAttribute('Target').replace(/^\.\.\//, '');
+          var notes = np && z.file(np) ? z.file(np).async('string').then(function (t) { return byTag(xml(t), 'p').map(function (p) { return byTag(p, 't').map(function (e) { return e.textContent; }).join('').trim(); }).filter(function (t) { return t && !/^\d+$/.test(t); }); }) : Promise.resolve([]);   // speaker notes
+          return Promise.all([media, notes]).then(function (y) { return { paras: paras, img: y[0], notes: y[1] }; });
+        });
+      })).then(function (all) {
+        var lines = [];
+        all.forEach(function (sl, i) {
+          if (!sl.paras.length && !sl.img && !(sl.notes || []).length) return;
+          lines.push('**Slide ' + (i + 1) + (sl.paras[0] ? ': ' + sl.paras[0] : '') + '**');
+          sl.paras.slice(1).forEach(function (t) { lines.push(/^[•\-–]/.test(t) || /^\d+[\.\)]\s/.test(t) ? t : '• ' + t); });
+          if (sl.img) lines.push(keepImg(sl.img));
+          (sl.notes || []).forEach(function (t) { lines.push('Note: ' + t); });
+        });
+        return clean(lines);
+      });
+    });
+  }
+  function readXlsx(file) {
+    return zip(file).then(function (z) {
+      var sheets = Object.keys(z.files).filter(function (n) { return /^xl\/worksheets\/sheet\d+\.xml$/.test(n); }).sort(num);
+      return Promise.all([z.file('xl/sharedStrings.xml') ? z.file('xl/sharedStrings.xml').async('string') : ''].concat(sheets.map(function (n) { return z.file(n).async('string'); }))).then(function (x) {
+        var shared = x[0] ? byTag(xml(x[0]), 'si').map(function (si) { return byTag(si, 't').map(function (t) { return t.textContent; }).join(''); }) : [], lines = [];
+        x.slice(1).forEach(function (sx, k) {
+          if (sheets.length > 1) lines.push('**Sheet ' + (k + 1) + '**');
+          byTag(xml(sx), 'row').forEach(function (row) {
+            var cells = byTag(row, 'c').map(function (c) { var v = byTag(c, 'v')[0], is = byTag(c, 't')[0], t = c.getAttribute('t');
+              return t === 's' && v ? shared[+v.textContent] || '' : t === 'inlineStr' && is ? is.textContent : v ? v.textContent : ''; }).filter(function (v) { return String(v).trim(); });
+            if (cells.length) lines.push(cells.join(' | '));
+          });
+        });
+        return clean(lines);
+      });
+    });
+  }
+  function readOdf(file) {
+    return zip(file).then(function (z) { if (!z.file('content.xml')) throw new Error('This OpenDocument file could not be read.'); return z.file('content.xml').async('string'); }).then(function (t) {
+      var d = xml(t), out = [];
+      byTag(d, 'h').concat(byTag(d, 'p')).sort(function (a, b) { return a.compareDocumentPosition(b) & 2 ? 1 : -1; }).forEach(function (e) {
+        if (e.parentNode && e.parentNode.localName === 'p') return; var tx = e.textContent.replace(/\s+/g, ' ').trim(); if (tx) out.push(e.localName === 'h' ? '**' + tx + '**' : tx); });
+      return clean(out);
+    });
+  }
   function readPdf(file) {
     return need('/assets/pdf.min.js').then(function () {
       var lib = window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = '/assets/pdf.worker.min.js';
@@ -35,8 +132,12 @@
           rows.sort(function (a, b) { return b.y - a.y; }).forEach(function (r) { lines.push(r.bits.sort(function (a, b) { return a.x - b.x; }).map(function (b) { return b.s; }).join(' ')); });
         });
         var out = clean(lines);
-        if (out.join('').length < 40) throw new Error('This PDF has no readable text (it may be a scanned image). Try the Word version, or paste the questions into the box instead.');
-        return out;
+        if (out.join('').length >= 40) return out;
+        // scanned PDF (pictures only): show the first pages as pictures in the lesson
+        var pg = []; for (var j = 1; j <= Math.min(pdf.numPages, 8); j++) pg.push(j);
+        return Promise.all(pg.map(function (n) { return pdf.getPage(n).then(function (page) { var vp = page.getViewport({ scale: 1.4 }), c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+          return page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise.then(function () { return new Promise(function (ok) { c.toBlob(ok, 'image/jpeg', 0.85); }); }).then(function (b) { return shrink(b, 1100); }); }); }))
+          .then(function (urls) { return urls.map(function (u, i) { return ['**Page ' + (i + 1) + '**', keepImg(u)]; }).reduce(function (a, b) { return a.concat(b); }, []); });
       });
     });
   }
@@ -219,9 +320,11 @@
       '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Mark scheme: one marking point per line (each line = 1 mark). Use / between alternatives and + when all words are needed. Students never see this.<textarea data-f="scheme" rows="' + Math.max(3, String(q.scheme || '').split('\n').length + 1) + '" placeholder="sugar-phosphate backbone\nbases pair A+T / C+G\nhydrogen bonds between bases">' + E(q.scheme || '') + '</textarea></label>' +
       '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Rubric / level descriptors (optional, for long answers), e.g. "3-4: clear explanation with examples"<textarea data-f="rubric" rows="' + Math.max(2, String(q.rubric || '').split('\n').length + 1) + '" placeholder="1-2: identifies a relevant factor\n3-4: explains with scientific terms\n5-6: detailed, linked explanation with evidence">' + E(q.rubric || '') + '</textarea></label>' +
       '<details' + (info && q.image ? ' open' : '') + '><summary class="small">' + (info ? 'Picture (optional)' : 'Explanation and picture (optional)') + '</summary><label class="f" data-show="explain"' + (info ? ' hidden' : '') + '>Explanation shown to students after marking<textarea data-f="explanation" rows="2">' + E(q.explanation || '') + '</textarea></label>' +
-      '<label class="f">Picture address (for example from Wikimedia Commons)<input data-f="image" type="url" value="' + E(q.image || '') + '"></label></details></article>';
+      (/^data:image/.test(q.image || '') ? '<div class="row2 small" data-pic><img src="' + E(q.image) + '" alt="" style="max-height:110px;max-width:60%;border-radius:8px;border:1px solid var(--line)"><span>Picture from your file <button type="button" class="btn sm" data-unpic>Remove</button></span><input data-f="image" type="hidden" value="' + E(q.image) + '"></div>'
+        : '<label class="f">Picture address (for example from Wikimedia Commons)<input data-f="image" type="url" value="' + E(q.image || '') + '"></label>') + '</details></article>';
   };
   Q.wireCard = function (el) {
+    var up = el.querySelector('[data-unpic]'); if (up) up.onclick = function () { var w = el.querySelector('[data-pic]'); w.innerHTML = '<label class="f">Picture address (for example from Wikimedia Commons)<input data-f="image" type="url" value=""></label>'; };
     var k = el.querySelector('[data-f=kind]');
     k.onchange = function () {
       var v = k.value, show = { choice: v === 'mcq' || v === 'tf', written: v === 'short', marks: v !== 'info', qlabel: v !== 'info', ilabel: v === 'info', explain: v !== 'info' };
@@ -276,7 +379,7 @@
     // pull questions and reading text out of an uploaded worksheet or notes
     var fileQs = [], intro = [];
     if (fileLines && fileLines.length) {
-      var lines = Q.clean(fileLines); fileQs = Q.parsePaper(lines);
+      var lines = Q.clean(fileLines), IMG = /^\[\[img:(\d+)\]\]$/; fileQs = Q.parsePaper(lines.filter(function (l) { return !IMG.test(l); }));
       if (schemeLines && schemeLines.length) Q.applyScheme(fileQs, Q.parseScheme(schemeLines));
       var firstQ = lines.findIndex(function (l) { return /^(?:(?:question|q)\s*)?1\s*[\.\):]\s/i.test(l); });
       intro = (firstQ < 0 ? lines : lines.slice(0, firstQ)).filter(function (l) { return !/^(name|class|date)\s*[:_]/i.test(l); });
@@ -292,10 +395,15 @@
     // 2. Explore: material from the file, or a space for the teacher's notes / video / simulation
     if (intro.length) {
       var buf = [];
-      intro.forEach(function (l) { buf.push(l); if (buf.join(' ').length > 700) { add({ section: 'Explore', kind: 'info', marks: 0, prompt: buf.join('\n') }); buf = []; } });
-      if (buf.length) add({ section: 'Explore', kind: 'info', marks: 0, prompt: buf.join('\n') });
+      var flush = function (img) {   // one reading card per slide or ~700 characters; a picture joins the card it belongs to
+        if (buf.length) { add({ section: 'Explore', kind: 'info', marks: 0, prompt: buf.join('\n'), image: img || '' }); buf = []; return; }
+        if (!img) return; var last = items[items.length - 1];
+        if (last && last.kind === 'info' && last.section === 'Explore' && !last.image) last.image = img; else add({ section: 'Explore', kind: 'info', marks: 0, prompt: 'Study this picture carefully.', image: img });
+      };
+      intro.forEach(function (l) { var m = IMG.exec(l); if (m) return flush(Q.IMGS[+m[1]]); if (/^\*\*/.test(l) && buf.length) flush(); buf.push(l); if (buf.join(' ').length > 700) flush(); });
+      flush();
     } else add({ section: 'Explore', kind: 'info', marks: 0, prompt: 'Explore: read the notes, watch the video or try the simulation below.\n\n(Teacher: replace this with your notes, and paste a YouTube or simulation link on its own line to embed it.)' });
-    add({ section: 'Explore', marks: 3, prompt: 'Write down three key facts or ideas you found while exploring.', scheme: '' });
+    add({ section: 'Explore', marks: 3, prompt: items.some(function (q) { return q.image; }) ? 'Look at the pictures and notes above. Write down three key facts or ideas they show.' : 'Write down three key facts or ideas you found while exploring.', scheme: '' });
     // 3–5. questions from the file, sorted into Test / Explain / Challenge by their marks
     fileQs.forEach(function (q) { q.section = q.kind !== 'short' || q.marks <= 2 ? 'Test' : q.marks <= 4 ? 'Explain' : 'Challenge'; add(q); });
     // objective-based questions where the file did not supply them

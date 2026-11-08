@@ -47,7 +47,9 @@
           return lessonCard(row); }).join('') + '</div></section>' : '';
         if (!s) { app.innerHTML = il || '<p class="emptybox">No learning content has been published yet.</p>'; return; }
         var tops = topics.filter(function (t) { return t.subject_id === s.id && !t.parent_id; }).filter(match).filter(function (t) { return !onlyLessons || count(t); });
-        app.innerHTML = il + '<div class="tabs" role="tablist">' + subjects.map(function (z) { return '<button role="tab" aria-selected="' + (z === s) + '" data-s="' + E(z.slug) + '" style="' + (z === s ? 'background:' + E(z.colour) + ';color:#fff' : '') + '">' + E(z.name) + '</button>'; }).join('') + '</div>' +
+        var make = me.staff ? '<div class="panel tint row2 lmake"><span><b>Teachers:</b> turn any file (PDF, Word, PowerPoint, Excel, web page, text or pictures) into an interactive six-step lesson. Use <b>＋ Add lesson</b> in a subtopic to file it there.</span><a class="btn main sm" href="/staff/#lessons/new">✨ Create an interactive lesson from a file</a></div>' : '';
+        var addHere = function (t) { return me.staff ? '<a class="addles small" href="/staff/#lessons/new/' + t.id + '">＋ Add lesson</a>' : ''; };
+        app.innerHTML = make + il + '<div class="tabs" role="tablist">' + subjects.map(function (z) { return '<button role="tab" aria-selected="' + (z === s) + '" data-s="' + E(z.slug) + '" style="' + (z === s ? 'background:' + E(z.colour) + ';color:#fff' : '') + '">' + E(z.name) + '</button>'; }).join('') + '</div>' +
           '<div class="row2"><input id="q" type="search" placeholder="Search topics and lessons" value="' + E(q) + '" style="max-width:340px" aria-label="Search topics and lessons">' +
           '<label class="chk small"><input type="checkbox" id="only"' + (onlyLessons ? ' checked' : '') + '> Only show topics with lessons</label></div>' +
           (tops.length ? tops.map(function (t) {
@@ -55,9 +57,9 @@
             return '<details class="ltopic"' + (n || q ? ' open' : '') + '><summary><span class="lt-name">' + E(t.name) + '</span><span class="pill">' + (n ? n + ' item' + (n === 1 ? '' : 's') : 'coming soon') + '</span>' + (t.programme && t.programme !== 'IB DP' && t.programme !== 'IGCSE' ? '<span class="small muted">' + E(t.programme) + '</span>' : '') + '</summary>' +
               (t.summary ? '<p class="small muted">' + E(t.summary) + '</p>' : '') + (items(t) ? '<div class="lgrid">' + items(t) + '</div>' : '') +
               kids.map(function (k) { var inner = items(k);
-                return '<div class="lsub' + (inner ? '' : ' empty') + '"><h4>' + E(k.name) + (k.summary && /HL only/.test(k.summary) ? ' <span class="pill">HL</span>' : '') + '</h4>' +
+                return '<div class="lsub' + (inner ? '' : ' empty') + '"><h4>' + E(k.name) + (k.summary && /HL only/.test(k.summary) ? ' <span class="pill">HL</span>' : '') + addHere(k) + '</h4>' +
                   (inner ? '<div class="lgrid">' + inner + '</div>' : '<p class="small muted">Interactive lessons coming soon.</p>') + '</div>'; }).join('') +
-              (!kids.length && !items(t) ? '<p class="small muted">Interactive lessons coming soon.</p>' : '') + '</details>';
+              (!kids.length && !items(t) ? '<p class="small muted">Interactive lessons coming soon.</p>' : '') + (!kids.length ? '<p>' + addHere(t) + '</p>' : '') + '</details>';
           }).join('') : '<p class="emptybox">Nothing matches.</p>');
         app.querySelectorAll('[data-s]').forEach(function (b) { b.onclick = function () { cur = b.getAttribute('data-s'); history.replaceState(null, '', '#' + cur); draw(); }; });
         app.querySelector('#only').onchange = function () { onlyLessons = this.checked; try { localStorage.setItem('bv-only', onlyLessons ? '1' : '0'); } catch (e) {} draw(); };

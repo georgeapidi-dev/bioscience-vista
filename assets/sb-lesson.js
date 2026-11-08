@@ -16,6 +16,12 @@
           b.textContent = 'Your account is waiting for your teacher to approve it. Your work still goes to your teacher; it will appear on your dashboard once you are approved.';
         } else who = s.user;
       });
+      db.rpc('is_staff').then(function (t) {   // teachers: show model answers in every step
+        if (t.data !== true) return;
+        window.BV_TEACHER = true; document.dispatchEvent(new Event('bv-teacher'));
+        b.style.background = '#f5f3ff'; b.style.color = '#5b21b6'; b.style.borderBottom = '1px solid #ddd6fe';
+        b.textContent = '👩‍🏫 Teacher view: signed in as ' + (s.user.email || 'teacher') + '. Model answers are shown in every step; students see them after finishing each step.';
+      }, function () {});
     } else {
       var here = encodeURIComponent(location.pathname + location.search);
       b.style.cssText = 'font:600 14px/1.5 system-ui,Arial,sans-serif;padding:8px 16px;background:#fff7ed;color:#9a3412;border-bottom:1px solid #fed7aa';

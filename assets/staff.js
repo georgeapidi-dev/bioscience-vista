@@ -275,6 +275,12 @@
       });
     });
   }
+  function repeatsOf(a, q) {   // a student's repeats of a lesson step, labelled, never counted in the mark
+    var reps = (a.repeats || []).filter(function (r) { return r.answers && r.answers[q.id] != null && r.answers[q.id] !== ''; });
+    if (!reps.length) return '';
+    return '<div class="fb rep"><h4>↻ Repeats (practice after seeing the answers, not marked)</h4>' + reps.map(function (r) { var g = r.answers[q.id];
+      return '<div class="small"><b>Repeat ' + E(r.n) + '</b> · ' + E(S.when(r.at)) + ': ' + (/^data:image\//.test(g) ? '<img class="hw" alt="Handwritten repeat" src="' + E(g) + '">' : q.kind === 'short' ? '<span style="white-space:pre-wrap">' + E(g) + '</span>' : E((q.options || [])[g]) + (q.ans && String(g) === String(q.ans.correct_option) ? ' ✓' : ' ✗')) + '</div>'; }).join('') + '</div>';
+  }
   function markOne(p, aid) {
     var Q = window.BVQ;
     S.db.from('quiz_attempts').select('*, quizzes(title,show_results)').eq('id', aid).maybeSingle().then(function (r) {
@@ -283,7 +289,7 @@
         var qs = x[0], by = {}; (a.detail || []).forEach(function (d) { by[d.question_id] = d; });
         var held = a.quizzes && !a.quizzes.show_results;
         p.innerHTML = '<p><a href="#marking">← Marking list</a></p><section class="panel row2"><div><h3>' + E(x[1].data ? x[1].data.full_name : '') + ' · ' + E(a.quizzes ? a.quizzes.title : '') + '</h3><p class="small muted">Submitted ' + E(S.when(a.submitted_at)) + '</p></div>' +
-          '<div><b style="font-size:1.6rem" id="tot">' + E(a.score) + '</b> / ' + E(a.max_score) + ' <span class="pill">' + (a.released ? 'released' : held ? 'not released yet' : 'student sees MCQ score') + '</span></div></section>' +
+          '<div><b style="font-size:1.6rem" id="tot">' + E(a.score) + '</b> / ' + E(a.max_score) + ((a.repeats || []).length ? ' <span class="pill">↻ ' + a.repeats.length + ' repeat' + (a.repeats.length > 1 ? 's' : '') + '</span>' : '') + ' <span class="pill">' + (a.released ? 'released' : held ? 'not released yet' : 'student sees MCQ score') + '</span></div></section>' +
           qs.filter(function (q) { return q.kind !== 'info'; }).map(function (q, i) { var d = by[q.id] || {}, g = (a.answers || {})[q.id], an = q.ans || {}, written = q.kind === 'short';
             var pic = /^data:image\//.test(g || ''), sug = written ? (pic ? { got: null, hits: [] } : Q.suggest(g || '', an.mark_scheme || an.model_answer || '', q.marks)) : null, pts = written ? Q.points(an.mark_scheme || an.model_answer || '') : [], lv = written ? Q.levels(an.rubric) : [];
             var val = d.got != null ? d.got : sug && sug.got != null ? sug.got : '';
@@ -291,6 +297,7 @@
               '<div class="fb"><h4>Student answer</h4>' + (g == null || g === '' ? '<i>no answer</i>' : pic ? '<img class="hw" alt="Handwritten answer" src="' + E(g) + '">' : written ? '<p style="white-space:pre-wrap">' + E(g) + '</p>' : E((q.options || [])[g]) + (g === an.correct_option ? ' ✓' : ' ✗ (correct: ' + E((q.options || [])[an.correct_option]) + ')')) + '</div>' +
               (pts.length ? '<div class="small"><b>Mark scheme</b>' + pts.map(function (t, k) { return '<div>' + (pic ? '• ' : sug.hits[k] ? '<span class="ok-t">✓</span> ' : '<span class="bad-t">✗</span> ') + E(t) + '</div>'; }).join('') + (d.got == null && sug.got != null ? '<p class="muted">Suggested: ' + sug.got + ' / ' + q.marks + ' (check it)</p>' : '') + '</div>' : '') +
               (lv.length ? '<div class="small"><b>Rubric</b> (click a level)' + lv.map(function (l) { return '<div><button type="button" class="btn sm" data-lv="' + l.hi + '">' + (l.lo === l.hi ? l.lo : l.lo + '–' + l.hi) + '</button> ' + E(l.text) + '</div>'; }).join('') + '</div>' : '') +
+              repeatsOf(a, q) +
               '<div class="row2"><label class="f">Marks<input type="number" min="0" max="' + q.marks + '" step="0.5" data-k="m" value="' + E(val) + '" style="max-width:90px"></label><label class="f" style="flex:1">Comment for the student<input data-k="c" value="' + E(d.comment || '') + '"></label></div></article>'; }).join('') +
           '<div class="acts panel"><button class="btn sm" type="button" id="savem">Save marks</button><button class="btn main sm" type="button" id="rel">✓ Confirm grade and release to student</button></div>';
         p.querySelectorAll('[data-lv]').forEach(function (b) { b.onclick = function () { b.closest('[data-q]').querySelector('[data-k=m]').value = b.getAttribute('data-lv'); }; });
@@ -311,35 +318,39 @@
 
   /* ---------- lesson builder: objectives or a file → interactive six-step lesson ---------- */
   function lessons(p, args) {
-    if (args[0]) return lessonEdit(p, args[0]);
+    if (args[0]) return lessonEdit(p, args[0], args[1]);
     S.db.from('quizzes').select('id,title,published,created_at, quiz_classes(class_id), quiz_questions(question_id)').eq('category', 'lesson').order('created_at', { ascending: false }).then(function (r) {
       var cn = {}; CLASSES.forEach(function (c) { cn[c.id] = c.name; });
       p.innerHTML = '<div class="acts"><a class="btn main sm" href="#lessons/new">✨ Create an interactive lesson</a></div>' +
-        '<p class="small muted">Type your lesson objectives, upload a worksheet or notes (PDF or Word), or both. The site turns them into a six-step inquiry lesson (question, explore, test, explain, challenge, reflect) where students type or handwrite their answers. You can change everything before publishing.</p>' +
+        '<p class="small muted">Type your lesson objectives, upload any file (PDF, Word, PowerPoint, Excel, web page, text or pictures), or both. The site turns them into a six-step inquiry lesson (question, explore, test, explain, challenge, reflect) where students type or handwrite their answers. You can change everything before publishing.</p>' +
         ((r.data || []).length ? '<div class="tablewrap"><table class="marks"><tr><th>Lesson</th><th>Items</th><th>Classes</th><th>Status</th><th></th></tr>' + r.data.map(function (q) {
           return '<tr><td><a href="#lessons/' + q.id + '">' + E(q.title) + '</a></td><td>' + q.quiz_questions.length + '</td><td class="small">' + E(q.quiz_classes.map(function (c) { return cn[c.class_id] || '…'; }).join(', ') || '–') + '</td><td>' + (q.published ? '<span class="pill">Published</span>' : 'Draft') + '</td>' +
             '<td><a class="small" href="/lesson/#' + q.id + '" target="_blank" rel="noopener">Preview ↗</a></td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No interactive lessons yet.</p>');
     });
   }
-  function lessonEdit(p, id) {
+  function lessonEdit(p, id, topicId) {
     var Q = window.BVQ, isNew = id === 'new';
     if (isNew) {
       p.innerHTML = '<p><a href="#lessons">← All lessons</a></p><section class="panel grp"><h3>Create an interactive lesson</h3>' +
         '<label class="f">Lesson title<input id="lt" placeholder="e.g. Osmosis in plant cells"></label>' +
         '<label class="f">Lesson objectives, one per line<textarea id="lo" rows="4" placeholder="Define osmosis\nExplain why plant cells become turgid in water\nCompare osmosis and diffusion"></textarea></label>' +
-        '<div class="two"><label class="f">Worksheet, notes or lesson plan (optional, PDF or .docx)<input id="lf" type="file" accept=".pdf,.docx,.txt"></label>' +
-        '<label class="f">Mark scheme (optional, PDF or .docx)<input id="lm" type="file" accept=".pdf,.docx,.txt"></label></div>' +
-        '<p class="small muted">With objectives only, you get a complete lesson outline with questions for each objective; add your notes, pictures and video links in the Explore step. With a file, its text becomes the reading and its questions become interactive.</p>' +
+        (topicId ? '<p class="small">This lesson will be filed under <b>' + E((TOPICS.filter(function (t) { return t.id === topicId; })[0] || {}).name || 'the chosen topic') + '</b> in the Learning centre.</p>' : '') +
+        '<div class="two"><label class="f">Upload any file: worksheet, notes, slides, spreadsheet, web page or pictures (optional, you can choose several)<input id="lf" type="file" multiple></label>' +
+        '<label class="f">Mark scheme (optional)<input id="lm" type="file" accept=".pdf,.docx,.dotx,.pptx,.ppsx,.xlsx,.csv,.tsv,.odt,.odp,.ods,.rtf,.txt,.md,.html,.htm,.doc,.ppt,.xls,image/*"></label></div>' +
+        '<p class="small muted">Works with PDF, Word, PowerPoint, Excel or CSV, OpenDocument, RTF, web pages, text files and pictures. Text becomes the reading, slides become one card each with their picture, numbered questions become interactive questions, and pictures appear in the lesson. With objectives only, you get a complete lesson outline. You can change everything before publishing.</p>' +
         '<div class="acts"><button class="btn main sm" type="button" id="lb">Build the lesson</button></div><p class="msg" id="lmsg" role="status"></p></section>';
-      p.querySelector('#lf').onchange = function () { var f = this.files[0]; if (f && !p.querySelector('#lt').value) p.querySelector('#lt').value = f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '); };
+      p.querySelector('#lf').onchange = function () { var f = this.files[0]; if (f && !p.querySelector('#lt').value) p.querySelector('#lt').value = f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim(); };
       p.querySelector('#lb').onclick = function () {
-        var title = p.querySelector('#lt').value.trim(), obj = p.querySelector('#lo').value.trim(), f = p.querySelector('#lf').files[0], m = p.querySelector('#lm').files[0], msg = p.querySelector('#lmsg');
+        var title = p.querySelector('#lt').value.trim(), obj = p.querySelector('#lo').value.trim(), fs = [].slice.call(p.querySelector('#lf').files), f = fs[0], m = p.querySelector('#lm').files[0], msg = p.querySelector('#lmsg');
         if (!obj && !f) { msg.className = 'msg'; msg.textContent = 'Type at least one objective or choose a file.'; return; }
         if (!title) { msg.className = 'msg'; msg.textContent = 'Give the lesson a title.'; return; }
-        msg.className = 'msg ok'; msg.textContent = 'Building…';
-        Promise.all([f ? Q.readFile(f) : null, m ? Q.readFile(m) : null]).then(function (x) {
+        msg.className = 'msg ok'; msg.textContent = 'Reading ' + (fs.length > 1 ? fs.length + ' files' : 'your file') + ' and building the lesson…';
+        Q.IMGS = [];
+        var readAll = Promise.all(fs.map(function (x) { return Q.readFile(x).catch(function (e) { throw new Error(x.name + ': ' + S.nice(e)); }); })).then(function (all) {
+          return all.length ? all.reduce(function (a, l, i) { return a.concat(all.length > 1 && !/^\*\*/.test(l[0] || '') ? ['**' + fs[i].name.replace(/\.[^.]+$/, '') + '**'] : [], l); }, []) : null; });
+        Promise.all([readAll, m ? Q.readFile(m) : null]).then(function (x) {
           var items = Q.buildLesson(title, obj, x[0], x[1]);
-          editor({ title: title, instructions: obj, published: false }, items, []);
+          editor({ title: title, instructions: obj, published: false, topic_id: topicId || null }, items, []);
         }).catch(function (e) { msg.className = 'msg'; msg.textContent = S.nice(e); });
       };
       return;
