@@ -739,6 +739,107 @@
     }
   };
 
+  /* ===== DP1 HL · A2.3 Viruses simulators ===== */
+  /* A2.3.2 · Compare viruses: genome, capsid, envelope and host */
+  var VIR = {
+    lambda: ['Bacteriophage lambda', 'DNA', 'double-stranded', 'linear in the virion (closes into a circle in the host)', 'about 48 500 base pairs', 'icosahedral head and a long tail', 'not enveloped', 'the bacterium E. coli', 'about 60 nm head', 'Lytic or lysogenic: its DNA can join the bacterial chromosome as a prophage.'],
+    sars2: ['SARS-CoV-2 (a coronavirus)', 'RNA', 'single-stranded, positive sense (can be read directly by ribosomes)', 'linear', 'about 30 000 bases, one of the largest RNA genomes', 'helical nucleocapsid', 'enveloped, with spike (S) glycoproteins', 'human cells with the ACE2 receptor', 'about 100 nm', 'Its RNA is translated straight away by host ribosomes to make viral proteins.'],
+    hiv: ['HIV-1 (a retrovirus)', 'RNA', 'single-stranded, positive sense, two copies', 'linear', 'about 9 700 bases', 'cone-shaped capsid', 'enveloped, with gp120 and gp41 glycoproteins', 'CD4 (helper T) cells', 'about 120 nm', 'Reverse transcriptase copies its RNA into DNA, which integrase inserts into the host genome.'],
+    flu: ['Influenza A virus', 'RNA', 'single-stranded, negative sense (must be copied to make mRNA)', 'segmented: 8 separate pieces', 'about 13 500 bases in total', 'helical nucleocapsids', 'enveloped, with haemagglutinin (H) and neuraminidase (N)', 'birds, pigs and humans', 'about 100 nm', 'Segments from two strains can be swapped in one cell (reassortment).'],
+    tmv: ['Tobacco mosaic virus', 'RNA', 'single-stranded, positive sense', 'linear', 'about 6 400 bases', 'rigid helical rod', 'not enveloped', 'tobacco and other plants', '300 nm long, 18 nm wide', 'The first virus to be discovered (1890s).'],
+    phix: ['Phage phiX174', 'DNA', 'single-stranded', 'circular', 'about 5 400 bases', 'icosahedral', 'not enveloped', 'the bacterium E. coli', 'about 30 nm', 'The first DNA genome ever sequenced (1977).'],
+    adeno: ['Adenovirus', 'DNA', 'double-stranded', 'linear', 'about 36 000 base pairs', 'icosahedral, with fibres at the corners', 'not enveloped', 'human airway and eye cells', 'about 90 nm', 'A cause of colds; also used as a vector in some vaccines.']
+  };
+  M.viruscompare = {
+    title: 'Compare viruses: genome, capsid and envelope',
+    html: function () { return '<div class="sim-c">' + select('va', 'Virus A', Object.keys(VIR).map(function (k) { return [k, VIR[k][0]]; })) +
+      select('vb', 'Virus B', Object.keys(VIR).map(function (k) { return [k, VIR[k][0]]; })) + '</div><div class="sim-out" aria-live="polite" style="overflow-x:auto"></div>'; },
+    run: function (r, first) {
+      if (first) $(r, 'vb').value = 'hiv';
+      var a = VIR[$(r, 'va').value], b = VIR[$(r, 'vb').value], rows = ['Nucleic acid', 'Strands', 'Shape of genome', 'Genome size', 'Capsid', 'Envelope', 'Host', 'Size', 'Notable'];
+      var h = '<table style="border-collapse:collapse;width:100%;font-size:.9rem"><tr><th style="text-align:left;padding:4px"></th><th style="text-align:left;padding:4px">' + E(a[0]) + '</th><th style="text-align:left;padding:4px">' + E(b[0]) + '</th></tr>';
+      rows.forEach(function (n, i) { var same = a[i + 1] === b[i + 1]; h += '<tr style="border-top:1px solid #cbd5e1"><th style="text-align:left;padding:4px;vertical-align:top">' + n + '</th><td style="padding:4px' + (same ? '' : ';background:#fef9c3') + '">' + E(a[i + 1]) + '</td><td style="padding:4px' + (same ? '' : ';background:#fef9c3') + '">' + E(b[i + 1]) + '</td></tr>'; });
+      r.querySelector('.sim-out').innerHTML = h + '</table><p style="margin:6px 0 0">Yellow cells are differences. What do ALL viruses share? A protein capsid, DNA or RNA, no cytoplasm and few or no enzymes of their own.</p>';
+    }
+  };
+
+  /* A2.3.3 and A2.3.4 · Bacteriophage lambda: lytic and lysogenic cycles, step by step */
+  var LYTIC = ['Attachment: the tail fibre binds a receptor protein on the outer membrane of E. coli.',
+    'Injection: the phage injects its DNA through the tail. The empty capsid stays outside. The linear DNA closes into a circle.',
+    'Replication and protein synthesis: the host\'s nucleotides, ATP, ribosomes and amino acids are used to copy the viral DNA and make capsid and tail proteins.',
+    'Assembly: new heads are filled with copies of the viral DNA and tails are attached.',
+    'Lysis: viral enzymes break down the cell wall; the cell bursts and releases about 100 new phages, which infect other cells. The host cell dies.'];
+  var LYSO = ['Attachment: the tail fibre binds a receptor protein on the outer membrane of E. coli.',
+    'Injection: the phage DNA enters the cell and closes into a circle.',
+    'Integration: a viral enzyme (integrase) inserts the lambda DNA into the bacterial chromosome. It is now a PROPHAGE. A repressor protein keeps the lytic genes switched off.',
+    'Cell division: whenever the bacterium divides, the prophage is copied with the chromosome, so every daughter cell carries it. No new phages are made and the cells live.',
+    'Stays lysogenic: while conditions are good, the prophage is passed on silently, generation after generation.'];
+  M.phage = {
+    title: 'Bacteriophage lambda: lytic or lysogenic?',
+    html: function () { return '<div class="sim-c">' + select('pp', 'Pathway after injection', [['lytic', 'Lytic cycle'], ['lyso', 'Lysogenic cycle']]) + slider('ps', 'Stage (1 to 5)', 1, 5, 1) +
+      select('pc', 'Conditions for the host cell', [['good', 'Good conditions'], ['uv', 'Stress: UV light damages DNA']]) + '</div>' +
+      '<svg viewBox="0 0 400 210" role="img" aria-label="Phage and bacterial cell"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var path = $(r, 'pp').value, s = +$(r, 'ps').value, uv = $(r, 'pc').value === 'uv', induced = path === 'lyso' && s === 5 && uv;
+      function hexa(x, y, k) { var p = []; for (var i = 0; i < 6; i++) { var a = Math.PI / 3 * i - Math.PI / 2; p.push((x + k * Math.cos(a)).toFixed(1) + ',' + (y + k * Math.sin(a)).toFixed(1)); } return '<polygon points="' + p.join(' ') + '" fill="#fde68a" stroke="#b45309" stroke-width="1.5"/>'; }
+      var burst = path === 'lytic' && s === 5, svg = '';
+      svg += '<rect x="70" y="60" width="260" height="120" rx="60" fill="#e0f2fe" stroke="#0369a1" stroke-width="3"' + (burst ? ' stroke-dasharray="14 10"' : '') + '/>';
+      svg += '<path d="M120 120 C 160 80, 240 160, 280 120" fill="none" stroke="#334155" stroke-width="4"/>';
+      if (s <= 2) svg += hexa(200, 22, 16) + '<rect x="196" y="38" width="8" height="22" fill="#94a3b8"/>' + (s === 2 ? '<path d="M200 70 q 10 15 0 30" fill="none" stroke="#dc2626" stroke-width="3"/>' : '');
+      if (path === 'lytic' && s === 3) for (var i = 0; i < 4; i++) svg += '<circle cx="' + (130 + i * 45) + '" cy="' + (95 + (i % 2) * 40) + '" r="10" fill="none" stroke="#dc2626" stroke-width="3"/>';
+      if (path === 'lytic' && s >= 4) for (var j = 0; j < 7; j++) svg += hexa(s === 5 ? 40 + j * 54 : 110 + j * 30, s === 5 ? (j % 2 ? 30 : 195) : 100 + (j % 2) * 30, 10);
+      if (path === 'lyso' && s >= 3 && !induced) svg += '<path d="M190 112 l 26 8" stroke="#dc2626" stroke-width="7"/>';
+      if (induced) svg += '<circle cx="200" cy="150" r="12" fill="none" stroke="#dc2626" stroke-width="3"/>';
+      if (path === 'lyso' && s >= 4 && !induced) svg += '<line x1="200" y1="62" x2="200" y2="178" stroke="#0369a1" stroke-width="3" stroke-dasharray="6 5"/>';
+      if (induced) for (var k = 0; k < 4; k++) svg += hexa(120 + k * 50, 95 + (k % 2) * 35, 10);
+      r.querySelector('svg').innerHTML = svg;
+      var msg = path === 'lytic' ? LYTIC[s - 1] : induced ? 'INDUCTION: DNA damage (here from UV light) inactivates the repressor. The prophage is cut out of the chromosome and the lytic cycle begins: replication, assembly and lysis follow.' : LYSO[s - 1];
+      r.querySelector('.sim-out').innerHTML = '<b>' + (path === 'lytic' ? 'Lytic' : 'Lysogenic') + ' cycle · stage ' + s + '.</b> ' + E(msg) +
+        (path === 'lyso' && s === 5 && !uv ? '<br>Change the conditions to "Stress" to see induction.' : '') + '<br>A virus has no metabolism of its own: every stage after injection depends on the host cell.';
+    }
+  };
+
+  /* A2.3.6 · Rapid evolution: drug resistance in a virus population */
+  M.virevo = {
+    title: 'Why do some viruses become drug resistant so quickly?',
+    html: function () { return '<div class="sim-c">' + select('vt', 'Virus', [['rna', 'RNA virus, e.g. HIV (no proofreading)'], ['dna', 'DNA virus (proofreading)']]) +
+      select('tx', 'Treatment', [['none', 'No treatment'], ['one', 'One antiviral drug'], ['three', 'Three drugs together (combination therapy)']]) + slider('dy', 'Days of treatment', 0, 60, 60) + '</div>' +
+      '<svg viewBox="0 0 400 220" role="img" aria-label="Viral load against time"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var rna = $(r, 'vt').value === 'rna', tx = $(r, 'tx').value, d = +$(r, 'dy').value, N = 1e10, p = rna ? 3e-5 : 1e-11, k = tx === 'three' ? 3 : tx === 'one' ? 1 : 0;
+      var expected = k ? N * Math.pow(p, k) : 0, prob = k ? 1 - Math.exp(-expected) : 0, escape = prob > 0.5;
+      function load(t) { if (!k) return 6; var sens = 6 - t * 0.2; if (!escape) return Math.max(1, sens); var res = 1 + Math.max(0, t - 8) * 0.35; return Math.max(Math.max(1, sens), Math.min(6, res)); }
+      var X = function (t) { return 45 + t * 5.6; }, Y = function (v) { return 190 - v * 28; }, pts = [];
+      for (var t = 0; t <= d; t++) pts.push(X(t).toFixed(1) + ',' + Y(load(t)).toFixed(1));
+      var s = '<line x1="45" y1="190" x2="385" y2="190" stroke="#334155"/><line x1="45" y1="20" x2="45" y2="190" stroke="#334155"/>' +
+        '<text x="215" y="212" text-anchor="middle" font-size="12">Days of treatment</text><text x="14" y="105" font-size="12" transform="rotate(-90 14 105)" text-anchor="middle">Viral load (log scale)</text>' +
+        (pts.length > 1 ? '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#e4572e" stroke-width="3"/>' : '');
+      r.querySelector('svg').innerHTML = s;
+      var fmt = function (v) { return v >= 1 ? Math.round(v).toLocaleString() : v.toExponential(1); };
+      r.querySelector('.sim-out').innerHTML = !k ? '<b>No treatment: the viral load stays high.</b> About 10 billion new virus particles are made each day, ' + (rna ? 'and an error-prone polymerase makes about one mistake per genome copy, so a huge range of mutants already exists.' : 'with very few copying mistakes.')
+        : '<b>Resistant mutants expected before treatment starts: about ' + fmt(expected) + '.</b> ' + (escape ? 'Resistance is almost certain: the drug kills the sensitive virus, the resistant mutants survive and multiply, and the viral load rises again (natural selection).'
+          : 'Resistance is very unlikely: a single virus would need ' + (k === 3 ? 'three resistance mutations at once' : 'a rare resistance mutation') + ', and the drugs keep the viral load low.') +
+        '<br>Reasons for rapid evolution: a high mutation rate (no proofreading in RNA polymerases and reverse transcriptase), a short generation time and enormous population sizes. This is why HIV is treated with three drugs at once.';
+    }
+  };
+
+  /* A2.3.6 · Influenza: antigenic drift and shift against this year's vaccine */
+  M.drift = {
+    title: 'Influenza: does last year\'s vaccine still work?',
+    html: function () { return '<div class="sim-c">' + slider('yr', 'Years since the vaccine was made', 0, 6, 1) + select('up', 'Vaccine policy', [['no', 'Keep the same vaccine'], ['yes', 'Update the vaccine every year']]) +
+      select('sh', 'Event', [['drift', 'Normal year: antigenic drift'], ['shift', 'Antigenic shift: a new H subtype appears']]) + '</div>' +
+      '<svg viewBox="0 0 400 120" role="img" aria-label="Vaccine match"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var y = +$(r, 'yr').value, up = $(r, 'up').value === 'yes', shift = $(r, 'sh').value === 'shift';
+      var age = up ? Math.min(y, 1) * 0.5 : y, match = shift ? 5 : Math.round(100 * Math.exp(-0.32 * age)), aa = Math.round((up ? 0 : y) * 4 + (y ? 2 : 0));
+      r.querySelector('svg').innerHTML = '<rect x="20" y="40" width="360" height="30" fill="#f1f5f9" stroke="#cbd5e1"/><rect x="20" y="40" width="' + (3.6 * match) + '" height="30" fill="' + (match > 60 ? '#15803d' : match > 30 ? '#d97706' : '#b91c1c') + '"/>' +
+        '<text x="20" y="30" font-size="12">How well antibodies from the vaccine match the virus</text><text x="20" y="92" font-size="13" font-weight="700">' + match + '% match</text>';
+      r.querySelector('.sim-out').innerHTML = shift ? '<b>Antigenic shift:</b> two different strains infected the same cell (for example in a pig) and swapped RNA segments (reassortment). The new virus has a haemagglutinin the population has never met, so old vaccines and immunity barely work. This is how flu pandemics start.'
+        : '<b>Antigenic drift:</b> about ' + aa + ' amino acids in haemagglutinin and neuraminidase have changed by point mutation. ' + (up ? 'Because the vaccine is updated every year to match the strains in circulation, the match stays high.' : 'Without an update, antibodies fit the changed surface proteins less well each year, so the vaccine protects less.') +
+          '<br>That is why the WHO recommends new flu vaccine strains twice a year (once for each hemisphere).';
+    }
+  };
+
   function mount(el) {
     if (el.getAttribute('data-mounted')) return;
     var name = el.getAttribute('data-sim'), m = M[name]; if (!m) return;
