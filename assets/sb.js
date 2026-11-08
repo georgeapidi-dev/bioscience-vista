@@ -18,7 +18,7 @@
       ]).then(function (x) {
         if (!x[0].error && !x[0].data) { return S.db.auth.signOut().then(function () { return null; }); }   // account was deleted
         var roles = (x[1].data || []).map(function (r) { return r.role; }), p = x[0].data || {};
-        var me = { user: u, profile: p, roles: roles, admin: roles.indexOf('admin') >= 0, staff: roles.indexOf('teacher') >= 0 || roles.indexOf('admin') >= 0, cls: null };
+        var me = { user: u, profile: p, roles: roles, admin: roles.indexOf('admin') >= 0, staff: roles.indexOf('teacher') >= 0 || roles.indexOf('admin') >= 0, parent: roles.indexOf('parent') >= 0, cls: null };
         if (!p.class_id) return me;
         return S.db.from('classes').select('id,name,programme').eq('id', p.class_id).maybeSingle().then(function (c) { me.cls = c.data; return me; });
       });
@@ -32,6 +32,8 @@
     return S.me().then(function (me) {
       if (!me) { location.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); throw 'signed-out'; }
       if (opts.staff && !me.staff) { el.innerHTML = '<section class="panel"><h2>Teachers only</h2><p>This area is for teachers. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; throw 'not-staff'; }
+      if (me.parent && !me.staff && !opts.parent) { location.href = '/parent/'; throw 'parent'; }   // parents have their own page
+      if (opts.parent && !me.parent && !me.staff) { el.innerHTML = '<section class="panel"><h2>Parents only</h2><p>This page is for parents. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; throw 'not-parent'; }
       if (!opts.allowPending && !me.staff && !me.profile.approved) { S.updateNav(me); el.innerHTML = S.pendingBox(me); throw 'pending'; }
       S.updateNav(me); return me;
     });
@@ -53,7 +55,7 @@
   S.nice = function (e) { var m = (e && (e.message || e.error_description || e)) || 'Something went wrong.'; return String(m).replace(/^.*?ERROR:\s*/, ''); };
   S.updateNav = function (me) {
     var a = document.querySelector('.cta-nav'); if (!a || !me) return;
-    a.textContent = me.staff ? 'Teacher dashboard' : 'My dashboard'; a.href = me.staff ? '/staff/' : '/dashboard/';
+    a.textContent = me.staff ? 'Teacher dashboard' : me.parent ? "My child's progress" : 'My dashboard'; a.href = me.staff ? '/staff/' : me.parent ? '/parent/' : '/dashboard/';
   };
   S.pct = function (s, m) { return m ? Math.round(100 * s / m) : null; };
   S.when = function (t) { return t ? new Date(t).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : ''; };

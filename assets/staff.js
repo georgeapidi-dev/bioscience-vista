@@ -112,15 +112,45 @@
       p.innerHTML = '<p><a href="#students">← All students</a></p><section class="panel"><div class="row2"><h3>' + E(pr.full_name) + '</h3><span class="pill">' + (pr.approved ? 'Active' : 'Blocked') + '</span></div>' +
         '<div class="row2"><label class="f">Name<input id="sn" value="' + E(pr.full_name) + '"></label><label class="f">Class<select id="sc">' + classOpts(pr.class_id, '(no class)') + '</select></label><label class="f">Student number<input id="snum" value="' + E(pr.student_number || '') + '"></label><button class="btn sm" id="ss" type="button">Save</button></div></section>' +
         '<section class="panel"><h3>Lesson progress</h3>' + ((x[2].data || []).length ? x[2].data.map(function (l) { return '<div class="row2"><span class="small">' + E(l.lessons ? l.lessons.title : '') + '</span><span class="small muted">' + l.percent + '%</span></div><div class="bar"><i style="width:' + l.percent + '%"></i></div>'; }).join('') : '<p class="muted">No lessons opened yet.</p>') + '</section>' +
+        '<section class="panel" id="pbox"><p class="muted">Loading parents…</p></section>' +
         '<section class="grp"><h3 class="sec-h">Results and feedback</h3>' + ((x[1].data || []).length ? x[1].data.map(function (r) {
           return '<article class="task" data-r="' + r.id + '"><div class="top2"><b>' + E(r.title) + '</b><span class="small muted">' + E(S.when(r.recorded_at)) + '</span></div>' +
             '<div class="row2"><label class="f">Score<input type="number" step="0.5" data-k="score" value="' + E(r.score == null ? '' : r.score) + '" style="max-width:90px"></label><span>/ ' + E(r.max_score) + '</span></div>' +
             '<label class="f">Teacher feedback<textarea rows="3" data-k="teacher_feedback">' + E(r.teacher_feedback || '') + '</textarea></label>' + (r.ai_feedback ? '<div class="fb ai"><h4>AI feedback</h4>' + BV.md(r.ai_feedback) + '</div>' : '') +
             '<div class="acts"><button class="btn sm main" type="button" data-a="save">Save feedback</button>' + (r.attempt_id ? '<a class="btn sm" href="#marking/' + r.attempt_id + '">Open answers</a>' : '') + '</div></article>'; }).join('') : '<p class="emptybox">No results yet.</p>') + '</section>';
+      parentsBox(p, sid);
       p.querySelector('#ss').onclick = function () { S.db.from('profiles').update({ full_name: p.querySelector('#sn').value.trim(), class_id: p.querySelector('#sc').value || null, student_number: p.querySelector('#snum').value.trim() || null }).eq('id', sid).then(function (r) { ok(r, 'Student saved'); }); };
       p.querySelectorAll('[data-r]').forEach(function (a) { a.querySelector('[data-a=save]').onclick = function () { var sc = a.querySelector('[data-k=score]').value;
         S.db.from('student_results').update({ score: sc === '' ? null : +sc, teacher_feedback: a.querySelector('[data-k=teacher_feedback]').value.trim() || null, updated_at: new Date().toISOString() }).eq('id', a.getAttribute('data-r')).then(function (r) { ok(r, 'Feedback saved'); }); }; });
     });
+  }
+
+  /* parents linked to this student: the private parent code, new codes, and removing a link */
+  function parentsBox(p, sid) {
+    var box = p.querySelector('#pbox'); if (!box) return;
+    Promise.all([
+      S.db.from('parent_links').select('parent_id, profiles!parent_id(full_name)').eq('student_id', sid),
+      S.db.from('student_parent_codes').select('code').eq('student_id', sid).maybeSingle()
+    ]).then(function (x) {
+      if (x[0].error) throw x[0].error;
+      var links = x[0].data || [], code = x[1].data && x[1].data.code;
+      box.innerHTML = '<h3>Parents</h3>' +
+        '<p class="small muted">A parent signs up with this code (Create a parent account) or adds it on their dashboard. They can see this student\'s marks, lesson progress and your feedback, and cannot change anything. Making a new code stops the old one working.</p>' +
+        '<div class="row2"><span class="small">Parent code</span><b style="font-size:1.3rem;letter-spacing:.15em">' + E(code || '–') + '</b><button class="btn sm" type="button" id="pcr">New code</button></div>' +
+        (links.length ? '<div class="tablewrap"><table class="marks"><tr><th>Linked parent</th><th></th></tr>' + links.map(function (l) {
+          return '<tr><td>' + E(l.profiles ? l.profiles.full_name : 'Parent') + '</td><td><button class="btn sm" type="button" data-pu="' + E(l.parent_id) + '">Remove link</button></td></tr>';
+        }).join('') + '</table></div>' : '<p class="muted">No parent linked yet.</p>');
+      box.querySelector('#pcr').onclick = function () {
+        if (!this.dataset.sure) { this.dataset.sure = 1; this.textContent = 'Click again to replace the code'; return; }
+        S.db.rpc('reset_parent_code', { sid: sid }).then(function (r) { if (ok(r, 'New parent code made')) parentsBox(p, sid); });
+      };
+      box.querySelectorAll('[data-pu]').forEach(function (b) {
+        b.onclick = function () {
+          if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'Click again to remove'; return; }
+          S.db.from('parent_links').delete().eq('parent_id', b.getAttribute('data-pu')).eq('student_id', sid).then(function (r) { if (ok(r, 'Link removed')) parentsBox(p, sid); });
+        };
+      });
+    }).catch(function (e) { box.innerHTML = '<h3>Parents</h3><p class="msg">' + E(S.nice(e)) + '</p>'; });
   }
 
   /* ---------- quizzes ---------- */
