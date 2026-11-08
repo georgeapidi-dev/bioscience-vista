@@ -2,7 +2,8 @@
    A floating "Graph & draw" button opens the site's Science tools (graph plotter with best fit, graph paper, drawing board,
    calculator) in a panel over the lesson, so students never leave their work. Downloads still work from inside the panel. */
 (function () {
-  if (window.__bvDock || window.top !== window) return; window.__bvDock = true;
+  if (window.top !== window || document.getElementById('bvdock-btn')) return;
+  if (window.__bvDockMount) { window.__bvDockMount(); return; }   // a password-locked page was rewritten: re-attach the same dock
   var css = document.createElement('style');
   css.textContent = '#bvdock-btn{position:fixed;left:14px;bottom:62px;z-index:2147483000;display:inline-flex!important;align-items:center;gap:6px;width:auto!important;max-width:max-content!important;margin:0!important;' +
     'border:0;border-radius:999px;padding:10px 15px;background:linear-gradient(120deg,#0d9488,#2563eb);color:#fff;font:700 14px/1.1 system-ui,Arial,sans-serif;box-shadow:0 6px 18px rgba(15,23,42,.28);cursor:pointer;text-transform:none!important}' +
@@ -53,6 +54,11 @@
     var h = a.getAttribute('href') || ''; if (!/^\/tools\/?(#.*)?$/.test(h)) return;
     e.preventDefault(); open((h.split('#')[1]) || 'graph');
   }, true);
-  function mount() { if (!document.body) return setTimeout(mount, 50); document.body.appendChild(btn); document.body.appendChild(dock); }
-  mount();
+  function mount() {   // re-attach if the page body is replaced (for example after a lesson password unlocks it)
+    if (!document.body) return;
+    if (!document.head.contains(css)) document.head.appendChild(css);
+    if (!document.body.contains(btn)) document.body.appendChild(btn);
+    if (!document.body.contains(dock)) document.body.appendChild(dock);
+  }
+  window.__bvDockMount = mount; mount(); document.addEventListener('DOMContentLoaded', mount); window.addEventListener('load', mount); setInterval(mount, 1500);
 })();
