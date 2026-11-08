@@ -203,7 +203,7 @@
         if (!list.length) throw new Error('No numbered questions were found. Questions should start with a number such as "1." or "Question 1". You can paste the text and fix the numbering.');
         var matched = x[1] ? Q.applyScheme(list, Q.parseScheme(x[1])) : 0;
         var mc = list.filter(function (q) { return q.kind !== 'short'; }).length;
-        msg.className = 'msg ok'; msg.textContent = 'Found ' + list.length + ' questions (' + mc + ' multiple choice, ' + (list.length - mc) + ' written)' + (x[1] ? '; mark scheme matched ' + matched + ' of them' : '') + '. Check them below, then save.';
+        msg.className = 'msg ok'; msg.textContent = 'Found ' + list.length + ' questions (' + mc + ' multiple choice, ' + (list.length - mc) + ' written)' + (x[1] ? '; mark scheme matched ' + matched + ' of them' : '') + (list.filter(function (q) { return q.image; }).length ? '; ' + list.filter(function (q) { return q.image; }).length + ' with a picture from your file' : '') + '. Check them below (📷 adds a picture or diagram to any question), then save.';
         draw();
       }).catch(function (e) { msg.className = 'msg'; msg.textContent = S.nice(e); });
     };
@@ -217,7 +217,7 @@
       out.querySelectorAll('.qe').forEach(function (el) {
         Q.wireCard(el);
         el.querySelector('[data-act=del]').onclick = function () { sync(); list.splice(+el.dataset.i, 1); draw(); };
-        var j = el.querySelector('[data-act=join]'); if (j) j.onclick = function () { sync(); var i = +el.dataset.i, a = list[i - 1], b = list[i]; a.prompt += '\n' + b.prompt; if (b.options.length) { a.options = a.options.concat(b.options); a.kind = a.kind === 'short' ? 'mcq' : a.kind; } a.scheme = [a.scheme, b.scheme].filter(Boolean).join('\n'); list.splice(i, 1); draw(); };
+        var j = el.querySelector('[data-act=join]'); if (j) j.onclick = function () { sync(); var i = +el.dataset.i, a = list[i - 1], b = list[i]; a.prompt += '\n' + b.prompt; if (b.options.length) { a.options = a.options.concat(b.options); a.kind = a.kind === 'short' ? 'mcq' : a.kind; } a.scheme = [a.scheme, b.scheme].filter(Boolean).join('\n'); if (!a.image) a.image = b.image; list.splice(i, 1); draw(); };
       });
       out.querySelector('#iadd').onclick = function () { sync(); list.push({ ref: String(list.length + 1), kind: 'mcq', prompt: '', options: [], correct: -1, marks: 1, scheme: '', rubric: '', explanation: '', image: '' }); draw(); out.lastElementChild.scrollIntoView({ behavior: 'smooth' }); };
       out.querySelector('#isave').onclick = function () {

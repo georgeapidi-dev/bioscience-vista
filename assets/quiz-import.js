@@ -122,17 +122,19 @@
       return file.arrayBuffer().then(function (buf) { return lib.getDocument({ data: buf }).promise; });
     }).then(function (pdf) {
       var pages = []; for (var i = 1; i <= pdf.numPages; i++) pages.push(i);
-      return Promise.all(pages.map(function (n) { return pdf.getPage(n).then(function (p) { return p.getTextContent(); }); })).then(function (contents) {
+      var lib = window.pdfjsLib;
+      return Promise.all(pages.map(function (n) { return pdf.getPage(n).then(function (p) { return Promise.all([p.getTextContent(), pdfPics(lib, p)]).then(function (r) { r[0].pics = r[1]; return r[0]; }); }); })).then(function (contents) {
         var lines = [];
         contents.forEach(function (c) {
           // group text pieces that share a baseline into one line, top to bottom, left to right
           var rows = [];
+          (c.pics || []).forEach(function (pic) { rows.push({ y: pic.y, bits: [{ x: 0, s: keepImg(pic.url) }], pic: true }); });
           c.items.forEach(function (it) { if (!it.str || !it.str.trim()) return; var y = it.transform[5], x = it.transform[4];
-            var row = rows.filter(function (r) { return Math.abs(r.y - y) < 3; })[0]; if (!row) { row = { y: y, bits: [] }; rows.push(row); } row.bits.push({ x: x, s: it.str }); });
+            var row = rows.filter(function (r) { return !r.pic && Math.abs(r.y - y) < 3; })[0]; if (!row) { row = { y: y, bits: [] }; rows.push(row); } row.bits.push({ x: x, s: it.str }); });
           rows.sort(function (a, b) { return b.y - a.y; }).forEach(function (r) { lines.push(r.bits.sort(function (a, b) { return a.x - b.x; }).map(function (b) { return b.s; }).join(' ')); });
         });
         var out = clean(lines);
-        if (out.join('').length >= 40) return out;
+        if (out.filter(function (l) { return !IMGLINE.test(l); }).join('').length >= 40) return out;
         // scanned PDF (pictures only): show the first pages as pictures in the lesson
         var pg = []; for (var j = 1; j <= Math.min(pdf.numPages, 8); j++) pg.push(j);
         return Promise.all(pg.map(function (n) { return pdf.getPage(n).then(function (page) { var vp = page.getViewport({ scale: 1.4 }), c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
@@ -141,17 +143,65 @@
       });
     });
   }
+  var IMGLINE = /^\[\[img:(\d+)\]\]$/;
+  function pdfPics(lib, page) {   // embedded pictures (photos, scanned diagrams) on one PDF page, with their height on the page
+    var OPS = lib.OPS;
+    return page.getOperatorList().then(function (ops) {
+      var found = [], stack = [], m = [1, 0, 0, 1, 0, 0];
+      function mul(a, b) { return [a[0] * b[0] + a[2] * b[1], a[1] * b[0] + a[3] * b[1], a[0] * b[2] + a[2] * b[3], a[1] * b[2] + a[3] * b[3], a[0] * b[4] + a[2] * b[5] + a[4], a[1] * b[4] + a[3] * b[5] + a[5]]; }
+      ops.fnArray.forEach(function (fn, k) {
+        var a = ops.argsArray[k];
+        if (fn === OPS.save) stack.push(m.slice()); else if (fn === OPS.restore) m = stack.pop() || [1, 0, 0, 1, 0, 0];
+        else if (fn === OPS.transform) m = mul(m, a);
+        else if (fn === OPS.paintImageXObject || fn === OPS.paintJpegXObject) { var w = Math.abs(m[0]) + Math.abs(m[2]), h = Math.abs(m[1]) + Math.abs(m[3]); if (w > 40 && h > 40) found.push({ name: a[0], y: m[5] + h, w: w, h: h }); }
+      });
+      return Promise.all(found.slice(0, 12).map(function (f) {
+        return new Promise(function (ok) {
+          var store = /^g_/.test(f.name) ? page.commonObjs : page.objs, done = false;
+          var t = setTimeout(function () { if (!done) { done = true; ok(null); } }, 4000);
+          try { store.get(f.name, function (img) { if (done) return; done = true; clearTimeout(t); ok(img ? picUrl(img) : null); }); } catch (e) { clearTimeout(t); ok(null); }
+        }).then(function (u) { return u && { y: f.y, url: u }; });
+      })).then(function (r) { return r.filter(Boolean); });
+    }).catch(function () { return []; });
+  }
+  function picUrl(img) {
+    var c = document.createElement('canvas'), w = img.width, h = img.height; if (!w || !h || w < 40 || h < 40) return null;
+    c.width = w; c.height = h; var x = c.getContext('2d');
+    if (img.bitmap) x.drawImage(img.bitmap, 0, 0);
+    else if (img.data) {
+      var d = x.createImageData(w, h), src = img.data, n = w * h;
+      if (src.length === n * 4) d.data.set(src);
+      else if (src.length === n * 3) { for (var k = 0, j = 0; k < n; k++) { d.data[k * 4] = src[j++]; d.data[k * 4 + 1] = src[j++]; d.data[k * 4 + 2] = src[j++]; d.data[k * 4 + 3] = 255; } }
+      else return null;
+      x.putImageData(d, 0, 0);
+    } else return null;
+    var scale = Math.min(1, 1100 / w), o = c; if (scale < 1) { o = document.createElement('canvas'); o.width = Math.round(w * scale); o.height = Math.round(h * scale); o.getContext('2d').drawImage(c, 0, 0, o.width, o.height); }
+    var g = o.getContext('2d'), bg = document.createElement('canvas'); bg.width = o.width; bg.height = o.height; var b = bg.getContext('2d'); b.fillStyle = '#fff'; b.fillRect(0, 0, o.width, o.height); b.drawImage(o, 0, 0);
+    return bg.toDataURL('image/jpeg', 0.85);
+  }
   function readDocx(file) {
     // Word's automatic numbering is not part of the text, so rebuild it from each paragraph's list level and style
     var paras = [];
-    function text(el) { return (el.children || []).map(function (c) { return c.type === 'text' ? c.value : c.type === 'tab' ? ' ' : c.type === 'break' ? ' ' : text(c); }).join(''); }
-    function collect(el) { (el.children || []).forEach(function (c) { if (c.type === 'paragraph') paras.push({ text: text(c), style: c.styleName || '', num: c.numbering }); else collect(c); }); }
+    var pics = [];
+    function text(el, imgs) { return (el.children || []).map(function (c) { if (c.type === 'image') { imgs.push(c); return ''; } return c.type === 'text' ? c.value : c.type === 'tab' ? ' ' : c.type === 'break' ? ' ' : text(c, imgs); }).join(''); }
+    function collect(el) { (el.children || []).forEach(function (c) { if (c.type === 'paragraph') { var imgs = []; paras.push({ text: text(c, imgs), style: c.styleName || '', num: c.numbering, imgs: imgs }); } else collect(c); }); }
+    function readPic(im) {   // Word picture → small JPEG data URL (skips EMF/WMF drawings browsers cannot show)
+      if (!/^image\/(png|jpe?g|gif|bmp|webp|svg)/i.test(im.contentType || '')) return Promise.resolve(null);
+      return im.readAsBase64String().then(function (b) { var bin = atob(b), u = new Uint8Array(bin.length); for (var k = 0; k < bin.length; k++) u[k] = bin.charCodeAt(k);
+        return shrink(new Blob([u], { type: im.contentType }), 1100); }).catch(function () { return null; });
+    }
     return need('/assets/mammoth.browser.min.js').then(function () { return file.arrayBuffer(); })
       .then(function (buf) { return window.mammoth.convertToHtml({ arrayBuffer: buf }, { transformDocument: function (d) { collect(d); return d; } }); })
       .then(function () {
+        var all = []; paras.forEach(function (p) { p.imgs.forEach(function (im) { all.push(im); }); });
+        return Promise.all(all.map(readPic)).then(function (urls) { var k = 0; paras.forEach(function (p) { p.pics = p.imgs.map(function () { return urls[k++]; }).filter(Boolean); }); });
+      })
+      .then(function () {
         var lines = [], qn = 0, sub = 0, roman = 0, ROM = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii'];
         paras.forEach(function (p) {
-          var t = p.text.replace(/\s+/g, ' ').trim(); if (!t) return;
+          var t = p.text.replace(/\s+/g, ' ').trim();
+          if (!t) { (p.pics || []).forEach(function (u) { lines.push(keepImg(u)); }); return; }
+          var after = (p.pics || []).map(keepImg); if (after.length) { var lp = lines.push; lines.push = function (x) { lp.call(lines, x); after.forEach(function (m) { lp.call(lines, m); }); lines.push = lp; return lines.length; }; }
           var typedQ = /^(?:(?:question|q)\s*)?(\d{1,3})\s*[\.\):]?\s/i.exec(t), typedItem = /^\(?[a-hA-H][\.\)]\s/.test(t);
           if (typedQ) { qn = +typedQ[1]; sub = 0; roman = 0; lines.push(t); return; }
           if (typedItem) { lines.push(t); return; }
@@ -182,11 +232,14 @@
   var ROMAN = /^(i{1,3}|iv|v|vi{1,3}|ix|x)$/;
   Q.clean = clean;
   Q.parsePaper = function (lines) {
-    lines = clean(lines); var qs = [], cur = null, last = 0;
+    lines = clean(lines); var qs = [], cur = null, last = 0, early = [];
     lines.forEach(function (line) {
+      var pm = IMGLINE.exec(line);
+      if (pm) { var url = Q.IMGS[+pm[1]]; if (!url) return; if (!cur) { early.push(url); return; }
+        var holder = cur.items.length ? cur.items[cur.items.length - 1] : cur; (holder.pics = holder.pics || []).push(url); return; }
       var m = QSTART.exec(line);
       if (m && (+m[1] === last + 1 || (!cur && +m[1] <= 3)) && !/^\d+\s*(cm|mm|m|g|kg|s|%|°)/i.test(line.slice(m[1].length).trim())) {
-        cur = { num: +m[1], stem: [], items: [], answer: null }; qs.push(cur); last = +m[1];
+        cur = { num: +m[1], stem: [], items: [], answer: null, pics: early.splice(0) }; qs.push(cur); last = +m[1];
         var first = m[2] && ITEM.exec(m[2]); if (first) cur.items.push({ label: first[1], text: [first[2]] }); else if (m[2]) cur.stem.push(m[2]);
         return;
       }
@@ -198,7 +251,8 @@
     });
     var out = [];
     qs.forEach(function (q) {
-      var stem = q.stem.join(' ').trim(), sm = MARKS.exec(stem), items = q.items.map(function (it) { var t = it.text.join(' ').trim(), mm = MARKS.exec(t); return { label: it.label, text: mm ? t.replace(MARKS, '') : t, marks: mm ? +mm[1] : null, answer: it.answer }; });
+      var stem = q.stem.join(' ').trim(), sm = MARKS.exec(stem), items = q.items.map(function (it) { var t = it.text.join(' ').trim(), mm = MARKS.exec(t); return { label: it.label, text: mm ? t.replace(MARKS, '') : t, marks: mm ? +mm[1] : null, answer: it.answer, pics: it.pics || [] }; });
+      var qpic = (q.pics || [])[0] || '';
       if (sm) stem = stem.replace(MARKS, '');
       var letters = items.filter(function (it) { return !ROMAN.test(it.label) || it.label === 'i' && items.length < 9; });
       var looksLikeOptions = items.length >= 2 && items.length <= 6 && items.every(function (it) { return it.marks == null && it.text.length < 160; }) &&
@@ -208,17 +262,18 @@
         if (ans) { var L = /^\(?([A-Fa-f])\)?\b/.exec(ans); if (L && opts.length) correct = 'abcdef'.indexOf(L[1].toLowerCase()); }
         var tf = opts.length === 2 && /^true$/i.test(opts[0]) && /^false$/i.test(opts[1]);
         out.push({ ref: String(q.num), kind: opts.length ? (tf ? 'tf' : 'mcq') : 'short', prompt: stem, options: opts, correct: correct, marks: sm ? +sm[1] : opts.length ? 1 : 2,
-          scheme: !opts.length && ans ? ans : '', rubric: '', explanation: '', image: '' });
+          scheme: !opts.length && ans ? ans : '', rubric: '', explanation: '', image: qpic || items.reduce(function (a, it) { return a || it.pics[0] || ''; }, '') });
         return;
       }
       // structured question: each lettered part (and roman sub-part) becomes its own question
-      var parent = '', first = true;
+      var parent = '', first = true, carry = qpic;
       items.forEach(function (it) {
         var roman = ROMAN.test(it.label) && parent && !(it.label === 'i' && parent === 'h');
         if (!roman) parent = it.label.toLowerCase();
         var ref = q.num + '(' + parent + ')' + (roman ? '(' + it.label + ')' : '');
-        if (!roman && items.some(function (x) { return x !== it && ROMAN.test(x.label); }) && it.marks == null && items[items.indexOf(it) + 1] && ROMAN.test(items[items.indexOf(it) + 1].label)) { stem = (stem ? stem + '\n' : '') + '(' + parent + ') ' + it.text; return; }
-        out.push({ ref: ref, kind: 'short', prompt: (first && stem ? stem + '\n\n' : '') + it.text, options: [], correct: -1, marks: it.marks || 1, scheme: it.answer || '', rubric: '', explanation: '', image: '' });
+        if (!roman && items.some(function (x) { return x !== it && ROMAN.test(x.label); }) && it.marks == null && items[items.indexOf(it) + 1] && ROMAN.test(items[items.indexOf(it) + 1].label)) { stem = (stem ? stem + '\n' : '') + '(' + parent + ') ' + it.text; if (it.pics[0]) carry = it.pics[0]; return; }
+        out.push({ ref: ref, kind: 'short', prompt: (first && stem ? stem + '\n\n' : '') + it.text, options: [], correct: -1, marks: it.marks || 1, scheme: it.answer || '', rubric: '', explanation: '', image: it.pics[0] || (first ? carry : '') });
+        if (it.pics[0] || first) carry = '';
         first = false;
       });
     });
@@ -331,10 +386,37 @@
       '<div class="f" data-show="choice"' + (choice ? '' : ' hidden') + '><span>Correct answer: tick one</span><div class="abcd" data-abcd style="display:flex;flex-wrap:wrap;gap:8px">' + abcd(q.options || [], q.correct) + '</div></div>' +
       '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Mark scheme: one marking point per line (each line = 1 mark). Use / between alternatives and + when all words are needed. Students never see this.<textarea data-f="scheme" rows="' + Math.max(3, String(q.scheme || '').split('\n').length + 1) + '" placeholder="sugar-phosphate backbone\nbases pair A+T / C+G\nhydrogen bonds between bases">' + E(q.scheme || '') + '</textarea></label>' +
       '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Rubric / level descriptors (optional, for long answers), e.g. "3-4: clear explanation with examples"<textarea data-f="rubric" rows="' + Math.max(2, String(q.rubric || '').split('\n').length + 1) + '" placeholder="1-2: identifies a relevant factor\n3-4: explains with scientific terms\n5-6: detailed, linked explanation with evidence">' + E(q.rubric || '') + '</textarea></label>' +
-      '<details' + (info && q.image ? ' open' : '') + '><summary class="small">' + (info ? 'Picture (optional)' : 'Explanation and picture (optional)') + '</summary><label class="f" data-show="explain"' + (info ? ' hidden' : '') + '>Explanation shown to students after marking<textarea data-f="explanation" rows="2">' + E(q.explanation || '') + '</textarea></label>' +
-      (/^data:image/.test(q.image || '') ? '<div class="row2 small" data-pic><img src="' + E(q.image) + '" alt="" style="max-height:110px;max-width:60%;border-radius:8px;border:1px solid var(--line)"><span>Picture from your file <button type="button" class="btn sm" data-unpic>Remove</button></span><input data-f="image" type="hidden" value="' + E(q.image) + '"></div>'
-        : '<label class="f">Picture address (for example from Wikimedia Commons)<input data-f="image" type="url" value="' + E(q.image || '') + '"></label>') + '</details></article>';
+      picBox(q.image) +
+      '<details' + (q.explanation ? ' open' : '') + ' data-show="explain"' + (info ? ' hidden' : '') + '><summary class="small">Explanation (optional)</summary><label class="f">Explanation shown to students after marking<textarea data-f="explanation" rows="2">' + E(q.explanation || '') + '</textarea></label></details></article>';
   };
+  var HINT = 'or paste a picture here (Ctrl+V), or drag one in';
+  function picBox(img) {   // upload, paste or drop a picture or diagram for this question
+    img = img || '';
+    return '<div class="f qpic" data-picbox style="border:1px dashed var(--line);border-radius:10px;padding:8px 10px"><span>Picture or diagram (optional)</span>' +
+      '<div class="row2" style="justify-content:flex-start;gap:10px;flex-wrap:wrap">' +
+      '<img data-picimg alt=""' + (img ? ' src="' + E(img) + '"' : ' hidden') + ' style="max-height:140px;max-width:60%;border-radius:8px;border:1px solid var(--line);background:#fff">' +
+      '<label class="btn sm" style="cursor:pointer"><span data-piclab>📷 ' + (img ? 'Change picture' : 'Upload picture or diagram') + '</span><input type="file" accept="image/*" data-upload hidden></label>' +
+      '<button type="button" class="btn sm" data-unpic' + (img ? '' : ' hidden') + '>Remove picture</button>' +
+      '<span class="small muted" data-pichint>' + (img ? '' : HINT) + '</span></div>' +
+      '<details' + (img && !/^data:/.test(img) ? ' open' : '') + '><summary class="small muted">Use a picture address instead</summary><input data-picurl type="url" placeholder="https://…" value="' + (/^data:/.test(img) ? '' : E(img)) + '"></details>' +
+      '<input data-f="image" type="hidden" value="' + E(img) + '"></div>';
+  }
+  Q.picBox = picBox;
+  function setPic(el, url) {
+    var box = el.querySelector('[data-picbox]'); if (!box) return;
+    var im = box.querySelector('[data-picimg]'), hid = box.querySelector('[data-f=image]');
+    hid.value = url || ''; if (url) im.src = url; else im.removeAttribute('src'); im.hidden = !url;
+    box.querySelector('[data-unpic]').hidden = !url; box.querySelector('[data-pichint]').textContent = url ? '' : HINT;
+    box.querySelector('[data-piclab]').textContent = '📷 ' + (url ? 'Change picture' : 'Upload picture or diagram');
+    var u = box.querySelector('[data-picurl]'); if (u && !/^data:/.test(url || '') && u.value !== (url || '')) u.value = url || '';
+  }
+  Q.setPic = setPic;
+  function takePic(el, file) {
+    if (!file || (!/^image\//.test(file.type || '') && !/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(file.name || ''))) return false;
+    var hint = el.querySelector('[data-pichint]'); if (hint) hint.textContent = 'Adding picture…';
+    shrink(file, 1100).then(function (u) { setPic(el, u); }).catch(function () { if (hint) hint.textContent = 'That picture could not be read. Try a PNG or JPG.'; });
+    return true;
+  }
   Q.wireCard = function (el) {
     var opt = el.querySelector('[data-f=options]'), box = el.querySelector('[data-abcd]');
     function redraw() {   // keep the ticks in step with the option lines; a line starting with * is ticked
@@ -344,7 +426,19 @@
       var need = el.querySelector('[data-need]'); if (need) need.hidden = c >= 0;
     }
     if (opt && box) { opt.addEventListener('input', redraw); box.addEventListener('change', function () { var need = el.querySelector('[data-need]'); if (need) need.hidden = true; }); }
-    var up = el.querySelector('[data-unpic]'); if (up) up.onclick = function () { var w = el.querySelector('[data-pic]'); w.innerHTML = '<label class="f">Picture address (for example from Wikimedia Commons)<input data-f="image" type="url" value=""></label>'; };
+    var box = el.querySelector('[data-picbox]');
+    if (box) {
+      box.querySelector('[data-upload]').onchange = function () { takePic(el, this.files[0]); this.value = ''; };
+      box.querySelector('[data-unpic]').onclick = function () { setPic(el, ''); };
+      box.querySelector('[data-picurl]').onchange = function () { var v = this.value.trim(); if (!v || /^https?:\/\//.test(v)) setPic(el, v); };
+      box.addEventListener('dragover', function (e) { e.preventDefault(); box.style.background = 'var(--tint, #eef6ff)'; });
+      box.addEventListener('dragleave', function () { box.style.background = ''; });
+      box.addEventListener('drop', function (e) { e.preventDefault(); box.style.background = ''; var f = e.dataTransfer && e.dataTransfer.files[0]; takePic(el, f); });
+      el.addEventListener('paste', function (e) {   // a picture pasted anywhere on this question becomes its picture
+        var items = (e.clipboardData && e.clipboardData.items) || [];
+        for (var k = 0; k < items.length; k++) if (items[k].kind === 'file' && /^image\//.test(items[k].type)) { e.preventDefault(); takePic(el, items[k].getAsFile()); return; }
+      });
+    }
     var k = el.querySelector('[data-f=kind]');
     k.onchange = function () {
       var v = k.value, show = { choice: v === 'mcq' || v === 'tf', written: v === 'short', marks: v !== 'info', qlabel: v !== 'info', ilabel: v === 'info', explain: v !== 'info' };
