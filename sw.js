@@ -20,7 +20,7 @@ self.addEventListener('fetch', function (e) {
   }
   if (u.origin !== location.origin || u.pathname === '/sw.js' || /^\/(rest|auth|storage|realtime|functions)\//.test(u.pathname) || r.headers.get('Authorization')) return;   // database and sign-in: always live
   if (r.mode === 'navigate') {   // pages: newest copy when online, saved copy when offline
-    e.respondWith(fetch(r).then(function (res) { return keep(r, res); }).catch(function () { return saved(r).then(function (m) { return m || caches.match('/offline.html'); }); }));
+    e.respondWith(fetch(new Request(r.url, { cache: 'no-cache', credentials: 'same-origin', redirect: 'follow' })).then(function (res) { return keep(r, res); }).catch(function () { return saved(r).then(function (m) { return m || caches.match('/offline.html'); }); }));   // always check for a newer page
     return;
   }
   e.respondWith(fetch(r).then(function (res) { return keep(r, res); }).catch(function () { return saved(r).then(function (m) { return m || Response.error(); }); }));   // files: newest when online, saved copy offline
