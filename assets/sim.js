@@ -741,6 +741,85 @@
   };
 
   /* ===== DP1 HL · A2.3 Viruses simulators ===== */
+  /* B2.2.2 · Nuclear and cytoplasmic separation: gene expression with and without a nucleus */
+  M.compart = {
+    title: 'Transcription and translation: prokaryote or eukaryote?',
+    html: function () { return '<div class="sim-c">' + select('cpt', 'Cell', [['pro', 'Prokaryote (no nucleus)'], ['eu', 'Eukaryote (nucleus)']]) + slider('cps', 'Time (stage 1 to 4)', 1, 4, 1) + '</div><svg viewBox="0 0 400 170" role="img" aria-label="Gene expression"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var eu = $(r, 'cpt').value === 'eu', s = +$(r, 'cps').value, g = '<rect x="10" y="10" width="380" height="150" rx="40" fill="#f0f9ff" stroke="#0369a1" stroke-width="3"/>';
+      if (eu) g += '<circle cx="110" cy="85" r="60" fill="#ede5ff" stroke="#6d28d9" stroke-width="3"/><circle cx="110" cy="85" r="66" fill="none" stroke="#6d28d9" stroke-width="2"/>' + [[110, 19], [170, 70], [150, 140], [55, 125]].map(function (p) { return '<rect x="' + (p[0] - 4) + '" y="' + (p[1] - 4) + '" width="8" height="8" fill="#fff" stroke="#6d28d9"/>'; }).join('') + '<text x="190" y="150" font-size="11">← nucleus (pores in envelope)</text>';
+      g += '<path d="M60 85 h100" stroke="#1e3a8a" stroke-width="6"/><text x="110" y="78" text-anchor="middle" font-size="10">gene (DNA)</text>';
+      function mrna(x, y, len, col) { return '<path d="M' + x + ' ' + y + ' h' + len + '" stroke="' + (col || '#db2777') + '" stroke-width="4"/>'; }
+      function ribo(x, y) { return '<ellipse cx="' + x + '" cy="' + y + '" rx="10" ry="7" fill="#f59e0b" stroke="#92400e"/><path d="M' + x + ' ' + (y - 8) + ' q8 -14 18 -16" stroke="#15803d" stroke-width="3" fill="none"/>'; }
+      var msg;
+      if (!eu) {
+        if (s >= 1) g += mrna(60, 100, s === 1 ? 40 : 100);
+        if (s >= 2) g += ribo(75, 100) + (s >= 3 ? ribo(100, 100) + ribo(125, 100) : '');
+        if (s === 4) g += '<path d="M250 60 q20 10 40 0 t40 5" stroke="#15803d" stroke-width="4" fill="none"/><text x="290" y="85" text-anchor="middle" font-size="11">finished proteins</text>';
+        msg = ['Transcription starts: mRNA is made in the cytoplasm, next to the DNA.', 'Ribosomes attach to the mRNA and start translation BEFORE transcription has finished: the two happen at the same time, in the same place.', 'Several ribosomes translate the same mRNA at once.', 'Proteins are released. Fast, but no chance to modify the mRNA first.'][s - 1];
+      } else {
+        if (s >= 1 && s <= 2) g += mrna(60, 100, 100, s === 1 ? '#f9a8d4' : '#db2777');
+        if (s === 2) g += '<text x="110" y="118" text-anchor="middle" font-size="10">introns removed</text>';
+        if (s >= 3) g += mrna(200, 100, 110) + ribo(230, 100) + ribo(265, 100);
+        if (s === 4) g += '<path d="M300 50 q20 10 40 0 t30 5" stroke="#15803d" stroke-width="4" fill="none"/><text x="320" y="40" text-anchor="middle" font-size="11">finished proteins</text>';
+        msg = ['Transcription happens INSIDE the nucleus: a pre-mRNA is made.', 'Post-transcriptional modification: introns are removed (splicing) and the mRNA is processed while it is still in the nucleus, away from ribosomes.', 'The mature mRNA leaves through a nuclear pore. Translation by ribosomes happens only in the cytoplasm.', 'Proteins are released. Separating transcription from translation lets the cell check and edit mRNA before it is used.'][s - 1];
+      }
+      r.querySelector('svg').innerHTML = g; r.querySelector('.sim-out').innerHTML = '<b>Stage ' + s + '.</b> ' + msg;
+    }
+  };
+
+  /* B2.2.4–B2.2.5 · Folded membranes: cristae and thylakoids increase surface area */
+  M.cristae = {
+    title: 'Folding a membrane: cristae and thylakoids',
+    html: function () { return '<div class="sim-c">' + select('crt', 'Organelle', [['mito', 'Mitochondrion: cristae'], ['chl', 'Chloroplast: thylakoids']]) + slider('crn', 'Number of folds or thylakoids', 0, 12, 4) + '</div><svg viewBox="0 0 400 180" role="img" aria-label="Organelle"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var mito = $(r, 'crt').value === 'mito', n = +$(r, 'crn').value, g = '', base = 2 * 300 + 2 * 120, add = 0;
+      if (mito) {
+        g += '<rect x="40" y="25" width="320" height="130" rx="65" fill="#fee2e2" stroke="#991b1b" stroke-width="3"/><rect x="50" y="35" width="300" height="110" rx="55" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>';
+        for (var i = 0; i < n; i++) { var x = 80 + i * (240 / Math.max(n, 1)), up = i % 2 === 0; g += '<path d="M' + x + ' ' + (up ? 36 : 144) + ' v' + (up ? 70 : -70) + ' h8 v' + (up ? -70 : 70) + '" fill="none" stroke="#b91c1c" stroke-width="2"/>'; add += 140; }
+        g += '<text x="200" y="172" text-anchor="middle" font-size="10">matrix inside; intermembrane space between the two membranes</text>';
+      } else {
+        g += '<ellipse cx="200" cy="90" rx="170" ry="72" fill="#dcfce7" stroke="#166534" stroke-width="3"/><ellipse cx="200" cy="90" rx="162" ry="64" fill="none" stroke="#166534" stroke-width="2"/>';
+        for (var j = 0; j < n; j++) { var cx = 90 + (j % 6) * 44, cy = j < 6 ? 70 : 115; for (var k = 0; k < 4; k++) g += '<rect x="' + (cx - 16) + '" y="' + (cy - 14 + k * 7) + '" width="32" height="6" rx="3" fill="#4ade80" stroke="#166534"/>'; add += 4 * 76; }
+        g += '<text x="200" y="174" text-anchor="middle" font-size="11">grana (stacks of thylakoids) in the stroma</text>';
+      }
+      var total = base + add, ratio = total / base;
+      r.querySelector('svg').innerHTML = g;
+      r.querySelector('.sim-out').innerHTML = '<b>' + (mito ? 'Inner membrane' : 'Thylakoid membrane') + ' area: ' + ratio.toFixed(1) + ' × that of an unfolded organelle.</b><br>' +
+        (mito ? 'ATP synthase and the electron transport chain are IN the inner membrane, so more cristae = more sites for oxidative phosphorylation = more ATP. Protons are pumped into the small intermembrane space, building a steep gradient quickly. Very active cells (muscle, liver, sperm) have mitochondria with many cristae.'
+              : 'Photosystems, electron carriers and ATP synthase are IN the thylakoid membranes, so more thylakoids = more light absorbed and more ATP and NADPH made. Protons build up in the small thylakoid lumen; the Calvin cycle enzymes are in the stroma.');
+    }
+  };
+
+  /* B2.2.7–B2.2.9 · Following a protein to its destination */
+  var PATH = {
+    sec: ['Secreted protein (e.g. insulin, digestive enzymes)', ['Nucleus: the gene is transcribed into mRNA.', 'mRNA leaves through a nuclear pore; a ribosome starts translating. A signal sequence at the start of the protein makes the ribosome BIND to the rough ER.', 'The growing polypeptide is fed into the lumen of the rough ER, where it folds and may be modified (e.g. sugars added).', 'The protein buds off the ER in a transport vesicle and moves to the CIS face of the Golgi.', 'In the Golgi it is modified further, sorted and packaged. It leaves the TRANS face in a secretory vesicle.', 'The vesicle fuses with the plasma membrane: EXOCYTOSIS releases the protein outside the cell.']],
+    mem: ['Membrane protein (e.g. a channel or receptor)', ['Nucleus: transcription.', 'Translation begins; the signal sequence directs the ribosome to the rough ER.', 'The protein is inserted INTO the ER membrane rather than released into the lumen.', 'It travels in the membrane of a transport vesicle to the Golgi.', 'The Golgi modifies and sorts it into a vesicle heading for the plasma membrane.', 'When the vesicle fuses with the plasma membrane, the protein becomes part of the plasma membrane.']],
+    lys: ['Lysosome enzyme (hydrolase)', ['Nucleus: transcription.', 'Translation on a ribosome bound to the rough ER.', 'The enzyme enters the ER lumen and folds.', 'Transport vesicle to the Golgi.', 'The Golgi tags it (with a phosphate on a sugar) and packages it into a CLATHRIN-coated vesicle.', 'The vesicle loses its coat and fuses with a lysosome: the enzyme now works at low pH inside it.']],
+    cyt: ['Protein used in the cytosol (e.g. glycolysis enzymes)', ['Nucleus: transcription.', 'There is no ER signal sequence, so translation is completed by a FREE ribosome in the cytosol.', 'The protein folds in the cytosol.', 'It stays in the cytosol, or is imported into the nucleus, a mitochondrion or a chloroplast.', 'No vesicles or Golgi are needed.', 'Done: free ribosomes make proteins that are used inside the cell.']]
+  };
+  M.proteinpath = {
+    title: 'Where does the protein go? Ribosomes, rough ER, Golgi and vesicles',
+    html: function () { return '<div class="sim-c">' + select('ppd', 'Protein', Object.keys(PATH).map(function (k) { return [k, PATH[k][0]]; })) + slider('pps', 'Step (1 to 6)', 1, 6, 1) + '</div><svg viewBox="0 0 400 180" role="img" aria-label="Protein pathway"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var d = $(r, 'ppd').value, s = +$(r, 'pps').value, free = d === 'cyt', g = '';
+      g += '<rect x="5" y="5" width="390" height="170" rx="30" fill="#fff7ed" stroke="#9a3412" stroke-width="3"/>';
+      g += '<circle cx="55" cy="90" r="38" fill="#ede5ff" stroke="#6d28d9" stroke-width="3"/><text x="55" y="94" text-anchor="middle" font-size="10">nucleus</text>';
+      g += '<path d="M105 50 q15 40 0 80 M120 50 q15 40 0 80 M135 50 q15 40 0 80" stroke="#0369a1" stroke-width="5" fill="none"/>' + [60, 80, 100, 120].map(function (y) { return '<circle cx="' + (102 + (y % 40) / 4) + '" cy="' + y + '" r="3" fill="#f59e0b"/>'; }).join('') + '<text x="122" y="145" text-anchor="middle" font-size="10">rough ER</text>';
+      g += '<path d="M220 55 q25 -8 50 0 M215 72 q30 -8 60 0 M215 90 q30 -8 60 0 M220 108 q25 -8 50 0" stroke="#15803d" stroke-width="5" fill="none"/><text x="245" y="128" text-anchor="middle" font-size="10">Golgi: cis (left) → trans (right)</text>';
+      g += '<circle cx="330" cy="140" r="16" fill="#fecaca" stroke="#991b1b"/><text x="330" y="168" text-anchor="middle" font-size="9">lysosome</text>';
+      var X = free ? [55, 150, 170, 180, 180, 180] : [55, 110, 125, 185, 285, d === 'lys' ? 330 : 385], Y = free ? [90, 40, 40, 40, 40, 40] : [90, 70, 100, 80, 80, d === 'lys' ? 140 : 90];
+      var x = X[s - 1], y = Y[s - 1], col = '#db2777';
+      if (s === 4 && !free || s === 6 && !free && d !== 'sec') g += '<circle cx="' + x + '" cy="' + y + '" r="11" fill="#fef3c7" stroke="#b45309" stroke-width="2"' + (d === 'lys' && s >= 5 ? ' stroke-dasharray="3 2"' : '') + '/>';
+      if (s === 5 && !free) g += '<circle cx="' + x + '" cy="' + y + '" r="11" fill="#fef3c7" stroke="#b45309" stroke-width="' + (d === 'lys' ? 4 : 2) + '"' + (d === 'lys' ? ' stroke-dasharray="3 2"' : '') + '/>';
+      if (free && s >= 2) g += '<ellipse cx="150" cy="40" rx="9" ry="6" fill="#f59e0b"/>';
+      g += '<circle cx="' + x + '" cy="' + y + '" r="5" fill="' + col + '"/>';
+      if (d === 'sec' && s === 6) g += '<path d="M392 90 l-14 -6 v12 z" fill="' + col + '"/>';
+      r.querySelector('svg').innerHTML = g;
+      r.querySelector('.sim-out').innerHTML = '<b>' + E(PATH[d][0]) + ' · step ' + s + ':</b> ' + E(PATH[d][1][s - 1]) + '<br><span class="small">Pink dot = the protein. ' + (free ? 'Free ribosome shown top left of the ER.' : 'Dashed vesicle = clathrin coat.') + '</span>';
+    }
+  };
+
   /* A1.2.6–A1.2.12 · Base pairing: complementary strand, antiparallel ends, RNA copy, purines and pyrimidines */
   var PAIR = { A: 'T', T: 'A', C: 'G', G: 'C' }, PUR = { A: 1, G: 1 };
   M.basepair = {
