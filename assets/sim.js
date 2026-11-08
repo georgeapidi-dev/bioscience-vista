@@ -10,7 +10,7 @@
     s.textContent = '.sim{display:grid;gap:10px}.sim .sim-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sim .sim-h b{font-size:1rem}' +
       '.sim .sim-c{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));align-items:end}' +
       '.sim label{display:grid;gap:4px;font-size:.9rem}.sim select,.sim input[type=text]{padding:6px;border-radius:8px;border:1px solid #cbd5e1;font:inherit}' +
-      '.sim .sim-out{background:#f1f5f9;border-radius:10px;padding:10px;font-size:.95rem}.sim svg{width:100%;height:auto;max-height:340px}.sim .sim-cap{font-size:.85rem;color:#475569;margin:0}';
+      '.sim .sim-out{background:#f1f5f9;border-radius:10px;padding:10px;font-size:.95rem}.sim svg{width:100%;height:auto;max-height:340px}.sim .sim-cap{font-size:.85rem;color:#475569;margin:0}.sim .sim-run-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.sim .sim-run{background:#0f766e;color:#fff;border:0;border-radius:999px;padding:9px 18px;font:inherit;font-weight:700;cursor:pointer}.sim .sim-run:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}.sim .sim-hint{font-size:.85rem;color:#475569}';
     document.head.appendChild(s);
   }
   function ctl(id, label, html) { return '<label for="' + id + '">' + label + html + '</label>'; }
@@ -376,9 +376,11 @@
     var name = el.getAttribute('data-sim'), m = M[name]; if (!m) return;
     css(); el.setAttribute('data-mounted', '1');
     var cap = el.getAttribute('data-caption') || '';
-    el.innerHTML = '<div class="sim-h"><b>🧪 Simulation: ' + E(m.title) + '</b></div>' + (cap ? '<p class="sim-cap">' + E(cap) + '</p>' : '') + m.html();
+    el.innerHTML = '<div class="sim-h"><b>🧪 Simulation: ' + E(m.title) + '</b></div>' + (cap ? '<p class="sim-cap">' + E(cap) + '</p>' : '') + m.html() +
+      '<div class="sim-run-row"><button type="button" class="sim-run">▶ Run simulation</button><span class="sim-hint">Change a control, or press Run to run it again.</span></div>';
     var first = true, upd = function () { try { m.run(el, first); } finally { first = false; } };
     el.querySelectorAll('input,select').forEach(function (c) { c.addEventListener('input', upd); c.addEventListener('change', upd); });
+    el.querySelector('.sim-run').addEventListener('click', function () { upd(); el.querySelector('.sim-out') && el.querySelector('.sim-out').focus && el.querySelector('.sim-out').setAttribute('tabindex', '-1'); });
     upd();
   }
   function all() { document.querySelectorAll('[data-sim]').forEach(mount); }
