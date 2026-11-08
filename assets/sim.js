@@ -8,6 +8,7 @@
     if (CSS) return; CSS = true;
     var s = document.createElement('style');
     s.textContent = '.sim{display:grid;gap:10px}.sim .sim-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sim .sim-h b{font-size:1rem}' +
+      '.sim .sim-val{font-weight:700;font-size:.85rem;color:#0f766e;justify-self:start}.sim.sim-busy .sim-out{opacity:.85}.sim.sim-flash .sim-out,.sim.sim-flash svg{animation:simflash 1.2s ease-out}@keyframes simflash{0%{box-shadow:0 0 0 4px #fbbf24;background-color:#fef3c7}100%{box-shadow:0 0 0 0 transparent}}.sim .sim-run[disabled]{opacity:.7;cursor:wait}' +
       '.sim .sim-c{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));align-items:end}' +
       '.sim label{display:grid;gap:4px;font-size:.9rem}.sim select,.sim input[type=text]{padding:6px;border-radius:8px;border:1px solid #cbd5e1;font:inherit}' +
       '.sim .sim-out{background:#f1f5f9;border-radius:10px;padding:10px;font-size:.95rem}.sim svg{width:100%;height:auto;max-height:340px}.sim .sim-cap{font-size:.85rem;color:#475569;margin:0}.sim .sim-run-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.sim .sim-run{background:#0f766e;color:#fff;border:0;border-radius:999px;padding:9px 18px;font:inherit;font-weight:700;cursor:pointer}.sim .sim-run:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}.sim .sim-hint{font-size:.85rem;color:#475569}';
@@ -928,8 +929,39 @@
     el.innerHTML = '<div class="sim-h"><b>🧪 Simulation: ' + E(m.title) + '</b></div>' + (cap ? '<p class="sim-cap">' + E(cap) + '</p>' : '') + m.html() +
       '<div class="sim-run-row"><button type="button" class="sim-run">▶ Run simulation</button><span class="sim-hint">Change a control, or press Run to run it again.</span></div>';
     var first = true, upd = function (why) { try { m.run(el, first, why === 'run'); } finally { first = false; } };
+    // each slider shows its current value next to it
+    el.querySelectorAll('input[type=range]').forEach(function (s) {
+      var v = document.createElement('output'); v.className = 'sim-val'; s.insertAdjacentElement('afterend', v);
+      var show = function () { v.textContent = s.value; }; s.addEventListener('input', show); s.addEventListener('change', show); s._show = show; show();
+    });
     el.querySelectorAll('input,select').forEach(function (c) { c.addEventListener('input', upd); c.addEventListener('change', upd); });
-    el.querySelector('.sim-run').addEventListener('click', function () { upd('run'); el.querySelector('.sim-out') && el.querySelector('.sim-out').focus && el.querySelector('.sim-out').setAttribute('tabindex', '-1'); });
+    var btn = el.querySelector('.sim-run'), hint = el.querySelector('.sim-hint'), busy = false, runs = 0;
+    function flash() {   // show clearly that the model has just run
+      runs++; el.classList.remove('sim-flash'); void el.offsetWidth; el.classList.add('sim-flash');
+      var out = el.querySelector('.sim-out'); if (out) { out.setAttribute('tabindex', '-1'); }
+      hint.textContent = '✓ Ran ' + (runs === 1 ? 'once' : runs + ' times') + '. Change a control and press Run again to compare.';
+    }
+    btn.addEventListener('click', function () {
+      if (busy) return;
+      var sl = el.querySelector('input[type=range]');
+      // models that take a new measurement on each run (they use the third argument) just run once
+      if (m.run.length >= 3 || !sl) { upd('run'); flash(); return; }
+      // otherwise animate: sweep the first slider from its lowest value up to the chosen one, step by step
+      var min = +sl.min, max = +sl.max, st = +sl.step || 1, target = +sl.value, end = target > min ? target : max;
+      var n = Math.round((end - min) / st), stride = Math.max(1, Math.ceil(n / 24)), vals = [];
+      for (var k = 0; k <= n; k += stride) vals.push(Math.round((min + k * st) * 1e6) / 1e6);
+      if (vals[vals.length - 1] !== end) vals.push(end);
+      if (end !== target) vals.push(target);
+      busy = true; btn.disabled = true; btn.textContent = '⏳ Running…'; el.classList.add('sim-busy');
+      var i = 0, tick = function () {
+        sl.value = vals[i]; if (sl._show) sl._show();
+        try { m.run(el, false, false); } catch (e) {}
+        i++;
+        if (i < vals.length) setTimeout(tick, vals.length > 12 ? 90 : 220);
+        else { busy = false; btn.disabled = false; btn.textContent = '▶ Run simulation'; el.classList.remove('sim-busy'); upd('run'); flash(); }
+      };
+      tick();
+    });
     upd();
   }
   function all() { document.querySelectorAll('[data-sim]').forEach(mount); }
