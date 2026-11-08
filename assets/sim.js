@@ -142,24 +142,36 @@
     }
   };
 
-  /* 6 · DNA fragments on a gel */
+  /* 6 · Gel electrophoresis: DNA fragments move through the gel and separate by size */
+  var PEOPLE = { 'A': [5000, 2000, 1000, 250], 'B': [5000, 2000, 800, 500], 'C': [6000, 2000, 1000, 500], 'D': [4000, 1500, 800, 250] };
+  var LADDER = [10000, 5000, 2000, 1000, 500, 250];
   M.gel = {
-    title: 'Gel electrophoresis: fragments separate by size',
-    html: function () { return '<label for="l1">Ladder (bp, comma separated)<input id="l1" type="text" value="10000, 5000, 2000, 1000, 500, 250" autocomplete="off"></label>' +
-      '<label for="l2">Sample A (bp)<input id="l2" type="text" value="4000, 1500, 600" autocomplete="off"></label>' +
-      '<label for="l3">Sample B (bp)<input id="l3" type="text" value="4000, 2000, 250" autocomplete="off"></label>' +
-      '<svg viewBox="0 0 400 260" role="img" aria-label="Gel with DNA bands"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    title: 'Gel electrophoresis: DNA bands separate by size',
+    html: function () { return '<div class="sim-c">' +
+      select('a', 'Sample 1 (person)', [['A', 'Person A'], ['B', 'Person B'], ['C', 'Person C'], ['D', 'Person D']]) +
+      select('b', 'Sample 2 (person)', [['A', 'Person A'], ['B', 'Person B'], ['C', 'Person C'], ['D', 'Person D']]) +
+      slider('time', 'Time the gel runs (minutes)', 0, 60, 60) + '</div>' +
+      '<svg viewBox="0 0 400 300" role="img" aria-label="Gel with a ladder and two samples"></svg><div class="sim-out" aria-live="polite"></div>'; },
     run: function (r) {
-      var lanes = [$(r, 'l1').value, $(r, 'l2').value, $(r, 'l3').value].map(function (t) { return t.split(',').map(function (x) { return +x.trim(); }).filter(function (x) { return x > 0; }); });
-      var names = ['Ladder', 'Sample A', 'Sample B'], svg = '<rect x="20" y="20" width="360" height="220" fill="#0f172a" rx="6"/>';
-      function y(bp) { return 30 + (4 - Math.log10(Math.max(bp, 10))) * 55; }   // log scale: bigger fragments stay near the wells
-      lanes.forEach(function (bands, li) {
-        var x = 70 + li * 110;
-        svg += '<text x="' + x + '" y="252" text-anchor="middle" font-size="12">' + names[li] + '</text><rect x="' + (x - 22) + '" y="22" width="44" height="6" fill="#64748b"/>';
-        bands.forEach(function (bp) { svg += '<rect x="' + (x - 20) + '" y="' + (y(bp) - 3).toFixed(1) + '" width="40" height="6" fill="' + (li === 0 ? '#e2e8f0' : '#fbbf24') + '"/><text x="' + (x + 26) + '" y="' + (y(bp) + 4).toFixed(1) + '" font-size="9" fill="#cbd5e1">' + bp + '</text>'; });
+      var t = +$(r, 'time').value, f = t / 60, A = $(r, 'a').value, B = $(r, 'b').value;
+      var top = 40, H = 220;
+      function y(bp) { return top + 10 + f * (Math.log10(20000) - Math.log10(bp)) / (Math.log10(20000) - Math.log10(250)) * (H - 20); }
+      var lanes = [['Ladder', LADDER, '#e2e8f0'], ['Person ' + A, PEOPLE[A], '#fbbf24'], ['Person ' + B, PEOPLE[B], '#fbbf24']];
+      var svg = '<rect x="10" y="' + top + '" width="380" height="' + (H + 20) + '" rx="8" fill="#0f172a"/>';
+      lanes.forEach(function (ln, i) {
+        var x = 70 + i * 120;
+        svg += '<rect x="' + (x - 26) + '" y="' + (top + 4) + '" width="52" height="7" fill="#64748b"/>';
+        svg += '<text x="' + x + '" y="282" text-anchor="middle" font-size="13" fill="#0f172a">' + E(ln[0]) + '</text>';
+        ln[1].forEach(function (bp) { svg += '<rect x="' + (x - 22) + '" y="' + (y(bp) - 3).toFixed(1) + '" width="44" height="6" fill="' + ln[2] + '"/>'; });
       });
+      svg += '<text x="200" y="30" text-anchor="middle" font-size="12" fill="#0f172a">Wells (−)  ·  moves towards +</text>';
       r.querySelector('svg').innerHTML = svg;
-      r.querySelector('.sim-out').innerHTML = 'Smaller fragments move further down the gel, because they pass through the gel more easily. Compare Sample A and Sample B with the ladder: the bands that line up have the same length. A band in Sample A that does not line up with Sample B shows the two people differ at that position.';
+      var same = A === B, shared = PEOPLE[A].filter(function (bp) { return PEOPLE[B].indexOf(bp) >= 0; }).length;
+      var msg;
+      if (t < 60) msg = 'The gel is still running. Bands closer to the wells are the bigger pieces. Set the time to 60 minutes to compare the final pattern.';
+      else if (same) msg = 'The two samples are from the same person: every band lines up.';
+      else msg = 'The two samples are different people. They share ' + shared + ' of ' + PEOPLE[A].length + ' bands; a difference in any band shows the DNA is not from the same person.';
+      r.querySelector('.sim-out').innerHTML = '<b>' + E(msg) + '</b><br>Smaller pieces travel further down the gel. Compare each sample with the ladder to read the sizes.';
     }
   };
 
