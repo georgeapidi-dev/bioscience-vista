@@ -3,7 +3,7 @@
    no service-role key or admin password is ever used in the browser. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, TOPICS = [], CLASSES = [];
-  var TABS = [['overview', 'Overview'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['content', 'Content'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
+  var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['content', 'Content'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
   var ADMIN_TABS = ['bookings', 'roles', 'activity'];
 
   S.guard(app, { staff: true }).then(function (me) { ME = me; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(function () { window.addEventListener('hashchange', route); route(); })
@@ -38,7 +38,22 @@
       '<nav class="tabs" aria-label="Teacher sections">' + TABS.filter(function (t) { return ADMIN_TABS.indexOf(t[0]) < 0 || ME.admin; }).map(function (t) { return '<a href="#' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</a>'; }).join('') + '</nav><div id="pane"><p class="muted">Loading…</p></div>';
     app.innerHTML = head; app.querySelector('#so').onclick = S.signOut;
     var pane = app.querySelector('#pane');
-    ({ overview: overview, approvals: approvals, activity: activity, lessons: lessons, classes: classes, students: students, quizzes: quizzes, marking: marking, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
+    ({ overview: overview, work: lessonWork, approvals: approvals, activity: activity, lessons: lessons, classes: classes, students: students, quizzes: quizzes, marking: marking, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
+  }
+
+  /* ---------- lesson work (each saved step from a lesson page) ---------- */
+  function lessonWork(p) {
+    p.innerHTML = '<p class="muted">Loading…</p>';
+    S.db.from('lesson_work').select('*').order('saved_at', { ascending: false }).limit(200).then(function (r) {
+      if (r.error) { p.innerHTML = '<p class="msg">' + E(S.nice(r.error)) + '</p>'; return; }
+      var rows = r.data || [];
+      p.innerHTML = '<section class="panel"><h3>Lesson work</h3><p class="muted">Each row is one step a student saved on a lesson page (latest 200).</p>' +
+        (rows.length ? '<div class="tablewrap"><table class="marks"><tr><th>When</th><th>Student</th><th>Class</th><th>Lesson</th><th>Step</th><th>Work</th></tr>' +
+          rows.map(function (x) {
+            return '<tr><td>' + E(new Date(x.saved_at).toLocaleString()) + '</td><td>' + E(x.student_name) + '</td><td>' + E(x.class_name || '') + '</td><td>' + E(x.lesson) + '</td><td>' + x.step +
+              '</td><td><pre style="white-space:pre-wrap;margin:0;font-size:.85em">' + E(x.answers) + '</pre></td></tr>';
+          }).join('') + '</table></div>' : '<p class="emptybox">No student work saved yet.</p>') + '</section>';
+    });
   }
 
   /* ---------- overview ---------- */
