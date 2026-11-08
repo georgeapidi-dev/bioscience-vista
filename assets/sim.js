@@ -741,6 +741,87 @@
   };
 
   /* ===== DP1 HL · A2.3 Viruses simulators ===== */
+  /* A1.2.6–A1.2.12 · Base pairing: complementary strand, antiparallel ends, RNA copy, purines and pyrimidines */
+  var PAIR = { A: 'T', T: 'A', C: 'G', G: 'C' }, PUR = { A: 1, G: 1 };
+  M.basepair = {
+    title: 'Complementary base pairing and antiparallel strands',
+    html: function () { return '<label for="bp">DNA strand, written 5′ → 3′ (A, C, G, T)<input id="bp" type="text" value="ATGCGTACCTAG" maxlength="20" autocomplete="off"></label>' +
+      '<div class="sim-c">' + select('bv', 'Show', [['dna', 'The complementary DNA strand'], ['rna', 'The mRNA made using this strand as the template']]) + '</div><svg viewBox="0 0 400 150" role="img" aria-label="Two paired strands"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var raw = ($(r, 'bp').value || '').toUpperCase(), s = raw.replace(/[^ACGT]/g, '').slice(0, 20), rna = $(r, 'bv').value === 'rna', g = '', n = s.length, w = Math.min(28, 340 / Math.max(n, 1)), x0 = 40;
+      if (!n) { r.querySelector('svg').innerHTML = ''; r.querySelector('.sim-out').textContent = 'Type a strand using only A, C, G and T.'; return; }
+      var comp = s.split('').map(function (b) { return rna && b === 'A' ? 'U' : PAIR[b]; }), hb = 0, pur = 0;
+      g += '<text x="4" y="40" font-size="12" font-weight="700">5′</text><text x="' + (x0 + n * w + 4) + '" y="40" font-size="12" font-weight="700">3′</text>';
+      g += '<text x="4" y="118" font-size="12" font-weight="700">3′</text><text x="' + (x0 + n * w + 4) + '" y="118" font-size="12" font-weight="700">5′</text>';
+      g += '<line x1="' + x0 + '" y1="20" x2="' + (x0 + n * w) + '" y2="20" stroke="#64748b" stroke-width="4"/><line x1="' + x0 + '" y1="132" x2="' + (x0 + n * w) + '" y2="132" stroke="' + (rna ? '#db2777' : '#64748b') + '" stroke-width="4"/>';
+      s.split('').forEach(function (b, i) {
+        var x = x0 + i * w + w / 2, c = comp[i], h = (b === 'C' || b === 'G') ? 3 : 2; hb += h; if (PUR[b]) pur++;
+        var col = function (k) { return ({ A: '#2563eb', T: '#dc2626', U: '#ea580c', C: '#15803d', G: '#7c3aed' })[k]; };
+        g += '<rect x="' + (x - w / 2 + 2) + '" y="22" width="' + (w - 4) + '" height="' + (PUR[b] ? 44 : 30) + '" fill="' + col(b) + '" opacity=".85"/><text x="' + x + '" y="36" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">' + b + '</text>';
+        g += '<rect x="' + (x - w / 2 + 2) + '" y="' + (PUR[b] ? 100 : 86) + '" width="' + (w - 4) + '" height="' + (PUR[b] ? 30 : 44) + '" fill="' + col(c) + '" opacity=".85"/><text x="' + x + '" y="124" text-anchor="middle" font-size="12" fill="#fff" font-weight="700">' + c + '</text>';
+        for (var k = 0; k < h; k++) g += '<line x1="' + (x - 6 + k * 6) + '" y1="' + (PUR[b] ? 68 : 54) + '" x2="' + (x - 6 + k * 6) + '" y2="' + (PUR[b] ? 98 : 84) + '" stroke="#0f172a" stroke-dasharray="2 2"/>';
+      });
+      r.querySelector('svg').innerHTML = g;
+      r.querySelector('.sim-out').innerHTML = '<b>' + (rna ? 'mRNA' : 'Complementary strand') + ', written 5′ → 3′:</b> ' + comp.slice().reverse().join('') + ' &nbsp; (read right to left in the diagram)' +
+        '<br>Hydrogen bonds: <b>' + hb + '</b> (A–T 2, C–G 3' + (rna ? ', A–U 2' : '') + '). Purines on the top strand: ' + pur + ' of ' + n + '.' +
+        '<br>Long bars are PURINES (A, G: two rings); short bars are PYRIMIDINES (C, T, U: one ring). Every pair is one long + one short bar, so the helix keeps the same width.' + (raw.replace(/[^A-Z]/g, '') !== s ? '<br><i>Letters other than A, C, G and T were ignored.</i>' : '');
+    }
+  };
+
+  /* A1.2.9 · How much information four bases can hold */
+  M.seqdiv = {
+    title: 'DNA sequence diversity: 4ⁿ possible sequences',
+    html: function () { return '<div class="sim-c">' + slider('sn', 'Length of the sequence (n nucleotides)', 1, 40, 10) + '</div><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var n = +$(r, 'sn').value, big = Math.pow(4, n), txt = n <= 20 ? big.toLocaleString() : big.toExponential(2).replace('e+', ' × 10^');
+      var cmp = n <= 5 ? 'fewer than the number of students in a school' : n <= 10 ? 'about the population of a large city' : n <= 16 ? 'more than the number of people on Earth' : n <= 27 ? 'more than the number of stars in our galaxy' : 'more than the number of grains of sand on all the beaches on Earth';
+      r.querySelector('.sim-out').innerHTML = 'Possible sequences = 4<sup>' + n + '</sup> = <b>' + txt + '</b> (' + cmp + ').' +
+        '<br>Each extra nucleotide multiplies the number of possibilities by 4. A gene of 1000 nucleotides could have 4<sup>1000</sup> sequences: in practice limitless. The human genome is about 3.2 × 10⁹ base pairs long.';
+    }
+  };
+
+  /* A1.2.14 · Hershey and Chase (1952) */
+  var HC = ['Phages are grown in bacteria given a radioactive isotope, so the isotope is built into the new phages.',
+    'Labelled phages infect unlabelled E. coli and inject their genetic material.',
+    'A blender shakes the empty protein coats off the outside of the bacteria.',
+    'A centrifuge spins the mixture: the heavy bacteria form a PELLET at the bottom; the light phage coats stay in the liquid SUPERNATANT.',
+    'Radioactivity is measured in the pellet and in the supernatant.'];
+  M.hershey = {
+    title: 'The Hershey–Chase experiment',
+    html: function () { return '<div class="sim-c">' + select('hl', 'Radioactive label', [['p', 'Phosphorus-32 (labels DNA)'], ['s', 'Sulfur-35 (labels protein)']]) + slider('hs', 'Stage (1 to 5)', 1, 5, 1) + '</div><svg viewBox="0 0 400 170" role="img" aria-label="Experiment stage"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var p = $(r, 'hl').value === 'p', s = +$(r, 'hs').value, hot = '#f59e0b', g = '';
+      function phage(x, y, coat, dna) { return '<polygon points="' + x + ',' + (y - 14) + ' ' + (x + 12) + ',' + (y - 7) + ' ' + (x + 12) + ',' + (y + 7) + ' ' + x + ',' + (y + 14) + ' ' + (x - 12) + ',' + (y + 7) + ' ' + (x - 12) + ',' + (y - 7) + '" fill="' + (dna ? '#fde68a' : '#fff') + '" stroke="' + coat + '" stroke-width="3"/><line x1="' + x + '" y1="' + (y + 14) + '" x2="' + x + '" y2="' + (y + 30) + '" stroke="' + coat + '" stroke-width="3"/>'; }
+      var coat = p ? '#334155' : hot, dnaCol = p ? hot : '#94a3b8';
+      if (s <= 2) { g += '<rect x="120" y="70" width="160" height="70" rx="35" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>'; g += phage(160, s === 1 ? 30 : 40, coat, s === 1) + phage(240, s === 1 ? 30 : 40, coat, s === 1); if (s === 2) g += '<path d="M160 80 q10 20 30 15 M240 80 q-10 25 -30 20" stroke="' + dnaCol + '" stroke-width="4" fill="none"/>'; }
+      if (s === 3) { g += '<rect x="120" y="70" width="160" height="70" rx="35" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/><path d="M160 90 q10 20 30 15 M240 90 q-10 25 -30 20" stroke="' + dnaCol + '" stroke-width="4" fill="none"/>' + phage(60, 40, coat, false) + phage(340, 50, coat, false) + '<text x="200" y="20" text-anchor="middle" font-size="12">Blender: coats knocked off</text>'; }
+      if (s >= 4) { g += '<path d="M150 10 v120 q50 40 100 0 v-120" fill="#f8fafc" stroke="#334155" stroke-width="3"/><text x="75" y="60" text-anchor="middle" font-size="11">supernatant</text><text x="75" y="74" text-anchor="middle" font-size="11">(phage coats)</text><line x1="110" y1="64" x2="150" y2="64" stroke="#64748b"/>' + phage(180, 35, coat, false) + phage(220, 85, coat, false);
+        g += '<ellipse cx="200" cy="140" rx="34" ry="12" fill="#bae6fd" stroke="#0369a1"/><text x="200" y="168" text-anchor="middle" font-size="11">pellet (bacteria)</text>';
+        if (p) g += '<ellipse cx="200" cy="140" rx="34" ry="12" fill="' + hot + '" opacity=".7"/>'; }
+      r.querySelector('svg').innerHTML = g;
+      var res = s === 5 ? (p ? '<br><b>Result:</b> most radioactivity (P-32) is in the PELLET, inside the bacteria. DNA entered the cells. New phages made inside also contained some P-32.' : '<br><b>Result:</b> most radioactivity (S-35) is in the SUPERNATANT, with the empty coats. Protein did not enter the cells.') +
+        '<br><b>Conclusion:</b> DNA, not protein, enters the bacterium and directs the making of new phages, so DNA is the genetic material. (P is in DNA but not protein; S is in protein (cysteine, methionine) but not DNA.)' : '';
+      r.querySelector('.sim-out').innerHTML = '<b>Stage ' + s + '.</b> ' + HC[s - 1] + res + '<br><span class="small">Orange = radioactive.</span>';
+    }
+  };
+
+  /* A1.2.15 · Chargaff's rules */
+  M.chargaff = {
+    title: "Chargaff's rules: base composition of DNA",
+    html: function () { return '<div class="sim-c">' + slider('ca', 'Adenine (% of all bases)', 10, 40, 30) + select('cs', 'Type of DNA', [['ds', 'Double-stranded (most organisms)'], ['ss', 'Single-stranded (a few viruses, e.g. phage φX174)']]) + '</div><svg viewBox="0 0 400 120" role="img" aria-label="Base percentages"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var A = +$(r, 'ca').value, ds = $(r, 'cs').value === 'ds', T = ds ? A : 33 - A / 2, G = ds ? (100 - 2 * A) / 2 : 24, C = 100 - A - T - G;
+      if (!ds) { T = Math.max(5, Math.round(33 - A / 3)); G = Math.round((100 - A - T) * 0.55); C = 100 - A - T - G; }
+      var d = [['A', A, '#2563eb'], ['T', T, '#dc2626'], ['G', G, '#7c3aed'], ['C', C, '#15803d']], g = '';
+      d.forEach(function (b, i) { var h = b[1] * 2; g += '<rect x="' + (40 + i * 90) + '" y="' + (100 - h) + '" width="60" height="' + h + '" fill="' + b[2] + '"/><text x="' + (70 + i * 90) + '" y="' + (95 - h) + '" text-anchor="middle" font-size="12">' + b[0] + ' ' + Math.round(b[1]) + '%</text>'; });
+      r.querySelector('svg').innerHTML = g + '<line x1="30" y1="100" x2="390" y2="100" stroke="#334155"/>';
+      var pu = A + G, py = T + C;
+      r.querySelector('.sim-out').innerHTML = ds ? '<b>Double-stranded DNA:</b> A = T = ' + A + '%, G = C = ' + G + '%. Purines (A + G) = ' + pu + '% = pyrimidines (T + C) = ' + py + '%. The ratio A+G : T+C = 1.' +
+        '<br>Why: every A is paired with a T and every G with a C, so the amounts must match. Chargaff measured this before the structure of DNA was known; it became key evidence for Watson and Crick\'s base pairing.'
+        : '<b>Single-stranded DNA:</b> A ' + A + '%, T ' + T + '%, G ' + G + '%, C ' + C + '%. A ≠ T and G ≠ C, because the bases are not paired. Chargaff\'s rules apply only to double-stranded DNA.';
+    }
+  };
+
   /* A2.2.4–A2.2.9 · Compare cell types, including atypical eukaryotic cells */
   var CT = {
     // name, size, [cell wall, nucleus, mitochondria, chloroplasts, large permanent vacuole, centrioles, ribosomes, DNA form, nuclei per cell], note, drawing
