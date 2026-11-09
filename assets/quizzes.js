@@ -1,12 +1,12 @@
 /* Quiz centre · Learnova (marking is done on the server by submit_quiz) */
 (function () {
   var T = window.BVT;
-  var S = window.BVS, E = S.E, app = document.getElementById('app'), timer = null, ME;
+  var S = window.BVS, E = S.E, app = document.getElementById('app'), timer = null, beat = null, ME;
   var EXAM = app.getAttribute('data-mode') === 'exam', NOUN = EXAM ? 'exam' : 'quiz', HOME = EXAM ? '/exams/' : '/quizzes/';
   S.guard(app).then(function (me) { ME = me; route(); window.addEventListener('hashchange', route); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
-  function route() { clearInterval(timer); var id = location.hash.slice(1); return id ? open(id) : list(); }
+  function route() { clearInterval(timer); clearInterval(beat); var id = location.hash.slice(1); return id ? open(id) : list(); }
   function fail(r) { app.innerHTML = '<section class="panel"><p class="msg">' + E(S.nice(r.error || r)) + '</p><p><a href="#">← All ' + NOUN + 's</a></p></section>'; }
 
   function list() {
@@ -48,7 +48,7 @@
       if (live) return paper(q, live.id);
       if (done.length && !(canStart && new URLSearchParams(location.search).get('again'))) return review(q, done[0], canStart);
       app.innerHTML = '<section class="panel"><p class="label">' + (EXAM ? 'Exam' : 'Quiz') + '</p><h2>' + E(q.title) + '</h2>' + (q.instructions ? '<p>' + E(q.instructions) + '</p>' : '') +
-        (EXAM ? '<p class="panel tint small"><b>Exam conditions.</b> Work on your own. Once you start, the timer keeps running even if you close the page, and the exam is handed in automatically when time runs out.</p>' : '') + '<ul class="small"><li>' + (q.time_limit_minutes ? 'You have <b>' + q.time_limit_minutes + ' minutes</b>. The timer keeps running if you close the page.' : 'There is no time limit.') + '</li><li>Attempts allowed: ' + q.max_attempts + ' (used ' + at.length + ')</li><li>Your answers are saved on this device as you go. Press <b>Submit</b> when you finish.</li></ul>' +
+        (EXAM ? '<p class="panel tint small"><b>Exam conditions.</b> Work on your own. Once you start, the timer keeps running even if you close the page, and the exam is handed in automatically when time runs out.</p>' : '') + '<ul class="small"><li>' + (q.time_limit_minutes ? 'You have <b>' + q.time_limit_minutes + ' minutes</b>. The timer keeps running if you close the page.' : 'There is no time limit.') + '</li><li>Attempts allowed: ' + q.max_attempts + ' (used ' + at.length + ')</li><li>Your answers are saved as you go, so you can carry on if your device switches off. Press <b>Submit</b> when you finish.</li></ul>' +
         '<div class="acts"><button class="btn main" id="go" type="button">' + (EXAM ? 'Start exam' : 'Start quiz') + '</button><a class="btn" href="#">Back</a></div><p class="msg" id="m"></p></section>';
       app.querySelector('#go').onclick = function () { this.disabled = true; S.db.rpc('start_quiz', { qid: qid }).then(function (r) { if (r.error) { app.querySelector('#m').textContent = S.nice(r.error); return; } paper(q, r.data); }); };
     });
@@ -58,7 +58,10 @@
   function paper(q, attempt) {
     S.db.rpc('quiz_paper', { attempt: attempt }).then(function (r) {
       if (r.error) return fail(r);
-      var qs = r.data || [], saved = {}; try { saved = JSON.parse(localStorage.getItem(key(attempt)) || '{}'); } catch (e) {}
+      var qs = r.data || [], local = {}; try { local = JSON.parse(localStorage.getItem(key(attempt)) || '{}'); } catch (e) {}
+      if (Object.keys(local).length) return build(local);   // otherwise carry on from answers saved on the server (e.g. a different device)
+      S.db.from('quiz_attempts').select('answers').eq('id', attempt).maybeSingle().then(function (a) { build((a.data && a.data.answers) || {}); }, function () { build({}); });
+      function build(saved) {
       var secs = qs.length ? qs[0].seconds_left : null;
       app.innerHTML = '<form id="qf" class="grp"><div class="row2 sticky-top"><div><p class="label">' + E(q.title) + '</p><b id="cnt"></b></div>' + (secs != null ? '<span class="timer" id="tm" aria-live="off"></span>' : '') + '</div>' +
         qs.map(function (x, i) {
@@ -71,19 +74,26 @@
               opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"' + (String(v) === String(j) ? ' checked' : '') + '> <b>' + 'ABCDEFGH'.charAt(j) + '.</b> ' + E(o) + '</label>'; }).join('')) + '</fieldset>';
         }).join('') + '<div class="acts"><button class="btn main" type="submit">Submit answers</button><a class="btn" href="#">Save and leave</a></div><p class="msg" id="m" role="alert"></p></form>';
       var f = app.querySelector('#qf'), pads = {};
-      qs.forEach(function (x) { var h = f.querySelector('[data-pad="' + x.question_id + '"]'); if (h) pads[x.question_id] = T.pad(h, { mode: T.parse(x.prompt).mode, x: T.parse(x.prompt).x, y: T.parse(x.prompt).y, image: x.image_url, value: saved[x.question_id], onchange: function () { keep(); } }); });
+      qs.forEach(function (x) { var h = f.querySelector('[data-pad="' + x.question_id + '"]'); if (h) pads[x.question_id] = T.pad(h, { mode: T.parse(x.prompt).mode, x: T.parse(x.prompt).x, y: T.parse(x.prompt).y, image: x.image_url, value: saved[x.question_id], onchange: function () { keep(); push(); } }); });
       function collect() { var g = {}; qs.forEach(function (x) {
         if (pads[x.question_id]) { var d = pads[x.question_id].get(); if (d) g[x.question_id] = d; return; }
         var el = f.querySelector('select[name="q-' + x.question_id + '"]') || f.querySelector('[name="q-' + x.question_id + '"]' + (x.kind === 'short' ? '' : ':checked')); if (el && el.value !== '') g[x.question_id] = x.kind === 'short' ? el.value : +el.value; }); return g; }
       var kt = null; function keep() { clearTimeout(kt); kt = setTimeout(function () { try { localStorage.setItem(key(attempt), JSON.stringify(collect())); } catch (e) {} count(); }, 400); }
       function count() { var n = Object.keys(collect()).length; app.querySelector('#cnt').textContent = n + ' of ' + qs.length + ' answered'; }
+      var pt = null, lastSent = null;   // teacher's live view: answers go to the server every few seconds, plus a heartbeat
+      function push(now) { clearTimeout(pt); pt = setTimeout(function () { if (sent) return; var g = collect(), js = JSON.stringify(g);
+        S.db.rpc('save_quiz_progress', { attempt: attempt, given: js === lastSent ? null : g }).then(function (r) { if (!r.error) lastSent = js; }, function () {}); }, now ? 0 : 3000); }
+      clearInterval(beat); beat = setInterval(function () { push(true); }, 30000); push(true);
+      f.addEventListener('change', function () { push(); });
+      f.addEventListener('input', function () { push(); });
+      var lv = f.querySelector('.acts a.btn'); if (lv) lv.addEventListener('click', function () { push(true); });
       f.addEventListener('change', keep);
       f.addEventListener('input', function () { try { localStorage.setItem(key(attempt), JSON.stringify(collect())); } catch (e) {} count(); }); count();
       var sent = false;
       function submit(auto) {
         if (sent) return; var g = collect(), miss = qs.length - Object.keys(g).length;
         if (!auto && miss && !confirmInline(miss)) return;
-        sent = true; clearInterval(timer); app.querySelector('#m').className = 'msg'; app.querySelector('#m').textContent = auto ? 'Time is up. Submitting…' : 'Submitting…';
+        sent = true; clearInterval(timer); clearInterval(beat); clearTimeout(pt); app.querySelector('#m').className = 'msg'; app.querySelector('#m').textContent = auto ? 'Time is up. Submitting…' : 'Submitting…';
         S.db.rpc('submit_quiz', { attempt: attempt, given: g }).then(function (res) {
           if (res.error) { sent = false; app.querySelector('#m').textContent = S.nice(res.error); return; }
           try { localStorage.removeItem(key(attempt)); } catch (e) {}
@@ -97,6 +107,7 @@
         var end = Date.now() + secs * 1000, tm = app.querySelector('#tm');
         var tick = function () { var s = Math.max(0, Math.round((end - Date.now()) / 1000)); tm.textContent = '⏱ ' + Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); tm.classList.toggle('low', s < 60); if (!s) submit(true); };
         tick(); timer = setInterval(tick, 1000);
+      }
       }
     });
   }

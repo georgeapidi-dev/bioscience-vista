@@ -32,6 +32,7 @@
   function iso(v) { return v ? new Date(v).toISOString() : null; }
 
   function route() {
+    clearInterval(LIVE);
     var h = location.hash.slice(1).split('/'), tab = h[0] || 'overview';
     if (ADMIN_TABS.indexOf(tab) >= 0 && !ME.admin) tab = 'overview';
     var head = '<div class="row2"><div><p class="label">Teacher dashboard</p><h2>' + E(ME.profile.full_name || ME.user.email) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><button class="btn sm" type="button" id="so">Log out</button></div>' +
@@ -81,19 +82,161 @@
   }
 
   /* ---------- classes ---------- */
-  function classes(p) {
+  function classes(p, args) {
+    if (args && args[0]) return refs().then(function () { classPage(p, args[0], args[1]); });
     refs().then(function () {
-      p.innerHTML = '<form class="panel row2" id="nc"><input id="cn" placeholder="Class name, e.g. Grade 9 Science" required><input id="cp" placeholder="Programme, e.g. MYP 4" style="max-width:180px"><button class="btn main sm" type="submit">Create class</button></form>' +
+      p.innerHTML = '<section class="panel"><h3>Class pages</h3><p class="small muted">Open a class to see its quizzes, exams and interactive lessons, and who has and has not submitted. The page updates itself while you watch.</p>' +
+        (CLASSES.length ? '<div class="cgrid">' + CLASSES.map(function (c) { return '<a class="ccard" href="#classes/' + c.id + '"><b>' + E(c.name) + '</b><span class="small muted">' + E(c.programme || '') + '</span><span class="small" data-n="' + c.id + '">…</span></a>'; }).join('') + '</div>' : '<p class="emptybox">No classes yet.</p>') + '</section>' +
+        '<form class="panel row2" id="nc"><input id="cn" placeholder="Class name, e.g. Grade 9 Science" required><input id="cp" placeholder="Programme, e.g. MYP 4" style="max-width:180px"><button class="btn main sm" type="submit">Create class</button></form>' +
         (CLASSES.length ? '<div class="tablewrap"><table class="marks"><tr><th>Class</th><th>Programme</th><th>Join code</th><th>Open for joining</th><th></th></tr>' + CLASSES.map(function (c) {
           return '<tr data-id="' + c.id + '"><td><input data-k="name" value="' + E(c.name) + '"></td><td><input data-k="programme" value="' + E(c.programme || '') + '"></td><td><b class="code">' + E(c.join_code) + '</b> <button type="button" class="btn sm" data-a="new">New code</button></td>' +
             '<td><input type="checkbox" data-k="active"' + (c.active ? ' checked' : '') + '></td><td><button type="button" class="btn sm" data-a="save">Save</button></td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No classes yet.</p>') +
         '<p class="small muted">Give students the join code. They type it on the <a href="/register/">registration page</a>. Untick "Open for joining" to stop new sign-ups; make a new code if a code was shared too widely.</p>';
+      S.db.from('profiles').select('class_id').in('class_id', CLASSES.map(function (c) { return c.id; })).then(function (r) {
+        var n = {}; (r.data || []).forEach(function (x) { n[x.class_id] = (n[x.class_id] || 0) + 1; });
+        p.querySelectorAll('[data-n]').forEach(function (el) { var k = n[el.getAttribute('data-n')] || 0; el.textContent = k + ' student' + (k === 1 ? '' : 's'); });
+      });
       p.querySelector('#nc').onsubmit = function (e) { e.preventDefault();
         S.db.from('classes').insert({ name: p.querySelector('#cn').value.trim(), programme: p.querySelector('#cp').value.trim() || null, teacher_id: ME.user.id, join_code: code6() }).then(function (r) { if (ok(r, 'Class created')) classes(p); }); };
       p.querySelectorAll('tr[data-id]').forEach(function (tr) { var id = tr.getAttribute('data-id');
         tr.querySelector('[data-a=save]').onclick = function () { S.db.from('classes').update({ name: tr.querySelector('[data-k=name]').value.trim(), programme: tr.querySelector('[data-k=programme]').value.trim() || null, active: tr.querySelector('[data-k=active]').checked }).eq('id', id).then(function (r) { ok(r, 'Saved'); }); };
         tr.querySelector('[data-a=new]').onclick = function () { S.db.from('classes').update({ join_code: code6() }).eq('id', id).then(function (r) { if (ok(r, 'New code made')) classes(p); }); };
       });
+    });
+  }
+
+
+  /* ---------- class pages: each class has its own page for quizzes, exams and interactive lessons ---------- */
+  var LIVE = null;
+  function ago(t) { if (!t) return ''; var s = Math.max(0, (Date.now() - new Date(t)) / 1000); return s < 45 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' h ago' : S.when(t); }
+  function mmss(s) { return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
+  function sameProg(a, b) { a = (a || '').toLowerCase(); b = (b || '').toLowerCase(); return !!a && !!b && (a === b || (a.indexOf('ib dp') === 0 && b.indexOf('ib dp') === 0)); }
+  function roster(cid) {
+    return S.db.from('profiles').select('id,full_name,approved').eq('class_id', cid).order('full_name').then(function (r) {
+      var list = (r.data || []).filter(function (x) { return x.id !== ME.user.id; }), ids = list.map(function (x) { return x.id; });
+      if (!ids.length) return [];
+      return S.db.from('user_roles').select('user_id,role').in('user_id', ids).in('role', ['teacher', 'admin']).then(function (q) {
+        var staff = {}; (q.data || []).forEach(function (x) { staff[x.user_id] = 1; });
+        return list.filter(function (x) { return !staff[x.id]; });
+      });
+    });
+  }
+  function bar(parts, total) {   // parts: [[count, colour, label]]
+    return '<div class="sbar" role="img" aria-label="' + parts.map(function (x) { return x[0] + ' ' + x[2]; }).join(', ') + '">' + parts.map(function (x) { return x[0] ? '<span style="flex:' + x[0] + ';background:' + x[1] + '"></span>' : ''; }).join('') + (total ? '' : '<span style="flex:1;background:var(--line)"></span>') + '</div>';
+  }
+  function classPage(p, cid, sub) {
+    var c = CLASSES.filter(function (x) { return x.id === cid; })[0];
+    if (!c) { p.innerHTML = '<p class="emptybox">This class was not found, or it is not one of your classes. <a href="#classes">All classes</a></p>'; return; }
+    sub = sub === 'lessons' ? 'lessons' : 'quizzes';
+    var state = { filter: 'all', open: {}, lesson: null, live: true };
+    try { state.lesson = sessionStorage.getItem('bv-cl-' + cid) || null; } catch (e) {}
+    p.innerHTML = '<p class="small"><a href="#classes">← All classes</a></p><div class="row2"><div><p class="label">' + E(c.programme || 'Class') + '</p><h2 style="margin:0">' + E(c.name) + '</h2></div>' +
+      '<div class="small muted" style="text-align:right">Join code <b class="code">' + E(c.join_code) + '</b><br><label class="chk" style="display:inline-flex"><input type="checkbox" id="lv" checked> Live: update every 15 seconds</label> <span id="stamp"></span></div></div>' +
+      '<nav class="tabs" aria-label="Class sections"><a href="#classes/' + cid + '/quizzes" aria-selected="' + (sub === 'quizzes') + '">📝 Quizzes and exams</a><a href="#classes/' + cid + '/lessons" aria-selected="' + (sub === 'lessons') + '">🧪 Interactive lessons</a></nav>' +
+      '<div id="cbody"><p class="muted">Loading…</p></div>';
+    var body = p.querySelector('#cbody'), busy = false;
+    function load() {
+      if (busy) return; busy = true;
+      (sub === 'lessons' ? lessonBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
+        var miss = /class_(quiz|lesson)_board|schema cache|does not exist/i.test((e && (e.message || e.details)) || String(e));
+        body.innerHTML = miss ? '<p class="emptybox">The class pages need one database update (migration 011) before they can show results. Run it once in the Supabase SQL editor, then reload this page.</p>' : '<p class="msg">' + E(S.nice(e)) + '</p>'; });
+    }
+    state.reload = load;
+    p.querySelector('#lv').onchange = function () { state.live = this.checked; clearInterval(LIVE); if (state.live) { LIVE = setInterval(load, 15000); load(); } };
+    clearInterval(LIVE); LIVE = setInterval(load, 15000); load();
+  }
+  function filters(state) {
+    return '<div class="row2" style="justify-content:flex-start"><span class="small muted">Show:</span>' + [['all', 'Everyone'], ['not', 'Not submitted'], ['done', 'Submitted']].map(function (f) {
+      return '<button type="button" class="btn sm' + (state.filter === f[0] ? ' main' : '') + '" data-f="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>';
+  }
+  function wireFilters(host, state) {
+    host.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { state.filter = b.getAttribute('data-f'); state.reload(); }; });
+    host.querySelectorAll('details[data-k]').forEach(function (d) { d.ontoggle = function () { state.open[d.getAttribute('data-k')] = d.open; }; });
+  }
+  function quizBoard(body, c, state) {
+    return Promise.all([roster(c.id),
+      S.db.from('quiz_classes').select('quizzes(id,title,category,published,due_at,opens_at,time_limit_minutes,show_results,created_at, quiz_questions(question_id))').eq('class_id', c.id),
+      S.db.rpc('class_quiz_board', { cls: c.id })]).then(function (x) {
+      if (x[1].error) throw x[1].error; if (x[2].error) throw x[2].error;
+      var kids = x[0], qs = (x[1].data || []).map(function (r) { return r.quizzes; }).filter(Boolean), by = {}, extra = {};
+      qs.sort(function (a, b) { return (b.published - a.published) || (new Date(b.created_at) - new Date(a.created_at)); });
+      (x[2].data || []).forEach(function (r) { (by[r.quiz_id] = by[r.quiz_id] || {})[r.student_id] = r; });
+      if (!qs.length) { body.innerHTML = '<p class="emptybox">No quizzes or exams are set for ' + E(c.name) + ' yet. In <a href="#quizzes">Quizzes and exams</a>, open a quiz, tick this class and publish it.</p>'; return; }
+      if (!kids.length) { body.innerHTML = '<p class="emptybox">No students have joined ' + E(c.name) + ' yet. Give them the join code <b class="code">' + E(c.join_code) + '</b> to type on the registration page.</p>'; return; }
+      var html = filters(state) + qs.map(function (q, qi) {
+        var nq = (q.quiz_questions || []).length, rows = kids.map(function (k) {
+          var a = (by[q.id] || {})[k.id], st = !a ? 'none' : a.status === 'in_progress' ? 'prog' : 'done';
+          return { k: k, a: a, st: st };
+        });
+        var nDone = rows.filter(function (r) { return r.st === 'done'; }).length, nProg = rows.filter(function (r) { return r.st === 'prog'; }).length, nNone = rows.length - nDone - nProg;
+        var notList = rows.filter(function (r) { return r.st !== 'done'; }).map(function (r) { return E(r.k.full_name || '(no name)'); });
+        var show = rows.filter(function (r) { return state.filter === 'all' || (state.filter === 'done' ? r.st === 'done' : r.st !== 'done'); });
+        var order = { prog: 0, none: 1, done: 2 }; show.sort(function (a, b) { return order[a.st] - order[b.st] || (a.k.full_name || '').localeCompare(b.k.full_name || ''); });
+        var key = 'q' + q.id, open = state.open[key] != null ? state.open[key] : qi === 0;
+        return '<details class="panel" data-k="' + key + '"' + (open ? ' open' : '') + '><summary><b>' + (q.category === 'exam' ? '🧪 ' : '📝 ') + E(q.title) + '</b> ' + (q.published ? '' : '<span class="pill">Draft: students cannot see it</span>') +
+          '<div class="small muted">' + [nq + ' questions', q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : '', q.due_at ? 'Due ' + S.when(q.due_at) : ''].filter(Boolean).join(' · ') + '</div>' +
+          '<div class="small"><b style="color:var(--ok)">✓ ' + nDone + ' submitted</b> · <b style="color:#b45309">✎ ' + nProg + ' working now</b> · <b style="color:#b91c1c">○ ' + nNone + ' not started</b> · of ' + rows.length + '</div>' +
+          bar([[nDone, 'var(--ok)', 'submitted'], [nProg, '#f59e0b', 'working'], [nNone, '#fca5a5', 'not started']], rows.length) + '</summary>' +
+          (notList.length ? '<p class="small"><b>Not submitted (' + notList.length + '):</b> ' + notList.join(', ') + '</p>' : '<p class="small"><b>Everyone has submitted.</b></p>') +
+          '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Status</th><th>Progress</th><th>Last active</th><th>Result</th></tr>' + show.map(function (r) {
+            var a = r.a, idle = a && r.st === 'prog' && (Date.now() - new Date(a.last_seen)) > 180000;
+            var stat = r.st === 'done' ? '<span class="pill ok">✓ Submitted</span>' : r.st === 'prog' ? (idle ? '<span class="pill new">⚠ Idle</span>' : '<span class="pill t">✎ Working</span>') : '<span class="pill" style="color:#b91c1c">Not started</span>';
+            var prog = !a ? '' : r.st === 'prog' ? a.answered + ' of ' + nq + ' answered' + (a.seconds_left != null ? ' · ⏱ ' + mmss(a.seconds_left) + ' left' : '') : 'Handed in ' + S.when(a.submitted_at);
+            var res = !a || r.st !== 'done' ? '' : a.status === 'needs_marking' ? '<a class="btn sm" href="#marking/' + a.attempt_id + '">Mark</a>' : (a.score != null ? a.score + ' / ' + a.max_score : '') + (a.released || q.show_results ? '' : ' <span class="small muted">(not released)</span>');
+            return '<tr><td><a href="#students/' + r.k.id + '">' + E(r.k.full_name || '(no name)') + '</a>' + (r.k.approved ? '' : ' <span class="pill new">not approved</span>') + '</td><td>' + stat + '</td><td class="small">' + prog + (a && a.attempts > 1 ? ' · attempt ' + a.attempts : '') + '</td><td class="small">' + (a ? ago(r.st === 'done' ? a.submitted_at : a.last_seen) : '–') + '</td><td>' + res + '</td></tr>';
+          }).join('') + '</table></div></details>';
+      }).join('');
+      body.innerHTML = html; wireFilters(body, state);
+    });
+  }
+  function lessonBoard(body, c, state) {
+    var since = new Date(Date.now() - 60 * 864e5).toISOString();
+    return Promise.all([roster(c.id), S.db.rpc('class_lesson_board', { cls: c.id }), S.db.from('lessons').select('external_id,title,topic_id,sort_order').order('sort_order'),
+      S.db.from('lesson_work').select('lesson,student_name,class_name,step,saved_at').is('student_id', null).gte('saved_at', since).order('saved_at', { ascending: false }).limit(1000)]).then(function (x) {
+      if (x[1].error) throw x[1].error;
+      var kids = x[0], board = x[1].data || [], lessons = x[2].data || [], tp = {}; TOPICS.forEach(function (t) { tp[t.id] = t; });
+      var title = {}; lessons.forEach(function (l) { title[l.external_id] = l.title; });
+      var last = {}; board.forEach(function (r) { if (!last[r.lesson] || r.last_saved > last[r.lesson]) last[r.lesson] = r.last_saved; });
+      var active = Object.keys(last).sort(function (a, b) { return last[b] < last[a] ? -1 : 1; });
+      var prog = lessons.filter(function (l) { var t = tp[l.topic_id], pr = t && (t.programme || (tp[t.parent_id] || {}).programme); return sameProg(pr, c.programme) && active.indexOf(l.external_id) < 0; });
+      if (!state.lesson || (active.indexOf(state.lesson) < 0 && !prog.some(function (l) { return l.external_id === state.lesson; }))) state.lesson = active[0] || (prog[0] && prog[0].external_id) || null;
+      if (!state.lesson) { body.innerHTML = '<p class="emptybox">No interactive lessons for ' + E(c.name) + ' yet. When students in this class save a step on a lesson page while signed in, the lesson appears here.</p>'; return; }
+      var L = state.lesson, rows = {}; board.filter(function (r) { return r.lesson === L; }).forEach(function (r) { rows[r.student_id] = r; });
+      var list = kids.map(function (k) { return { k: k, r: rows[k.id] }; });
+      Object.keys(rows).forEach(function (sid) { if (!kids.some(function (k) { return k.id === sid; })) list.push({ k: { id: sid, full_name: rows[sid].student_name, approved: true, moved: true }, r: rows[sid] }); });
+      list.forEach(function (x) { var st = x.r ? x.r.steps : []; x.st = !x.r ? 'none' : (st.indexOf(6) >= 0 || st.length >= 6) ? 'done' : 'prog'; });
+      var nDone = list.filter(function (x) { return x.st === 'done'; }).length, nProg = list.filter(function (x) { return x.st === 'prog'; }).length, nNone = list.length - nDone - nProg;
+      var notList = list.filter(function (x) { return x.st !== 'done'; }).map(function (x) { return E(x.k.full_name || '(no name)'); });
+      var show = list.filter(function (x) { return state.filter === 'all' || (state.filter === 'done' ? x.st === 'done' : x.st !== 'done'); });
+      var order = { prog: 0, none: 1, done: 2 }; show.sort(function (a, b) { return order[a.st] - order[b.st] || (a.k.full_name || '').localeCompare(b.k.full_name || ''); });
+      var num = (c.name.match(/\d+/) || [''])[0], anon = (x[3].data || []).filter(function (w) { var cn = (w.class_name || '').toLowerCase(); return w.lesson === L && num && (cn.match(/\d+/) || [''])[0] === num; });
+      var anonBy = {}; anon.forEach(function (w) { var k = w.student_name.trim().toLowerCase(); (anonBy[k] = anonBy[k] || { n: w.student_name, c: w.class_name, steps: {}, t: w.saved_at }).steps[w.step] = 1; });
+      var chips = function (st) { var out = ''; for (var i = 1; i <= 6; i++) out += '<span class="stp' + (st.indexOf(i) >= 0 ? ' on' : '') + '" title="Step ' + i + (st.indexOf(i) >= 0 ? ' saved' : ' not saved') + '">' + i + '</span>'; return out; };
+      body.innerHTML = '<div class="row2"><label class="small">Lesson <select id="lsel" style="max-width:520px">' +
+          (active.length ? '<optgroup label="Lessons this class has worked on">' + active.map(function (id) { return '<option value="' + E(id) + '"' + (id === L ? ' selected' : '') + '>' + E(title[id] || id) + ' · ' + ago(last[id]) + '</option>'; }).join('') + '</optgroup>' : '') +
+          (prog.length ? '<optgroup label="Other lessons for ' + E(c.programme || 'this class') + '">' + prog.map(function (l) { return '<option value="' + E(l.external_id) + '"' + (l.external_id === L ? ' selected' : '') + '>' + E(l.title) + '</option>'; }).join('') + '</optgroup>' : '') +
+        '</select></label></div>' + filters(state) +
+        '<section class="panel"><b>' + E(title[L] || L) + '</b><div class="small"><b style="color:var(--ok)">✓ ' + nDone + ' finished all six steps</b> · <b style="color:#b45309">✎ ' + nProg + ' part-way</b> · <b style="color:#b91c1c">○ ' + nNone + ' not started</b> · of ' + list.length + '</div>' +
+        bar([[nDone, 'var(--ok)', 'finished'], [nProg, '#f59e0b', 'part-way'], [nNone, '#fca5a5', 'not started']], list.length) +
+        (notList.length ? '<p class="small"><b>Not submitted (' + notList.length + '):</b> ' + notList.join(', ') + '</p>' : '<p class="small"><b>Everyone has finished.</b></p>') +
+        (kids.length ? '' : '<p class="small muted">No students have joined this class yet (join code <b class="code">' + E(c.join_code) + '</b>).</p>') +
+        '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Status</th><th>Steps saved</th><th>Marks so far</th><th>Last saved</th><th></th></tr>' + show.map(function (x) {
+          var r = x.r, idle = r && x.st === 'prog' && (Date.now() - new Date(r.last_saved)) > 600000;
+          var stat = x.st === 'done' ? '<span class="pill ok">✓ Finished</span>' : x.st === 'prog' ? (idle ? '<span class="pill new">⚠ No save for ' + ago(r.last_saved).replace(' ago', '') + '</span>' : '<span class="pill t">✎ Working</span>') : '<span class="pill" style="color:#b91c1c">Not started</span>';
+          return '<tr><td>' + E(x.k.full_name || '(no name)') + (x.k.moved ? ' <span class="pill">now in another class</span>' : '') + '</td><td>' + stat + '</td><td>' + chips(r ? r.steps : []) + '</td><td>' + (r && r.total ? E(r.total.replace(/\s/g, '')) : '–') + '</td><td class="small">' + (r ? ago(r.last_saved) : '–') + '</td><td>' + (r ? '<button type="button" class="btn sm" data-w="' + x.k.id + '">View work</button>' : '') + '</td></tr>' +
+            '<tr hidden data-wr="' + x.k.id + '"><td colspan="6"></td></tr>';
+        }).join('') + '</table></div></section>' +
+        (Object.keys(anonBy).length ? '<section class="panel tint"><b>Saved without signing in (' + Object.keys(anonBy).length + ')</b><p class="small muted">These students typed a class like "' + E(num) + '" but were not signed in, so their work is not linked to an account. Ask them to sign in before they save. Their work is still in <a href="#work">Lesson work</a>.</p><ul class="small">' +
+          Object.keys(anonBy).map(function (k) { var a = anonBy[k]; return '<li><b>' + E(a.n) + '</b> (typed "' + E(a.c) + '") · steps ' + Object.keys(a.steps).sort().join(', ') + ' · ' + ago(a.t) + '</li>'; }).join('') + '</ul></section>' : '');
+      body.querySelector('#lsel').onchange = function () { state.lesson = this.value; try { sessionStorage.setItem('bv-cl-' + c.id, state.lesson); } catch (e) {} state.reload(); };
+      wireFilters(body, state);
+      body.querySelectorAll('[data-w]').forEach(function (b) { b.onclick = function () {
+        var sid = b.getAttribute('data-w'), tr = body.querySelector('[data-wr="' + sid + '"]'); if (!tr.hidden) { tr.hidden = true; return; }
+        tr.hidden = false; tr.firstChild.innerHTML = '<span class="muted">Loading…</span>';
+        S.db.from('lesson_work').select('step,answers,saved_at').eq('student_id', sid).eq('lesson', L).order('saved_at').then(function (w) {
+          tr.firstChild.innerHTML = (w.data || []).map(function (s) { return '<div style="margin:4px 0"><b>Step ' + s.step + '</b> <span class="small muted">' + E(S.when(s.saved_at)) + '</span><pre style="white-space:pre-wrap;margin:2px 0;font-size:.85em">' + E(s.answers) + '</pre></div>'; }).join('') || '<span class="muted">Nothing saved.</span>';
+        });
+      }; });
     });
   }
 

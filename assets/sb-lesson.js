@@ -10,7 +10,8 @@
     if (s) {
       b.style.cssText = 'font:600 13px/1.4 system-ui,Arial,sans-serif;padding:6px 16px;background:#ecfdf5;color:#065f46;border-bottom:1px solid #a7f3d0';
       b.textContent = '✓ Logged in as ' + (s.user.email || 'student') + '. Your marks are saved to your Learnova dashboard.';
-      db.from('profiles').select('approved').eq('id', s.user.id).maybeSingle().then(function (p) {
+      db.from('profiles').select('approved,full_name,class_id,classes(name)').eq('id', s.user.id).maybeSingle().then(function (p) {
+        lockWho(p.data);
         if (p.data && p.data.approved === false) {
           b.style.background = '#fff7ed'; b.style.color = '#9a3412';
           b.textContent = 'Your account is waiting for your teacher to approve it. Your work still goes to your teacher; it will appear on your dashboard once you are approved.';
@@ -34,12 +35,36 @@
     db.rpc('log_visit', { page: location.pathname, ref: document.referrer && document.referrer.indexOf(location.origin) !== 0 ? document.referrer.split('?')[0] : null,
       dev: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'phone' : 'computer', vid: vid }).then(function () {}, function () {});
   } catch (e) {}
+  // Signed-in students: name and class come from their account, so work is filed under the right class.
+  function lockWho(pr) {
+    if (!pr || !pr.full_name) return;
+    var cls = pr.classes && pr.classes.name, set = function (id, v) { var el = document.getElementById(id); if (!el || !v) return;
+      el.value = v; el.readOnly = true; el.title = 'Filled in from your Learnova account'; el.style.background = '#f1f5f9';
+      el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); };
+    set('sname', pr.full_name); set('scls', cls);
+    if (!cls) { var b = document.querySelector('[role=status]'); if (b) b.textContent += ' You are not in a class yet: ask your teacher for your class join code.'; }
+  }
   function field(body, k) {
     try { if (body instanceof URLSearchParams || body instanceof FormData) return body.get(k); if (typeof body === 'string') return new URLSearchParams(body).get(k); } catch (e) {}
     return null;
   }
   var orig = window.fetch;
   window.fetch = function (url, opts) {
+    // Lesson steps saved to the site database: send them with the student's own sign-in, so the server files them under their account and class.
+    if (String(url).indexOf('/rest/v1/lesson_work') >= 0 && opts && opts.method === 'POST') {
+      var self = this;
+      return db.auth.getSession().then(function (r) {
+        var s = r.data && r.data.session, o = opts;
+        if (s) { o = Object.assign({}, opts, { headers: Object.assign({}, opts.headers, { Authorization: 'Bearer ' + s.access_token }) }); }
+        return orig.call(self, url, o).then(function (res) {
+          try {
+            var b = JSON.parse(opts.body), m = /TOTAL=([\d.]+)\s*\/\s*([\d.]+)/.exec(b.answers || '');
+            if (s && res.ok && m) db.rpc('record_lesson_result', { lesson_ext_id: b.lesson, got: +m[1], out_of: +m[2], step: b.step || null }).then(function (x) { if (x.error && window.console) console.warn('Learnova account:', x.error.message); });
+          } catch (e) {}
+          return res;
+        });
+      }, function () { return orig.call(self, url, opts); });
+    }
     var p = orig.apply(this, arguments);
     try {
       if (who && String(url).indexOf('/formResponse') >= 0 && opts && opts.body) {
