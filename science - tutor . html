@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Science Tutor</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; color: #172033; }
+    input, select, textarea, button { font: inherit; padding: .65rem; }
+    input, select, textarea { box-sizing: border-box; width: 100%; margin: .3rem 0 1rem; }
+    button { cursor: pointer; margin: .25rem .25rem .5rem 0; }
+    #messages { border: 1px solid #ccd3df; border-radius: 8px; min-height: 220px; padding: 1rem; margin: 1rem 0; }
+    .bubble { white-space: pre-wrap; overflow-wrap: anywhere; padding: .75rem; margin: .5rem 0; border-radius: 8px; }
+    .student { background: #eaf2ff; }
+    .tutor { background: #f1f3f6; }
+    .status { min-height: 1.5em; color: #505a6b; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <h1>AI Science Tutor</h1>
+
+  <section id="authPanel">
+    <h2>Sign in or create an account</h2>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="email" required>
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" required>
+    <button id="signInButton" type="button">Sign in</button>
+    <button id="signUpButton" type="button">Create account</button>
+  </section>
+
+  <section id="tutorPanel" hidden>
+    <p>Signed in as <span id="userEmail"></span> <button id="signOutButton" type="button">Sign out</button></p>
+
+    <label for="curriculum">Curriculum / course</label>
+    <select id="curriculum">
+      <option>IB MYP</option>
+      <option>IB Diploma Biology SL</option>
+      <option>IB Diploma Biology HL</option>
+      <option>IB Diploma Chemistry SL</option>
+      <option>IB Diploma Chemistry HL</option>
+      <option>IB Environmental Systems and Societies</option>
+      <option>Cambridge IGCSE Biology</option>
+      <option>Cambridge IGCSE Chemistry</option>
+      <option>Cambridge A-Level Biology</option>
+      <option>Cambridge A-Level Chemistry</option>
+      <option>General Science</option>
+    </select>
+
+    <label for="topic">Topic (optional)</label>
+    <input id="topic" maxlength="120" placeholder="For example, cell respiration">
+
+    <div id="messages" aria-live="polite"></div>
+
+    <form id="questionForm">
+      <label for="question">Your question</label>
+      <textarea id="question" rows="3" maxlength="8000" required
+        placeholder="Ask a science question, request a practice problem, or describe a diagram..."></textarea>
+      <label for="diagram">Attach a diagram (optional; JPEG, PNG, GIF, or WebP up to 3 MB)</label>
+      <input id="diagram" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+      <button id="sendButton" type="submit">Ask the tutor</button>
+      <button id="newChatButton" type="button">New chat</button>
+    </form>
+  </section>
+
+  <p id="status" class="status" role="status"></p>
+
+  <script type="module">
+    import { createClient } from
+      'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://syfwkraeylsvkavfmiha.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Tm8gdqIuBo1DvcGcpZ8P1Q_L6jyh8y9';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    const authPanel = document.querySelector('#authPanel');
+    const tutorPanel = document.querySelector('#tutorPanel');
+    const statusEl = document.querySelector('#status');
+    const messagesEl = document.querySelector('#messages');
+    const questionEl = document.querySelector('#question');
+    const diagramEl = document.querySelector('#diagram');
+    const sendButton = document.querySelector('#sendButton');
+
+    // Keep the conversation in this page's memory; it is not saved to the database.
+    let history = [];
+
+    function setStatus(message) {
+      statusEl.textContent = message;
+    }
+
+    function showSession(session) {
+      const signedIn = Boolean(session?.user);
+      authPanel.hidden = signedIn;
+      tutorPanel.hidden = !signedIn;
+      document.querySelector('#userEmail').textContent = session?.user?.email ?? '';
+      if (!signedIn) setStatus('Sign in to use the tutor.');
+      else setStatus('');
+    }
+
+    function addBubble(text, kind) {
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${kind}`;
+      bubble.textContent = text; // Render as text, not HTML.
+      messagesEl.appendChild(bubble);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function readImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = String(reader.result);
+          resolve({ mediaType: file.type, data: dataUrl.split(',')[1] });
+        };
+        reader.onerror = () => reject(new Error('Could not read the selected image.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.querySelector('#signInButton').addEventListener('click', async () => {
+      setStatus('Signing in…');
+      const { error } = await supabase.auth.signInWithPassword({
+        email: document.querySelector('#email').value.trim(),
+        password: document.querySelector('#password').value,
+      });
+      if (error) setStatus(error.message);
+    });
+
+    document.querySelector('#signUpButton').addEventListener('click', async () => {
+      setStatus('Creating account…');
+      const { data, error } = await supabase.auth.signUp({
+        email: document.querySelector('#email').value.trim(),
+        password: document.querySelector('#password').value,
+      });
+      if (error) {
+        setStatus(error.message);
+      } else if (!data.session) {
+        setStatus('Check your email to confirm your account, then sign in.');
+      } else {
+        setStatus('Account created.');
+      }
+    });
+
+    document.querySelector('#signOutButton').addEventListener('click', async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) setStatus(error.message);
+    });
+
+    document.querySelector('#newChatButton').addEventListener('click', () => {
+      history = [];
+      messagesEl.replaceChildren();
+      setStatus('New chat started.');
+    });
+
+    document.querySelector('#questionForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const question = questionEl.value.trim();
+      if (!question) return;
+
+      const file = diagramEl.files[0];
+      if (file && (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type) ||
+                   file.size > 3 * 1024 * 1024)) {
+        setStatus('Choose a JPEG, PNG, GIF, or WebP image under 3 MB.');
+        return;
+      }
+
+      sendButton.disabled = true;
+      setStatus('The tutor is thinking…');
+
+      try {
+        const messages = [...history, { role: 'user', content: question }].slice(-20);
+        const body = {
+          curriculum: document.querySelector('#curriculum').value,
+          topic: document.querySelector('#topic').value.trim(),
+          messages,
+        };
+        if (file) body.image = await readImage(file);
+
+        const { data, error } = await supabase.functions.invoke('science-tutor', { body });
+        if (error) throw error;
+
+        addBubble(question + (file ? ' [diagram attached]' : ''), 'student');
+        addBubble(data.answer, 'tutor');
+        history = [...messages, { role: 'assistant', content: data.answer }].slice(-20);
+
+        questionEl.value = '';
+        diagramEl.value = '';
+        setStatus('');
+      } catch (error) {
+        setStatus(`Could not reach the tutor: ${error.message || 'Please try again.'}`);
+      } finally {
+        sendButton.disabled = false;
+      }
+    });
+
+    const { data: { session } } = await supabase.auth.getSession();
+    showSession(session);
+    supabase.auth.onAuthStateChange((_event, nextSession) => showSession(nextSession));
+  </script>
+</body>
+</html>
