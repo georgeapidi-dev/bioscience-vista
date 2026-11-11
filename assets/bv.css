@@ -295,3 +295,9 @@ details.tp[open]>summary::before{transform:rotate(90deg)}
 .stp.on{background:var(--ok);color:#fff;border-color:transparent}
 details.panel>summary{cursor:pointer;list-style:none;display:grid;gap:3px}
 details.panel>summary::-webkit-details-marker{display:none}
+
+/* exam mode */
+.xwarn{position:sticky;top:64px;z-index:5;padding:10px 14px;border-radius:12px;background:#fee2e2;color:#991b1b;font-weight:700;border:1px solid #fecaca}
+.xlock{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:24px;background:var(--bg,#f8fafc)}
+.xlock>div{max-width:520px;display:grid;gap:12px;text-align:center;background:var(--raised,#fff);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow)}
+.xlock[hidden],.xwarn[hidden]{display:none}

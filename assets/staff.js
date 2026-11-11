@@ -179,11 +179,12 @@
           bar([[nDone, 'var(--ok)', 'submitted'], [nProg, '#f59e0b', 'working'], [nNone, '#fca5a5', 'not started']], rows.length) + '</summary>' +
           (notList.length ? '<p class="small"><b>Not submitted (' + notList.length + '):</b> ' + notList.join(', ') + '</p>' : '<p class="small"><b>Everyone has submitted.</b></p>') +
           '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Status</th><th>Progress</th><th>Last active</th><th>Result</th></tr>' + show.map(function (r) {
-            var a = r.a, idle = a && r.st === 'prog' && (Date.now() - new Date(a.last_seen)) > 180000;
-            var stat = r.st === 'done' ? '<span class="pill ok">✓ Submitted</span>' : r.st === 'prog' ? (idle ? '<span class="pill new">⚠ Idle</span>' : '<span class="pill t">✎ Working</span>') : '<span class="pill" style="color:#b91c1c">Not started</span>';
+            var a = r.a, idle = a && r.st === 'prog' && (Date.now() - new Date(a.last_seen)) > 180000, gone = a && r.st === 'prog' && a.away_now;
+            var stat = r.st === 'done' ? '<span class="pill ok">✓ Submitted</span>' : r.st === 'prog' ? (gone ? '<span class="pill" style="background:#fee2e2;color:#b91c1c">🚩 Left the page now</span>' : idle ? '<span class="pill new">⚠ Idle</span>' : '<span class="pill t">✎ Working</span>') : '<span class="pill" style="color:#b91c1c">Not started</span>';
+            var flag = a && a.away_count ? ' <span class="pill" style="background:#fee2e2;color:#b91c1c" title="Times the student left the page, and total time away">🚩 Left ' + a.away_count + '× · ' + mmss(a.away_seconds || 0) + '</span>' : '';
             var prog = !a ? '' : r.st === 'prog' ? a.answered + ' of ' + nq + ' answered' + (a.seconds_left != null ? ' · ⏱ ' + mmss(a.seconds_left) + ' left' : '') : 'Handed in ' + S.when(a.submitted_at);
             var res = !a || r.st !== 'done' ? '' : a.status === 'needs_marking' ? '<a class="btn sm" href="#marking/' + a.attempt_id + '">Mark</a>' : (a.score != null ? a.score + ' / ' + a.max_score : '') + (a.released || q.show_results ? '' : ' <span class="small muted">(not released)</span>');
-            return '<tr><td><a href="#students/' + r.k.id + '">' + E(r.k.full_name || '(no name)') + '</a>' + (r.k.approved ? '' : ' <span class="pill new">not approved</span>') + '</td><td>' + stat + '</td><td class="small">' + prog + (a && a.attempts > 1 ? ' · attempt ' + a.attempts : '') + '</td><td class="small">' + (a ? ago(r.st === 'done' ? a.submitted_at : a.last_seen) : '–') + '</td><td>' + res + '</td></tr>';
+            return '<tr><td><a href="#students/' + r.k.id + '">' + E(r.k.full_name || '(no name)') + '</a>' + (r.k.approved ? '' : ' <span class="pill new">not approved</span>') + '</td><td>' + stat + '</td><td class="small">' + prog + (a && a.attempts > 1 ? ' · attempt ' + a.attempts : '') + flag + '</td><td class="small">' + (a ? ago(r.st === 'done' ? a.submitted_at : a.last_seen) : '–') + '</td><td>' + res + '</td></tr>';
           }).join('') + '</table></div></details>';
       }).join('');
       body.innerHTML = html; wireFilters(body, state);
@@ -391,6 +392,13 @@
         '<fieldset><legend>Set for classes</legend>' + (CLASSES.length ? CLASSES.map(function (c) { return '<label class="chk"><input type="checkbox" name="cl" value="' + c.id + '"' + (set.indexOf(c.id) >= 0 ? ' checked' : '') + '> ' + E(c.name) + '</label>'; }).join('') : '<p class="small">Create a class first.</p>') + '</fieldset>' +
         '<fieldset><legend>Results</legend><label class="chk"><input type="radio" name="sr" value="hold"' + (q.show_results ? '' : ' checked') + '> I check and release results (recommended for written answers)</label>' +
         '<label class="chk"><input type="radio" name="sr" value="show"' + (q.show_results ? ' checked' : '') + '> Show multiple-choice scores straight after submitting</label></fieldset>' +
+        (function () { var g = q.integrity || {}, ex = q.category === 'exam', m = g.mode || (ex ? 'autosubmit' : 'warn');
+          return '<fieldset><legend>Exam security</legend><p class="small muted">A website cannot fully stop students switching tabs or apps, but it can see every switch. Each one is recorded and shown on the class page and in marking.</p>' +
+          '<div class="row2"><label class="f">When a student leaves the page<select id="xm">' + [['record', 'Just record it'], ['warn', 'Warn the student and record it'], ['autosubmit', 'Warn, then hand it in automatically']].map(function (o) { return '<option value="' + o[0] + '"' + (m === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
+          '<label class="f">Hand in after this many switches<input id="xn" type="number" min="1" max="20" value="' + E(g.max || 3) + '"></label></div>' +
+          '<label class="chk"><input type="checkbox" id="xf"' + (g.fullscreen === false ? '' : ' checked') + '> Full screen: questions are hidden whenever the student leaves full screen (computers; phones cannot do full screen)</label>' +
+          '<label class="chk"><input type="checkbox" id="xs"' + (g.seb ? ' checked' : '') + '> Safe Exam Browser only: it will not open in an ordinary browser (students install the free Safe Exam Browser first)</label>' +
+          (isNew ? '' : '<p class="small muted">Students can press "Open in Safe Exam Browser" on the ' + (ex ? 'exam' : 'quiz') + ' page, or you can share a file that opens this ' + (ex ? 'exam' : 'quiz') + ' directly: <button type="button" class="btn sm" id="xsf">⬇ Download Safe Exam Browser file</button></p>') + '</fieldset>'; })() +
         '<label class="chk"><input type="checkbox" id="pb"' + (q.published ? ' checked' : '') + '> Published (students in the chosen classes can see it)</label>' +
         '<div class="acts"><button class="btn main sm" type="submit">Save quiz</button>' + (isNew ? '' : '<a class="btn sm" href="#quizzes/' + id + '/preview">👁 Preview as a student</a><a class="btn sm" href="#marking">Marking</a><button class="btn sm" type="button" id="del">Delete quiz</button>') + '</div></form>' +
         (isNew ? '' : '<section class="panel grp" id="msbox"><h3>Mark scheme</h3><p class="small muted">Attach the mark scheme and the answers are filled in for you: the correct letter (A, B, C, D) for each multiple-choice question, and the marking points for written questions. Check the question numbers match, then press Save question changes.</p>' +
@@ -399,13 +407,31 @@
         (isNew ? '<p class="small muted">Save the quiz first, then add questions.</p>' : '<section class="grp"><div class="row2"><h3 class="sec-h">Questions (' + qs.length + ', ' + qs.reduce(function (a, z) { return a + (z.marks || 0); }, 0) + ' marks)</h3><button class="btn main sm" type="button" id="qsave">Save question changes</button></div>' +
           '<div id="qlist" class="grp">' + qs.map(function (z, i) { return Q.card(z, i, { delLabel: 'Remove' }); }).join('') + '</div>' +
           '<div class="acts"><button class="btn sm" type="button" id="qadd">＋ Add a question</button></div></section>');
+      var xsf = p.querySelector('#xsf');
+      if (xsf) xsf.onclick = function () {   // a Safe Exam Browser settings file that opens this quiz or exam directly
+        var url = location.origin + (p.querySelector('#cat').value === 'exam' ? '/exams/' : '/quizzes/') + '#' + id;
+        var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0"><dict>' +
+          '<key>originatorVersion</key><string>Learnova</string><key>startURL</key><string>' + E(url) + '</string><key>sendBrowserExamKey</key><false/>' +
+          '<key>allowQuit</key><true/><key>quitURL</key><string>' + E(location.origin) + '/?seb=quit</string><key>quitURLConfirm</key><true/><key>browserViewMode</key><integer>1</integer>' +
+          '<key>enableBrowserWindowToolbar</key><true/><key>browserWindowAllowReload</key><true/><key>newBrowserWindowByLinkPolicy</key><integer>1</integer><key>newBrowserWindowByScriptPolicy</key><integer>1</integer>' +
+          '<key>allowDownUploads</key><false/><key>allowPreferencesWindow</key><false/><key>allowSpellCheck</key><false/><key>enableZoomPage</key><true/><key>enableZoomText</key><true/>' +
+          '<key>allowedDisplaysMaxNumber</key><integer>1</integer><key>allowScreenSharing</key><false/><key>enablePrintScreen</key><false/><key>URLFilterEnable</key><false/></dict></plist>\n';
+        var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([xml], { type: 'application/seb' }));
+        a.download = (p.querySelector('#t').value.trim() || 'exam').replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').slice(0, 60) + '.seb'; document.body.appendChild(a); a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      };
       p.querySelector('#qf').onsubmit = function (e) { e.preventDefault();
         var row = { title: p.querySelector('#t').value.trim(), category: p.querySelector('#cat').value, instructions: p.querySelector('#ins').value.trim() || null, topic_id: p.querySelector('#tp').value || null, time_limit_minutes: +p.querySelector('#tl').value || null,
-          max_attempts: Math.max(1, +p.querySelector('#ma').value || 1), opens_at: iso(p.querySelector('#op').value), due_at: iso(p.querySelector('#du').value), show_results: (p.querySelector('[name=sr]:checked') || {}).value === 'show', published: p.querySelector('#pb').checked };
+          max_attempts: Math.max(1, +p.querySelector('#ma').value || 1), opens_at: iso(p.querySelector('#op').value), due_at: iso(p.querySelector('#du').value), show_results: (p.querySelector('[name=sr]:checked') || {}).value === 'show', published: p.querySelector('#pb').checked,
+          integrity: { mode: p.querySelector('#xm').value, max: Math.max(1, +p.querySelector('#xn').value || 3), fullscreen: p.querySelector('#xf').checked, seb: p.querySelector('#xs').checked } };
         var cls = [].map.call(p.querySelectorAll('[name=cl]:checked'), function (c) { return c.value; });
         if (row.published && !cls.length) { toast('Choose at least one class before publishing.', true); return; }
         if (row.published && !isNew && !qs.length) { toast('Add questions before publishing.', true); return; }
-        (isNew ? S.db.from('quizzes').insert(row).select('id').single() : S.db.from('quizzes').update(row).eq('id', id).select('id').single()).then(function (r) {
+        var put = function (rw) { return isNew ? S.db.from('quizzes').insert(rw).select('id').single() : S.db.from('quizzes').update(rw).eq('id', id).select('id').single(); };
+        put(row).then(function (r) {   // before database update 012 there is no integrity column: save the rest and say so
+          if (r.error && /integrity/.test(r.error.message || '')) { delete row.integrity; toast('Exam security settings need database update 012; the other settings were saved.', true); return put(row); }
+          return r;
+        }).then(function (r) {
           if (!ok(r)) return; var qid = r.data.id;
           S.db.from('quiz_classes').delete().eq('quiz_id', qid).then(function () { return cls.length ? S.db.from('quiz_classes').insert(cls.map(function (c) { return { quiz_id: qid, class_id: c }; })) : { error: null }; })
             .then(function (r2) { if (ok(r2, 'Quiz saved')) { if (isNew) location.hash = 'quizzes/' + qid; else quizEdit(p, qid); } });
@@ -536,7 +562,7 @@
       Promise.all([loadQuiz(a.quiz_id), S.db.from('profiles').select('full_name').eq('id', a.student_id).maybeSingle()]).then(function (x) {
         var qs = x[0], by = {}; (a.detail || []).forEach(function (d) { by[d.question_id] = d; });
         var held = a.quizzes && !a.quizzes.show_results;
-        p.innerHTML = '<p><a href="#marking">← Marking list</a></p><section class="panel row2"><div><h3>' + E(x[1].data ? x[1].data.full_name : '') + ' · ' + E(a.quizzes ? a.quizzes.title : '') + '</h3><p class="small muted">Submitted ' + E(S.when(a.submitted_at)) + '</p></div>' +
+        p.innerHTML = '<p><a href="#marking">← Marking list</a></p><section class="panel row2"><div><h3>' + E(x[1].data ? x[1].data.full_name : '') + ' · ' + E(a.quizzes ? a.quizzes.title : '') + '</h3><p class="small muted">Submitted ' + E(S.when(a.submitted_at)) + '</p>' + (a.away_count ? '<p class="small" style="color:#b91c1c"><b>🚩 Left the page ' + a.away_count + ' time' + (a.away_count > 1 ? 's' : '') + '</b>, ' + Math.round((a.away_seconds || 0) / 60 * 10) / 10 + ' min away in total.</p>' : '') + '</div>' +
           '<div><b style="font-size:1.6rem" id="tot">' + E(a.score) + '</b> / ' + E(a.max_score) + ((a.repeats || []).length ? ' <span class="pill">↻ ' + a.repeats.length + ' repeat' + (a.repeats.length > 1 ? 's' : '') + '</span>' : '') + ' <span class="pill">' + (a.released ? 'released' : held ? 'not released yet' : 'student sees MCQ score') + '</span></div></section>' +
           qs.filter(function (q) { return q.kind !== 'info'; }).map(function (q, i) { var d = by[q.id] || {}, g = (a.answers || {})[q.id], an = q.ans || {}, written = q.kind === 'short';
             var pic = /^data:image\//.test(g || ''), sug = written ? (pic ? { got: null, hits: [] } : Q.suggest(g || '', an.mark_scheme || an.model_answer || '', q.marks)) : null, pts = written ? Q.points(an.mark_scheme || an.model_answer || '') : [], lv = written ? Q.levels(an.rubric) : [];

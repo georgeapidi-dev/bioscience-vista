@@ -1,12 +1,12 @@
 /* Quiz centre · Learnova (marking is done on the server by submit_quiz) */
 (function () {
   var T = window.BVT;
-  var S = window.BVS, E = S.E, app = document.getElementById('app'), timer = null, beat = null, ME;
+  var S = window.BVS, E = S.E, app = document.getElementById('app'), timer = null, beat = null, GUARD = null, ME;
   var EXAM = app.getAttribute('data-mode') === 'exam', NOUN = EXAM ? 'exam' : 'quiz', HOME = EXAM ? '/exams/' : '/quizzes/';
   S.guard(app).then(function (me) { ME = me; route(); window.addEventListener('hashchange', route); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
-  function route() { clearInterval(timer); clearInterval(beat); var id = location.hash.slice(1); return id ? open(id) : list(); }
+  function route() { clearInterval(timer); clearInterval(beat); if (GUARD) GUARD.off(); var id = location.hash.slice(1); return id ? open(id) : list(); }
   function fail(r) { app.innerHTML = '<section class="panel"><p class="msg">' + E(S.nice(r.error || r)) + '</p><p><a href="#">← All ' + NOUN + 's</a></p></section>'; }
 
   function list() {
@@ -45,23 +45,69 @@
       var q = x[0].data, at = x[1].data || []; if (!q) return fail((EXAM ? 'Exam' : 'Quiz') + ' not found.');
       var live = at.filter(function (a) { return a.status === 'in_progress'; })[0], done = at.filter(function (a) { return a.status !== 'in_progress'; });
       var canStart = at.length < q.max_attempts;
-      if (live) return paper(q, live.id);
+      if (live) { if (rules(q).seb && !inSEB()) { app.innerHTML = '<section class="panel"><h2>' + E(q.title) + '</h2><p>This ' + NOUN + ' can only be continued in Safe Exam Browser.</p><div class="acts"><a class="btn main" href="' + E(sebLink()) + '">Open in Safe Exam Browser</a><a class="btn" href="#">Back</a></div></section>'; return; } return paper(q, live.id); }
       if (done.length && !(canStart && new URLSearchParams(location.search).get('again'))) return review(q, done[0], canStart);
       app.innerHTML = '<section class="panel"><p class="label">' + (EXAM ? 'Exam' : 'Quiz') + '</p><h2>' + E(q.title) + '</h2>' + (q.instructions ? '<p>' + E(q.instructions) + '</p>' : '') +
         (EXAM ? '<p class="panel tint small"><b>Exam conditions.</b> Work on your own. Once you start, the timer keeps running even if you close the page, and the exam is handed in automatically when time runs out.</p>' : '') + '<ul class="small"><li>' + (q.time_limit_minutes ? 'You have <b>' + q.time_limit_minutes + ' minutes</b>. The timer keeps running if you close the page.' : 'There is no time limit.') + '</li><li>Attempts allowed: ' + q.max_attempts + ' (used ' + at.length + ')</li><li>Your answers are saved as you go, so you can carry on if your device switches off. Press <b>Submit</b> when you finish.</li></ul>' +
         '<div class="acts"><button class="btn main" id="go" type="button">' + (EXAM ? 'Start exam' : 'Start quiz') + '</button><a class="btn" href="#">Back</a></div><p class="msg" id="m"></p></section>';
-      app.querySelector('#go').onclick = function () { this.disabled = true; S.db.rpc('start_quiz', { qid: qid }).then(function (r) { if (r.error) { app.querySelector('#m').textContent = S.nice(r.error); return; } paper(q, r.data); }); };
+      var R = rules(q), ul = app.querySelector('ul.small');
+      if (ul) ul.insertAdjacentHTML('beforeend', '<li><b>Stay on this page.</b> ' + (R.fullscreen && fsOK() ? 'The ' + NOUN + ' opens in full screen. ' : '') + 'Leaving the page, another tab or another window is recorded and your teacher can see it.' +
+        (R.mode === 'autosubmit' ? ' If you leave ' + R.max + ' time' + (R.max > 1 ? 's' : '') + ', it is handed in automatically.' : '') + ' Copying and pasting are switched off.</li>');
+      if (R.seb && !inSEB()) {
+        app.querySelector('.acts').innerHTML = '<a class="btn main" href="' + E(sebLink()) + '">Open in Safe Exam Browser</a><a class="btn" href="https://safeexambrowser.org/download_en.html" target="_blank" rel="noopener">Download Safe Exam Browser</a><a class="btn" href="#">Back</a>';
+        app.querySelector('#m').textContent = 'This ' + NOUN + ' can only be done in Safe Exam Browser. Install it (free), then press Open in Safe Exam Browser and sign in there.';
+        return;
+      }
+      app.querySelector('#go').onclick = function () { this.disabled = true; if (R.fullscreen && fsOK()) goFull(); S.db.rpc('start_quiz', { qid: qid }).then(function (r) { if (r.error) { app.querySelector('#m').textContent = S.nice(r.error); return; } paper(q, r.data); }); };
     });
   }
 
+
+  /* ---------- exam mode: full screen, every tab / window / app switch recorded, optional hand-in ---------- */
+  function rules(q) { var g = q.integrity || {}, ex = q.category === 'exam' || EXAM;
+    return { mode: g.mode || (ex ? 'autosubmit' : 'warn'), max: Math.max(1, +g.max || 3), fullscreen: g.fullscreen !== false, seb: !!g.seb }; }
+  function inSEB() { return /SEB\//.test(navigator.userAgent) || !!window.SafeExamBrowser; }
+  function fsOK() { return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled) && !inSEB(); }
+  function isFull() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function goFull() { var d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen; try { var r = f && f.call(d); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
+  function exitFull() { try { if (isFull()) (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {} }
+  function sebLink() { return 'sebs://' + location.host + '/assets/learnova-' + (EXAM ? 'exams' : 'quizzes') + '.seb'; }   // opens Safe Exam Browser on this page; the student signs in there
+  function watch(q, attempt, f, prev, handIn) {
+    var R = rules(q), needFs = R.fullscreen && fsOK(), away = false, since = 0, n = +(prev.away_count || 0), secs = +(prev.away_seconds || 0), done = false, offs = [];
+    function on(t, ev, fn) { t.addEventListener(ev, fn, true); offs.push(function () { t.removeEventListener(ev, fn, true); }); }
+    var note = document.createElement('div'); note.className = 'xwarn'; note.setAttribute('role', 'alert'); note.hidden = true; f.insertBefore(note, f.firstChild.nextSibling);
+    var lock = document.createElement('div'); lock.className = 'xlock'; lock.hidden = true;
+    lock.innerHTML = '<div><p class="label">' + (EXAM ? 'Exam' : 'Quiz') + ' mode</p><h2>The questions are hidden</h2><p>This ' + NOUN + ' must be done in full screen. Leaving full screen, another tab or another window is recorded and your teacher can see it.</p><button type="button" class="btn main">Return to full screen</button></div>';
+    lock.querySelector('button').onclick = goFull; document.body.appendChild(lock);
+    function send() { S.db.rpc('quiz_focus', { attempt: attempt, n: n, secs: Math.round(secs), away: away }).then(function () {}, function () {}); }
+    function say(t) { note.textContent = t; note.hidden = false; }
+    function leave() { if (away || done) return; away = true; since = Date.now(); n++; send(); }
+    function present() { return !document.hidden && document.hasFocus() && (!needFs || isFull()); }
+    function back() {
+      if (!away || done || !present()) return; away = false; secs += (Date.now() - since) / 1000; send();
+      if (R.mode === 'record') return;
+      if (R.mode === 'autosubmit' && n >= R.max) { done = true; say('You left the ' + NOUN + ' ' + n + ' times, so it is being handed in now.'); handIn(); return; }
+      say('⚠ You left the ' + NOUN + ' (' + n + (R.mode === 'autosubmit' ? ' of ' + R.max : '') + (n === 1 && R.mode !== 'autosubmit' ? ' time' : ' times') + '). Your teacher can see this.' +
+        (R.mode === 'autosubmit' && R.max - n === 1 ? ' If you leave once more, it will be handed in automatically.' : ''));
+    }
+    function fsCheck() { if (!needFs) return; lock.hidden = isFull(); if (!isFull()) leave(); else back(); }
+    on(document, 'visibilitychange', function () { if (document.hidden) leave(); else back(); });
+    on(window, 'blur', function () { setTimeout(function () { if (!document.hasFocus()) leave(); }, 150); });
+    on(window, 'focus', back);
+    on(document, 'fullscreenchange', fsCheck); on(document, 'webkitfullscreenchange', fsCheck);
+    ['copy', 'cut', 'paste', 'contextmenu', 'drop'].forEach(function (ev) { on(f, ev, function (e) { if (e.target.closest && e.target.closest('[data-pad]') && ev === 'contextmenu') return; e.preventDefault(); say('Copying and pasting are switched off in this ' + NOUN + '.'); }); });
+    if (needFs && !isFull()) lock.hidden = false;   // e.g. after reloading the page: ask to go back into full screen (not counted)
+    send();
+    return { off: function () { done = true; offs.forEach(function (x) { x(); }); offs = []; if (lock.parentNode) lock.parentNode.removeChild(lock); exitFull(); GUARD = null; }, rules: R };
+  }
   function key(a) { return 'bvq-' + a; }
   function paper(q, attempt) {
     S.db.rpc('quiz_paper', { attempt: attempt }).then(function (r) {
       if (r.error) return fail(r);
       var qs = r.data || [], local = {}; try { local = JSON.parse(localStorage.getItem(key(attempt)) || '{}'); } catch (e) {}
-      if (Object.keys(local).length) return build(local);   // otherwise carry on from answers saved on the server (e.g. a different device)
-      S.db.from('quiz_attempts').select('answers').eq('id', attempt).maybeSingle().then(function (a) { build((a.data && a.data.answers) || {}); }, function () { build({}); });
-      function build(saved) {
+      // carry on from this device's copy, or else from answers saved on the server (e.g. a different device)
+      S.db.from('quiz_attempts').select('*').eq('id', attempt).maybeSingle().then(function (a) { var row = a.data || {}; build(Object.keys(local).length ? local : (row.answers || {}), row); }, function () { build(local, {}); });
+      function build(saved, row) {
       var secs = qs.length ? qs[0].seconds_left : null;
       app.innerHTML = '<form id="qf" class="grp"><div class="row2 sticky-top"><div><p class="label">' + E(q.title) + '</p><b id="cnt"></b></div>' + (secs != null ? '<span class="timer" id="tm" aria-live="off"></span>' : '') + '</div>' +
         qs.map(function (x, i) {
@@ -79,7 +125,7 @@
         if (pads[x.question_id]) { var d = pads[x.question_id].get(); if (d) g[x.question_id] = d; return; }
         var el = f.querySelector('select[name="q-' + x.question_id + '"]') || f.querySelector('[name="q-' + x.question_id + '"]' + (x.kind === 'short' ? '' : ':checked')); if (el && el.value !== '') g[x.question_id] = x.kind === 'short' ? el.value : +el.value; }); return g; }
       var kt = null; function keep() { clearTimeout(kt); kt = setTimeout(function () { try { localStorage.setItem(key(attempt), JSON.stringify(collect())); } catch (e) {} count(); }, 400); }
-      function count() { var n = Object.keys(collect()).length; app.querySelector('#cnt').textContent = n + ' of ' + qs.length + ' answered'; }
+      function count() { var c = app.querySelector('#cnt'); if (!c || sent) return; c.textContent = Object.keys(collect()).length + ' of ' + qs.length + ' answered'; }
       var pt = null, lastSent = null;   // teacher's live view: answers go to the server every few seconds, plus a heartbeat
       function push(now) { clearTimeout(pt); pt = setTimeout(function () { if (sent) return; var g = collect(), js = JSON.stringify(g);
         S.db.rpc('save_quiz_progress', { attempt: attempt, given: js === lastSent ? null : g }).then(function (r) { if (!r.error) lastSent = js; }, function () {}); }, now ? 0 : 3000); }
@@ -90,10 +136,11 @@
       f.addEventListener('change', keep);
       f.addEventListener('input', function () { try { localStorage.setItem(key(attempt), JSON.stringify(collect())); } catch (e) {} count(); }); count();
       var sent = false;
-      function submit(auto) {
+      GUARD = watch(q, attempt, f, row, function () { submit(true, 'left'); });
+      function submit(auto, why) {
         if (sent) return; var g = collect(), miss = qs.length - Object.keys(g).length;
         if (!auto && miss && !confirmInline(miss)) return;
-        sent = true; clearInterval(timer); clearInterval(beat); clearTimeout(pt); app.querySelector('#m').className = 'msg'; app.querySelector('#m').textContent = auto ? 'Time is up. Submitting…' : 'Submitting…';
+        sent = true; clearInterval(timer); clearInterval(beat); clearTimeout(pt); if (GUARD) GUARD.off(); app.querySelector('#m').className = 'msg'; app.querySelector('#m').textContent = why === 'left' ? 'Handing in because you left the ' + NOUN + ' too many times…' : auto ? 'Time is up. Submitting…' : 'Submitting…';
         S.db.rpc('submit_quiz', { attempt: attempt, given: g }).then(function (res) {
           if (res.error) { sent = false; app.querySelector('#m').textContent = S.nice(res.error); return; }
           try { localStorage.removeItem(key(attempt)); } catch (e) {}
@@ -120,7 +167,7 @@
       var pc = S.pct(+a.score, +a.max_score);
       app.innerHTML = '<section class="panel tint"><p class="label">' + E(q.title) + '</p><h2>' + (hide ? 'Submitted ✓' : a.status === 'needs_marking' ? 'Submitted: ' + E(a.score) + ' / ' + E(a.max_score) + ' so far' : 'Your score: ' + E(a.score) + ' / ' + E(a.max_score) + (pc != null ? ' (' + pc + '%)' : '')) + '</h2>' +
         (hide ? '<p>Your answers are saved. Your teacher will check them and release your mark; it will appear here and on your dashboard.</p>' : a.status === 'needs_marking' ? '<p>Your written answers will be marked by your teacher. Your total will update on your dashboard.</p>' : '') +
-        '<div class="acts"><a class="btn sm" href="#">All ' + NOUN + 's</a><a class="btn sm" href="/dashboard/">My dashboard</a>' + (canRetry ? '<a class="btn main sm" href="?again=1#' + q.id + '">Try again</a>' : '') + '</div></section>' +
+        '<div class="acts"><a class="btn sm" href="#">All ' + NOUN + 's</a><a class="btn sm" href="/dashboard/">My dashboard</a>' + (canRetry ? '<a class="btn main sm" href="?again=1#' + q.id + '">Try again</a>' : '') + (inSEB() ? '<a class="btn main sm" href="/?seb=quit">Close Safe Exam Browser</a>' : '') + '</div></section>' +
         (hide ? '' : qs.map(function (x, i) { var d = by[x.question_id] || {}, given = (a.answers || {})[x.question_id];
           var ok = d.got != null && +d.got === +d.max, part = d.got != null && +d.got > 0 && !ok;
           return '<article class="q ' + (d.got == null ? '' : ok ? 'good' : part ? 'part' : 'bad') + '"><div>' + (/^\d+\s*(\([a-z]\)|\.\s)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + T.rich(x.prompt, true) + ' <span class="pill">' + (d.got == null ? 'to be marked' : E(d.got) + ' / ' + E(d.max)) + '</span></div>' +
