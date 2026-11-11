@@ -82,6 +82,7 @@
     history.push({ role: 'user', content: q, pic: hadPic }); busy = true; st.textContent = ''; app.querySelector('#tq').value = ''; setPic(null); draw();
     app.querySelector('#tsend').disabled = true;
     S.db.functions.invoke('science-tutor', { body: body }).then(function (r) {
+      if (r && typeof r.data === 'string') { try { r.data = JSON.parse(r.data); } catch (e) {} }   // the function's reply may arrive as plain text
       if (r.error || !r.data || !r.data.answer) return errorText(r.error).then(function (m) { throw new Error(m); });
       history.push({ role: 'assistant', content: r.data.answer }); keep();
     }).catch(function (e) {
