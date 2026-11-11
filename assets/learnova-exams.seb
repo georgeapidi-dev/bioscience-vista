@@ -4,7 +4,7 @@
 <dict>
 	<key>originatorVersion</key><string>Learnova</string>
 	<key>startURL</key><string>https://biosciencevista.com/exams/</string>
-	<key>sendBrowserExamKey</key><false/>
+	<key>sendBrowserExamKey</key><true/>
 	<key>allowQuit</key><true/>
 	<key>quitURL</key><string>https://biosciencevista.com/?seb=quit</string>
 	<key>quitURLConfirm</key><true/>

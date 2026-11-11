@@ -397,8 +397,15 @@
           '<div class="row2"><label class="f">When a student leaves the page<select id="xm">' + [['record', 'Just record it'], ['warn', 'Warn the student and record it'], ['autosubmit', 'Warn, then hand it in automatically']].map(function (o) { return '<option value="' + o[0] + '"' + (m === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
           '<label class="f">Hand in after this many switches<input id="xn" type="number" min="1" max="20" value="' + E(g.max || 3) + '"></label></div>' +
           '<label class="chk"><input type="checkbox" id="xf"' + (g.fullscreen === false ? '' : ' checked') + '> Full screen: questions are hidden whenever the student leaves full screen (computers; phones cannot do full screen)</label>' +
-          '<label class="chk"><input type="checkbox" id="xs"' + (g.seb ? ' checked' : '') + '> Safe Exam Browser only: it will not open in an ordinary browser (students install the free Safe Exam Browser first)</label>' +
-          (isNew ? '' : '<p class="small muted">Students can press "Open in Safe Exam Browser" on the ' + (ex ? 'exam' : 'quiz') + ' page, or you can share a file that opens this ' + (ex ? 'exam' : 'quiz') + ' directly: <button type="button" class="btn sm" id="xsf">⬇ Download Safe Exam Browser file</button></p>') + '</fieldset>'; })() +
+          '<label class="chk"><input type="checkbox" id="xs"' + (g.seb ? ' checked' : '') + '> Safe Exam Browser only (lockdown): it will not open in an ordinary browser. Students cannot switch to other apps, websites or screenshots until they hand in.</label>' +
+          '<div class="xseb" style="display:grid;gap:8px;padding-left:26px">' +
+          '<div class="row2"><label class="f">Quit password (only you can close Safe Exam Browser early; leave blank for none)<input id="xq" type="password" autocomplete="new-password" placeholder="' + (g.quit_hash ? 'Password set: type a new one to change it' : 'e.g. a word only you know') + '"></label>' +
+          (g.quit_hash ? '<label class="chk"><input type="checkbox" id="xqc"> Remove the quit password</label>' : '') + '</div>' +
+          '<label class="chk"><input type="checkbox" id="xb"' + (g.block_web === false ? '' : ' checked') + '> Block all other websites inside Safe Exam Browser</label>' +
+          (isNew ? '<p class="small muted">Save first; then you can download the Safe Exam Browser file for this ' + (ex ? 'exam' : 'quiz') + '.</p>' :
+            '<ol class="small" style="margin:0;padding-left:18px"><li>Save, then <button type="button" class="btn sm" id="xsf">⬇ Download the Safe Exam Browser file</button> and share it with the class (e.g. on Google Classroom). Students install <a href="https://safeexambrowser.org/download_en.html" target="_blank" rel="noopener">Safe Exam Browser</a> (free) and double-click the file.</li>' +
+            '<li>Open the same file yourself, sign in, and press <b>Register this set-up</b>. From then on only that file is accepted. <span class="muted">Registered set-ups: ' + ((g.seb_keys || []).length) + '</span>' + ((g.seb_keys || []).length ? ' <button type="button" class="btn sm" id="xsr">Clear registered set-ups</button>' : '') + '</li>' +
+            '<li>Try it on one student computer before the real exam.</li></ol>') + '</div></fieldset>'; })() +
         '<label class="chk"><input type="checkbox" id="pb"' + (q.published ? ' checked' : '') + '> Published (students in the chosen classes can see it)</label>' +
         '<div class="acts"><button class="btn main sm" type="submit">Save quiz</button>' + (isNew ? '' : '<a class="btn sm" href="#quizzes/' + id + '/preview">👁 Preview as a student</a><a class="btn sm" href="#marking">Marking</a><button class="btn sm" type="button" id="del">Delete quiz</button>') + '</div></form>' +
         (isNew ? '' : '<section class="panel grp" id="msbox"><h3>Mark scheme</h3><p class="small muted">Attach the mark scheme and the answers are filled in for you: the correct letter (A, B, C, D) for each multiple-choice question, and the marking points for written questions. Check the question numbers match, then press Save question changes.</p>' +
@@ -407,15 +414,22 @@
         (isNew ? '<p class="small muted">Save the quiz first, then add questions.</p>' : '<section class="grp"><div class="row2"><h3 class="sec-h">Questions (' + qs.length + ', ' + qs.reduce(function (a, z) { return a + (z.marks || 0); }, 0) + ' marks)</h3><button class="btn main sm" type="button" id="qsave">Save question changes</button></div>' +
           '<div id="qlist" class="grp">' + qs.map(function (z, i) { return Q.card(z, i, { delLabel: 'Remove' }); }).join('') + '</div>' +
           '<div class="acts"><button class="btn sm" type="button" id="qadd">＋ Add a question</button></div></section>');
+      var xsr = p.querySelector('#xsr');
+      if (xsr) xsr.onclick = function () { var ng = Object.assign({}, q.integrity || {}, { seb_keys: [] });
+        S.db.from('quizzes').update({ integrity: ng }).eq('id', id).then(function (r) { if (ok(r, 'Registered set-ups cleared. Open the new settings file in Safe Exam Browser and register it.')) { q.integrity = ng; xsr.remove(); } }); };
       var xsf = p.querySelector('#xsf');
       if (xsf) xsf.onclick = function () {   // a Safe Exam Browser settings file that opens this quiz or exam directly
-        var url = location.origin + (p.querySelector('#cat').value === 'exam' ? '/exams/' : '/quizzes/') + '#' + id;
+        var url = location.origin + (p.querySelector('#cat').value === 'exam' ? '/exams/' : '/quizzes/') + '#' + id, gi = q.integrity || {};
+        var hosts = ['biosciencevista.com', '*.biosciencevista.com', '*.supabase.co', 'commons.wikimedia.org', 'upload.wikimedia.org', 'fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net', 'cdnjs.cloudflare.com'];
+        var filt = gi.block_web === false ? '<key>URLFilterEnable</key><false/>' : '<key>URLFilterEnable</key><true/><key>URLFilterEnableContentFilter</key><false/><key>URLFilterRules</key><array>' +
+          hosts.map(function (h) { return '<dict><key>active</key><true/><key>regex</key><false/><key>expression</key><string>' + h + '</string><key>action</key><integer>1</integer></dict>'; }).join('') + '</array>';
         var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0"><dict>' +
-          '<key>originatorVersion</key><string>Learnova</string><key>startURL</key><string>' + E(url) + '</string><key>sendBrowserExamKey</key><false/>' +
+          '<key>originatorVersion</key><string>Learnova</string><key>startURL</key><string>' + E(url) + '</string><key>sendBrowserExamKey</key><true/>' +
+          (gi.quit_hash ? '<key>hashedQuitPassword</key><string>' + gi.quit_hash + '</string>' : '') +
           '<key>allowQuit</key><true/><key>quitURL</key><string>' + E(location.origin) + '/?seb=quit</string><key>quitURLConfirm</key><true/><key>browserViewMode</key><integer>1</integer>' +
           '<key>enableBrowserWindowToolbar</key><true/><key>browserWindowAllowReload</key><true/><key>newBrowserWindowByLinkPolicy</key><integer>1</integer><key>newBrowserWindowByScriptPolicy</key><integer>1</integer>' +
           '<key>allowDownUploads</key><false/><key>allowPreferencesWindow</key><false/><key>allowSpellCheck</key><false/><key>enableZoomPage</key><true/><key>enableZoomText</key><true/>' +
-          '<key>allowedDisplaysMaxNumber</key><integer>1</integer><key>allowScreenSharing</key><false/><key>enablePrintScreen</key><false/><key>URLFilterEnable</key><false/></dict></plist>\n';
+          '<key>allowedDisplaysMaxNumber</key><integer>1</integer><key>allowScreenSharing</key><false/><key>enablePrintScreen</key><false/>' + filt + '</dict></plist>\n';
         var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([xml], { type: 'application/seb' }));
         a.download = (p.querySelector('#t').value.trim() || 'exam').replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').slice(0, 60) + '.seb'; document.body.appendChild(a); a.click();
         setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
@@ -423,12 +437,15 @@
       p.querySelector('#qf').onsubmit = function (e) { e.preventDefault();
         var row = { title: p.querySelector('#t').value.trim(), category: p.querySelector('#cat').value, instructions: p.querySelector('#ins').value.trim() || null, topic_id: p.querySelector('#tp').value || null, time_limit_minutes: +p.querySelector('#tl').value || null,
           max_attempts: Math.max(1, +p.querySelector('#ma').value || 1), opens_at: iso(p.querySelector('#op').value), due_at: iso(p.querySelector('#du').value), show_results: (p.querySelector('[name=sr]:checked') || {}).value === 'show', published: p.querySelector('#pb').checked,
-          integrity: { mode: p.querySelector('#xm').value, max: Math.max(1, +p.querySelector('#xn').value || 3), fullscreen: p.querySelector('#xf').checked, seb: p.querySelector('#xs').checked } };
+          integrity: Object.assign({}, q.integrity || {}, { mode: p.querySelector('#xm').value, max: Math.max(1, +p.querySelector('#xn').value || 3), fullscreen: p.querySelector('#xf').checked, seb: p.querySelector('#xs').checked, block_web: p.querySelector('#xb').checked }) };
         var cls = [].map.call(p.querySelectorAll('[name=cl]:checked'), function (c) { return c.value; });
         if (row.published && !cls.length) { toast('Choose at least one class before publishing.', true); return; }
         if (row.published && !isNew && !qs.length) { toast('Add questions before publishing.', true); return; }
+        var qpw = p.querySelector('#xq').value, qclr = p.querySelector('#xqc') && p.querySelector('#xqc').checked;
+        if (qclr) delete row.integrity.quit_hash;
+        var hashed = qpw ? crypto.subtle.digest('SHA-256', new TextEncoder().encode(qpw)).then(function (b) { row.integrity.quit_hash = Array.from(new Uint8Array(b)).map(function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }) : Promise.resolve();
         var put = function (rw) { return isNew ? S.db.from('quizzes').insert(rw).select('id').single() : S.db.from('quizzes').update(rw).eq('id', id).select('id').single(); };
-        put(row).then(function (r) {   // before database update 012 there is no integrity column: save the rest and say so
+        hashed.then(function () { return put(row); }).then(function (r) {   // before database update 012 there is no integrity column: save the rest and say so
           if (r.error && /integrity/.test(r.error.message || '')) { delete row.integrity; toast('Exam security settings need database update 012; the other settings were saved.', true); return put(row); }
           return r;
         }).then(function (r) {

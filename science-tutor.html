@@ -1,203 +1,52 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI Science Tutor</title>
-  <style>
-    body { font: 16px/1.5 system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; color: #172033; }
-    input, select, textarea, button { font: inherit; padding: .65rem; }
-    input, select, textarea { box-sizing: border-box; width: 100%; margin: .3rem 0 1rem; }
-    button { cursor: pointer; margin: .25rem .25rem .5rem 0; }
-    #messages { border: 1px solid #ccd3df; border-radius: 8px; min-height: 220px; padding: 1rem; margin: 1rem 0; }
-    .bubble { white-space: pre-wrap; overflow-wrap: anywhere; padding: .75rem; margin: .5rem 0; border-radius: 8px; }
-    .student { background: #eaf2ff; }
-    .tutor { background: #f1f3f6; }
-    .status { min-height: 1.5em; color: #505a6b; }
-    [hidden] { display: none !important; }
-  </style>
-</head>
-<body>
-  <h1>AI Science Tutor</h1>
-
-  <section id="authPanel">
-    <h2>Sign in or create an account</h2>
-    <label for="email">Email</label>
-    <input id="email" type="email" autocomplete="email" required>
-    <label for="password">Password</label>
-    <input id="password" type="password" autocomplete="current-password" required>
-    <button id="signInButton" type="button">Sign in</button>
-    <button id="signUpButton" type="button">Create account</button>
-  </section>
-
-  <section id="tutorPanel" hidden>
-    <p>Signed in as <span id="userEmail"></span> <button id="signOutButton" type="button">Sign out</button></p>
-
-    <label for="curriculum">Curriculum / course</label>
-    <select id="curriculum">
-      <option>IB MYP</option>
-      <option>IB Diploma Biology SL</option>
-      <option>IB Diploma Biology HL</option>
-      <option>IB Diploma Chemistry SL</option>
-      <option>IB Diploma Chemistry HL</option>
-      <option>IB Environmental Systems and Societies</option>
-      <option>Cambridge IGCSE Biology</option>
-      <option>Cambridge IGCSE Chemistry</option>
-      <option>Cambridge A-Level Biology</option>
-      <option>Cambridge A-Level Chemistry</option>
-      <option>General Science</option>
-    </select>
-
-    <label for="topic">Topic (optional)</label>
-    <input id="topic" maxlength="120" placeholder="For example, cell respiration">
-
-    <div id="messages" aria-live="polite"></div>
-
-    <form id="questionForm">
-      <label for="question">Your question</label>
-      <textarea id="question" rows="3" maxlength="8000" required
-        placeholder="Ask a science question, request a practice problem, or describe a diagram..."></textarea>
-      <label for="diagram">Attach a diagram (optional; JPEG, PNG, GIF, or WebP up to 3 MB)</label>
-      <input id="diagram" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
-      <button id="sendButton" type="submit">Ask the tutor</button>
-      <button id="newChatButton" type="button">New chat</button>
-    </form>
-  </section>
-
-  <p id="status" class="status" role="status"></p>
-
-  <script type="module">
-    import { createClient } from
-      'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-    const SUPABASE_URL = 'https://syfwkraeylsvkavfmiha.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Tm8gdqIuBo1DvcGcpZ8P1Q_L6jyh8y9';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-
-    const authPanel = document.querySelector('#authPanel');
-    const tutorPanel = document.querySelector('#tutorPanel');
-    const statusEl = document.querySelector('#status');
-    const messagesEl = document.querySelector('#messages');
-    const questionEl = document.querySelector('#question');
-    const diagramEl = document.querySelector('#diagram');
-    const sendButton = document.querySelector('#sendButton');
-
-    // Keep the conversation in this page's memory; it is not saved to the database.
-    let history = [];
-
-    function setStatus(message) {
-      statusEl.textContent = message;
-    }
-
-    function showSession(session) {
-      const signedIn = Boolean(session?.user);
-      authPanel.hidden = signedIn;
-      tutorPanel.hidden = !signedIn;
-      document.querySelector('#userEmail').textContent = session?.user?.email ?? '';
-      if (!signedIn) setStatus('Sign in to use the tutor.');
-      else setStatus('');
-    }
-
-    function addBubble(text, kind) {
-      const bubble = document.createElement('div');
-      bubble.className = `bubble ${kind}`;
-      bubble.textContent = text; // Render as text, not HTML.
-      messagesEl.appendChild(bubble);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
-
-    function readImage(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const dataUrl = String(reader.result);
-          resolve({ mediaType: file.type, data: dataUrl.split(',')[1] });
-        };
-        reader.onerror = () => reject(new Error('Could not read the selected image.'));
-        reader.readAsDataURL(file);
-      });
-    }
-
-    document.querySelector('#signInButton').addEventListener('click', async () => {
-      setStatus('Signing in…');
-      const { error } = await supabase.auth.signInWithPassword({
-        email: document.querySelector('#email').value.trim(),
-        password: document.querySelector('#password').value,
-      });
-      if (error) setStatus(error.message);
-    });
-
-    document.querySelector('#signUpButton').addEventListener('click', async () => {
-      setStatus('Creating account…');
-      const { data, error } = await supabase.auth.signUp({
-        email: document.querySelector('#email').value.trim(),
-        password: document.querySelector('#password').value,
-      });
-      if (error) {
-        setStatus(error.message);
-      } else if (!data.session) {
-        setStatus('Check your email to confirm your account, then sign in.');
-      } else {
-        setStatus('Account created.');
-      }
-    });
-
-    document.querySelector('#signOutButton').addEventListener('click', async () => {
-      const { error } = await supabase.auth.signOut();
-      if (error) setStatus(error.message);
-    });
-
-    document.querySelector('#newChatButton').addEventListener('click', () => {
-      history = [];
-      messagesEl.replaceChildren();
-      setStatus('New chat started.');
-    });
-
-    document.querySelector('#questionForm').addEventListener('submit', async (event) => {
-      event.preventDefault();
-
-      const question = questionEl.value.trim();
-      if (!question) return;
-
-      const file = diagramEl.files[0];
-      if (file && (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type) ||
-                   file.size > 3 * 1024 * 1024)) {
-        setStatus('Choose a JPEG, PNG, GIF, or WebP image under 3 MB.');
-        return;
-      }
-
-      sendButton.disabled = true;
-      setStatus('The tutor is thinking…');
-
-      try {
-        const messages = [...history, { role: 'user', content: question }].slice(-20);
-        const body = {
-          curriculum: document.querySelector('#curriculum').value,
-          topic: document.querySelector('#topic').value.trim(),
-          messages,
-        };
-        if (file) body.image = await readImage(file);
-
-        const { data, error } = await supabase.functions.invoke('science-tutor', { body });
-        if (error) throw error;
-
-        addBubble(question + (file ? ' [diagram attached]' : ''), 'student');
-        addBubble(data.answer, 'tutor');
-        history = [...messages, { role: 'assistant', content: data.answer }].slice(-20);
-
-        questionEl.value = '';
-        diagramEl.value = '';
-        setStatus('');
-      } catch (error) {
-        setStatus(`Could not reach the tutor: ${error.message || 'Please try again.'}`);
-      } finally {
-        sendButton.disabled = false;
-      }
-    });
-
-    const { data: { session } } = await supabase.auth.getSession();
-    showSession(session);
-    supabase.auth.onAuthStateChange((_event, nextSession) => showSession(nextSession));
-  </script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Class lessons · Learnova</title>
+<style>
+:root{--bg:#f6f8f6;--card:#fff;--ink:#1f2a24;--muted:#5d6b62;--green:#1b6b3a;--line:#d5e0d8;--red:#b03a2e}
+@media (prefers-color-scheme:dark){:root{--bg:#111714;--card:#1a221d;--ink:#e6efe9;--muted:#9fb0a5;--green:#5fbf83;--line:#2f3d34;--red:#e7786c}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding:16px}
+#gate{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;display:none}
+h1{margin:0 0 4px;font-size:1.35rem}p{margin:0 0 14px;color:var(--muted);font-size:.92rem}
+label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px}
+input[type=password]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus,button:focus-visible{outline:2px solid var(--green);outline-offset:1px}
+.rem{display:flex;gap:8px;align-items:center;margin:10px 0 14px;font-size:.9rem;color:var(--ink)}
+button{width:100%;font:inherit;font-weight:600;border:0;border-radius:9px;padding:11px;background:var(--green);color:#fff;cursor:pointer}
+@media (prefers-color-scheme:dark){button{color:#0d1510}}
+#err{color:var(--red);font-size:.88rem;min-height:1.3em;margin-top:8px}
+#wait{color:var(--muted)}
+</style></head><body>
+<div id="wait">Opening…</div>
+<form id="gate" autocomplete="off"><h1>Learnova lessons</h1><p>Type the class password your teacher gave you.</p>
+<label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
+<label class="rem"><input type="checkbox" id="rem" checked> Remember on this device</label>
+<button type="submit">Open</button><div id="err" role="alert"></div><p style="margin:14px 0 0;font-size:.85rem"><a href="/" style="color:var(--green)">← Learnova home</a></p></form>
+<script>
+var P = {"salt": "ZnqsY0CCPCJbekqm3hRWow==", "iv": "C2NfmxgzOfRcjdwX", "it": 150000, "ct": "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"};
+(function () {
+  if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
+  var K = 'mas-key-' + P.salt.slice(0, 12), te = new TextDecoder();
+  function u8(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+  function b64(buf) { var a = new Uint8Array(buf), s = ''; for (var i = 0; i < a.length; i++) s += String.fromCharCode(a[i]); return btoa(s); }
+  function get(k) { try { return localStorage.getItem(k) || sessionStorage.getItem(k); } catch (e) { return null; } }
+  function put(k, v, keep) { try { (keep ? localStorage : sessionStorage).setItem(k, v); } catch (e) {} }
+  function open(key) {
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8(P.iv) }, key, u8(P.ct)).then(function (pt) {
+      var html = te.decode(pt); document.open(); document.write(html); document.close(); });
+  }
+  function raw(b) { return crypto.subtle.importKey('raw', u8(b), 'AES-GCM', true, ['decrypt']); }
+  function show() { document.getElementById('wait').style.display = 'none'; document.getElementById('gate').style.display = 'block'; document.getElementById('pw').focus(); }
+  if (!window.crypto || !crypto.subtle) { document.getElementById('wait').textContent = 'This browser cannot open the lessons. Please use Chrome, Edge, Safari or Firefox.'; return; }
+  var saved = get(K);
+  (saved ? raw(saved).then(open) : Promise.reject()).catch(show);
+  document.getElementById('gate').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var err = document.getElementById('err'), btn = this.querySelector('button'), keep = document.getElementById('rem').checked; err.textContent = ''; btn.disabled = true; btn.textContent = 'Checking…';
+    crypto.subtle.importKey('raw', new TextEncoder().encode(document.getElementById('pw').value), 'PBKDF2', false, ['deriveKey'])
+      .then(function (base) { return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: u8(P.salt), iterations: P.it, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, true, ['decrypt']); })
+      .then(function (key) { return crypto.subtle.exportKey('raw', key).then(function (r) { return open(key).then(function () { put(K, b64(r), keep); }); }); })
+      .catch(function () { btn.disabled = false; btn.textContent = 'Open'; err.textContent = 'That password is not right. Check with your teacher.'; });
+  });
+})();
+</script></body></html>

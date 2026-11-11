@@ -45,6 +45,13 @@
       var q = x[0].data, at = x[1].data || []; if (!q) return fail((EXAM ? 'Exam' : 'Quiz') + ' not found.');
       var live = at.filter(function (a) { return a.status === 'in_progress'; })[0], done = at.filter(function (a) { return a.status !== 'in_progress'; });
       var canStart = at.length < q.max_attempts;
+      if (rules(q).seb && inSEB()) {   // lockdown: inside Safe Exam Browser, check it is running the teacher's settings file
+        if (ME.staff) return sebTeacher(q);
+        app.innerHTML = '<p class="muted">Checking Safe Exam Browser…</p>';
+        return sebPass(q.id).then(function (ok) { if (ok) go(); else sebBlocked(q); });
+      }
+      go();
+      function go() {
       if (live) { if (rules(q).seb && !inSEB()) { app.innerHTML = '<section class="panel"><h2>' + E(q.title) + '</h2><p>This ' + NOUN + ' can only be continued in Safe Exam Browser.</p><div class="acts"><a class="btn main" href="' + E(sebLink()) + '">Open in Safe Exam Browser</a><a class="btn" href="#">Back</a></div></section>'; return; } return paper(q, live.id); }
       if (done.length && !(canStart && new URLSearchParams(location.search).get('again'))) return review(q, done[0], canStart);
       app.innerHTML = '<section class="panel"><p class="label">' + (EXAM ? 'Exam' : 'Quiz') + '</p><h2>' + E(q.title) + '</h2>' + (q.instructions ? '<p>' + E(q.instructions) + '</p>' : '') +
@@ -59,6 +66,49 @@
         return;
       }
       app.querySelector('#go').onclick = function () { this.disabled = true; if (R.fullscreen && fsOK()) goFull(); S.db.rpc('start_quiz', { qid: qid }).then(function (r) { if (r.error) { app.querySelector('#m').textContent = S.nice(r.error); return; } paper(q, r.data); }); };
+      }
+    });
+  }
+
+  /* ---------- Safe Exam Browser lockdown ---------- */
+  // SEB 3.x gives each settings file a Config Key; the page can read a hash of it (tied to this page address) from SEB's JavaScript API.
+  function sebKey() {
+    return new Promise(function (res) {
+      var X = window.SafeExamBrowser, t = setTimeout(function () { res(X && X.security && X.security.configKey || null); }, 2000);
+      if (!X || !X.security) { clearTimeout(t); return res(null); }
+      try { if (X.security.updateKeys) X.security.updateKeys(function () { clearTimeout(t); res(X.security.configKey || null); }); else { clearTimeout(t); res(X.security.configKey || null); } } catch (e) { clearTimeout(t); res(null); }
+    });
+  }
+  function sebPass(qid) {
+    return sebKey().then(function (k) { return S.db.rpc('seb_check', { qid: qid, key: k }); }).then(function (r) {
+      if (r.error) return /seb_check|schema cache|PGRST202/i.test(r.error.message || '');   // before database update 012 there is nothing to check
+      return r.data === true;
+    }, function () { return false; });
+  }
+  function sebBlocked(q) {
+    app.innerHTML = '<section class="panel"><p class="label">' + (EXAM ? 'Exam' : 'Quiz') + '</p><h2>' + E(q.title) + '</h2><p class="msg">This Safe Exam Browser is not set up for this ' + NOUN + '.</p>' +
+      '<p>Close Safe Exam Browser, then open the ' + NOUN + ' again using the Safe Exam Browser file your teacher gave you. If it still does not open, ask your teacher.</p>' +
+      '<div class="acts"><button class="btn main" type="button" id="again">Check again</button><a class="btn" href="/?seb=quit">Close Safe Exam Browser</a></div></section>';
+    app.querySelector('#again').onclick = function () { open(q.id); };
+  }
+  function sebTeacher(q) {   // a teacher opening the exam inside SEB registers that setup, so only that settings file is accepted
+    app.innerHTML = '<p class="muted">Reading Safe Exam Browser…</p>';
+    sebKey().then(function (k) {
+      var g = q.integrity || {}, keys = Array.isArray(g.seb_keys) ? g.seb_keys : [], has = k && keys.indexOf(k) >= 0;
+      app.innerHTML = '<section class="panel"><p class="label">Teacher · Safe Exam Browser set-up</p><h2>' + E(q.title) + '</h2>' +
+        (!k ? '<p class="msg">This Safe Exam Browser does not share its settings key. Use Safe Exam Browser 3 or newer, and open the exam with the settings file downloaded from Learnova (it has "Use Browser Exam Key and Config Key" switched on).</p>' :
+          '<p>You are signed in as a teacher inside Safe Exam Browser. ' + (has ? '<b>✓ This set-up is registered.</b> Students opening the exam with the same settings file will be let in.' :
+            'Register this set-up so that students can only take the exam with <b>this same settings file</b>. Anyone using another file, or an ordinary browser, is kept out.') + '</p>' +
+          '<p class="small muted">Set-ups registered for this exam: ' + keys.length + '. Register again whenever you download a new settings file (changing the settings changes the key). Students must open the exam the same way you did, with the same file.</p>') +
+        '<div class="acts">' + (k && !has ? '<button class="btn main" type="button" id="reg">Register this set-up</button>' : '') + '<a class="btn" href="/?seb=quit">Close Safe Exam Browser</a></div><p class="msg" id="m" role="status"></p></section>';
+      var b = app.querySelector('#reg');
+      if (b) b.onclick = function () { b.disabled = true;
+        var ng = Object.assign({}, g, { seb: true, seb_keys: keys.concat([k]).slice(-10) });
+        S.db.from('quizzes').update({ integrity: ng }).eq('id', q.id).select('id').single().then(function (r) {
+          if (r.error) { b.disabled = false; app.querySelector('#m').textContent = S.nice(r.error); return; }
+          q.integrity = ng; sebTeacher(q);
+        });
+      };
     });
   }
 
