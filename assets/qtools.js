@@ -168,7 +168,9 @@
     if (mis.length) out += '<div class="fbp miss"><b>✗ What is missing or incorrect</b><ul>' + mis.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>';
     if (why.length || (f.explain && !correct)) out += '<div class="fbp why"><b>💡 Why</b>' + why.map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + (f.explain && why.indexOf(f.explain) < 0 ? '<p>' + esc(f.explain) + '</p>' : '') + '</div>';
     else if (f.explain && correct) out += '<div class="fbp why"><b>💡 Remember</b><p>' + esc(f.explain) + '</p></div>';
-    var imp = f.improve || (mis.length ? 'Add the missing ideas above to your answer, using the key scientific words. Then read your answer again: does each sentence answer the question?' : '');
+    var choice = /^(The correct answer is|No answer was chosen|You chose the correct answer)/.test(mis[0] || und[0] || '');
+    var imp = f.improve || (!mis.length ? '' : choice ? 'Read the question and every option carefully, and rule out the options you know are wrong before you choose.' :
+      'Add the missing ideas above to your answer, using the key scientific words. Then read your answer again: does each sentence answer the question?');
     if (imp && !correct) out += '<div class="fbp imp"><b>↗ How to improve</b><p>' + esc(imp) + '</p></div>';
     if (f.next && !correct) out += '<div class="fbp next"><b>📚 Study next</b><p>' + esc(f.next) + '</p></div>';
     return out;
