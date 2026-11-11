@@ -12,10 +12,10 @@
     "@media print{#dlkit-btn,#dlkit-pdf,#dlkit-toast{display:none}}";
   document.head.appendChild(css);
   var btn = document.createElement("button");
-  btn.id = "dlkit-btn"; btn.type = "button"; btn.textContent = "⤓ Save my work";
+  btn.id = "dlkit-btn"; btn.type = "button"; btn.textContent = "⤓ Save my work"; btn.title = "Save my work (download a copy)";
   btn.title = "Save a copy of this lesson with your answers, marks and feedback";
   var pdf = document.createElement("button");
-  pdf.id = "dlkit-pdf"; pdf.type = "button"; pdf.textContent = "⤓ PDF";
+  pdf.id = "dlkit-pdf"; pdf.type = "button"; pdf.textContent = "⤓ PDF"; pdf.title = "Download this lesson as a PDF";
   pdf.title = "Download my answers, marks and feedback as a PDF";
   document.body.appendChild(btn); document.body.appendChild(pdf);
 
