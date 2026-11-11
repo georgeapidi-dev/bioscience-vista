@@ -346,7 +346,7 @@
         if (Array.isArray(a.accepted) && a.accepted.length) h += '<p class="small"><b>Also accept:</b> ' + E(a.accepted.join('; ')) + '</p>';
         var mis = Array.isArray(a.misconceptions) ? a.misconceptions : [];
         if (mis.length) h += '<p class="small"><b>Do not accept / common errors:</b></p><ul class="small">' + mis.map(function (m) { return '<li>' + (m.any ? '<i>' + E(m.any.slice(0, 4).join(' / ')) + '</i>: ' : '') + E(typeof m === 'string' ? m : (m.say || JSON.stringify(m))) + '</li>'; }).join('') + '</ul>';
-        if (a.explanation) h += '<p class="small"><b>Why:</b> ' + E(a.explanation) + '</p>';
+        if (a.explanation && String(a.mark_scheme || '').indexOf(a.explanation) < 0) h += '<p class="small"><b>Why:</b> ' + E(a.explanation) + '</p>';
         if (!h) h = '<p class="ans"><i>No mark scheme entered for this question yet.</i></p>';
         return '<section class="q"><div class="qh"><b>Question ' + n + '</b><span>[' + (q.marks || 0) + ' mark' + (q.marks === 1 ? '' : 's') + ']</span></div><div class="prompt">' + md(prompt) + '</div>' +
           (q.image_url ? '<img src="' + E(q.image_url) + '" alt="">' : '') + h + '</section>';
