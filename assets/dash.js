@@ -29,6 +29,25 @@
     };
     return open.map(row).join('') + (done.length ? '<details><summary class="small muted">Done (' + done.length + ')</summary>' + done.map(row).join('') + '</details>' : '');
   }
+  // The student's own learning profile and the analysis of each piece of work (Student Work Analysis Engine)
+  var PROF = null;
+  function myProfile(me) {
+    var box = app.querySelector('#anbox'), A = window.BVA; if (!box || !A) return;
+    var go = PROF ? Promise.resolve(PROF) : Promise.all([S.db.rpc('student_profile'), S.db.from('submission_analysis').select('*').eq('student_id', me.user.id).order('at', { ascending: false })]).then(function (x) { if (x[0].error) throw x[0].error; PROF = [x[0].data, x[1].data || []]; return PROF; });
+    go.then(function (z) {
+      var prof = z[0], subs = z[1];
+      box.innerHTML = '<div class="row2"><h3 style="margin:0">📊 My learning profile</h3>' + (prof.overall && prof.overall.items ? '<button type="button" class="btn sm" id="aip">🤖 Summarise my learning</button>' : '') + '</div>' +
+        '<p class="small muted">Built from the marks on every question you have handed in. It shows what you understand well, what to practise and where to find help.</p>' + A.profileHtml(prof, {}) +
+        (subs.length ? '<h4>My analysed work</h4>' + subs.map(function (sa) { return '<details class="panel" data-sk="' + E(sa.sub_key) + '"><summary><b>' + E(sa.title) + '</b> <span class="small muted">' + E(S.when(sa.at)) + '</span> · ' + (sa.pct == null ? '–' : sa.pct + '%') + '</summary><div class="sbody small muted">Loading…</div></details>'; }).join('') : '');
+      box.querySelectorAll('details[data-sk]').forEach(function (dd) { dd.ontoggle = function () { if (!dd.open || dd.getAttribute('data-l')) return; dd.setAttribute('data-l', 1);
+        var sk = dd.getAttribute('data-sk'), sa = subs.filter(function (q) { return q.sub_key === sk; })[0];
+        S.db.from('item_results').select('*').eq('sub_key', sk).order('id').then(function (r) { var b = dd.querySelector('.sbody'); b.className = 'sbody'; b.innerHTML = A.submissionHtml(sa, r.data || [], { settings: prof.settings, open: true }); }); }; });
+      var b = box.querySelector('#aip'); if (b) b.onclick = function () { b.disabled = true; b.textContent = 'Summarising…';
+        S.db.functions.invoke('analyse', { body: { profile: me.user.id } }).then(function (res) { var d = res.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } }
+          if (res.error || !d || !d.ok) { b.disabled = false; b.textContent = '🤖 Summarise my learning'; alert((d && d.error) || 'Not available right now. Your profile above is still up to date.'); return; }
+          PROF = null; myProfile(me); }); };
+    }).catch(function (e) { box.innerHTML = '<h3>📊 My learning profile</h3><p class="small muted">' + (/student_profile|schema cache/.test(String(e && e.message)) ? 'Your learning profile will appear here soon.' : E(S.nice(e))) + '</p>'; });
+  }
   function draw(me, res, prog, quizzes, att, tasks) {
     var first = (me.profile.full_name || 'there').split(' ')[0], got = 0, max = 0;
     res.forEach(function (r) { if (r.score != null && r.max_score) { got += +r.score; max += +r.max_score; } });
@@ -47,6 +66,7 @@
     h += '<div class="two"><section class="panel"><h3>📌 To do</h3>' + todoHtml(tasks) + (todo.length || !tasks.length ? (tasks.length ? '<p class="small muted" style="margin:10px 0 2px">Also open for your class:</p>' : '') : '') + (todo.length ? todo.map(function (q) { return '<p>' + ({ exam: '🧪', lesson: '📘' }[q.category] || '📝') + ' <a href="' + ({ exam: '/exams/', lesson: '/lesson/' }[q.category] || '/quizzes/') + '#' + q.id + '">' + E(q.title) + '</a>' + (q.due_at ? ' <span class="small muted">due ' + E(S.when(q.due_at)) + '</span>' : '') + '</p>'; }).join('') : (tasks.length ? '' : '<p class="muted">Nothing to do right now. Well done!</p>')) +
       prog.filter(function (p) { return p.status !== 'completed'; }).slice(0, 5).map(function (p) { return '<p>📘 <a href="' + E(p.lessons && p.lessons.url || '/learn/') + '">' + E(p.lessons ? p.lessons.title : 'Lesson') + '</a> <span class="small muted">' + p.percent + '% done</span></p>'; }).join('') + '</section>' +
       '<section class="panel"><h3>My progress</h3>' + (prog.length ? prog.slice(0, 8).map(function (p) { return '<div class="grp" style="gap:4px"><div class="row2"><span class="small">' + E(p.lessons ? p.lessons.title : '') + '</span><span class="small muted">' + p.percent + '%</span></div><div class="bar"><i style="width:' + p.percent + '%"></i></div></div>'; }).join('') : '<p class="muted">Open a lesson from the <a href="/learn/">Learning centre</a> to start.</p>') + '</section></div>';
+    h += '<section class="panel" id="anbox"><h3>📊 My learning profile</h3><p class="muted small">Loading…</p></section>';
     h += '<section class="grp"><h3 class="sec-h">My results and feedback</h3>' + (res.length ? res.map(function (r) { var pc = S.pct(+r.score, +r.max_score);
       return '<article class="task"><div class="top2"><b>' + E(r.title || 'Task') + '</b><span class="score">' + (r.score == null ? 'Being marked' : E(r.score) + ' / ' + E(r.max_score) + (pc != null ? ' (' + pc + '%)' : '')) + '</span></div>' +
         '<div class="bar"><i style="width:' + (pc || 0) + '%"></i></div><span class="small muted">' + E(S.when(r.recorded_at)) + '</span>' +
@@ -56,6 +76,7 @@
       '<p class="small muted">Marks from before accounts were switched on are still on <a href="/progress/">My learning (personal code)</a>.</p></details>';
     app.innerHTML = h;
     app.querySelector('#so').onclick = S.signOut;
+    myProfile(me);
     app.querySelectorAll('[data-done]').forEach(function (b) { b.onclick = function () {
       b.disabled = true; S.db.from('assignment_done').insert({ assignment_id: b.getAttribute('data-done'), student_id: me.user.id }).then(function (r) {
         if (r.error) { b.disabled = false; alert(S.nice(r.error)); return; }

@@ -28,8 +28,7 @@
     [/\bosmosis\b.*\b(salt|sugar|solute|glucose) (moves|move|diffus)/, 'In osmosis it is water that moves across a partially permeable membrane, not the solute.'],
     [/\bmitochondria (make|makes|produce|produces|create|creates) energy\b/, 'Mitochondria release energy from glucose by aerobic respiration; they do not make energy.'],
     [/\bgenes? (is|are) (made of )?(protein|proteins)\b/, 'Genes are sections of DNA. A gene codes for a protein; it is not made of protein.'],
-    [/\bdominant (means|is|alleles? (is|are)) (more common|better|stronger)\b/, 'Dominant does not mean more common or better. It means the allele is expressed when only one copy is present.'],
-    [/\bcars?\b.*\b(alive|living)\b|\bfire\b.*\b(alive|living)\b/, 'Non-living things can show one or two life processes (a car moves, fire uses oxygen) but not all seven, so they are not alive.']
+    [/\bdominant (means|is|alleles? (is|are)) (more common|better|stronger)\b/, 'Dominant does not mean more common or better. It means the allele is expressed when only one copy is present.']
   ];
   function misconceptions(text) {
     var t = ' ' + String(text || '').toLowerCase().replace(/[’']/g, ' ').replace(/\s+/g, ' ') + ' ', out = [];

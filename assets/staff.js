@@ -127,19 +127,19 @@
   function classPage(p, cid, sub) {
     var c = CLASSES.filter(function (x) { return x.id === cid; })[0];
     if (!c) { p.innerHTML = '<p class="emptybox">This class was not found, or it is not one of your classes. <a href="#classes">All classes</a></p>'; return; }
-    sub = sub === 'lessons' || sub === 'todo' ? sub : 'quizzes';
+    sub = ['lessons', 'todo', 'analysis'].indexOf(sub) >= 0 ? sub : 'quizzes';
     var state = { filter: 'all', open: {}, lesson: null, live: true };
     try { state.lesson = sessionStorage.getItem('bv-cl-' + cid) || null; } catch (e) {}
     p.innerHTML = '<p class="small"><a href="#classes">← All classes</a></p><div class="row2"><div><p class="label">' + E(c.programme || 'Class') + '</p><h2 style="margin:0">' + E(c.name) + '</h2></div>' +
       '<div class="small muted" style="text-align:right">Join code <b class="code">' + E(c.join_code) + '</b><br><label class="chk" style="display:inline-flex"><input type="checkbox" id="lv" checked> Live: update every 15 seconds</label> <span id="stamp"></span></div></div>' +
-      '<nav class="tabs" aria-label="Class sections"><a href="#classes/' + cid + '/quizzes" aria-selected="' + (sub === 'quizzes') + '">📝 Quizzes and exams</a><a href="#classes/' + cid + '/lessons" aria-selected="' + (sub === 'lessons') + '">🧪 Interactive lessons</a><a href="#classes/' + cid + '/todo" aria-selected="' + (sub === 'todo') + '">📌 To-do list</a></nav>' +
+      '<nav class="tabs" aria-label="Class sections"><a href="#classes/' + cid + '/quizzes" aria-selected="' + (sub === 'quizzes') + '">📝 Quizzes and exams</a><a href="#classes/' + cid + '/lessons" aria-selected="' + (sub === 'lessons') + '">🧪 Interactive lessons</a><a href="#classes/' + cid + '/todo" aria-selected="' + (sub === 'todo') + '">📌 To-do list</a><a href="#classes/' + cid + '/analysis" aria-selected="' + (sub === 'analysis') + '">📊 Analysis</a></nav>' +
       '<div id="cbody"><p class="muted">Loading…</p></div>';
     var body = p.querySelector('#cbody'), busy = false;
     function load() {
       if (busy) return; busy = true;
-      (sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
-        var miss = /class_(quiz|lesson)_board|class_todo|assign_work|schema cache|does not exist/i.test((e && (e.message || e.details)) || String(e));
-        body.innerHTML = miss ? '<p class="emptybox">This part of the class page needs a database update (' + (sub === 'todo' ? 'migration 015' : 'migration 011') + ') before it can show results. Run it once in the Supabase SQL editor, then reload this page.</p>' : '<p class="msg">' + E(S.nice(e)) + '</p>'; });
+      (sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
+        var miss = /class_(quiz|lesson)_board|class_todo|assign_work|class_analysis|schema cache|does not exist/i.test((e && (e.message || e.details)) || String(e));
+        body.innerHTML = miss ? '<p class="emptybox">This part of the class page needs a database update (' + (sub === 'todo' ? 'migration 015' : sub === 'analysis' ? 'migration 016' : 'migration 011') + ') before it can show results. Run it once in the Supabase SQL editor, then reload this page.</p>' : '<p class="msg">' + E(S.nice(e)) + '</p>'; });
     }
     state.reload = load;
     p.querySelector('#lv').onchange = function () { state.live = this.checked; clearInterval(LIVE); if (state.live) { LIVE = setInterval(load, 15000); load(); } };
@@ -245,6 +245,95 @@
         S.db.from('classes').update({ content_programmes: pick }).eq('id', c.id).then(function (r) { if (ok(r, 'Saved: ' + c.name + ' sees ' + (pick.join(', ') || 'only work you set'))) c.content_programmes = pick; }); };
     });
   }
+  /* ---------- class analysis (Student Work Analysis Engine) ---------- */
+  function analysisBoard(body, c, state) {
+    if (body.getAttribute('data-ana') === c.id && !state.anaDirty) return Promise.resolve();   // no auto-refresh while reading or filtering
+    state.anaDirty = false; state.af = state.af || { topic: '', ref: '', from: '', to: '' };
+    var f = state.af, A = window.BVA;
+    return Promise.all([S.db.rpc('class_analysis', { cls: c.id, p_from: iso(f.from), p_to: f.to ? new Date(new Date(f.to).getTime() + 864e5).toISOString() : null, p_topic: f.topic || null, p_ref: f.ref || null }),
+      S.db.from('interventions').select('*').eq('class_id', c.id).order('at', { ascending: false }), S.db.from('analysis_settings').select('*').eq('teacher_id', ME.user.id).maybeSingle()]).then(function (x) {
+      if (x[0].error) throw x[0].error;
+      var d = x[0].data || {}, ivs = x[1].data || [], cfg = x[2].data || { thresholds: { secure: 85, developing: 70, practice: 50 }, min_items: 3, min_assessments: 2 }, th = cfg.thresholds;
+      body.setAttribute('data-ana', c.id);
+      body.innerHTML = '<div class="row2" style="flex-wrap:wrap;justify-content:flex-start;align-items:flex-end;gap:8px">' +
+        '<label class="f">Topic<select id="ft"><option value="">All topics</option>' + (d.all_topics || []).map(function (t) { return '<option' + (t === f.topic ? ' selected' : '') + '>' + E(t) + '</option>'; }).join('') + '</select></label>' +
+        '<label class="f">Assessment<select id="fa"><option value="">All work</option>' + (d.assessments || []).map(function (a) { return '<option value="' + E(a.ref) + '"' + (a.ref === f.ref ? ' selected' : '') + '>' + E(a.title) + '</option>'; }).join('') + '</select></label>' +
+        '<label class="f">From<input id="ff" type="date" value="' + E(f.from) + '"></label><label class="f">To<input id="fto" type="date" value="' + E(f.to) + '"></label>' +
+        '<button type="button" class="btn sm" id="fx">Clear filters</button><button type="button" class="btn sm" id="crep">⬇ Class report</button></div>' +
+        A.classHtml(d, { save: true, link: function (id) { return '#students/' + id; } }) +
+        '<section class="panel"><h3 style="margin-top:0">🗂 My intervention plan</h3>' + (ivs.length ? ivs.map(function (v) {
+          return '<div class="ba-sug"><b>' + E(v.title) + '</b> <span class="pill">' + E({ planned: 'Planned', done: 'Done', dropped: 'Dropped' }[v.status]) + '</span><div class="small"><b>Evidence:</b> ' + E(v.evidence || '') + '</div><div class="small"><b>Action:</b> ' + E(v.action || '') + '</div><div class="small muted">' + E(S.when(v.at)) + '</div>' +
+            '<div class="acts">' + (v.status !== 'done' ? '<button type="button" class="btn sm" data-ivs="' + v.id + '" data-v="done">✓ Done</button>' : '') + (v.status === 'planned' ? '<button type="button" class="btn sm" data-ivs="' + v.id + '" data-v="dropped">Drop</button>' : '') + '</div></div>'; }).join('') :
+          '<p class="small muted">Add teaching suggestions above to keep track of what you plan to do.</p>') + '</section>' +
+        '<details class="panel"><summary><b>⚙ Mastery levels and evidence rules</b> <span class="small muted">(used for all your classes)</span></summary><div class="row2" style="flex-wrap:wrap;justify-content:flex-start;gap:8px;margin-top:8px">' +
+        '<label class="f">Secure from %<input id="t1" type="number" min="1" max="100" value="' + th.secure + '" style="max-width:90px"></label><label class="f">Developing from %<input id="t2" type="number" min="1" max="100" value="' + th.developing + '" style="max-width:90px"></label>' +
+        '<label class="f">Needs practice from %<input id="t3" type="number" min="1" max="100" value="' + th.practice + '" style="max-width:90px"></label><span class="small muted" style="align-self:center">Below that: requires intervention.</span></div>' +
+        '<div class="row2" style="flex-wrap:wrap;justify-content:flex-start;gap:8px"><label class="f">Questions needed before a topic is labelled<input id="t4" type="number" min="1" max="50" value="' + cfg.min_items + '" style="max-width:90px"></label><label class="f">Pieces of work needed<input id="t5" type="number" min="1" max="20" value="' + cfg.min_assessments + '" style="max-width:90px"></label></div>' +
+        '<div class="acts"><button type="button" class="btn sm main" id="tsave">Save levels</button></div></details>';
+      var $ = function (q) { return body.querySelector(q); }, again = function () { state.anaDirty = true; body.removeAttribute('data-ana'); state.reload(); };
+      $('#ft').onchange = function () { f.topic = this.value; again(); }; $('#fa').onchange = function () { f.ref = this.value; again(); };
+      $('#ff').onchange = function () { f.from = this.value; again(); }; $('#fto').onchange = function () { f.to = this.value; again(); };
+      $('#fx').onclick = function () { state.af = { topic: '', ref: '', from: '', to: '' }; again(); };
+      $('#crep').onclick = function () {
+        var filt = [f.topic && 'topic: ' + f.topic, f.ref && 'assessment: ' + ((d.assessments || []).filter(function (a) { return a.ref === f.ref; })[0] || {}).title, f.from && 'from ' + f.from, f.to && 'to ' + f.to].filter(Boolean).join(' · ');
+        A.openDoc(A.reportDoc('Class analysis: ' + c.name, E(c.programme || '') + (filt ? ' · ' + E(filt) : '') + ' · ' + E(new Date().toLocaleDateString()), A.classHtml(d, {}) +
+          (ivs.length ? '<h2>Intervention plan</h2>' + ivs.map(function (v) { return '<p><b>' + E(v.title) + '</b> (' + E(v.status) + ')<br><b>Evidence:</b> ' + E(v.evidence) + '<br><b>Action:</b> ' + E(v.action) + '</p>'; }).join('') : '') +
+          '<h2>Teacher notes</h2><div class="note"></div>'), 'class-analysis-' + c.name.replace(/\W+/g, '-'));
+      };
+      body.querySelectorAll('[data-iv]').forEach(function (b) { b.onclick = function () { var g = d.suggestions[+b.getAttribute('data-iv')];
+        S.db.from('interventions').insert({ class_id: c.id, title: g.title, evidence: g.evidence, action: g.action }).then(function (r) { if (ok(r, 'Added to your intervention plan')) again(); }); }; });
+      body.querySelectorAll('[data-ivs]').forEach(function (b) { b.onclick = function () {
+        S.db.from('interventions').update({ status: b.getAttribute('data-v') }).eq('id', b.getAttribute('data-ivs')).then(function (r) { if (ok(r)) again(); }); }; });
+      $('#tsave').onclick = function () {
+        var t = { secure: +$('#t1').value, developing: +$('#t2').value, practice: +$('#t3').value };
+        if (!(t.secure > t.developing && t.developing > t.practice && t.practice > 0 && t.secure <= 100)) { toast('Each level must be lower than the one above it.', true); return; }
+        S.db.from('analysis_settings').upsert({ teacher_id: ME.user.id, thresholds: t, min_items: +$('#t4').value || 3, min_assessments: +$('#t5').value || 2, updated_at: new Date().toISOString() }).then(function (r) { if (ok(r, 'Mastery levels saved')) again(); });
+      };
+    });
+  }
+  /* A student's learning profile, their analysed work and printable reports (teacher view) */
+  function studentAnalysis(p, sid, pr) {
+    var box = p.querySelector('#anbox'); if (!box || !window.BVA) return;
+    var A = window.BVA;
+    Promise.all([S.db.rpc('student_profile', { sid: sid }), S.db.from('submission_analysis').select('*').eq('student_id', sid).order('at', { ascending: false })]).then(function (x) {
+      if (x[0].error) { box.innerHTML = '<p class="small muted">' + (/student_profile|schema cache/.test(x[0].error.message) ? 'The learning profile needs database update 016.' : E(S.nice(x[0].error))) + '</p>'; return; }
+      var prof = x[0].data, subs = x[1].data || [];
+      box.innerHTML = '<div class="row2"><h3 style="margin:0">📊 Learning profile</h3><div class="acts"><button type="button" class="btn sm" id="aip">🤖 AI summary</button><button type="button" class="btn sm main" id="prep">⬇ Profile report</button></div></div>' +
+        A.profileHtml(prof, { staff: true }) +
+        '<h5>Analysed work</h5>' + (subs.length ? subs.map(function (sa) { return '<details class="panel" data-sk="' + E(sa.sub_key) + '"><summary><b>' + E(sa.title) + '</b> <span class="small muted">' + E(S.when(sa.at)) + '</span> · ' + (sa.pct == null ? '–' : sa.pct + '%') + ' ' + A.pill(A.levelOf(sa.pct, (prof.settings || {}).thresholds)) + (sa.ai && !sa.ai.none ? ' <span class="pill">🤖</span>' : '') + '</summary><div class="sbody small muted">Loading…</div></details>'; }).join('') : '<p class="small muted">No analysed work yet.</p>') +
+        '<h5>Add a comment for the student</h5><textarea id="acm" rows="2" placeholder="Shown to the student on their profile and in reports"></textarea><div class="acts"><button type="button" class="btn sm" id="acs">Save comment</button></div>';
+      box.querySelectorAll('details[data-sk]').forEach(function (dd) { dd.ontoggle = function () { if (!dd.open || dd.getAttribute('data-l')) return; dd.setAttribute('data-l', 1);
+        var sk = dd.getAttribute('data-sk'), sa = subs.filter(function (z) { return z.sub_key === sk; })[0];
+        S.db.from('item_results').select('*').eq('sub_key', sk).order('id').then(function (r) {
+          dd.querySelector('.sbody').className = 'sbody'; dd.querySelector('.sbody').innerHTML = A.submissionHtml(sa, r.data || [], { settings: prof.settings, open: true }) +
+            '<div class="acts"><button type="button" class="btn sm" data-ai1>🤖 ' + (sa.ai && !sa.ai.none ? 'Redo' : 'Add') + ' AI analysis</button><button type="button" class="btn sm" data-rep1>⬇ Report for this work</button></div>';
+          dd.querySelector('[data-rep1]').onclick = function () { A.openDoc(A.reportDoc('Assessment analysis: ' + sa.title, E(pr.full_name) + ' · ' + E((CLASSES.filter(function (k) { return k.id === pr.class_id; })[0] || {}).name || '') + ' · ' + E(S.when(sa.at)),
+            A.submissionHtml(sa, r.data || [], { settings: prof.settings, open: true }) + commentsFor(prof, sk) + '<h2>Teacher comments</h2><div class="note"></div>'), 'analysis-' + (pr.full_name || 'student').replace(/\W+/g, '-')); };
+          dd.querySelector('[data-ai1]').onclick = function () { var b = this; b.disabled = true; b.textContent = 'Analysing…';
+            var body = sk.indexOf('L:') === 0 ? { lesson: sa.ref, student: sid } : { attempt: sk };
+            S.db.functions.invoke('analyse', { body: body }).then(function (res) { var dta = res.data; if (typeof dta === 'string') { try { dta = JSON.parse(dta); } catch (e) { dta = null; } }
+              if (res.error || !dta || !dta.ok) { b.disabled = false; b.textContent = '🤖 Add AI analysis'; toast((dta && dta.error) || 'AI analysis is not available right now.', true); return; }
+              toast(dta.ai ? 'AI analysis added' : 'Re-analysed (no written answers for AI to read)'); studentAnalysis(p, sid, pr); }); };
+        }); }; });
+      box.querySelector('#prep').onclick = function () {
+        S.db.from('item_results').select('*').eq('student_id', sid).order('at').then(function (r) {
+          var items = r.data || [], by = {}; items.forEach(function (i) { (by[i.sub_key] = by[i.sub_key] || []).push(i); });
+          A.openDoc(A.reportDoc('Learning profile: ' + (pr.full_name || 'Student'), E((CLASSES.filter(function (k) { return k.id === pr.class_id; })[0] || {}).name || '') + ' · ' + subs.length + ' pieces of analysed work',
+            '<h2>Overview and topic mastery</h2>' + A.profileHtml(prof, { staff: true }) + '<h2>Assessment history</h2>' +
+            subs.slice().reverse().map(function (sa) { return '<h3 style="margin-bottom:2px">' + E(sa.title) + '</h3>' + A.submissionHtml(sa, by[sa.sub_key] || [], { settings: prof.settings, open: true }); }).join('') +
+            '<h2>Teacher comments and intervention</h2><div class="note"></div>'), 'profile-' + (pr.full_name || 'student').replace(/\W+/g, '-'));
+        });
+      };
+      box.querySelector('#aip').onclick = function () { var b = this; b.disabled = true; b.textContent = 'Summarising…';
+        S.db.functions.invoke('analyse', { body: { profile: sid } }).then(function (res) { var dta = res.data; if (typeof dta === 'string') { try { dta = JSON.parse(dta); } catch (e) { dta = null; } }
+          if (res.error || !dta || !dta.ok) { b.disabled = false; b.textContent = '🤖 AI summary'; toast((dta && dta.error) || 'AI summary is not available right now.', true); return; }
+          studentAnalysis(p, sid, pr); }); };
+      box.querySelector('#acs').onclick = function () { var t = box.querySelector('#acm').value.trim(); if (!t) return;
+        S.db.from('analysis_comments').insert({ student_id: sid, comment: t }).then(function (r) { if (ok(r, 'Comment saved')) studentAnalysis(p, sid, pr); }); };
+    });
+  }
+  function commentsFor(prof, sk) { var cs = (prof.comments || []).filter(function (c) { return c.sub_key === sk || !c.sub_key; });
+    return cs.length ? '<h2>Comments</h2>' + cs.map(function (c) { return '<p>' + E(c.comment) + ' <span class="small">(' + E(S.when(c.at)) + ')</span></p>'; }).join('') : ''; }
   function defaultProg(p) { p = (p || '').toLowerCase(); return /^grade 11/.test(p) ? ['IGCSE', 'AS Level'] : /^grade 12/.test(p) ? ['AS Level', 'A Level'] : []; }
   function filters(state) {
     return '<div class="row2" style="justify-content:flex-start"><span class="small muted">Show:</span>' + [['all', 'Everyone'], ['not', 'Not submitted'], ['done', 'Submitted']].map(function (f) {
@@ -493,13 +582,14 @@
         '<div class="row2"><label class="f">Name<input id="sn" value="' + E(pr.full_name) + '"></label><label class="f">Class<select id="sc">' + classOpts(pr.class_id, '(no class)') + '</select></label><label class="f">Student number<input id="snum" value="' + E(pr.student_number || '') + '"></label><button class="btn sm" id="ss" type="button">Save</button></div></section>' +
         '<section class="panel"><h3>Lesson progress</h3>' + ((x[2].data || []).length ? x[2].data.map(function (l) { return '<div class="row2"><span class="small">' + E(l.lessons ? l.lessons.title : '') + '</span><span class="small muted">' + l.percent + '%</span></div><div class="bar"><i style="width:' + l.percent + '%"></i></div>'; }).join('') : '<p class="muted">No lessons opened yet.</p>') + '</section>' +
         '<section class="panel"><div class="row2"><h3 style="margin:0">📌 To-do list</h3>' + (pr.class_id ? '<button type="button" class="btn sm main" id="stw">＋ Set work for ' + E((pr.full_name || 'this student').split(' ')[0]) + '</button>' : '') + '</div><div id="stform"></div><div id="stlist" class="small muted">' + (pr.class_id ? 'Loading…' : 'Put this student in a class first.') + '</div></section>' +
+        '<section class="panel" id="anbox"><p class="muted">Loading learning profile…</p></section>' +
         '<section class="panel" id="pbox"><p class="muted">Loading parents…</p></section>' +
         '<section class="grp"><h3 class="sec-h">Results and feedback</h3>' + ((x[1].data || []).length ? x[1].data.map(function (r) {
           return '<article class="task" data-r="' + r.id + '"><div class="top2"><b>' + E(r.title) + '</b><span class="small muted">' + E(S.when(r.recorded_at)) + '</span></div>' +
             '<div class="row2"><label class="f">Score<input type="number" step="0.5" data-k="score" value="' + E(r.score == null ? '' : r.score) + '" style="max-width:90px"></label><span>/ ' + E(r.max_score) + '</span></div>' +
             '<label class="f">Teacher feedback<textarea rows="3" data-k="teacher_feedback">' + E(r.teacher_feedback || '') + '</textarea></label>' + (r.ai_feedback ? '<div class="fb ai"><h4>Automatic feedback</h4>' + BV.md(r.ai_feedback) + '</div>' : '') +
             '<div class="acts"><button class="btn sm main" type="button" data-a="save">Save feedback</button><button class="btn sm" type="button" data-a="auto" title="Write the automatic feedback again from the marks on each question">🔁 Refresh automatic feedback</button>' + (r.attempt_id ? '<a class="btn sm" href="#marking/' + r.attempt_id + '">Open answers</a>' : '') + '</div></article>'; }).join('') : '<p class="emptybox">No results yet.</p>') + '</section>';
-      parentsBox(p, sid); studentTodo(p, sid, pr);
+      parentsBox(p, sid); studentTodo(p, sid, pr); studentAnalysis(p, sid, pr);
       p.querySelector('#ss').onclick = function () { S.db.from('profiles').update({ full_name: p.querySelector('#sn').value.trim(), class_id: p.querySelector('#sc').value || null, student_number: p.querySelector('#snum').value.trim() || null }).eq('id', sid).then(function (r) { ok(r, 'Student saved'); }); };
       p.querySelectorAll('[data-r]').forEach(function (a) { a.querySelector('[data-a=auto]').onclick = function () { var b = this; b.disabled = true; b.textContent = 'Writing feedback…';
         S.db.functions.invoke('result-feedback', { body: { result_id: a.getAttribute('data-r') } }).then(function (r) { var d = r.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } }

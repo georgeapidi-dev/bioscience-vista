@@ -64,6 +64,8 @@
               if (x.error) { if (window.console) console.warn('Learnova account:', x.error.message); return; }
               // whole-lesson feedback on the dashboard, updated from the marks on every question so far
               db.functions.invoke('result-feedback', { body: { lesson: b.lesson } }).then(function () {}, function () {});
+              // question-by-question analysis and the learning profile (AI reads the written answers once the lesson is finished)
+              db.functions.invoke('analyse', { body: { lesson: b.lesson, mode: (b.step || 0) >= 6 ? 'ai' : 'rule' } }).then(function () {}, function () {});
             });
           } catch (e) {}
           return res;
