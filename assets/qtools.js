@@ -151,11 +151,53 @@
   };
   T.isPic = function (v) { return /^data:image\//.test(v || ''); };
 
+  /* ---------- feedback (rule-based, AI or teacher), the same layout everywhere ----------
+     row = { source: 'rule' | 'ai' | 'teacher', rule: {got, feedback}, ai: {got, confidence, feedback}, teacher: {got, comment}, reviewed }
+     opts.staff: show every part for the teacher (rule check and AI suggestion side by side) */
+  var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  T.fbSource = function (row) {
+    if (!row) return '';
+    if (row.source === 'teacher') return '🧑‍🏫 Marked by your teacher';
+    if (row.source === 'ai') return row.reviewed ? '🤖 AI feedback · mark confirmed by your teacher' : '🤖 AI feedback · your teacher will confirm the mark';
+    return row.reviewed ? '⚙️ Marked from your teacher\'s mark scheme · checked by your teacher' : '⚙️ Marked automatically from your teacher\'s mark scheme';
+  };
+  T.fbParts = function (f, correct) {   // f = {understood[], missing[], why[], explain, improve, next}
+    f = f || {}; var L = function (a) { return (a || []).filter(Boolean); }, out = '';
+    var und = L(f.understood), mis = L(f.missing), why = L(f.why);
+    if (und.length) out += '<div class="fbp good"><b>✓ What you did well</b><ul>' + und.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>';
+    if (mis.length) out += '<div class="fbp miss"><b>✗ What is missing or incorrect</b><ul>' + mis.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>';
+    if (why.length || (f.explain && !correct)) out += '<div class="fbp why"><b>💡 Why</b>' + why.map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + (f.explain && why.indexOf(f.explain) < 0 ? '<p>' + esc(f.explain) + '</p>' : '') + '</div>';
+    else if (f.explain && correct) out += '<div class="fbp why"><b>💡 Remember</b><p>' + esc(f.explain) + '</p></div>';
+    var imp = f.improve || (mis.length ? 'Add the missing ideas above to your answer, using the key scientific words. Then read your answer again: does each sentence answer the question?' : '');
+    if (imp && !correct) out += '<div class="fbp imp"><b>↗ How to improve</b><p>' + esc(imp) + '</p></div>';
+    if (f.next && !correct) out += '<div class="fbp next"><b>📚 Study next</b><p>' + esc(f.next) + '</p></div>';
+    return out;
+  };
+  T.feedback = function (row, opts) {
+    opts = opts || {}; if (!row) return '';
+    var rf = (row.rule || {}).feedback, af = (row.ai || {}).feedback, t = row.teacher || {};
+    var main = row.source === 'ai' && af ? af : rf || af, got = t.got != null ? t.got : row.source === 'ai' && row.ai ? row.ai.got : (row.rule || {}).got, max = (row.rule || row.ai || {}).max;
+    var correct = got != null && max != null && +got === +max && !((main || {}).missing || []).length;
+    var html = '<div class="fbbox">' + T.fbParts(main, correct) + (t.comment ? '<div class="fbp tc"><b>🧑‍🏫 Teacher\'s comment</b><p>' + esc(t.comment) + '</p></div>' : '') +
+      '<p class="fbsrc">' + T.fbSource(row) + '</p></div>';
+    if (!opts.staff) return html;
+    var parts = '';
+    if (row.rule && (row.rule.rules || row.rule.got != null)) parts += '<div class="fbcol"><p class="label">⚙️ Rule check' + (row.rule.got != null ? ': ' + row.rule.got + ' / ' + row.rule.max : '') + (row.rule.confident ? ' · reliable' : ' · needs a check') + '</p>' + T.fbParts(rf, false) + '</div>';
+    if (row.ai) parts += '<div class="fbcol"><p class="label">🤖 AI suggestion: ' + esc(row.ai.got) + ' / ' + esc(row.ai.max) + ' · ' + esc(row.ai.confidence || '') + ' confidence</p>' + T.fbParts(af, false) +
+      '<button type="button" class="btn sm" data-useai="' + esc(row.ai.got) + '">Use AI mark (' + esc(row.ai.got) + ')</button></div>';
+    else if (row.need_ai) parts += '<div class="fbcol"><p class="label">🤖 AI suggestion</p><p class="small muted">Waiting for AI marking. Press "Get AI suggestions" above, or mark it yourself.</p></div>';
+    return parts ? '<div class="fbstaff">' + parts + '</div><p class="fbsrc">Students will see: ' + T.fbSource(row) + '</p>' : '';
+  };
+
   if (!document.getElementById('qtools-css')) {
     var st = document.createElement('style'); st.id = 'qtools-css';
     st.textContent = '.qtable-wrap{overflow-x:auto;margin:.5em 0}.qtable{border-collapse:collapse;min-width:50%;font-size:.95em;background:var(--card,#fff)}.qtable th,.qtable td{border:1px solid var(--line,#cfd6e2);padding:6px 10px;text-align:left;vertical-align:top}.qtable th{background:var(--tint,#eef4ff);font-weight:700}' +
       '.qp{display:block;margin:.25em 0}.dtools{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.dtools button{border:1px solid var(--line,#d6dbe4);background:var(--card,#fff);border-radius:8px;padding:5px 9px;cursor:pointer;font:inherit}.dtools button[aria-pressed=true]{background:#2563eb;color:#fff;border-color:#2563eb}.dcol{display:inline-flex;gap:2px}.dcol button{font-size:18px;padding:2px 7px}.dcol button[aria-pressed=true]{background:#e0e7ff!important;color:inherit}' +
-      'select.qdrop{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line,#d6dbe4);min-width:260px;max-width:100%}';
+      'select.qdrop{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line,#d6dbe4);min-width:260px;max-width:100%}' +
+      '.fbbox{display:grid;gap:8px;margin:.5em 0}.fbp{border-left:4px solid var(--line,#d6dbe4);padding:4px 10px;border-radius:4px}.fbp b{display:block;margin-bottom:2px}.fbp ul{margin:0;padding-left:20px}.fbp p{margin:2px 0}' +
+      '.fbp.good{border-color:#16a34a;background:rgba(22,163,74,.07)}.fbp.miss{border-color:#dc2626;background:rgba(220,38,38,.06)}.fbp.why{border-color:#2563eb;background:rgba(37,99,235,.06)}' +
+      '.fbp.imp{border-color:#d97706;background:rgba(217,119,6,.07)}.fbp.next{border-color:#7c3aed;background:rgba(124,58,237,.06)}.fbp.tc{border-color:#0f766e;background:rgba(15,118,110,.07)}' +
+      '.fbsrc{font-size:.8em;color:var(--muted,#64748b);margin:2px 0 0}.fbstaff{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:.5em 0}.fbcol{border:1px solid var(--line,#d6dbe4);border-radius:10px;padding:8px 10px;display:grid;gap:6px}';
     document.head.appendChild(st);
   }
 })();

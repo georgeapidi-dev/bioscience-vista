@@ -366,6 +366,47 @@
   }
   Q.abcd = abcd;
   function T() { return window.BVT; }
+  /* ---------- feedback rules for one question (used by the rule-based feedback engine; AI is only a back-up) ---------- */
+  var FBL = 'ABCDEFGH';
+  Q.fbToText = function (fb) {   // database form → what the teacher edits
+    fb = fb || {};
+    var pts = (fb.points || []).map(function (p) { var kw = (p.all && p.all.length ? p.all.join(' + ') : (p.any || []).join(' / ')); return p.text + ((p.marks || 1) > 1 ? ' [' + p.marks + ']' : '') + (kw ? ' :: ' + kw : ''); }).join('\n');
+    var ofb = (fb.option_feedback || []).map(function (t, k) { return t ? FBL.charAt(k) + ': ' + t : ''; }).filter(Boolean).join('\n');
+    var mis = (fb.misconceptions || []).map(function (m) { return (m.any || []).join(' / ') + ' :: ' + (m.say || ''); }).join('\n');
+    return { accepted: (fb.accepted || []).join('\n'), points: pts, ofb: ofb, mis: mis, improve: fb.improve || '', study: fb.study || '', mode: fb.feedback_mode || '' };
+  };
+  Q.fbFromText = function (t, nopts) {   // what the teacher typed → database form (empty → null)
+    var lines = function (v) { return String(v || '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean); };
+    var kws = function (v, sep) { return String(v || '').split(sep).map(function (x) { return x.trim(); }).filter(Boolean); };
+    var points = lines(t.points).map(function (l) {
+      var i = l.indexOf('::'), text = (i >= 0 ? l.slice(0, i) : l).trim(), kw = i >= 0 ? l.slice(i + 2).trim() : '', marks = 1, m = /\[(\d+(?:\.\d+)?)\]\s*$/.exec(text);
+      if (m) { marks = +m[1]; text = text.slice(0, m.index).trim(); }
+      var p = { text: text, marks: marks }; if (/\+/.test(kw)) p.all = kws(kw, '+'); else p.any = kws(kw || text, '/');
+      return p;
+    });
+    var ofb = []; lines(t.ofb).forEach(function (l) { var m = /^([A-H])\s*[:.)-]\s*(.+)$/i.exec(l); if (m) ofb[FBL.indexOf(m[1].toUpperCase())] = m[2].trim(); });
+    for (var k = 0; k < Math.max(ofb.length, nopts || 0); k++) if (!ofb[k]) ofb[k] = '';
+    var mis = lines(t.mis).map(function (l) { var i = l.indexOf('::'); return i < 0 ? null : { any: kws(l.slice(0, i), '/'), say: l.slice(i + 2).trim() }; }).filter(function (m) { return m && m.any.length && m.say; });
+    return { accepted: lines(t.accepted).length ? lines(t.accepted) : null, points: points.length ? points : null, option_feedback: ofb.some(Boolean) ? ofb : null,
+      misconceptions: mis.length ? mis : null, improve: String(t.improve || '').trim() || null, study: String(t.study || '').trim() || null, feedback_mode: t.mode || null };
+  };
+  function fbBox(q, written, choice) {
+    var f = Q.fbToText(q.fb), has = !!(f.accepted || f.points || f.ofb || f.mis || f.improve || f.study || f.mode);
+    var ta = function (k, rows, ph) { return '<textarea data-f="fb_' + k + '" rows="' + Math.max(rows, String(f[k] || '').split('\n').length + 1) + '" placeholder="' + E(ph) + '">' + E(f[k]) + '</textarea>'; };
+    return '<details data-show="explain" data-fbbox' + (has ? ' open' : '') + '><summary class="small">💬 Feedback for students (automatic marking rules)' + (has ? ' ✓' : '') + '</summary><div class="grp" style="display:grid;gap:8px;padding:6px 0">' +
+      '<p class="small muted">Used to mark and give feedback without AI. Students see: what they did well, what is missing, why, how to improve and what to study next.</p>' +
+      '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Marking points: one per line, written as you want students to read it, then <b>::</b> and the keywords that show the student has it. Use / between alternatives and + when every word is needed; add [2] for a 2-mark point.' +
+        ta('points', 3, 'Above the optimum, the rate decreases :: decreas / falls / slows\nThe enzyme is denatured :: denatur\nThe active site changes shape :: active site + shape') + '</label>' +
+      '<div class="row2" data-show="written"' + (written ? '' : ' hidden') + '><button type="button" class="btn sm" data-fbfill>Start from the mark scheme</button><span class="small muted">Copies each mark-scheme line as a point for you to edit. Keywords match the start of words, so "denatur" finds "denatured".</span></div>' +
+      '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Accepted answers for short answers (one per line; full marks), e.g. 30 or 30 mm' + ta('accepted', 1, '30\n30 mm') + '</label>' +
+      '<label class="f" data-show="choice"' + (choice ? '' : ' hidden') + '>Why each wrong option is wrong (one line per option: the letter, a colon, then the explanation)' + ta('ofb', 2, 'B: The foam height is what you measure: that is the dependent variable.') + '</label>' +
+      '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Common misconceptions: the words students use :: what to tell them' + ta('mis', 2, 'killed / dies :: Enzymes are proteins, not living things, so they cannot be killed. Say the enzyme is denatured.') + '</label>' +
+      '<label class="f">How to improve (optional)' + ta('improve', 1, 'Use three ideas: rate, denaturing and the shape of the active site.') + '</label>' +
+      '<label class="f">What to study next (optional)' + ta('study', 1, 'Enzymes: effect of temperature and pH') + '</label>' +
+      '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Marking for this question<select data-f="fb_mode"><option value="">Use the quiz setting</option><option value="hybrid"' + (f.mode === 'hybrid' ? ' selected' : '') + '>Hybrid: rules first, AI if needed</option><option value="rule"' + (f.mode === 'rule' ? ' selected' : '') + '>Rules only (no AI)</option><option value="ai"' + (f.mode === 'ai' ? ' selected' : '') + '>AI suggestion</option></select></label>' +
+      '<div class="f"><span>Try an answer' + (q.id ? '' : ' (save the quiz first)') + '</span><div class="row2" style="justify-content:flex-start"><input data-fbtry placeholder="Type an answer a student might give" style="flex:1;min-width:200px"' + (q.id ? '' : ' disabled') + '><button type="button" class="btn sm" data-fbtest' + (q.id ? '' : ' disabled') + '>Check with the rules</button></div><div data-fbout class="small"></div></div>' +
+      '</div></details>';
+  }
   Q.card = function (q, i, opts) {
     opts = opts || {};
     var optsText = (q.options || []).join('\n');
@@ -397,7 +438,7 @@
       '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Mark scheme: one marking point per line (each line = 1 mark). Use / between alternatives and + when all words are needed. Students never see this.<textarea data-f="scheme" rows="' + Math.max(3, String(q.scheme || '').split('\n').length + 1) + '" placeholder="sugar-phosphate backbone\nbases pair A+T / C+G\nhydrogen bonds between bases">' + E(q.scheme || '') + '</textarea></label>' +
       '<label class="f" data-show="written"' + (written ? '' : ' hidden') + '>Rubric / level descriptors (optional, for long answers), e.g. "3-4: clear explanation with examples"<textarea data-f="rubric" rows="' + Math.max(2, String(q.rubric || '').split('\n').length + 1) + '" placeholder="1-2: identifies a relevant factor\n3-4: explains with scientific terms\n5-6: detailed, linked explanation with evidence">' + E(q.rubric || '') + '</textarea></label>' +
       picBox(q.image) +
-      '<details' + (q.explanation ? ' open' : '') + ' data-show="explain"' + (info ? ' hidden' : '') + '><summary class="small">Explanation (optional)</summary><label class="f">Explanation shown to students after marking<textarea data-f="explanation" rows="2">' + E(q.explanation || '') + '</textarea></label></details></article>';
+      '<details' + (q.explanation ? ' open' : '') + ' data-show="explain"' + (info ? ' hidden' : '') + '><summary class="small">Explanation (optional)</summary><label class="f">Explanation shown to students after marking<textarea data-f="explanation" rows="2">' + E(q.explanation || '') + '</textarea></label></details>' + (opts.lesson ? '' : fbBox(q, written, choice)) + '</article>';
   };
   var HINT = 'or paste a picture here (Ctrl+V), or drag one in';
   function picBox(img) {   // upload, paste or drop a picture or diagram for this question
@@ -428,6 +469,27 @@
     return true;
   }
   Q.wireCard = function (el) {
+    var fill = el.querySelector('[data-fbfill]');
+    if (fill) fill.onclick = function () {
+      var pts = el.querySelector('[data-f=fb_points]'), sc = (el.querySelector('[data-f=scheme]') || {}).value || '';
+      var add = sc.split('\n').map(function (l) { return l.replace(/^[-•*\d.)\s]+/, '').trim(); }).filter(Boolean).map(function (l) { return l + ' :: ' + (l.length <= 40 ? l : ''); }).join('\n');
+      if (!add) { fill.textContent = 'Write the mark scheme first'; return; }
+      pts.value = (pts.value.trim() ? pts.value.trim() + '\n' : '') + add; pts.rows = Math.max(3, pts.value.split('\n').length + 1);
+      fill.textContent = 'Added: now write the keywords after each ::';
+    };
+    var tst = el.querySelector('[data-fbtest]');
+    if (tst) tst.onclick = function () {
+      var out = el.querySelector('[data-fbout]'), ans = el.querySelector('[data-fbtry]').value, db = window.BVS && window.BVS.db;
+      if (!el.dataset.id || !db) return;
+      out.textContent = 'Checking… (uses the rules as last saved: save the quiz after changing them)';
+      var kind = (el.querySelector('[data-f=kind]') || {}).value, given = ans;
+      if (kind !== 'short') { var m = /^\s*([A-H])\b/i.exec(ans); given = m ? String('ABCDEFGH'.indexOf(m[1].toUpperCase())) : ans; }
+      db.rpc('test_feedback', { qid: el.dataset.id, answer: given }).then(function (r) {
+        if (r.error) { out.textContent = /test_feedback|schema cache/i.test(r.error.message || '') ? 'This check needs database update 013.' : r.error.message; return; }
+        var x = r.data || {};
+        out.innerHTML = '<p><b>' + (x.got == null ? 'No mark from the rules' : 'Mark: ' + x.got + ' / ' + x.max) + '</b> · ' + (x.confident ? 'reliable: given automatically' : 'not reliable: you (or AI, in hybrid mode) will check it') + '</p>' + (T() && T().fbParts ? T().fbParts(x.feedback, false) : '');
+      });
+    };
     var opt = el.querySelector('[data-f=options]'), box = el.querySelector('[data-abcd]');
     function redraw() {   // keep the ticks in step with the option lines; a line starting with * is ticked
       var lines = opt.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean), cur = el.querySelector('[data-ok]:checked'), c = cur ? +cur.value : -1;
@@ -480,7 +542,9 @@
     var marks = parseInt(v('marks'), 10); marks = kind === 'info' ? 0 : isNaN(marks) ? 1 : Math.max(lesson ? 0 : 1, marks);
     var mode = kind === 'short' ? v('amode') : kind === 'mcq' || kind === 'tf' ? v('cmode') : '', prompt = T() ? T().join(v('prompt'), mode, v('ax'), v('ay')) : v('prompt');
     return { id: el.dataset.id || null, ref: v('ref'), section: v('section') || null, kind: kind, prompt: prompt, options: options, correct: correct, marks: marks,
-      scheme: kind === 'short' ? v('scheme') : '', rubric: kind === 'short' ? v('rubric') : '', explanation: kind === 'info' ? '' : v('explanation'), image: v('image') };
+      scheme: kind === 'short' ? v('scheme') : '', rubric: kind === 'short' ? v('rubric') : '', explanation: kind === 'info' ? '' : v('explanation'), image: v('image'),
+      fb: el.querySelector('[data-fbbox]') && kind !== 'info' ? Q.fbFromText({ accepted: kind === 'short' ? v('fb_accepted') : '', points: kind === 'short' ? v('fb_points') : '', ofb: kind === 'short' ? '' : v('fb_ofb'),
+        mis: kind === 'short' ? v('fb_mis') : '', improve: v('fb_improve'), study: v('fb_study'), mode: kind === 'short' ? v('fb_mode') : '' }, options.length) : null };
   };
   Q.check = function (q) {
     var name = q.kind === 'info' ? 'A reading block' + (q.section ? ' in ' + q.section : '') : 'Question ' + (q.ref || (q.section ? 'in ' + q.section : ''));
@@ -500,7 +564,13 @@
         return go.then(function (r) {
           if (r.error) throw r.error; ids.push(r.data.id);
           if (q.kind === 'info') return;
-          return db.from('question_answers').upsert({ question_id: r.data.id, correct_option: q.kind === 'short' ? null : q.correct, mark_scheme: q.scheme || null, rubric: q.rubric || null, explanation: q.explanation || null }).then(function (r2) { if (r2.error) throw r2.error; });
+          return db.from('question_answers').upsert({ question_id: r.data.id, correct_option: q.kind === 'short' ? null : q.correct, mark_scheme: q.scheme || null, rubric: q.rubric || null, explanation: q.explanation || null }).then(function (r2) {
+            if (r2.error) throw r2.error;
+            if (!q.fb) return;
+            return db.from('question_answers').update(q.fb).eq('question_id', r.data.id).then(function (r3) {
+              if (r3.error) { Q.fbError = /column|schema cache/i.test(r3.error.message || '') ? 'Feedback rules need database update 013 before they can be saved.' : (r3.error.message || 'Feedback rules were not saved.'); }
+            });
+          });
         });
       });
     }, Promise.resolve()).then(function () { return ids; });

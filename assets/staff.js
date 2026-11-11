@@ -178,6 +178,7 @@
           '<div class="small"><b style="color:var(--ok)">✓ ' + nDone + ' submitted</b> · <b style="color:#b45309">✎ ' + nProg + ' working now</b> · <b style="color:#b91c1c">○ ' + nNone + ' not started</b> · of ' + rows.length + '</div>' +
           bar([[nDone, 'var(--ok)', 'submitted'], [nProg, '#f59e0b', 'working'], [nNone, '#fca5a5', 'not started']], rows.length) + '</summary>' +
           (notList.length ? '<p class="small"><b>Not submitted (' + notList.length + '):</b> ' + notList.join(', ') + '</p>' : '<p class="small"><b>Everyone has submitted.</b></p>') +
+          '<div class="acts"><button type="button" class="btn sm" data-rep="' + q.id + '">⬇ Report (marks and feedback)</button></div>' +
           '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Status</th><th>Progress</th><th>Last active</th><th>Result</th></tr>' + show.map(function (r) {
             var a = r.a, idle = a && r.st === 'prog' && (Date.now() - new Date(a.last_seen)) > 180000, gone = a && r.st === 'prog' && a.away_now;
             var stat = r.st === 'done' ? '<span class="pill ok">✓ Submitted</span>' : r.st === 'prog' ? (gone ? '<span class="pill" style="background:#fee2e2;color:#b91c1c">🚩 Left the page now</span>' : idle ? '<span class="pill new">⚠ Idle</span>' : '<span class="pill t">✎ Working</span>') : '<span class="pill" style="color:#b91c1c">Not started</span>';
@@ -188,6 +189,40 @@
           }).join('') + '</table></div></details>';
       }).join('');
       body.innerHTML = html; wireFilters(body, state);
+      body.querySelectorAll('[data-rep]').forEach(function (b) { b.onclick = function () { var qz = qs.filter(function (z) { return z.id === b.getAttribute('data-rep'); })[0];
+        b.disabled = true; b.textContent = 'Making the report…';
+        quizReport(qz, c, kids, by[qz.id] || {}).then(function () { b.disabled = false; b.textContent = '⬇ Report (marks and feedback)'; }, function (e) { b.disabled = false; b.textContent = '⬇ Report (marks and feedback)'; toast(S.nice(e), true); }); }; });
+    });
+  }
+  /* A self-contained HTML report for one quiz and one class: marks, answers and feedback, with where each piece of feedback came from */
+  function quizReport(qz, c, kids, latest) {
+    var ids = Object.keys(latest).map(function (k) { return latest[k].attempt_id; });
+    return Promise.all([loadQuiz(qz.id), ids.length ? S.db.from('quiz_attempts').select('id,student_id,answers,detail,score,max_score,status,submitted_at,released,away_count,away_seconds').in('id', ids) : Promise.resolve({ data: [] }),
+      ids.length ? S.db.from('attempt_feedback').select('*').in('attempt_id', ids).then(function (f) { return f; }, function () { return { data: [] }; }) : Promise.resolve({ data: [] })]).then(function (x) {
+      var qs = x[0].filter(function (q) { return q.kind !== 'info'; }), at = {}, fb = {}, src = { rule: 0, ai: 0, teacher: 0 };
+      (x[1].data || []).forEach(function (a) { at[a.student_id] = a; });
+      ((x[2] && x[2].data) || []).forEach(function (f) { (fb[f.attempt_id] = fb[f.attempt_id] || {})[f.question_id] = f; src[f.source] = (src[f.source] || 0) + 1; });
+      var T = window.BVT, h = function (v) { return E(v == null ? '' : v); }, lbl = { rule: '⚙️ Rule-based', ai: '🤖 AI', teacher: '🧑‍🏫 Teacher' };
+      var done = kids.filter(function (k) { return at[k.id] && at[k.id].status !== 'in_progress'; }), mean = done.length ? Math.round(done.reduce(function (t, k) { return t + 100 * (+at[k.id].score || 0) / (+at[k.id].max_score || 1); }, 0) / done.length) : null;
+      var rows = kids.map(function (k) { var a = at[k.id], st = !a ? 'Not started' : a.status === 'in_progress' ? 'Working' : a.status === 'needs_marking' ? 'Needs marking' : 'Marked';
+        return '<tr><td>' + h(k.full_name) + '</td><td>' + st + '</td><td>' + (a && a.status !== 'in_progress' ? h(a.score) + ' / ' + h(a.max_score) : '–') + '</td><td>' + (a && a.away_count ? a.away_count + '×' : '') + '</td></tr>'; }).join('');
+      var per = done.map(function (k) { var a = at[k.id], f = fb[a.id] || {}, det = {}; (a.detail || []).forEach(function (d) { det[d.question_id] = d; });
+        return '<section class="stu"><h2>' + h(k.full_name) + ' <small>' + h(a.score) + ' / ' + h(a.max_score) + ' · handed in ' + h(S.when(a.submitted_at)) + (a.released ? ' · released' : '') + '</small></h2>' + qs.map(function (q, i) {
+          var d = det[q.id] || {}, g = (a.answers || {})[q.id], row = f[q.id], ans = g == null || g === '' ? '<i>no answer</i>' : /^data:image/.test(g) ? '<img src="' + h(g) + '" alt="Drawing" style="max-width:320px">' : q.kind === 'short' ? '<span style="white-space:pre-wrap">' + h(g) + '</span>' : h('ABCDEFGH'.charAt(g) + '. ' + ((q.options || [])[g] || ''));
+          return '<div class="q"><p><b>' + (i + 1) + '.</b> ' + h(String(q.prompt || '').replace(/\[\[answer:[^\]]*\]\]/g, '').slice(0, 400)) + ' <span class="pill">' + (d.got == null ? 'to be marked' : h(d.got) + ' / ' + h(d.max)) + '</span>' + (row ? ' <span class="src ' + row.source + '">' + lbl[row.source] + (row.reviewed ? ' · teacher-reviewed' : '') + '</span>' : '') + '</p>' +
+            '<p class="ans"><b>Answer:</b> ' + ans + '</p>' + (row && T && T.feedback ? T.feedback(row) : d.comment ? '<p><b>Teacher comment:</b> ' + h(d.comment) + '</p>' : '') + '</div>'; }).join('') + '</section>'; }).join('');
+      var css = 'body{font:15px/1.5 system-ui,Arial,sans-serif;max-width:960px;margin:24px auto;padding:0 16px;color:#1e293b}h1{margin:0}table{border-collapse:collapse;width:100%;margin:12px 0}td,th{border:1px solid #cbd5e1;padding:6px 8px;text-align:left}th{background:#f1f5f9}' +
+        '.stu{border-top:3px solid #e2e8f0;margin-top:24px;page-break-before:always}.stu small{color:#64748b;font-weight:400}.q{border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;margin:10px 0}.pill{background:#f1f5f9;border-radius:99px;padding:1px 8px;font-size:.8em}' +
+        '.src{font-size:.8em;border-radius:99px;padding:1px 8px}.src.rule{background:#e0f2fe}.src.ai{background:#ede9fe}.src.teacher{background:#dcfce7}.ans{background:#f8fafc;padding:6px 8px;border-radius:6px}' +
+        '.fbbox{display:grid;gap:6px}.fbp{border-left:4px solid #cbd5e1;padding:4px 10px}.fbp b{display:block}.fbp ul{margin:0;padding-left:20px}.fbp p{margin:2px 0}.fbp.good{border-color:#16a34a}.fbp.miss{border-color:#dc2626}.fbp.why{border-color:#2563eb}.fbp.imp{border-color:#d97706}.fbp.next{border-color:#7c3aed}.fbp.tc{border-color:#0f766e}.fbsrc{font-size:.8em;color:#64748b;margin:0}' +
+        '@media print{.stu{page-break-before:always}}';
+      var html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + h(qz.title) + ' · ' + h(c.name) + '</title><style>' + css + '</style></head><body>' +
+        '<p style="color:#64748b">Learnova · teacher report · ' + h(new Date().toLocaleString()) + '</p><h1>' + h(qz.title) + '</h1><p><b>' + h(c.name) + '</b> · ' + done.length + ' of ' + kids.length + ' handed in' + (mean != null ? ' · class average ' + mean + '%' : '') + '</p>' +
+        '<p>Feedback sources: ⚙️ rule-based ' + src.rule + ' · 🤖 AI ' + src.ai + ' · 🧑‍🏫 teacher ' + src.teacher + '. AI marks are suggestions until a teacher confirms them.</p>' +
+        '<table><tr><th>Student</th><th>Status</th><th>Mark</th><th>Left the page</th></tr>' + rows + '</table>' + per + '</body></html>';
+      var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+      a.download = (qz.title + ' ' + c.name).replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').slice(0, 80) + '-report.html'; document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
     });
   }
   function lessonBoard(body, c, state) {
@@ -384,7 +419,7 @@
       var q = x[0].data || {}, set = (x[1].data || []).map(function (c) { return c.class_id; }), qq = x[2].data || [];
       var lastN = 0, qs = qq.map(function (z, k) { var o = z.questions || {}, an = o.question_answers || {}; if (Array.isArray(an)) an = an[0] || {};
         var pm = /^(\d+)\s*(\([a-h]\)(?:\s*\([ivx]+\))?)/i.exec(o.prompt || ''), ref = pm ? pm[1] + pm[2].replace(/\s/g, '') : String(lastN + 1); lastN = pm ? +pm[1] : lastN + 1;
-        return { id: o.id, ref: ref, kind: o.kind, prompt: o.prompt, options: o.options || [], correct: an.correct_option == null ? -1 : an.correct_option, marks: o.marks, scheme: an.mark_scheme || an.model_answer || '', rubric: an.rubric || '', explanation: an.explanation || '', image: o.image_url || '' }; });
+        return { id: o.id, ref: ref, kind: o.kind, prompt: o.prompt, options: o.options || [], correct: an.correct_option == null ? -1 : an.correct_option, marks: o.marks, scheme: an.mark_scheme || an.model_answer || '', rubric: an.rubric || '', explanation: an.explanation || '', image: o.image_url || '', fb: an }; });
       p.innerHTML = '<p><a href="#quizzes">← All quizzes and exams</a></p><form class="panel grp" id="qf"><h3>' + (isNew ? 'New quiz or exam' : 'Settings') + '</h3>' +
         '<div class="row2"><label class="f" style="flex:1">Title<input id="t" required value="' + E(q.title) + '"></label><label class="f">Type<select id="cat"><option value="quiz"' + (q.category !== 'exam' ? ' selected' : '') + '>Quiz (Quiz centre)</option><option value="exam"' + (q.category === 'exam' ? ' selected' : '') + '>Exam (Online exams page)</option></select></label></div><label class="f">Instructions<textarea id="ins" rows="2">' + E(q.instructions || '') + '</textarea></label>' +
         '<div class="row2"><label class="f">Topic<select id="tp">' + topicOpts(q.topic_id) + '</select></label><label class="f">Time limit (minutes, blank = none)<input id="tl" type="number" min="1" value="' + E(q.time_limit_minutes || '') + '"></label><label class="f">Attempts<input id="ma" type="number" min="1" value="' + E(q.max_attempts || 1) + '"></label></div>' +
@@ -392,6 +427,10 @@
         '<fieldset><legend>Set for classes</legend>' + (CLASSES.length ? CLASSES.map(function (c) { return '<label class="chk"><input type="checkbox" name="cl" value="' + c.id + '"' + (set.indexOf(c.id) >= 0 ? ' checked' : '') + '> ' + E(c.name) + '</label>'; }).join('') : '<p class="small">Create a class first.</p>') + '</fieldset>' +
         '<fieldset><legend>Results</legend><label class="chk"><input type="radio" name="sr" value="hold"' + (q.show_results ? '' : ' checked') + '> I check and release results (recommended for written answers)</label>' +
         '<label class="chk"><input type="radio" name="sr" value="show"' + (q.show_results ? ' checked' : '') + '> Show multiple-choice scores straight after submitting</label></fieldset>' +
+        '<fieldset><legend>Marking and feedback</legend><label class="f">How written answers are marked and given feedback<select id="fm">' +
+          [['hybrid', 'Hybrid (recommended): rules first, AI only when the rules cannot decide'], ['rule', 'Rules only: no AI (your mark scheme, keywords and explanations)'], ['ai', 'AI for every written answer (rules still mark multiple choice)']]
+            .map(function (o) { return '<option value="' + o[0] + '"' + ((q.feedback_mode || 'hybrid') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
+          '<p class="small muted">Multiple-choice and true/false questions are always marked by the rules, never by AI. AI marks are suggestions: you confirm them when marking. Everything still works if AI is unavailable. You can change the setting for single questions in each question\'s Feedback section.</p></fieldset>' +
         (function () { var g = q.integrity || {}, ex = q.category === 'exam', m = g.mode || (ex ? 'autosubmit' : 'warn');
           return '<fieldset><legend>Exam security</legend><p class="small muted">A website cannot fully stop students switching tabs or apps, but it can see every switch. Each one is recorded and shown on the class page and in marking.</p>' +
           '<div class="row2"><label class="f">When a student leaves the page<select id="xm">' + [['record', 'Just record it'], ['warn', 'Warn the student and record it'], ['autosubmit', 'Warn, then hand it in automatically']].map(function (o) { return '<option value="' + o[0] + '"' + (m === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
@@ -437,6 +476,7 @@
       p.querySelector('#qf').onsubmit = function (e) { e.preventDefault();
         var row = { title: p.querySelector('#t').value.trim(), category: p.querySelector('#cat').value, instructions: p.querySelector('#ins').value.trim() || null, topic_id: p.querySelector('#tp').value || null, time_limit_minutes: +p.querySelector('#tl').value || null,
           max_attempts: Math.max(1, +p.querySelector('#ma').value || 1), opens_at: iso(p.querySelector('#op').value), due_at: iso(p.querySelector('#du').value), show_results: (p.querySelector('[name=sr]:checked') || {}).value === 'show', published: p.querySelector('#pb').checked,
+          feedback_mode: p.querySelector('#fm').value,
           integrity: Object.assign({}, q.integrity || {}, { mode: p.querySelector('#xm').value, max: Math.max(1, +p.querySelector('#xn').value || 3), fullscreen: p.querySelector('#xf').checked, seb: p.querySelector('#xs').checked, block_web: p.querySelector('#xb').checked }) };
         var cls = [].map.call(p.querySelectorAll('[name=cl]:checked'), function (c) { return c.value; });
         if (row.published && !cls.length) { toast('Choose at least one class before publishing.', true); return; }
@@ -446,6 +486,7 @@
         var hashed = qpw ? crypto.subtle.digest('SHA-256', new TextEncoder().encode(qpw)).then(function (b) { row.integrity.quit_hash = Array.from(new Uint8Array(b)).map(function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }) : Promise.resolve();
         var put = function (rw) { return isNew ? S.db.from('quizzes').insert(rw).select('id').single() : S.db.from('quizzes').update(rw).eq('id', id).select('id').single(); };
         hashed.then(function () { return put(row); }).then(function (r) {   // before database update 012 there is no integrity column: save the rest and say so
+          if (r.error && /feedback_mode/.test(r.error.message || '')) { delete row.feedback_mode; toast('The feedback setting needs database update 013; the other settings were saved.', true); return put(row); }
           if (r.error && /integrity/.test(r.error.message || '')) { delete row.integrity; toast('Exam security settings need database update 012; the other settings were saved.', true); return put(row); }
           return r;
         }).then(function (r) {
@@ -473,10 +514,10 @@
       p.querySelector('#qadd').onclick = function () { var d = document.createElement('div'); d.innerHTML = Q.card({ kind: 'mcq', prompt: '', options: [], correct: -1, marks: 1 }, listEl.children.length); var el = d.firstChild; listEl.appendChild(el); wire(el); el.querySelector('[data-f=prompt]').focus(); };
       p.querySelector('#qsave').onclick = function () {
         var cards = [].map.call(listEl.querySelectorAll('.qe'), Q.readCard), bad = cards.map(Q.check).filter(Boolean)[0]; if (bad) { toast(bad, true); return; }
-        var btn = this; btn.disabled = true;
+        var btn = this; btn.disabled = true; Q.fbError = null;
         Q.save(S.db, cards).then(function (ids) {
           return S.db.from('quiz_questions').delete().eq('quiz_id', id).then(function () { return S.db.from('quiz_questions').insert(ids.map(function (qid, k) { return { quiz_id: id, question_id: qid, position: k + 1 }; })); });
-        }).then(function (r) { if (r.error) throw r.error; toast('Questions saved'); quizEdit(p, id); }).catch(function (e) { btn.disabled = false; toast(S.nice(e), true); });
+        }).then(function (r) { if (r.error) throw r.error; toast(Q.fbError ? 'Questions saved. ' + Q.fbError : 'Questions saved', !!Q.fbError); quizEdit(p, id); }).catch(function (e) { btn.disabled = false; toast(S.nice(e), true); });
       };
     });
   }
@@ -576,22 +617,32 @@
     var Q = window.BVQ;
     S.db.from('quiz_attempts').select('*, quizzes(title,show_results)').eq('id', aid).maybeSingle().then(function (r) {
       var a = r.data; if (!a) { p.innerHTML = '<p class="msg">Attempt not found.</p>'; return; }
-      Promise.all([loadQuiz(a.quiz_id), S.db.from('profiles').select('full_name').eq('id', a.student_id).maybeSingle()]).then(function (x) {
-        var qs = x[0], by = {}; (a.detail || []).forEach(function (d) { by[d.question_id] = d; });
+      Promise.all([loadQuiz(a.quiz_id), S.db.from('profiles').select('full_name').eq('id', a.student_id).maybeSingle(),
+        S.db.from('attempt_feedback').select('*').eq('attempt_id', aid).then(function (f) { return f; }, function () { return { data: [] }; })]).then(function (x) {
+        var qs = x[0], by = {}, FB = {}; (a.detail || []).forEach(function (d) { by[d.question_id] = d; }); ((x[2] && x[2].data) || []).forEach(function (f) { FB[f.question_id] = f; });
+        var waitAI = Object.keys(FB).filter(function (k) { return FB[k].need_ai && !FB[k].ai && !FB[k].reviewed; }).length;
         var held = a.quizzes && !a.quizzes.show_results;
         p.innerHTML = '<p><a href="#marking">← Marking list</a></p><section class="panel row2"><div><h3>' + E(x[1].data ? x[1].data.full_name : '') + ' · ' + E(a.quizzes ? a.quizzes.title : '') + '</h3><p class="small muted">Submitted ' + E(S.when(a.submitted_at)) + '</p>' + (a.away_count ? '<p class="small" style="color:#b91c1c"><b>🚩 Left the page ' + a.away_count + ' time' + (a.away_count > 1 ? 's' : '') + '</b>, ' + Math.round((a.away_seconds || 0) / 60 * 10) / 10 + ' min away in total.</p>' : '') + '</div>' +
           '<div><b style="font-size:1.6rem" id="tot">' + E(a.score) + '</b> / ' + E(a.max_score) + ((a.repeats || []).length ? ' <span class="pill">↻ ' + a.repeats.length + ' repeat' + (a.repeats.length > 1 ? 's' : '') + '</span>' : '') + ' <span class="pill">' + (a.released ? 'released' : held ? 'not released yet' : 'student sees MCQ score') + '</span></div></section>' +
           qs.filter(function (q) { return q.kind !== 'info'; }).map(function (q, i) { var d = by[q.id] || {}, g = (a.answers || {})[q.id], an = q.ans || {}, written = q.kind === 'short';
             var pic = /^data:image\//.test(g || ''), sug = written ? (pic ? { got: null, hits: [] } : Q.suggest(g || '', an.mark_scheme || an.model_answer || '', q.marks)) : null, pts = written ? Q.points(an.mark_scheme || an.model_answer || '') : [], lv = written ? Q.levels(an.rubric) : [];
-            var val = d.got != null ? d.got : sug && sug.got != null ? sug.got : '';
+            var fr = FB[q.id], val = d.got != null ? d.got : fr && fr.ai && fr.ai.got != null ? fr.ai.got : fr && fr.rule && fr.rule.got != null ? fr.rule.got : sug && sug.got != null ? sug.got : '';
             return '<article class="q ' + (d.got == null ? '' : +d.got === +d.max ? 'good' : +d.got > 0 ? 'part' : 'bad') + '" data-q="' + q.id + '"><div>' + num(q.prompt, i) + BVT.rich(q.prompt, true) + ' <span class="pill">' + (q.marks ? q.marks + ' mark' + (q.marks > 1 ? 's' : '') : 'not graded') + '</span></div>' + (q.image_url && !pic ? '<img src="' + E(q.image_url) + '" alt="" style="max-width:320px;max-height:200px;border-radius:8px">' : '') +
               '<div class="fb"><h4>Student answer</h4>' + (g == null || g === '' ? '<i>no answer</i>' : pic ? '<img class="hw" alt="Student drawing or handwriting" src="' + E(g) + '" style="max-width:100%;border:1px solid var(--line);border-radius:8px">' : written ? '<p style="white-space:pre-wrap">' + E(g) + '</p>' : E((q.options || [])[g]) + (g === an.correct_option ? ' ✓' : ' ✗ (correct: ' + E((q.options || [])[an.correct_option]) + ')')) + '</div>' +
               (pts.length ? '<div class="small"><b>Mark scheme</b>' + pts.map(function (t, k) { return '<div>' + (pic ? '• ' : sug.hits[k] ? '<span class="ok-t">✓</span> ' : '<span class="bad-t">✗</span> ') + E(t) + '</div>'; }).join('') + (d.got == null && sug.got != null ? '<p class="muted">Suggested: ' + sug.got + ' / ' + q.marks + ' (check it)</p>' : '') + '</div>' : '') +
               (lv.length ? '<div class="small"><b>Rubric</b> (click a level)' + lv.map(function (l) { return '<div><button type="button" class="btn sm" data-lv="' + l.hi + '">' + (l.lo === l.hi ? l.lo : l.lo + '–' + l.hi) + '</button> ' + E(l.text) + '</div>'; }).join('') + '</div>' : '') +
-              repeatsOf(a, q) +
+              repeatsOf(a, q) + (fr && BVT.feedback ? BVT.feedback(fr, { staff: true }) : '') +
               '<div class="row2"><label class="f">Marks<input type="number" min="0" max="' + q.marks + '" step="0.5" data-k="m" value="' + E(val) + '" style="max-width:90px"></label><label class="f" style="flex:1">Comment for the student<input data-k="c" value="' + E(d.comment || '') + '"></label></div></article>'; }).join('') +
-          '<div class="acts panel"><button class="btn sm" type="button" id="savem">Save marks</button><button class="btn main sm" type="button" id="rel">✓ Confirm grade and release to student</button></div>';
+          '<div class="acts panel">' + (waitAI ? '<button class="btn sm" type="button" id="askai">🤖 Get AI suggestions (' + waitAI + ')</button>' : '') + '<button class="btn sm" type="button" id="savem">Save marks</button><button class="btn main sm" type="button" id="rel">✓ Confirm grade and release to student</button></div>';
         p.querySelectorAll('[data-lv]').forEach(function (b) { b.onclick = function () { b.closest('[data-q]').querySelector('[data-k=m]').value = b.getAttribute('data-lv'); }; });
+        p.querySelectorAll('[data-useai]').forEach(function (b) { b.onclick = function () { b.closest('[data-q]').querySelector('[data-k=m]').value = b.getAttribute('data-useai'); toast('AI mark copied in: press Save marks to confirm it.'); }; });
+        var ask = p.querySelector('#askai');
+        if (ask) ask.onclick = function () { ask.disabled = true; ask.textContent = '🤖 Asking AI…';
+          S.db.functions.invoke('ai-mark', { body: { attempt: aid } }).then(function (res) {
+            var d = res && res.data; if (res.error || !d || d.ok === false) { toast((d && d.error) || 'AI marking is unavailable right now. You can mark these answers yourself.', true); ask.disabled = false; ask.textContent = '🤖 Try AI again'; return; }
+            toast(d.marked ? 'AI suggestions added for ' + d.marked + ' answer' + (d.marked > 1 ? 's' : '') + '. Check each one.' : 'Nothing needed AI marking.'); markOne(p, aid);
+          }, function () { toast('AI marking is unavailable right now. You can mark these answers yourself.', true); ask.disabled = false; });
+        };
         function saveAll() {
           var jobs = [].map.call(p.querySelectorAll('[data-q]'), function (art) { var m = art.querySelector('[data-k=m]').value, d = by[art.getAttribute('data-q')] || {}, c = art.querySelector('[data-k=c]').value.trim();
             if (m === '' || (+m === +d.got && c === (d.comment || ''))) return null; return { attempt: aid, qid: art.getAttribute('data-q'), marks_given: +m, comment: c || null }; }).filter(Boolean);

@@ -192,6 +192,8 @@
         if (!auto && miss && !confirmInline(miss)) return;
         sent = true; clearInterval(timer); clearInterval(beat); clearTimeout(pt); if (GUARD) GUARD.off(); app.querySelector('#m').className = 'msg'; app.querySelector('#m').textContent = why === 'left' ? 'Handing in because you left the ' + NOUN + ' too many times…' : auto ? 'Time is up. Submitting…' : 'Submitting…';
         S.db.rpc('submit_quiz', { attempt: attempt, given: g }).then(function (res) {
+          // AI suggestions for written answers the rules could not mark (hybrid / AI mode only; the server decides and never charges for objective questions)
+          if (!res.error && (q.feedback_mode || 'hybrid') !== 'rule' && S.db.functions) { try { S.db.functions.invoke('ai-mark', { body: { attempt: attempt } }).then(function () {}, function () {}); } catch (e) {} }
           if (res.error) { sent = false; app.querySelector('#m').textContent = S.nice(res.error); return; }
           try { localStorage.removeItem(key(attempt)); } catch (e) {}
           S.db.from('quiz_attempts').select('*').eq('id', attempt).maybeSingle().then(function (a) { review(q, a.data, false, res.data); });
@@ -212,7 +214,8 @@
   function review(q, a, canRetry, res) {
     if (!a) return list();
     var det = a.detail || [], hide = !q.show_results && !a.released;
-    S.db.rpc('quiz_paper', { attempt: a.id }).then(function (r) {
+    Promise.all([S.db.rpc('quiz_paper', { attempt: a.id }), hide ? Promise.resolve({ data: [] }) : S.db.from('attempt_feedback').select('question_id,source,rule,ai,teacher,reviewed').eq('attempt_id', a.id).then(function (f) { return f; }, function () { return { data: [] }; })]).then(function (rr) {
+      var r = rr[0], fb = {}; ((rr[1] && rr[1].data) || []).forEach(function (f) { fb[f.question_id] = f; });
       var qs = r.data || [], by = {}; det.forEach(function (d) { by[d.question_id] = d; });
       var pc = S.pct(+a.score, +a.max_score);
       app.innerHTML = '<section class="panel tint"><p class="label">' + E(q.title) + '</p><h2>' + (hide ? 'Submitted ✓' : a.status === 'needs_marking' ? 'Submitted: ' + E(a.score) + ' / ' + E(a.max_score) + ' so far' : 'Your score: ' + E(a.score) + ' / ' + E(a.max_score) + (pc != null ? ' (' + pc + '%)' : '')) + '</h2>' +
@@ -222,7 +225,8 @@
           var ok = d.got != null && +d.got === +d.max, part = d.got != null && +d.got > 0 && !ok;
           return '<article class="q ' + (d.got == null ? '' : ok ? 'good' : part ? 'part' : 'bad') + '"><div>' + (/^\d+\s*(\([a-z]\)|\.\s)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + T.rich(x.prompt, true) + ' <span class="pill">' + (d.got == null ? 'to be marked' : E(d.got) + ' / ' + E(d.max)) + '</span></div>' +
             '<p class="small"><b>Your answer:</b> ' + (given == null || given === '' ? '<i>no answer</i>' : T.isPic(given) ? '<br><img class="hw" alt="Your drawing" src="' + E(given) + '" style="max-width:100%;border:1px solid var(--line);border-radius:8px">' : x.kind === 'short' ? E(given) : 'ABCDEFGH'.charAt(given) + '. ' + E((x.options || [])[given])) + '</p>' +
-            (d.explanation ? '<p class="small fb ai">' + E(d.explanation) + '</p>' : '') + (d.comment ? '<div class="fb tch"><h4>Teacher comment</h4>' + E(d.comment) + '</div>' : '') + '</article>'; }).join(''));
+            (fb[x.question_id] && T.feedback ? T.feedback(fb[x.question_id]) :   // structured feedback (rules, AI or teacher)
+              (d.explanation ? '<p class="small fb ai">' + E(d.explanation) + '</p>' : '') + (d.comment ? '<div class="fb tch"><h4>Teacher comment</h4>' + E(d.comment) + '</div>' : '')) + '</article>'; }).join(''));
       window.scrollTo(0, 0);
     });
   }
