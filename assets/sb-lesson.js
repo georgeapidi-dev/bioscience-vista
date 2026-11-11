@@ -4,6 +4,7 @@
   var BV = window.BV || {};
   if (!BV.sbUrl || !BV.sbKey || !window.supabase || !window.fetch) return;
   var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } }), who = null;
+  window.BV_DB = db;   // shared with lesson-feedback.js
   db.auth.getSession().then(function (r) {
     var s = r.data.session, b = document.createElement('div');
     b.setAttribute('role', 'status');
@@ -15,7 +16,7 @@
         if (p.data && p.data.approved === false) {
           b.style.background = '#fff7ed'; b.style.color = '#9a3412';
           b.textContent = 'Your account is waiting for your teacher to approve it. Your work still goes to your teacher; it will appear on your dashboard once you are approved.';
-        } else who = s.user;
+        } else { who = s.user; window.BV_STUDENT = s.user; document.dispatchEvent(new Event('bv-signed-in')); }
       });
       db.rpc('is_staff').then(function (t) {   // teachers: show model answers in every step
         if (t.data !== true) return;
