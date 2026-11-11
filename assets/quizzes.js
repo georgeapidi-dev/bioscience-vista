@@ -193,7 +193,8 @@
         sent = true; clearInterval(timer); clearInterval(beat); clearTimeout(pt); if (GUARD) GUARD.off(); app.querySelector('#m').className = 'msg'; app.querySelector('#m').textContent = why === 'left' ? 'Handing in because you left the ' + NOUN + ' too many times…' : auto ? 'Time is up. Submitting…' : 'Submitting…';
         S.db.rpc('submit_quiz', { attempt: attempt, given: g }).then(function (res) {
           // AI suggestions for written answers the rules could not mark (hybrid / AI mode only; the server decides and never charges for objective questions)
-          if (!res.error && (q.feedback_mode || 'hybrid') !== 'rule' && S.db.functions) { try { S.db.functions.invoke('ai-mark', { body: { attempt: attempt } }).then(function () {}, function () {}); } catch (e) {} }
+          if (!res.error && (q.feedback_mode || 'hybrid') !== 'rule' && S.db.functions) { try { S.db.functions.invoke('ai-mark', { body: { attempt: attempt } }).then(function () {}, function () {}).then(function () { return S.db.functions.invoke('result-feedback', { body: { attempt: attempt } }); }).then(function () {}, function () {}); } catch (e) {} }
+          else if (!res.error && S.db.functions) { try { S.db.functions.invoke('result-feedback', { body: { attempt: attempt, mode: 'rule' } }).then(function () {}, function () {}); } catch (e) {} }
           if (res.error) { sent = false; app.querySelector('#m').textContent = S.nice(res.error); return; }
           try { localStorage.removeItem(key(attempt)); } catch (e) {}
           S.db.from('quiz_attempts').select('*').eq('id', attempt).maybeSingle().then(function (a) { review(q, a.data, false, res.data); });

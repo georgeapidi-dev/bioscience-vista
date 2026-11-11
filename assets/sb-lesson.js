@@ -60,7 +60,11 @@
         return orig.call(self, url, o).then(function (res) {
           try {
             var b = JSON.parse(opts.body), m = /TOTAL=([\d.]+)\s*\/\s*([\d.]+)/.exec(b.answers || '');
-            if (s && res.ok && m) db.rpc('record_lesson_result', { lesson_ext_id: b.lesson, got: +m[1], out_of: +m[2], step: b.step || null }).then(function (x) { if (x.error && window.console) console.warn('Learnova account:', x.error.message); });
+            if (s && res.ok && m) db.rpc('record_lesson_result', { lesson_ext_id: b.lesson, got: +m[1], out_of: +m[2], step: b.step || null }).then(function (x) {
+              if (x.error) { if (window.console) console.warn('Learnova account:', x.error.message); return; }
+              // whole-lesson feedback on the dashboard, updated from the marks on every question so far
+              db.functions.invoke('result-feedback', { body: { lesson: b.lesson } }).then(function () {}, function () {});
+            });
           } catch (e) {}
           return res;
         });

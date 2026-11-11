@@ -451,10 +451,14 @@
         '<section class="grp"><h3 class="sec-h">Results and feedback</h3>' + ((x[1].data || []).length ? x[1].data.map(function (r) {
           return '<article class="task" data-r="' + r.id + '"><div class="top2"><b>' + E(r.title) + '</b><span class="small muted">' + E(S.when(r.recorded_at)) + '</span></div>' +
             '<div class="row2"><label class="f">Score<input type="number" step="0.5" data-k="score" value="' + E(r.score == null ? '' : r.score) + '" style="max-width:90px"></label><span>/ ' + E(r.max_score) + '</span></div>' +
-            '<label class="f">Teacher feedback<textarea rows="3" data-k="teacher_feedback">' + E(r.teacher_feedback || '') + '</textarea></label>' + (r.ai_feedback ? '<div class="fb ai"><h4>AI feedback</h4>' + BV.md(r.ai_feedback) + '</div>' : '') +
-            '<div class="acts"><button class="btn sm main" type="button" data-a="save">Save feedback</button>' + (r.attempt_id ? '<a class="btn sm" href="#marking/' + r.attempt_id + '">Open answers</a>' : '') + '</div></article>'; }).join('') : '<p class="emptybox">No results yet.</p>') + '</section>';
+            '<label class="f">Teacher feedback<textarea rows="3" data-k="teacher_feedback">' + E(r.teacher_feedback || '') + '</textarea></label>' + (r.ai_feedback ? '<div class="fb ai"><h4>Automatic feedback</h4>' + BV.md(r.ai_feedback) + '</div>' : '') +
+            '<div class="acts"><button class="btn sm main" type="button" data-a="save">Save feedback</button><button class="btn sm" type="button" data-a="auto" title="Write the automatic feedback again from the marks on each question">🔁 Refresh automatic feedback</button>' + (r.attempt_id ? '<a class="btn sm" href="#marking/' + r.attempt_id + '">Open answers</a>' : '') + '</div></article>'; }).join('') : '<p class="emptybox">No results yet.</p>') + '</section>';
       parentsBox(p, sid); studentTodo(p, sid, pr);
       p.querySelector('#ss').onclick = function () { S.db.from('profiles').update({ full_name: p.querySelector('#sn').value.trim(), class_id: p.querySelector('#sc').value || null, student_number: p.querySelector('#snum').value.trim() || null }).eq('id', sid).then(function (r) { ok(r, 'Student saved'); }); };
+      p.querySelectorAll('[data-r]').forEach(function (a) { a.querySelector('[data-a=auto]').onclick = function () { var b = this; b.disabled = true; b.textContent = 'Writing feedback…';
+        S.db.functions.invoke('result-feedback', { body: { result_id: a.getAttribute('data-r') } }).then(function (r) { var d = r.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } }
+          if (r.error || !d || !d.ok) { b.disabled = false; b.textContent = '🔁 Refresh automatic feedback'; toast((d && d.error) || 'Could not write feedback right now.', true); return; }
+          toast('Feedback written'); student(p, sid); }); }; });
       p.querySelectorAll('[data-r]').forEach(function (a) { a.querySelector('[data-a=save]').onclick = function () { var sc = a.querySelector('[data-k=score]').value;
         S.db.from('student_results').update({ score: sc === '' ? null : +sc, teacher_feedback: a.querySelector('[data-k=teacher_feedback]').value.trim() || null, updated_at: new Date().toISOString() }).eq('id', a.getAttribute('data-r')).then(function (r) { ok(r, 'Feedback saved'); }); }; });
     });
@@ -762,7 +766,7 @@
           }).then(function () { toast(done + ' written answer' + (done === 1 ? '' : 's') + ' marked automatically. Check them, then release.'); marking(p, []); });
         };
         p.querySelector('#relall').onclick = function () { var btn = this; btn.disabled = true;
-          ready.reduce(function (pr, a) { return pr.then(function () { return S.db.rpc('release_attempt', { attempt: a.id }); }); }, Promise.resolve()).then(function () { toast(ready.length + ' result' + (ready.length === 1 ? '' : 's') + ' released to students'); marking(p, []); }); };
+          ready.reduce(function (pr, a) { return pr.then(function () { return S.db.rpc('release_attempt', { attempt: a.id }).then(function (x) { return S.db.functions.invoke('result-feedback', { body: { attempt: a.id } }).then(function () { return x; }, function () { return x; }); }); }); }, Promise.resolve()).then(function () { toast(ready.length + ' result' + (ready.length === 1 ? '' : 's') + ' released to students'); marking(p, []); }); };
       });
     });
   }
@@ -810,7 +814,7 @@
         p.querySelector('#savem').onclick = function () { saveAll().then(function () { toast('Marks saved'); markOne(p, aid); }, function (e) { toast(S.nice(e), true); }); };
         p.querySelector('#rel').onclick = function () {
           var empty = [].filter.call(p.querySelectorAll('[data-k=m]'), function (i) { return i.value === ''; }).length; if (empty) { toast('Give a mark for every question first (' + empty + ' empty).', true); return; }
-          saveAll().then(function () { return S.db.rpc('release_attempt', { attempt: aid }); }).then(function (res) { if (res.error) throw res.error; toast('Released: the student can now see ' + res.data + ' / ' + a.max_score); location.hash = 'marking'; })
+          saveAll().then(function () { return S.db.rpc('release_attempt', { attempt: aid }); }).then(function (res) { if (res.error) throw res.error; S.db.functions.invoke('result-feedback', { body: { attempt: aid } }).then(function () {}, function () {}); toast('Released: the student can now see ' + res.data + ' / ' + a.max_score); location.hash = 'marking'; })
             .catch(function (e) { toast(S.nice(e), true); });
         };
       });
