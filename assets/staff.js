@@ -279,7 +279,7 @@
           '<div class="small"><b style="color:var(--ok)">✓ ' + nDone + ' submitted</b> · <b style="color:#b45309">✎ ' + nProg + ' working now</b> · <b style="color:#b91c1c">○ ' + nNone + ' not started</b> · of ' + rows.length + '</div>' +
           bar([[nDone, 'var(--ok)', 'submitted'], [nProg, '#f59e0b', 'working'], [nNone, '#fca5a5', 'not started']], rows.length) + '</summary>' +
           (notList.length ? '<p class="small"><b>Not submitted (' + notList.length + '):</b> ' + notList.join(', ') + '</p>' : '<p class="small"><b>Everyone has submitted.</b></p>') +
-          '<div class="acts"><button type="button" class="btn sm" data-rep="' + q.id + '">⬇ Report (marks and feedback)</button>' +
+          '<div class="acts"><button type="button" class="btn sm" data-rep="' + q.id + '">⬇ Report (marks and feedback)</button><button type="button" class="btn sm" data-ms="' + q.id + '">📄 Mark scheme</button>' +
             (nDone ? '<button type="button" class="btn sm" data-remark="' + q.id + '" title="Re-mark every handed-in attempt with the current rules and refresh the feedback. Marks you confirmed are kept.">🔁 Re-mark and refresh feedback</button>' : '') + '</div>' +
           '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Status</th><th>Progress</th><th>Last active</th><th>Result</th></tr>' + show.map(function (r) {
             var a = r.a, idle = a && r.st === 'prog' && (Date.now() - new Date(a.last_seen)) > 180000, gone = a && r.st === 'prog' && a.away_now;
@@ -291,6 +291,7 @@
           }).join('') + '</table></div></details>';
       }).join('');
       body.innerHTML = html; wireFilters(body, state);
+      wireMS(body);
       body.querySelectorAll('[data-remark]').forEach(function (b) { b.onclick = function () {
         var qid = b.getAttribute('data-remark'), qz = qs.filter(function (z) { return z.id === qid; })[0] || {};
         b.disabled = true; b.textContent = 'Re-marking…';
@@ -317,6 +318,51 @@
       return '<div style="border-left:4px solid ' + (a.mark >= a.max ? '#16a34a' : a.mark > 0 ? '#f59e0b' : '#dc2626') + ';padding:4px 10px;margin:4px 0;background:#fff"><b>' + E(a.q) + ' · ' + E(a.mark) + '/' + E(a.max) + (f.source === 'ai' ? ' suggested' + (a.confidence ? ' (' + E(a.confidence) + ' confidence)' : '') : '') + '</b><ul style="margin:2px 0;padding-left:0;list-style:none">' +
         (a.understood || []).map(function (t) { return li('✓', t); }).join('') + (a.missing || []).map(function (t) { return li('✗', t); }).join('') + (a.why || []).map(function (t) { return li('💡', t); }).join('') +
         (a.improve ? li('↗', a.improve) : '') + (a.next ? li('📚', a.next) : '') + '</ul></div>'; }).join('');
+  }
+  /* Printable mark scheme for a quiz or exam, built from the answers and mark scheme stored with each question */
+  function wireMS(host) {
+    host.querySelectorAll('[data-ms]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); e.stopPropagation(); var t = b.textContent; b.disabled = true; b.textContent = 'Making…';
+      markScheme(b.getAttribute('data-ms')).then(function () { b.disabled = false; b.textContent = t; }, function (er) { b.disabled = false; b.textContent = t; toast(S.nice(er), true); }); }; });
+  }
+  function markScheme(qid) {
+    return Promise.all([S.db.from('quizzes').select('title,category,instructions,time_limit_minutes').eq('id', qid).maybeSingle(), loadQuiz(qid)]).then(function (x) {
+      var qz = x[0].data || { title: 'Quiz' }, qs = x[1].filter(function (q) { return q.kind !== 'info'; }), total = 0, n = 0;
+      var L = 'ABCDEFGHIJ', md = function (t) { return BV.md ? BV.md(String(t || '')) : E(t); };
+      var body = qs.map(function (q) {
+        n++; total += q.marks || 0; var a = q.ans || {}, opts = q.options || [], h = '';
+        var prompt = String(q.prompt || '').replace(/\[\[answer:[^\]]*\]\]/g, '_____');
+        if ((q.kind === 'mcq' || q.kind === 'tf') && opts.length) {
+          h += '<ol class="opts" type="A">' + opts.map(function (o, i) { var right = i === a.correct_option, fb = (a.option_feedback || [])[i];
+            return '<li class="' + (right ? 'right' : '') + '">' + E(o) + (right ? ' <b>✓ correct</b>' : '') + (fb ? '<div class="why">' + E(fb) + '</div>' : '') + '</li>'; }).join('') + '</ol>';
+          h += '<p class="ans"><b>Answer:</b> ' + (a.correct_option != null ? L[a.correct_option] + ' (' + E(opts[a.correct_option]) + ')' : '<i>not set</i>') + ' [1]</p>';
+        }
+        var pts = Array.isArray(a.points) ? a.points : [];
+        if (pts.length) h += '<p class="ans"><b>Mark points</b> (one mark each unless shown):</p><ul>' + pts.map(function (p) {
+          var any = (p.any || []).map(function (w) { return String(w).replace(/\s*\+\s*/g, ' + '); }).join(' / ');
+          var t = p.text || p.point; return '<li>' + E(t || any) + (p.marks && p.marks > 1 ? ' [' + p.marks + ']' : ' [1]') + (any && t ? ' <span class="kw">key words: ' + E(any) + '</span>' : '') + '</li>'; }).join('') + '</ul>';
+        if (a.mark_scheme) h += '<div class="ms"><b>Mark scheme</b>' + md(a.mark_scheme) + '</div>';
+        if (a.model_answer) h += '<div class="model"><b>Model answer</b>' + md(a.model_answer) + '</div>';
+        if (a.rubric) h += '<div class="ms"><b>Level descriptors</b>' + md(a.rubric) + '</div>';
+        if (Array.isArray(a.accepted) && a.accepted.length) h += '<p class="small"><b>Also accept:</b> ' + E(a.accepted.join('; ')) + '</p>';
+        var mis = Array.isArray(a.misconceptions) ? a.misconceptions : [];
+        if (mis.length) h += '<p class="small"><b>Do not accept / common errors:</b></p><ul class="small">' + mis.map(function (m) { return '<li>' + (m.any ? '<i>' + E(m.any.slice(0, 4).join(' / ')) + '</i>: ' : '') + E(typeof m === 'string' ? m : (m.say || JSON.stringify(m))) + '</li>'; }).join('') + '</ul>';
+        if (a.explanation) h += '<p class="small"><b>Why:</b> ' + E(a.explanation) + '</p>';
+        if (!h) h = '<p class="ans"><i>No mark scheme entered for this question yet.</i></p>';
+        return '<section class="q"><div class="qh"><b>Question ' + n + '</b><span>[' + (q.marks || 0) + ' mark' + (q.marks === 1 ? '' : 's') + ']</span></div><div class="prompt">' + md(prompt) + '</div>' +
+          (q.image_url ? '<img src="' + E(q.image_url) + '" alt="">' : '') + h + '</section>';
+      }).join('');
+      var css = 'body{font:15px/1.5 Arial,Helvetica,sans-serif;color:#111;max-width:860px;margin:24px auto;padding:0 16px}h1{font-size:1.5em;margin:0}.meta{color:#555;margin:4px 0 18px}' +
+        '.q{border:1px solid #ccc;border-radius:8px;padding:10px 14px;margin:12px 0;page-break-inside:avoid}.qh{display:flex;justify-content:space-between;border-bottom:1px solid #eee;margin-bottom:6px}' +
+        '.prompt{color:#333}.prompt p{margin:4px 0}img{max-width:100%;max-height:320px;display:block;margin:6px 0}.opts li{margin:2px 0}.opts li.right{font-weight:600;color:#065f46}.why{font-weight:400;color:#555;font-size:.9em}' +
+        '.ans{background:#ecfdf5;padding:4px 8px;border-radius:6px}.ms,.model{background:#f8fafc;border-left:4px solid #2563eb;padding:6px 10px;margin:6px 0}.model{border-left-color:#16a34a}.kw{color:#555;font-size:.88em}.small{font-size:.9em}' +
+        '.bar{position:sticky;top:0;background:#fff;padding:8px 0;border-bottom:1px solid #ddd;margin-bottom:10px}@media print{.bar{display:none}}';
+      var html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mark scheme · ' + E(qz.title) + '</title><style>' + css + '</style></head><body>' +
+        '<div class="bar"><button onclick="print()">🖨 Print or save as PDF</button></div><h1>Mark scheme: ' + E(qz.title) + '</h1>' +
+        '<p class="meta">' + (qz.category === 'exam' ? 'Exam' : 'Quiz') + ' · ' + n + ' questions · ' + total + ' marks' + (qz.time_limit_minutes ? ' · ' + qz.time_limit_minutes + ' minutes' : '') + ' · Prepared by George Apidi · Learnova · Confidential: for teachers</p>' + body + '</body></html>';
+      var w = window.open('', '_blank');
+      if (w) { w.document.open(); w.document.write(html); w.document.close(); }
+      else { var a2 = document.createElement('a'); a2.href = URL.createObjectURL(new Blob([html], { type: 'text/html' })); a2.download = 'mark-scheme-' + qz.title.replace(/[^\w]+/g, '-').slice(0, 60) + '.html'; a2.click(); }
+    });
   }
   /* A self-contained HTML report for one quiz and one class: marks, answers and feedback, with where each piece of feedback came from */
   function quizReport(qz, c, kids, latest) {
@@ -518,8 +564,10 @@
     S.db.from('quizzes').select('id,title,published,due_at,show_results,category, quiz_classes(class_id), quiz_questions(question_id)').neq('category', 'lesson').order('created_at', { ascending: false }).then(function (r) {
       var cn = {}; CLASSES.forEach(function (c) { cn[c.id] = c.name; });
       p.innerHTML = '<div class="acts"><a class="btn main sm" href="#quizzes/import">⬆ Import from PDF or Word</a><a class="btn sm" href="#quizzes/new">＋ New quiz or exam</a></div>' +
+        '<p class="small muted">📄 <b>Mark scheme</b> opens a printable mark scheme for that quiz or exam: correct answers, mark points, model answers and level descriptors. Use Print → Save as PDF to keep or share it.</p>' +
         ((r.data || []).length ? '<div class="tablewrap"><table class="marks"><tr><th>Title</th><th>Type</th><th>Questions</th><th>Classes</th><th>Due</th><th>Results</th><th>Status</th><th></th></tr>' + r.data.map(function (q) {
-          return '<tr><td><a href="#quizzes/' + q.id + '">' + E(q.title) + '</a></td><td>' + (q.category === 'exam' ? '🧪 Exam' : '📝 Quiz') + '</td><td>' + q.quiz_questions.length + '</td><td class="small">' + E(q.quiz_classes.map(function (c) { return cn[c.class_id] || '…'; }).join(', ') || '–') + '</td><td class="small">' + E(S.when(q.due_at) || '–') + '</td><td class="small">' + (q.show_results ? 'shown at once' : 'after you release') + '</td><td>' + (q.published ? '<span class="pill">Published</span>' : 'Draft') + '</td><td><a class="btn sm" href="#quizzes/' + q.id + '/preview">👁 Preview</a></td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No quizzes yet. Import a question paper or make one from scratch.</p>');
+          return '<tr><td><a href="#quizzes/' + q.id + '">' + E(q.title) + '</a></td><td>' + (q.category === 'exam' ? '🧪 Exam' : '📝 Quiz') + '</td><td>' + q.quiz_questions.length + '</td><td class="small">' + E(q.quiz_classes.map(function (c) { return cn[c.class_id] || '…'; }).join(', ') || '–') + '</td><td class="small">' + E(S.when(q.due_at) || '–') + '</td><td class="small">' + (q.show_results ? 'shown at once' : 'after you release') + '</td><td>' + (q.published ? '<span class="pill">Published</span>' : 'Draft') + '</td><td><a class="btn sm" href="#quizzes/' + q.id + '/preview">👁 Preview</a> <button type="button" class="btn sm" data-ms="' + q.id + '">📄 Mark scheme</button></td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No quizzes yet. Import a question paper or make one from scratch.</p>');
+      wireMS(p);
     });
   }
 
