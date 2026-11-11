@@ -747,8 +747,8 @@
     tree: ['A mango tree', [1, 1, 1, 1, 1, 1, 1], 'A tree is LIVING. Its movement is slow (leaves turn to the light, roots grow towards water), and it makes its own food by photosynthesis.'],
     bact: ['A bacterium', [1, 1, 1, 1, 1, 1, 1], 'One tiny cell, but it carries out all seven processes, so a bacterium is LIVING.'],
     seed: ['A dry bean seed', [0, 1, 0, 0, 0, 0, 0], 'A seed is ALIVE but dormant (resting). It respires very slowly; give it water and warmth and it grows and does everything else.'],
-    car: ['A car', [1, 0, 0, 0, 1, 0, 1], 'A car moves, uses fuel and gives out waste gases, but it does not grow, reproduce or sense like a living thing. It is NON-LIVING.'],
-    fire: ['A fire', [1, 1, 0, 1, 1, 0, 1], 'Fire moves, "grows", uses oxygen and gives out waste, but it is not made of cells and cannot sense or reproduce itself. It is NON-LIVING.'],
+    car: ['A car', [1, 0, 0, 0, 0, 1, 1], 'A car moves, takes in fuel and gives out exhaust gases, so it only SEEMS to show movement, nutrition and excretion. It does not respire, sense, grow or reproduce, and it is not made of cells. It is NON-LIVING.'],
+    fire: ['A fire', [1, 1, 0, 1, 0, 1, 1], 'Fire moves, "grows", uses oxygen and fuel, and gives out waste gases, so it SEEMS to show several life processes. But it is not made of cells, cannot sense its surroundings and cannot reproduce itself. It is NON-LIVING.'],
     crystal: ['A salt crystal', [0, 0, 0, 1, 0, 0, 0], 'A crystal can get bigger, but only by adding material to the outside. It does no other life process: NON-LIVING.'],
     wood: ['A dead log', [0, 0, 0, 0, 0, 0, 0], 'A log was once living, but it no longer carries out life processes. It is DEAD, which is different from never-living.']
   };
@@ -760,7 +760,7 @@
       P.forEach(function (p, i) { var y = 14 + i * 24, ok = o[1][i]; n += ok; svg += '<rect x="20" y="' + y + '" width="250" height="20" rx="5" fill="' + (ok ? '#dcfce7' : '#fee2e2') + '"/><text x="30" y="' + (y + 14) + '" font-size="12" font-weight="700" fill="#0f172a">' + p.charAt(0) + '</text><text x="46" y="' + (y + 14) + '" font-size="12">' + p.slice(1) + '</text><text x="255" y="' + (y + 15) + '" text-anchor="end" font-size="14" fill="' + (ok ? '#15803d' : '#b91c1c') + '">' + (ok ? '✓' : '✗') + '</text>'; });
       svg += '<circle cx="335" cy="95" r="48" fill="' + (n === 7 ? '#15803d' : '#64748b') + '"/><text x="335" y="91" text-anchor="middle" fill="#fff" font-size="22" font-weight="700">' + n + ' / 7</text><text x="335" y="112" text-anchor="middle" fill="#fff" font-size="11">life processes</text>';
       r.querySelector('svg').innerHTML = svg;
-      r.querySelector('.sim-out').innerHTML = '<b>' + o[0] + ':</b> ' + o[2] + '<br>A living thing must carry out ALL seven processes at some point in its life, and it is made of cells. Doing one or two (like a car moving) is not enough.';
+      r.querySelector('.sim-out').innerHTML = '<b>' + o[0] + ':</b> ' + o[2] + '<br>A living thing must carry out ALL seven processes at some point in its life, and it is made of cells. Non-living things can only seem to do some of them (like a car moving): that is not enough.';
     }
   };
 
