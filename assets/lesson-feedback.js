@@ -240,6 +240,27 @@
     btn.click();
   }
 
+  // Concept notes before the questions of steps that start straight with questions (written by "lesson-notes", stored in lesson_notes)
+  function conceptNotes() {
+    if (!window.SB_URL || !window.SB_KEY || !window.fetch) return;
+    fetch(window.SB_URL + '/rest/v1/lesson_notes?select=step,notes&lesson=eq.' + encodeURIComponent(SP.id), { headers: { apikey: window.SB_KEY, Authorization: 'Bearer ' + window.SB_KEY } })
+      .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) {
+        (rows || []).forEach(function (r) {
+          var sec = document.getElementById('step' + r.step), n = r.notes || {}; if (!sec || sec.querySelector('.bv-cnotes')) return;
+          var q = sec.querySelector('.card.task, .q'); if (!q) return;
+          var before = true; sec.querySelectorAll('.notes').forEach(function (x) { if (x.compareDocumentPosition(q) & Node.DOCUMENT_POSITION_FOLLOWING) before = false; });
+          if (!before) return;   // this step already has notes before its questions
+          var box = document.createElement('div'); box.className = 'card notes bv-cnotes';
+          box.innerHTML = '<h3>📘 ' + esc(n.title || 'Key ideas') + '</h3>' + (n.intro ? '<p>' + esc(n.intro) + '</p>' : '') +
+            ((n.points || []).length ? '<ul>' + n.points.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
+            ((n.terms || []).length ? '<p><b>Key words</b></p><ul>' + n.terms.map(function (t) { return '<li><b>' + esc(t.term) + '</b>: ' + esc(t.meaning) + '</li>'; }).join('') + '</ul>' : '') +
+            (n.example ? '<p><b>Example:</b> ' + esc(n.example) + '</p>' : '');
+          var card = q.closest('.card') || q; card.parentNode.insertBefore(box, card);
+        });
+      }, function () {});
+  }
+  conceptNotes();
+
   var orig = window.show;
   var ready = false;
   window.show = function (n, m) {
