@@ -254,7 +254,9 @@
           box.innerHTML = '<h3>📘 ' + esc(n.title || 'Key ideas') + '</h3>' + (n.intro ? '<p>' + esc(n.intro) + '</p>' : '') +
             ((n.points || []).length ? '<ul>' + n.points.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
             ((n.terms || []).length ? '<p><b>Key words</b></p><ul>' + n.terms.map(function (t) { return '<li><b>' + esc(t.term) + '</b>: ' + esc(t.meaning) + '</li>'; }).join('') + '</ul>' : '') +
-            (n.example ? '<p><b>Example:</b> ' + esc(n.example) + '</p>' : '');
+            (n.example ? '<p><b>Example:</b> ' + esc(n.example) + '</p>' : '') +
+            (n.image && n.image.src ? '<figure style="margin:10px 0 0;text-align:center"><img src="' + esc(n.image.src) + '" alt="' + esc(n.image.caption || n.image.title || '') + '" loading="lazy" style="max-width:100%;max-height:360px;border-radius:8px;background:#fff">' +
+              '<figcaption class="small">' + esc(n.image.caption || '') + '<br><span style="opacity:.75">Image: <a href="' + esc(n.image.page || '#') + '" target="_blank" rel="noopener">' + esc(n.image.title || 'source') + '</a>' + (n.image.artist ? ' · ' + esc(n.image.artist) : '') + ', ' + esc(n.image.license || '') + ', via Wikimedia Commons</span></figcaption></figure>' : '');
           var card = q.closest('.card') || q; card.parentNode.insertBefore(box, card);
         });
       }, function () {});
