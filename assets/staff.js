@@ -1290,7 +1290,9 @@
         var sug = q.status === 'open' ? hdSuggest(q.question + ' ' + (q.topic || '')) : [];
         card.querySelectorAll('[data-sug]').forEach(function (b) { b.onclick = function () {
           var n = sug[+b.getAttribute('data-sug')].notes || {};
-          var t = (n.intro ? n.intro + '\n' : '') + (n.points || []).map(function (x) { return '• ' + x; }).join('\n') + (n.example ? '\nExample: ' + n.example : '');
+          var qw = hdWords(q.question + ' ' + (q.topic || '')), rel = function (x) { var w = hdWords(x); return qw.filter(function (v) { return w.indexOf(v) >= 0; }).length; };
+          var pts = (n.points || []).map(function (x) { return [x, rel(x)]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 3).filter(function (x, i) { return x[1] > 0 || i < 2; }).map(function (x) { return x[0]; });
+          var t = (n.intro && rel(n.intro) ? n.intro + '\n' : '') + pts.map(function (x) { return '• ' + x; }).join('\n');
           ta.value = (ta.value.trim() ? ta.value.trim() + '\n\n' : '') + t; ta.focus(); }; });
         card.querySelectorAll('[data-act]').forEach(function (b) { b.onclick = function () {
           var act = b.getAttribute('data-act');
