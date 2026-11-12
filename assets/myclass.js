@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', function () {
       return 'dp' + (m[1] || m[2]) + lv;
     }
     if ((m = /grade\s*(\d+)/.exec(n))) return 'grade-' + m[1];
-    if ((m = /\b(ess|environmental systems|chemistry)\b/.exec(n))) {   // "IB ESS SL" → ess-sl, "IB Chemistry HL" → chem-hl
-      var base = m[1] === 'chemistry' ? 'chem' : 'ess', l2 = /\b(sl|standard level)\b/.test(n) ? '-sl' : /\b(hl|higher level)\b/.test(n) ? '-hl' : '';
+    if ((m = /\b(ess|environmental systems|chemistry|physics)\b/.exec(n))) {   // "IB ESS SL" → ess-sl, "IB Chemistry HL" → chem-hl
+      var base = m[1] === 'chemistry' ? 'chem' : m[1] === 'physics' ? 'phys' : 'ess', l2 = /\b(sl|standard level)\b/.test(n) ? '-sl' : /\b(hl|higher level)\b/.test(n) ? '-hl' : '';
       return base + l2;
     }
     return '';
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
       tiles.forEach(function (t) { t.hidden = t.getAttribute('data-cls') !== mine; });
       var head = document.querySelector('.hero p.muted'); if (head && tiles.length) head.textContent = 'Your class: ' + cls + '. Open it to see your interactive lessons.';
       // DP students go straight to their own level: /lessons/, /dp1/ and the other level's page all open /dp1-sl/ (or /dp1-hl/)
-      var pc = page ? page.getAttribute('data-page-cls') : '', lvl = /^(dp[12]|ess|chem)-(sl|hl)$/.test(mine), base = mine.replace(/-(sl|hl)$/, '');
+      var pc = page ? page.getAttribute('data-page-cls') : '', lvl = /^(dp[12]|ess|chem|phys)-(sl|hl)$/.test(mine), base = mine.replace(/-(sl|hl)$/, '');
       if (lvl && (!page || pc === base || (pc.indexOf(base + '-') === 0 && pc !== mine))) { location.replace('/' + mine + '/'); return; }
       if (page && page.getAttribute('data-page-cls') !== mine) {
         var list = document.querySelector('section.list'); if (list) list.hidden = true;
