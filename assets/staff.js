@@ -10,9 +10,10 @@
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
   function loadScript(src) { return new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = src; x.onload = ok; x.onerror = function () { bad(new Error('Could not load ' + src)); }; document.head.appendChild(x); }); }
+  var ARCHIVED = [];
   function refs() {
     return Promise.all([S.db.from('topics').select('id,name,code,programme,parent_id,sort_order, subjects(name,sort_order)').order('sort_order'), S.db.from('classes').select('*').order('name')])
-      .then(function (x) { TOPICS = x[0].data || []; CLASSES = (x[1].data || []).filter(function (c) { return ME.admin || c.teacher_id === ME.user.id; }); });
+      .then(function (x) { TOPICS = x[0].data || []; var all = (x[1].data || []).filter(function (c) { return ME.admin || c.teacher_id === ME.user.id; }); CLASSES = all.filter(function (c) { return !c.archived_at; }); ARCHIVED = all.filter(function (c) { return c.archived_at; }); });
   }
   function topicOpts(sel) {   // grouped by subject; subtopics indented under their main topic
     var subj = {}, order = [];
@@ -172,15 +173,37 @@
   }
 
   /* ---------- classes ---------- */
+  /* archive, restore or remove a class (admin). Lessons, quizzes, notes and simulations always stay. */
+  function archivedPanel() {
+    return '<section class="panel"><h3 style="margin:0">Archived classes</h3><p class="small muted">Archive a class when it ends or when you change school. Its students can no longer sign in to lessons or materials, and it disappears from your lists. ' +
+      'All your lessons, quizzes, notes and simulations stay, ready for new classes. Students\' past results are kept. <b>Remove</b> deletes the class itself and takes its students out of it (they would need to join a class and be approved again).</p>' +
+      (ARCHIVED.length ? '<div class="tablewrap"><table class="marks"><tr><th>Class</th><th>Programme</th><th>Archived</th><th></th></tr>' + ARCHIVED.map(function (c) {
+        return '<tr><td>' + E(c.name) + '</td><td>' + E(c.programme || '') + '</td><td>' + E(S.when(c.archived_at)) + '</td><td><button type="button" class="btn sm" data-restore="' + c.id + '">↩ Restore</button> <button type="button" class="btn sm" data-rmold="' + c.id + '" style="--c:#b91c1c">Remove</button></td></tr>'; }).join('') + '</table></div>'
+        : '<p class="emptybox">No archived classes.</p>') + '</section>';
+  }
+  function archive(p, id, on) {
+    var c = CLASSES.concat(ARCHIVED).filter(function (x) { return x.id === id; })[0] || {};
+    if (on && !confirm('Archive ' + (c.name || 'this class') + '?\n\nIts students lose access to lessons and materials until you restore it. Your lessons, quizzes, notes and simulations are kept.')) return;
+    S.db.rpc('archive_class', { cid: id, archive: on }).then(function (r) { if (ok(r, on ? 'Class archived' : 'Class restored')) classes(p); });
+  }
+  function removeClass(p, id) {
+    var c = CLASSES.concat(ARCHIVED).filter(function (x) { return x.id === id; })[0] || {};
+    var typed = prompt('Remove ' + (c.name || 'this class') + ' permanently?\n\nThe class, its join code and its class links (to-do items, quiz settings for this class) are deleted. Its students are taken out of the class and need approval again. ' +
+      'Your lessons, quizzes, notes, simulations and students\' past results are kept.\n\nThis cannot be undone. Type REMOVE to confirm.');
+    if (typed !== 'REMOVE') return;
+    S.db.rpc('remove_class', { cid: id }).then(function (r) { if (ok(r, 'Class removed' + (r.data ? ' · ' + r.data + ' student' + (r.data === 1 ? '' : 's') + ' taken out' : ''))) classes(p); });
+  }
   function classes(p, args) {
     if (args && args[0]) return refs().then(function () { classPage(p, args[0], args[1]); });
     refs().then(function () {
       p.innerHTML = '<section class="panel"><h3>Class pages</h3><p class="small muted">Open a class to see its quizzes, exams and interactive lessons, and who has and has not submitted. The page updates itself while you watch.</p>' +
         (CLASSES.length ? '<div class="cgrid">' + CLASSES.map(function (c) { return '<a class="ccard" href="#classes/' + c.id + '"><b>' + E(c.name) + '</b><span class="small muted">' + E(c.programme || '') + '</span><span class="small" data-n="' + c.id + '">…</span></a>'; }).join('') + '</div>' : '<p class="emptybox">No classes yet.</p>') + '</section>' +
         '<form class="panel row2" id="nc"><input id="cn" placeholder="Class name, e.g. Grade 9 Science" required><input id="cp" placeholder="Programme, e.g. MYP 4" style="max-width:180px"><button class="btn main sm" type="submit">Create class</button></form>' +
-        (CLASSES.length ? '<div class="tablewrap"><table class="marks"><tr><th>Class</th><th>Programme</th><th>Join code</th><th>Open for joining</th><th></th></tr>' + CLASSES.map(function (c) {
+        (CLASSES.length ? '<div class="tablewrap"><table class="marks"><tr><th>Class</th><th>Programme</th><th>Join code</th><th>Open for joining</th><th></th>' + (ME.admin ? '<th>Archive / remove</th>' : '') + '</tr>' + CLASSES.map(function (c) {
           return '<tr data-id="' + c.id + '"><td><input data-k="name" value="' + E(c.name) + '"></td><td><input data-k="programme" value="' + E(c.programme || '') + '"></td><td><b class="code">' + E(c.join_code) + '</b> <button type="button" class="btn sm" data-a="new">New code</button></td>' +
-            '<td><input type="checkbox" data-k="active"' + (c.active ? ' checked' : '') + '></td><td><button type="button" class="btn sm" data-a="save">Save</button></td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No classes yet.</p>') +
+            '<td><input type="checkbox" data-k="active"' + (c.active ? ' checked' : '') + '></td><td><button type="button" class="btn sm" data-a="save">Save</button></td>' +
+            (ME.admin ? '<td><button type="button" class="btn sm" data-a="arch">🗄 Archive</button> <button type="button" class="btn sm" data-a="rm" style="--c:#b91c1c">Remove</button></td>' : '') + '</tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No classes yet.</p>') +
+        (ME.admin ? archivedPanel() : '') +
         '<p class="small muted">Give students the join code. They type it on the <a href="/register/">registration page</a>. Untick "Open for joining" to stop new sign-ups; make a new code if a code was shared too widely.</p>';
       S.db.from('profiles').select('class_id').in('class_id', CLASSES.map(function (c) { return c.id; })).then(function (r) {
         var n = {}; (r.data || []).forEach(function (x) { n[x.class_id] = (n[x.class_id] || 0) + 1; });
@@ -191,7 +214,11 @@
       p.querySelectorAll('tr[data-id]').forEach(function (tr) { var id = tr.getAttribute('data-id');
         tr.querySelector('[data-a=save]').onclick = function () { S.db.from('classes').update({ name: tr.querySelector('[data-k=name]').value.trim(), programme: tr.querySelector('[data-k=programme]').value.trim() || null, active: tr.querySelector('[data-k=active]').checked }).eq('id', id).then(function (r) { ok(r, 'Saved'); }); };
         tr.querySelector('[data-a=new]').onclick = function () { S.db.from('classes').update({ join_code: code6() }).eq('id', id).then(function (r) { if (ok(r, 'New code made')) classes(p); }); };
+        var ar = tr.querySelector('[data-a=arch]'); if (ar) ar.onclick = function () { archive(p, id, true); };
+        var rm = tr.querySelector('[data-a=rm]'); if (rm) rm.onclick = function () { removeClass(p, id); };
       });
+      p.querySelectorAll('[data-restore]').forEach(function (b) { b.onclick = function () { archive(p, b.getAttribute('data-restore'), false); }; });
+      p.querySelectorAll('[data-rmold]').forEach(function (b) { b.onclick = function () { removeClass(p, b.getAttribute('data-rmold')); }; });
     });
   }
 

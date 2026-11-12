@@ -85,8 +85,10 @@
     app.innerHTML = '<div class="form narrow" id="rolepick"><h2>Who is logging in?</h2><p class="muted small">Choose one so we open the right page for you.</p>' +
       '<button class="btn main" type="button" data-role="student" style="display:block;width:100%;margin:10px 0;text-align:left">🎓 I am a student</button>' +
       '<button class="btn main" type="button" data-role="parent" style="display:block;width:100%;margin:10px 0;text-align:left">👪 I am a parent or carer</button>' +
-      '<button class="btn main" type="button" data-role="teacher" style="display:block;width:100%;margin:10px 0;text-align:left">🧑‍🏫 I am a teacher</button></div>';
+      '<button class="btn main" type="button" data-role="teacher" style="display:block;width:100%;margin:10px 0;text-align:left">🧑‍🏫 I am a teacher</button>' +
+      '<p class="small" style="margin-top:12px"><a href="#" id="fp0">🔑 Forgot your password?</a></p></div>';
     app.querySelectorAll('[data-role]').forEach(function (b) { b.addEventListener('click', function () { loginForm('', b.getAttribute('data-role')); }); });
+    app.querySelector('#fp0').addEventListener('click', function (e) { e.preventDefault(); forgotForm(''); });
   }
   // step 2: email and password for the chosen role
   function loginForm(msg, role) {
@@ -110,19 +112,49 @@
       });
     });
     app.querySelector('#chg').addEventListener('click', function (e) { e.preventDefault(); chooser(); });
-    app.querySelector('#fp').addEventListener('click', function (e) {
-      e.preventDefault(); var em = app.querySelector('#le').value.trim(), m = app.querySelector('#lm');
-      if (!em) { m.textContent = 'Type your email above first, then click "Forgot your password?".'; return; }
-      S.db.auth.resetPasswordForEmail(em, { redirectTo: location.origin + '/login/?reset=1' }).then(function (r) { m.className = r.error ? 'msg' : 'msg ok'; m.textContent = r.error ? S.nice(r.error) : 'If that email has an account, a reset link is on its way.'; });
+    app.querySelector('#fp').addEventListener('click', function (e) { e.preventDefault(); forgotForm(app.querySelector('#le').value.trim()); });
+  }
+  // forgotten password: email a reset link; the link opens this page with ?reset=1 and a one-time sign-in
+  function forgotForm(email, note) {
+    app.innerHTML = '<form class="form narrow" id="ff"><h2>Reset your password</h2><p class="muted small">Type the email you use for Learnova. We will email you a link to choose a new password.</p>' +
+      (note ? '<p class="msg">' + E(note) + '</p>' : '') +
+      '<label class="f">Email<input id="fe" type="email" autocomplete="email" required value="' + E(email || '') + '"></label>' +
+      '<button class="btn main" type="submit">Email me a reset link</button><p class="msg" id="fm" role="alert"></p>' +
+      '<p class="small"><a href="#" id="fb">← Back to log in</a></p></form>';
+    app.querySelector('#fb').addEventListener('click', function (e) { e.preventDefault(); history.replaceState(null, '', location.pathname); chooser(); });
+    app.querySelector('#ff').addEventListener('submit', function (e) {
+      e.preventDefault(); var em = app.querySelector('#fe').value.trim(), m = app.querySelector('#fm'), b = this.querySelector('button');
+      if (!/^\S+@\S+\.\S+$/.test(em)) { m.textContent = 'Please enter a valid email address.'; return; }
+      b.disabled = true; m.className = 'msg'; m.textContent = 'Sending…';
+      S.db.auth.resetPasswordForEmail(em, { redirectTo: location.origin + '/login/?reset=1' }).then(function (r) {
+        b.disabled = false;
+        if (r.error) { m.textContent = /rate|seconds/i.test(r.error.message) ? 'Please wait a minute before asking for another link.' : S.nice(r.error); return; }
+        app.innerHTML = '<section class="panel tint"><p class="label">Check your email</p><h2>Reset link sent</h2><p>If <b>' + E(em) + '</b> has a Learnova account, a link to choose a new password is on its way. Open it on this device.</p>' +
+          '<p class="small muted">No email after a few minutes? Check your spam or junk folder, or ask your teacher to reset it for you.</p><p class="small"><a href="/login/">← Back to log in</a></p></section>';
+      });
     });
   }
   function resetForm() {
-    app.innerHTML = '<form class="form narrow" id="nf"><h2>Choose a new password</h2><label class="f">New password (at least 8 characters)<input id="np" type="password" autocomplete="new-password" minlength="8" required></label><button class="btn main" type="submit">Save password</button><p class="msg" id="nm"></p></form>';
+    if (app.querySelector('#nf')) return;
+    app.innerHTML = '<form class="form narrow" id="nf"><h2>Choose a new password</h2><label class="f">New password (at least 8 characters)<input id="np" type="password" autocomplete="new-password" minlength="8" required></label>' +
+      '<label class="f">Type it again<input id="np2" type="password" autocomplete="new-password" required></label><button class="btn main" type="submit">Save password</button><p class="msg" id="nm" role="alert"></p></form>';
     app.querySelector('#nf').addEventListener('submit', function (e) {
-      e.preventDefault(); var p = app.querySelector('#np').value, m = app.querySelector('#nm'); if (p.length < 8) return m.textContent = 'At least 8 characters, please.';
-      S.db.auth.updateUser({ password: p }).then(function (r) { if (r.error) { m.textContent = S.nice(r.error); return; } S.me().then(go); });
+      e.preventDefault(); var p = app.querySelector('#np').value, m = app.querySelector('#nm'); m.className = 'msg';
+      if (p.length < 8) return m.textContent = 'At least 8 characters, please.';
+      if (p !== app.querySelector('#np2').value) return m.textContent = 'The two passwords do not match.';
+      S.db.auth.updateUser({ password: p }).then(function (r) {
+        if (r.error) { m.textContent = /session/i.test(r.error.message) ? 'This reset link has expired. Ask for a new one.' : S.nice(r.error); return; }
+        m.className = 'msg ok'; m.textContent = 'Password saved. Opening your page…'; history.replaceState(null, '', location.pathname); setTimeout(function () { S.me().then(go); }, 800);
+      });
     });
   }
   S.db.auth.onAuthStateChange(function (ev) { if (ev === 'PASSWORD_RECOVERY') resetForm(); });
-  S.me().then(function (me) { if (new URLSearchParams(location.search).get('reset')) return resetForm(); if (me) go(me); else chooser(); });
+  var hashErr = new URLSearchParams(location.hash.slice(1)).get('error_description') || new URLSearchParams(location.search).get('error_description');
+  S.me().then(function (me) {
+    if (new URLSearchParams(location.search).get('reset')) {
+      if (me) return resetForm();
+      return forgotForm('', hashErr ? 'That reset link has expired or was already used. Ask for a new one below.' : 'Open the newest reset link from your email, or ask for a new one below.');
+    }
+    if (me) go(me); else chooser();
+  });
 })();

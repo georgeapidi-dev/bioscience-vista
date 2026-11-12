@@ -32,7 +32,7 @@
     return S.me().then(function (me) {
       if (!me) { location.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); throw 'signed-out'; }
       if (opts.staff && !me.staff) { el.innerHTML = '<section class="panel"><h2>Teachers only</h2><p>This area is for teachers. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; throw 'not-staff'; }
-      if (me.parent && !me.staff && !opts.parent) { location.href = '/parent/'; throw 'parent'; }   // parents have their own page
+      if (me.parent && !me.staff && !opts.parent && !opts.anyone) { location.href = '/parent/'; throw 'parent'; }   // parents have their own page
       if (opts.parent && !me.parent && !me.staff) { el.innerHTML = '<section class="panel"><h2>Parents only</h2><p>This page is for parents. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; throw 'not-parent'; }
       if (!opts.allowPending && !me.staff && !me.profile.approved) { S.updateNav(me); el.innerHTML = S.pendingBox(me); throw 'pending'; }
       S.updateNav(me); return me;
