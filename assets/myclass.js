@@ -4,7 +4,10 @@ document.addEventListener('DOMContentLoaded', function () {
   var S = window.BVS; if (!S || !S.db) return;
   function slug(name) {   // "Grade 9 Science" → grade-9, "DP1 Biology" / "IB DP year 1" → dp1
     var n = String(name || '').toLowerCase(), m;
-    if ((m = /\bdp\s*([12])\b|ib dp year ([12])/.exec(n))) return 'dp' + (m[1] || m[2]);
+    if ((m = /\bdp\s*([12])\b|ib dp year ([12])/.exec(n))) {   // "DP1 Biology SL" → dp1-sl, "DP1 Biology HL" → dp1-hl
+      var lv = /\b(sl|standard level)\b/.test(n) ? '-sl' : /\b(hl|higher level)\b/.test(n) ? '-hl' : '';
+      return 'dp' + (m[1] || m[2]) + lv;
+    }
     if ((m = /grade\s*(\d+)/.exec(n))) return 'grade-' + m[1];
     return '';
   }
@@ -22,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       tiles.forEach(function (t) { t.hidden = t.getAttribute('data-cls') !== mine; });
       var head = document.querySelector('.hero p.muted'); if (head && tiles.length) head.textContent = 'Your class: ' + cls + '. Open it to see your interactive lessons.';
+      if (page && page.hasAttribute('data-chooser') && mine.indexOf(page.getAttribute('data-page-cls') + '-') === 0) { location.replace('/' + mine + '/'); return; }
       if (page && page.getAttribute('data-page-cls') !== mine) {
         var list = document.querySelector('section.list'); if (list) list.hidden = true;
         var n = document.createElement('p'); n.className = 'emptybox';
