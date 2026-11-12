@@ -17,6 +17,7 @@
     var h = '<section class="panel tint"><h2>' + (a.premium ? '⭐ You have premium access' : 'Premium access') + '</h2><p>' +
       (a.premium ? (a.free ? 'Your access was given free by the admin.' : 'Your access runs until <b>' + E(new Date(a.until).toLocaleDateString()) + '</b>. Paying again adds time on to the end.') :
         (me.school ? 'Premium lets you run your own classes, add Learnova lessons to them and set quizzes for your students.' : 'Premium opens the lessons, quizzes and simulations of the classes your teacher approved you for.')) + '</p>' +
+      '<p class="small">💚 ' + E(set.charity_note || '70% of every subscription and donation goes to charity.') + ' <a href="/donate/">Donate</a></p>' +
       (set.premium_note ? '<p class="small muted">' + E(set.premium_note) + '</p>' : '') + '</section>';
     if (!plans.length) h += '<p class="emptybox">Prices have not been set yet. Ask your teacher or the admin about access.</p>';
     else h += '<div class="grp"><h3 class="sec-h">1. Choose a plan</h3>' + plans.map(function (p, i) {
