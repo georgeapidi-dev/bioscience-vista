@@ -71,6 +71,98 @@
       (n.example ? '<p class="hex"><b>Example:</b> ' + E(n.example) + '</p>' : '') +
       (L.url ? '<p><a class="btn sm" href="' + E(L.url) + '">Open the lesson ➜</a></p>' : '') + '</article>';
   }
+
+  // ---------- searching the web (no AI): Wikipedia summary, Wikimedia Commons picture, flow chart, simulator graph ----------
+  var SEQ = 0;
+  function simpleWiki() { var c = (app.querySelector('#hcourse') || {}).value || ''; return /MYP|IGCSE|General/.test(c); }
+  function phrase(q, topic) {
+    var t = (String(q) + ' ' + (topic || '')).toLowerCase().replace(/[^a-z0-9\s\-]/g, ' ').split(/\s+/).filter(function (w) { return w.length > 2 && !STOP[w] && !/^(happen|happens|work|works|does|occur|use|used|explain|describe)$/.test(w); });
+    return t.filter(function (w, i) { return t.indexOf(w) === i; }).slice(0, 6).join(' ');
+  }
+  function getJSON(u) { return fetch(u).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }); }
+  function sentences(t) { return String(t || '').replace(/\s*\([^)]{0,80}\)/g, '').split(/(?<=[.!?])\s+(?=[A-Z0-9])/).map(function (x) { return x.trim(); }).filter(function (x) { return x.length > 25; }); }
+  function bestSentences(text, q, n) {
+    var qw = expand(words(q)), ss = sentences(text);
+    var sc = ss.map(function (x, i) { return { x: x, i: i, s: hits(qw, words(x)) * 2 + (i === 0 ? 1.5 : 0) - (x.length > 260 ? 1 : 0) }; });
+    return sc.filter(function (o) { return o.s > 0.5; }).sort(function (a, b) { return b.s - a.s; }).slice(0, n).sort(function (a, b) { return a.i - b.i; }).map(function (o) { return o.x; });
+  }
+  function web(q, topic, notePick, seq) {
+    var ph = phrase(q, topic), host = simpleWiki() ? 'simple.wikipedia.org' : 'en.wikipedia.org';
+    if (!ph) { app.querySelector('#hweb').innerHTML = ''; return; }
+    var wikiP = getJSON('https://' + host + '/w/api.php?action=query&list=search&format=json&origin=*&srlimit=5&srsearch=' + encodeURIComponent(ph))
+      .then(function (j) {
+        var res = (j.query && j.query.search) || []; if (!res.length && host.indexOf('simple') === 0) { host = 'en.wikipedia.org'; return getJSON('https://' + host + '/w/api.php?action=query&list=search&format=json&origin=*&srlimit=5&srsearch=' + encodeURIComponent(ph)).then(function (k) { return (k.query && k.query.search) || []; }); }
+        return res;
+      }).then(function (res) {
+        if (!res.length) return null;
+        var qw = words(ph), best = res.map(function (x, i) { return { x: x, s: hits(qw, words(x.title)) * 3 - i }; }).sort(function (a, b) { return b.s - a.s; })[0].x;
+        return getJSON('https://' + host + '/api/rest_v1/page/summary/' + encodeURIComponent(best.title.replace(/ /g, '_'))).then(function (sm) {
+          if (sm.type === 'disambiguation') return null;
+          var more = getJSON('https://' + host + '/w/api.php?action=query&prop=extracts&explaintext=1&exsectionformat=plain&exchars=6000&format=json&origin=*&titles=' + encodeURIComponent(best.title))
+            .then(function (j) { var pg = j.query && j.query.pages, k = pg && Object.keys(pg)[0]; return (pg && pg[k] && pg[k].extract) || ''; }, function () { return ''; });
+          return more.then(function (long) { return { title: sm.title, url: (sm.content_urls && sm.content_urls.desktop && sm.content_urls.desktop.page) || ('https://' + host + '/wiki/' + encodeURIComponent(best.title)), extract: sm.extract || '', long: long, thumb: sm.thumbnail && sm.thumbnail.source, host: host }; });
+        });
+      }).catch(function () { return null; });
+    var picP = getJSON('https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=12&gsrsearch=' + encodeURIComponent(ph + ' diagram filetype:bitmap|drawing') + '&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=640')
+      .then(function (j) {
+        var ps = Object.values((j.query || {}).pages || {}).sort(function (a, b) { return a.index - b.index; });
+        var LANG = /[-_ (](ar|az|be|bg|bn|ca|cs|da|de|el|es|et|eu|fa|fi|fr|gl|he|hi|hr|hu|hy|id|it|ja|ka|kk|kn|ko|lt|lv|mk|ml|mn|mr|ms|nl|no|pl|pt|ro|ru|sk|sl|sq|sr|sv|ta|te|th|tr|uk|ur|uz|vi|zh)([-_ .)]|$)/i;
+        var qw = words(ph);
+        ps = ps.filter(function (p) { var t = p.title.replace(/^File:/, ''); return /^[\x20-\x7E]+$/.test(t) && !LANG.test(t.replace(/\.\w+$/, '')) && hits(qw, words(t)) > 0; });
+        return ps.slice(0, 2).map(function (p) { var i = p.imageinfo[0], m = i.extmetadata || {}; return { src: i.thumburl, page: i.descriptionurl, title: p.title.replace(/^File:|\.\w+$/g, '').replace(/_/g, ' '), artist: m.Artist ? m.Artist.value.replace(/<[^>]+>/g, '').trim().slice(0, 60) : 'Wikimedia Commons', license: (m.LicenseShortName || {}).value || '' }; });
+      }).catch(function () { return []; });
+    Promise.all([wikiP, picP]).then(function (x) {
+      if (seq !== SEQ) return;   // a newer question was asked
+      var w = x[0], pics = x[1], html = '', webPick = [];
+      if (w) {
+        webPick = bestSentences(w.extract + ' ' + w.long, q, 3);
+        if (!webPick.length) webPick = sentences(w.extract).slice(0, 2);
+        html += '<div class="panel hshort hwebp"><p class="label">🌐 From the web, summarised</p>' + (w.thumb ? '<img class="hthumb" src="' + E(w.thumb) + '" alt="' + E(w.title) + '" loading="lazy">' : '') +
+          '<ul class="hpts">' + webPick.map(function (t) { return '<li>' + mark(t, q) + '</li>'; }).join('') + '</ul>' +
+          '<p class="small muted">Source: <a href="' + E(w.url) + '" target="_blank" rel="noopener">' + E(w.title) + '</a> · ' + (w.host.indexOf('simple') === 0 ? 'Simple English Wikipedia' : 'Wikipedia') + ' (CC BY-SA). Check web answers against your notes.</p></div>';
+      }
+      if (pics.length) html += '<div class="panel"><p class="label">🖼 Picture or diagram</p><div class="hpics">' + pics.map(function (p) { return '<figure class="hfig"><img src="' + E(p.src) + '" alt="' + E(p.title) + '" loading="lazy"><figcaption>' + E(p.title) + ' · <a href="' + E(p.page) + '" target="_blank" rel="noopener">' + E(p.artist) + (p.license ? ', ' + E(p.license) : '') + '</a></figcaption></figure>'; }).join('') + '</div></div>';
+      if (!html) html = '<div class="panel"><p class="small muted">🌐 Nothing useful came back from the web for this question.</p></div>';
+      app.querySelector('#hweb').innerHTML = html;
+      visuals(q, notePick.map(function (c) { return c.kind === 'term' ? '' : c.text; }).filter(Boolean), webPick);
+    });
+  }
+  // flow chart for process questions, built from the answer's own sentences in order
+  function shortLine(t) { var w = String(t).replace(/^Example:\s*/i, '').split(/\s+/); return w.length > 16 ? w.slice(0, 15).join(' ') + '…' : w.join(' '); }
+  function wrap(t, n) { var out = [], line = ''; String(t).split(/\s+/).forEach(function (w) { if ((line + ' ' + w).trim().length > n) { out.push(line.trim()); line = w; } else line += ' ' + w; }); if (line.trim()) out.push(line.trim()); return out; }
+  function flow(steps) {
+    var W = 560, bh = 66, gap = 26, H = steps.length * (bh + gap) - gap + 20, s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Flow chart" style="width:100%;max-width:560px;height:auto"><defs><marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#0f766e"/></marker></defs>';
+    steps.forEach(function (t, i) {
+      var y = 10 + i * (bh + gap), lines = wrap(shortLine(t), 62).slice(0, 3);
+      s += '<rect x="20" y="' + y + '" width="' + (W - 40) + '" height="' + bh + '" rx="12" fill="' + ['#e0f2f1', '#e3f2fd', '#fff8e1', '#fce4ec', '#ede7f6'][i % 5] + '" stroke="#0f766e" stroke-width="2"/>' +
+        '<circle cx="44" cy="' + (y + bh / 2) + '" r="13" fill="#0f766e"/><text x="44" y="' + (y + bh / 2 + 5) + '" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">' + (i + 1) + '</text>';
+      lines.forEach(function (l, k) { s += '<text x="68" y="' + (y + bh / 2 + 5 + (k - (lines.length - 1) / 2) * 17) + '" font-size="14" fill="#111">' + E(l) + '</text>'; });
+      if (i < steps.length - 1) s += '<line x1="' + W / 2 + '" y1="' + (y + bh) + '" x2="' + W / 2 + '" y2="' + (y + bh + gap - 2) + '" stroke="#0f766e" stroke-width="2.5" marker-end="url(#fa)"/>';
+    });
+    return s + '</svg>';
+  }
+  var SIMS = [[/enzyme|catalase|amylase|active site|denatur/, 'enzyme', 'enzyme'], [/osmosis|water potential|turgid|plasmolys/, 'osmosis', 'osmosis'], [/diffusion|concentration gradient/, 'diffusion'],
+    [/photosynthes|limiting factor|chlorophyll/, 'photosynth'], [/density|float|sink/, 'density'], [/surface area|volume ratio|sa ?: ?v|cell size/, 'cellsize'], [/heart|cardiac|blood pressure|valve|pulse/, null, 'heart'],
+    [/titrat|ph curve|neutrali[sz]|indicator|acid|alkali|base/, null, 'titration'], [/replicat|helicase|polymerase|okazaki/, 'replication', 'dna'], [/natural selection|evolution|camouflage|peppered/, 'moth'],
+    [/genetic drift|allele frequenc/, 'gdrift'], [/ferment|yeast/, 'ferment'], [/mitosis|meiosis|cell division|chromosome number/, 'division'], [/magnification|microscope/, 'microscope'],
+    [/mutation|codon|transcription|translation|protein synthesis/, 'codon'], [/gel electrophoresis|dna profil/, 'gel'], [/mass|weight|gravity/, 'weight'], [/states of matter|solid|liquid|gas|particle/, 'states'], [/menstrual|hormone/, 'hormones']];
+  function visuals(q, noteSteps, webSteps) {
+    var box = app.querySelector('#hviz'), t = String(q).toLowerCase(), html = '';
+    var proc = /\b(process|steps?|stages?|cycle|sequence|pathway|happens?|order|method|procedure|formed|forms?|made|produced|works?|travels?|flows?)\b/.test(t) && !/\b(affect|effect|influence|relationship|change|depend)s?\b/.test(t);
+    var steps = noteSteps.concat(webSteps).filter(function (x, i, a) { return a.indexOf(x) === i; }).slice(0, 5);
+    if (proc && steps.length >= 2) html += '<div class="panel"><p class="label">🔀 Flow chart</p>' + flow(steps) + '<p class="small muted">Built from the sentences in the answers above, in order.</p></div>';
+    var m = SIMS.filter(function (x) { return x[0].test(t); })[0];
+    if (m) {
+      html += '<div class="panel"><p class="label">📈 Graph: try it yourself</p>' + (m[1] ? '<div class="card sim" data-sim="' + m[1] + '"></div>' : '') +
+        (m[2] ? '<p><a class="btn sm" href="/simulations/' + m[2] + '/">Open the full virtual laboratory ➜</a></p>' : '') + '</div>';
+    }
+    box.innerHTML = html;
+    if (m && m[1]) {
+      var go = function () { document.querySelectorAll('#hviz [data-sim]').forEach(function (el) { if (window.BVSim && BVSim.mount) BVSim.mount(el); }); };
+      if (window.BVSim) go(); else { var sc = document.createElement('script'); var vm = ((document.querySelector('script[src*="tutor.js?v="]') || {}).src || '').match(/v=([\w]+)/); sc.src = '/assets/sim.js' + (vm ? '?v=' + vm[1] : ''); document.head.appendChild(sc); }
+    }
+  }
+
   // ---------- a short, specific answer built from the best-matching sentences in the notes ----------
   function qType(q) {
     var t = String(q).toLowerCase();
@@ -140,11 +232,14 @@
     } else if (r.notes.length) {
       html += '<div class="panel"><p><b>Your teacher\'s notes do not answer this exactly.</b> These notes are the closest:</p></div><details class="hmore" open><summary>Closest notes</summary>' + r.notes.slice(0, 2).map(noteCard).join('') + '</details>';
     } else html += '<div class="panel"><p><b>No notes match your question yet.</b> Try other key words, or send the question to your teacher below.</p></div>';
+    html += '<div id="hweb" aria-live="polite"><div class="panel"><p class="small muted">🌐 Searching the web for more…</p></div></div><div id="hviz"></div>';
     html += '<div class="panel hask"><p><b>Still stuck?</b> Send your question to your teacher. You will see the answer here under <i>My questions</i>.</p>' +
       '<button type="button" class="btn main" id="hsend">✉ Send my question to my teacher</button><p class="msg" id="hst2" role="status"></p></div>';
     box.innerHTML = html;
     box.querySelector('#hsend').onclick = function () { sendQ(q, this); };
     box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    var seq = ++SEQ;
+    web(q, topic, pick, seq);
   }
   function sendQ(q, btn) {
     var st = app.querySelector('#hst2');
@@ -184,7 +279,7 @@
     '.hterms{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:.6em 0}.hterms dt{font-weight:700}.hterms dd{margin:0}' +
     '.hex{background:rgba(46,125,50,.08);border-radius:10px;padding:8px 10px}.hfig{margin:.6em 0}.hfig img{max-width:100%;max-height:300px;border-radius:10px;display:block}.hfig figcaption{font-size:.85em;color:var(--muted,#667)}' +
     '.hq{border-top:1px solid var(--line,#dde3ea);padding:8px 0}.hq.new{background:rgba(255,193,7,.12)}.hans{background:rgba(25,118,210,.08);border-radius:10px;padding:8px 10px;margin-top:4px}' +
-    '.help textarea{width:100%}.hgloss{margin-bottom:8px}.hshort{border-left:5px solid #0f766e}.hpts{margin:.3em 0;padding-left:1.2em}.hpts li{margin:.35em 0}.hmore{margin:10px 0}.hmore summary{cursor:pointer;font-weight:600;padding:6px 0}';
+    '.hthumb{float:right;max-width:120px;max-height:120px;border-radius:10px;margin:0 0 8px 10px}.hwebp{border-left-color:#1d4ed8;overflow:hidden}.hpics{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.help textarea{width:100%}.hgloss{margin-bottom:8px}.hshort{border-left:5px solid #0f766e}.hpts{margin:.3em 0;padding-left:1.2em}.hpts li{margin:.35em 0}.hmore{margin:10px 0}.hmore summary{cursor:pointer;font-weight:600;padding:6px 0}';
 
   S.guard(app).then(function (me) {
     ME = me;
