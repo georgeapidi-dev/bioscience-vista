@@ -110,7 +110,7 @@
         var ps = Object.values((j.query || {}).pages || {}).sort(function (a, b) { return a.index - b.index; });
         var LANG = /[-_ (](ar|az|be|bg|bn|ca|cs|da|de|el|es|et|eu|fa|fi|fr|gl|he|hi|hr|hu|hy|id|it|ja|ka|kk|kn|ko|lt|lv|mk|ml|mn|mr|ms|nl|no|pl|pt|ro|ru|sk|sl|sq|sr|sv|ta|te|th|tr|uk|ur|uz|vi|zh)([-_ .)]|$)/i;
         var qw = words(ph);
-        ps = ps.filter(function (p) { var t = p.title.replace(/^File:/, ''); return /^[\x20-\x7E]+$/.test(t) && !LANG.test(t.replace(/\.\w+$/, '')) && hits(qw, words(t)) > 0; });
+        ps = ps.filter(function (p) { var t = p.title.replace(/^File:/, ''); return /^[\x20-\x7E]+$/.test(t) && !LANG.test(t.replace(/\.\w+$/, '')) && hits(qw, words(t)) >= Math.min(2, qw.length) && !/\b(19\d\d|18\d\d|book images|diseases? of)\b/i.test(t); });
         return ps.slice(0, 2).map(function (p) { var i = p.imageinfo[0], m = i.extmetadata || {}; return { src: i.thumburl, page: i.descriptionurl, title: p.title.replace(/^File:|\.\w+$/g, '').replace(/_/g, ' '), artist: m.Artist ? m.Artist.value.replace(/<[^>]+>/g, '').trim().slice(0, 60) : 'Wikimedia Commons', license: (m.LicenseShortName || {}).value || '' }; });
       }).catch(function () { return []; });
     Promise.all([wikiP, picP]).then(function (x) {
