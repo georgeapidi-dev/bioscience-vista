@@ -25,7 +25,9 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       tiles.forEach(function (t) { t.hidden = t.getAttribute('data-cls') !== mine; });
       var head = document.querySelector('.hero p.muted'); if (head && tiles.length) head.textContent = 'Your class: ' + cls + '. Open it to see your interactive lessons.';
-      if (page && page.hasAttribute('data-chooser') && mine.indexOf(page.getAttribute('data-page-cls') + '-') === 0) { location.replace('/' + mine + '/'); return; }
+      // DP students go straight to their own level: /lessons/, /dp1/ and the other level's page all open /dp1-sl/ (or /dp1-hl/)
+      var pc = page ? page.getAttribute('data-page-cls') : '', lvl = /^dp[12]-(sl|hl)$/.test(mine);
+      if (lvl && (!page || pc === mine.slice(0, 3) || (/^dp[12]-/.test(pc) && pc !== mine))) { location.replace('/' + mine + '/'); return; }
       if (page && page.getAttribute('data-page-cls') !== mine) {
         var list = document.querySelector('section.list'); if (list) list.hidden = true;
         var n = document.createElement('p'); n.className = 'emptybox';

@@ -42,7 +42,16 @@
       S.db.from('quizzes').select('*').eq('id', qid).maybeSingle(),
       S.db.from('quiz_attempts').select('*').eq('quiz_id', qid).eq('student_id', ME.user.id).order('started_at', { ascending: false })
     ]).then(function (x) {
-      var q = x[0].data, at = x[1].data || []; if (!q) return fail((EXAM ? 'Exam' : 'Quiz') + ' not found.');
+      var q = x[0].data, at = x[1].data || [];
+      if (!q) {   // a quiz set for another class or level (e.g. the HL version for an SL student): go to the version set for this student
+        if (ME.staff) return fail((EXAM ? 'Exam' : 'Quiz') + ' not found.');
+        return S.db.from('quiz_attempts').select('quiz_id, quizzes!inner(id,category,published)').eq('student_id', ME.user.id).eq('status', 'in_progress').then(function (r) {
+          var mine = (r.data || []).filter(function (a) { return a.quizzes && a.quizzes.published && a.quizzes.category === (EXAM ? 'exam' : 'quiz'); });
+          if (mine.length === 1) { location.replace(HOME + '#' + mine[0].quiz_id); return; }
+          app.innerHTML = '<section class="panel"><p class="msg">That ' + NOUN + ' is set for another class or level. Here are the ' + NOUN + 's set for you.</p></section>';
+          setTimeout(function () { location.replace(HOME); }, 1800);
+        });
+      }
       var live = at.filter(function (a) { return a.status === 'in_progress'; })[0], done = at.filter(function (a) { return a.status !== 'in_progress'; });
       var canStart = at.length < q.max_attempts;
       if (rules(q).seb && inSEB()) {   // lockdown: inside Safe Exam Browser, check it is running the teacher's settings file
