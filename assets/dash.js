@@ -2,8 +2,9 @@
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app');
   S.guard(app, { allowPending: true }).then(function (me) {
-    if (!me.staff && me.profile.approved === false && me.cls) { app.innerHTML = S.pendingBox(me); return; }
     if (me.staff && !new URLSearchParams(location.search).get('student')) { location.href = '/staff/'; return; }
+    if (!me.ok) { app.innerHTML = '<div class="row2"><div><p class="label">My dashboard</p><h2>Hello, ' + E((me.profile.full_name || 'there').split(' ')[0]) + ' 👋</h2><p class="muted small">' + E(me.user.email) + '</p></div><div class="cta"><button class="btn sm" type="button" id="so">Log out</button></div></div><div id="mycl"></div>';
+      app.querySelector('#so').onclick = S.signOut; classesPanel(me, app.querySelector('#mycl')); return; }
     return Promise.all([
       S.db.from('student_results').select('*').eq('student_id', me.user.id).order('recorded_at', { ascending: false }),
       S.db.from('learning_progress').select('*, lessons(title,url)').eq('student_id', me.user.id).order('updated_at', { ascending: false }),
@@ -13,6 +14,61 @@
     ]).then(function (x) { draw(me, x[0].data || [], x[1].data || [], x[2].data || [], x[3].data || [], x[4].data || []); });
   }).catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
+  // My classes, joining a class (school or teacher first, then the class; no codes) and premium access
+  function classesPanel(me, box) {
+    var a = me.access || {}, mine = a.classes || [];
+    var link = function (c) { return c.slug ? '/' + c.slug + '/' : '/class/?id=' + c.id; };
+    var st = { approved: '<span class="pill ok">✓ Approved</span>', pending: '<span class="pill t">⏳ Waiting for the teacher</span>', teacher_ok: '<span class="pill t">⏳ Teacher said yes · waiting for Learnova</span>', rejected: '<span class="pill">Not accepted</span>' };
+    var prem = a.premium ? '<p class="small"><span class="pill ok">⭐ Premium</span> ' + (a.free ? 'Free access given by the admin.' : a.until ? 'Until ' + E(new Date(a.until).toLocaleDateString()) + '. <a href="/premium/">Extend</a>' : '') + '</p>'
+      : '<p class="small"><b>Premium access is needed</b> to open class lessons, quizzes and simulations. <a class="btn main sm" href="/premium/">Get premium</a></p>';
+    box.innerHTML = '<section class="panel tint grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><button type="button" class="btn sm" id="addc">＋ Join a class</button></div>' + prem +
+      (mine.length ? mine.map(function (c) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>' + (c.status === 'approved' ? '<a href="' + E(link(c)) + '"><b>' + E(c.name) + '</b></a>' : '<b>' + E(c.name) + '</b>') + ' ' + (st[c.status] || '') + '</span>' +
+        '<button type="button" class="btn sm" data-leave="' + E(c.id) + '" title="Leave this class">Leave</button></div>'; }).join('') : '<p class="small">You have not joined a class yet. Press <b>Join a class</b>.</p>') +
+      '<div id="joinbox"></div></section>';
+    box.querySelectorAll('[data-leave]').forEach(function (b) { b.onclick = function () { if (!confirm('Leave this class? You can ask to join again later.')) return;
+      S.db.rpc('leave_class', { cid: b.getAttribute('data-leave') }).then(function (r) { if (r.error) return alert(S.nice(r.error)); location.reload(); }); }; });
+    box.querySelector('#addc').onclick = function () {
+      var jb = box.querySelector('#joinbox'); jb.innerHTML = '<p class="small muted">Loading classes…</p>';
+      S.db.rpc('class_directory').then(function (r) {
+        if (r.error) { jb.innerHTML = '<p class="msg">' + E(S.nice(r.error)) + '</p>'; return; }
+        var list = r.data || [], schools = [];
+        list.forEach(function (c) { if (schools.indexOf(c.school) < 0) schools.push(c.school); });
+        jb.innerHTML = '<p class="small" style="margin-top:10px">No school or teacher? Choose <b>Learnova · Independent learners</b>: you are in straight away and learn at your own pace with instant feedback.</p><div class="grp"><label class="f">1. Your school or teacher<select id="jsch"><option value="">Choose…</option>' + schools.map(function (s) { return '<option>' + E(s) + '</option>'; }).join('') + '</select></label>' +
+          '<label class="f">Or search by class name<input id="jq" placeholder="e.g. Biology HL"></label><div id="jlist"></div><p class="msg" id="jm" role="alert"></p></div>';
+        var draw = function () {
+          var sch = jb.querySelector('#jsch').value, q = jb.querySelector('#jq').value.trim().toLowerCase();
+          var show = list.filter(function (c) { return (!sch || c.school === sch) && (!q || (c.name + ' ' + (c.subject || '') + ' ' + c.school).toLowerCase().indexOf(q) >= 0); });
+          jb.querySelector('#jlist').innerHTML = (sch || q) ? (show.length ? '<p class="small"><b>2. Choose your class</b></p>' + show.map(function (c) {
+            return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(c.name) + '</b> <span class="small muted">' + E(c.school) + (c.description ? ' · ' + E(c.description) : '') + '</span></span>' +
+              (c.my_status ? (st[c.my_status] || '') : '<button type="button" class="btn main sm" data-join="' + E(c.id) + '">Ask to join</button>') + '</div>'; }).join('') : '<p class="small muted">No class matches. Check the name with your teacher.</p>') : '';
+          jb.querySelectorAll('[data-join]').forEach(function (b) { b.onclick = function () { b.disabled = true; var m = jb.querySelector('#jm');
+            S.db.rpc('request_join', { cid: b.getAttribute('data-join') }).then(function (x) { if (x.error) { b.disabled = false; m.textContent = S.nice(x.error); return; }
+              m.className = 'msg ok'; m.textContent = x.data === 'approved' ? 'You are in. Your lessons are ready.' : 'Request sent. Your teacher will approve it soon.'; setTimeout(function () { location.reload(); }, 1200); }); }; });
+        };
+        jb.querySelector('#jsch').onchange = draw; jb.querySelector('#jq').oninput = draw;
+      });
+    };
+  }
+  // Personalised next steps: lessons started but not finished, then the next lessons in each of my classes, in course order
+  function learningPlan(me, prog) {
+    var box = app.querySelector('#plan'); if (!box) return;
+    var ids = (me.classes || []).map(function (c) { return c.id; }); if (!ids.length) { box.remove(); return; }
+    S.db.from('class_materials').select('class_id,path,sort,materials(title,unit)').in('class_id', ids).order('sort').then(function (r) {
+      var mats = r.data || [], byPath = {}, seen = {};
+      prog.forEach(function (p) { var u = p.lessons && p.lessons.url; if (u) { var k = u.replace(/^https?:\/\/[^/]+/, '').replace(/[?#].*$/, ''); if (k.slice(-1) !== '/') k += '/'; byPath[k] = p; } });
+      var going = [], next = [];
+      mats.forEach(function (m) { if (seen[m.path]) return; seen[m.path] = 1; var p = byPath[m.path];
+        if (p && p.status !== 'completed') going.push({ m: m, p: p }); else if (!p) next.push({ m: m }); });
+      var perClass = {}; next = next.filter(function (x) { perClass[x.m.class_id] = (perClass[x.m.class_id] || 0) + 1; return perClass[x.m.class_id] <= 3; });
+      var total = Object.keys(seen).length, done = Object.keys(seen).filter(function (k) { return byPath[k] && byPath[k].status === 'completed'; }).length;
+      var row = function (x, tag) { var t = x.m.materials || {}; return '<p>📘 <a href="' + E(x.m.path) + '">' + E(t.title || x.m.path) + '</a> <span class="small muted">' + E(t.unit || '') + (tag ? ' · ' + tag : '') + '</span></p>'; };
+      box.innerHTML = '<h3>🧭 My learning plan</h3><p class="small muted">Chosen for you from your classes and your progress. Each lesson gives instant feedback on every step; your learning profile below shows what to practise.</p>' +
+        '<div class="bar"><i style="width:' + (total ? Math.round(100 * done / total) : 0) + '%"></i></div><p class="small">' + done + ' of ' + total + ' lessons in your classes completed</p>' +
+        (going.length ? '<h4>Finish what you started</h4>' + going.slice(0, 4).map(function (x) { return row(x, x.p.percent + '% done'); }).join('') : '') +
+        (next.length ? '<h4>Up next</h4>' + next.slice(0, 6).map(function (x) { return row(x); }).join('') : (going.length ? '' : '<p>You have finished every lesson in your classes. Try the <a href="/quizzes/">quizzes</a> to test yourself.</p>')) +
+        '<p class="small"><a href="/tutor/">Stuck? Ask the Science Help Desk</a> · <a href="/messages/">Message your teacher</a></p>';
+    }, function () { box.remove(); });
+  }
   var ICON = { lesson: '🧪', quiz: '📝', resource: '📄', sim: '🔬', link: '🔗', task: '✏️' };
   // Work the teacher set: open items first (overdue, then by due date), then done.
   function todoHtml(items) {
@@ -56,9 +112,9 @@
     var todo = quizzes.filter(function (q) { var a = att.filter(function (t) { return t.quiz_id === q.id; }); return !setQ[q.id] && !a.some(function (t) { return t.status !== 'in_progress'; }) && (!q.due_at || new Date(q.due_at) > new Date()); });
     var openTasks = tasks.filter(function (t) { return t.state !== 'done'; }).length;
     var fb = res.filter(function (r) { return r.teacher_feedback || r.ai_feedback; });
-    var h = '<div class="row2"><div><p class="label">My dashboard</p><h2>Hello, ' + E(first) + ' 👋</h2><p class="muted small">' + E(me.cls ? me.cls.name : 'No class yet') + ' · ' + E(me.user.email) + '</p></div>' +
+    var h = '<div class="row2"><div><p class="label">My dashboard</p><h2>Hello, ' + E(first) + ' 👋</h2><p class="muted small">' + E(me.classes.map(function (c) { return c.name; }).join(', ') || 'No class yet') + ' · ' + E(me.user.email) + '</p></div>' +
       '<div class="cta"><a class="btn sm" href="/learn/">Learning centre</a><a class="btn sm" href="/quizzes/">Quiz centre</a><a class="btn sm" href="/exams/">Online exams</a><button class="btn sm" type="button" id="so">Log out</button></div></div>';
-    if (!me.cls) h += '<form class="panel tint" id="jf"><h3>Join your class</h3><p class="small">Your account is not in a class yet, so lessons and quizzes are hidden. Type the class code from your teacher.</p><div class="row2"><input id="jc" placeholder="Class code" autocapitalize="characters" style="max-width:220px;text-transform:uppercase"><button class="btn main sm" type="submit">Join class</button></div><p class="msg" id="jm"></p></form>';
+    h += '<div id="mycl"></div>';
     h += '<div class="stats"><div class="stat"><span class="small muted">Overall score</span><b>' + (max ? Math.round(100 * got / max) + '%' : '–') + '</b></div>' +
       '<div class="stat"><span class="small muted">Lessons completed</span><b>' + done + ' / ' + prog.length + '</b></div>' +
       '<div class="stat"><span class="small muted">To do</span><b>' + (openTasks + todo.length) + '</b></div>' +
@@ -66,6 +122,7 @@
     h += '<div class="two"><section class="panel"><h3>📌 To do</h3>' + todoHtml(tasks) + (todo.length || !tasks.length ? (tasks.length ? '<p class="small muted" style="margin:10px 0 2px">Also open for your class:</p>' : '') : '') + (todo.length ? todo.map(function (q) { return '<p>' + ({ exam: '🧪', lesson: '📘' }[q.category] || '📝') + ' <a href="' + ({ exam: '/exams/', lesson: '/lesson/' }[q.category] || '/quizzes/') + '#' + q.id + '">' + E(q.title) + '</a>' + (q.due_at ? ' <span class="small muted">due ' + E(S.when(q.due_at)) + '</span>' : '') + '</p>'; }).join('') : (tasks.length ? '' : '<p class="muted">Nothing to do right now. Well done!</p>')) +
       prog.filter(function (p) { return p.status !== 'completed'; }).slice(0, 5).map(function (p) { return '<p>📘 <a href="' + E(p.lessons && p.lessons.url || '/learn/') + '">' + E(p.lessons ? p.lessons.title : 'Lesson') + '</a> <span class="small muted">' + p.percent + '% done</span></p>'; }).join('') + '</section>' +
       '<section class="panel"><h3>My progress</h3>' + (prog.length ? prog.slice(0, 8).map(function (p) { return '<div class="grp" style="gap:4px"><div class="row2"><span class="small">' + E(p.lessons ? p.lessons.title : '') + '</span><span class="small muted">' + p.percent + '%</span></div><div class="bar"><i style="width:' + p.percent + '%"></i></div></div>'; }).join('') : '<p class="muted">Open a lesson from the <a href="/learn/">Learning centre</a> to start.</p>') + '</section></div>';
+    h += '<section class="panel" id="plan"><h3>🧭 My learning plan</h3><p class="small muted">Loading…</p></section>';
     h += '<section class="panel" id="anbox"><h3>📊 My learning profile</h3><p class="muted small">Loading…</p></section>';
     h += '<section class="grp"><h3 class="sec-h">My results and feedback</h3>' + (res.length ? res.map(function (r) { var pc = S.pct(+r.score, +r.max_score);
       return '<article class="task"><div class="top2"><b>' + E(r.title || 'Task') + '</b><span class="score">' + (r.score == null ? 'Being marked' : E(r.score) + ' / ' + E(r.max_score) + (pc != null ? ' (' + pc + '%)' : '')) + '</span></div>' +
@@ -81,8 +138,8 @@
       b.disabled = true; S.db.from('assignment_done').insert({ assignment_id: b.getAttribute('data-done'), student_id: me.user.id }).then(function (r) {
         if (r.error) { b.disabled = false; alert(S.nice(r.error)); return; }
         tasks.forEach(function (t) { if (t.id === b.getAttribute('data-done')) t.state = 'done'; }); draw(me, res, prog, quizzes, att, tasks); }); }; });
-    var jf = app.querySelector('#jf'); if (jf) jf.onsubmit = function (e) { e.preventDefault(); var m = app.querySelector('#jm');
-      S.db.rpc('join_class', { code: app.querySelector('#jc').value }).then(function (r) { if (r.error) { m.textContent = S.nice(r.error); return; } location.reload(); }); };
+    classesPanel(me, app.querySelector('#mycl'));
+    learningPlan(me, prog);
     app.querySelector('#pf').onsubmit = function (e) { e.preventDefault(); var m = app.querySelector('#pm');
       S.db.from('profiles').update({ full_name: app.querySelector('#pn').value.trim() }).eq('id', me.user.id).then(function (r) { m.className = r.error ? 'msg' : 'msg ok'; m.textContent = r.error ? S.nice(r.error) : 'Saved.'; }); };
   }

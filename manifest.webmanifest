@@ -1,7 +1,7 @@
 {
  "name": "Learnova",
  "short_name": "Learnova",
- "description": "Interactive science lessons, quizzes, exams and tools by George Apidi.",
+ "description": "Interactive science lessons, quizzes, exams and tools from biosciencevista.com.",
  "id": "/",
  "start_url": "/?source=app",
  "scope": "/",

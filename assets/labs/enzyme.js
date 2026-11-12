@@ -1,4 +1,4 @@
-/* Enzyme activity laboratory · Learnova · by George Apidi */
+/* Enzyme activity laboratory · Learnova · by Learnova */
 (function () {
   var M = window.LABM, LABS = window.LABS = window.LABS || {};
   LABS.enzyme = {

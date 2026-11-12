@@ -1,4 +1,4 @@
-/* Learnova question tools · tables in questions, answer styles (drop-down, draw a graph, draw a diagram, label a picture) · by George Apidi */
+/* Learnova question tools · tables in questions, answer styles (drop-down, draw a graph, draw a diagram, label a picture) · by Learnova */
 (function () {
   var T = window.BVT = {};
   function E(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }

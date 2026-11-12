@@ -1,4 +1,4 @@
-/* Learnova virtual labs · scientific models (by George Apidi)
+/* Learnova virtual labs · scientific models (by Learnova)
    Pure functions, no drawing. Each model states its assumptions in the lab's "About the model" panel. */
 (function (root) {
   var M = {};

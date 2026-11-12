@@ -16,7 +16,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "d621c6f6", "iv": "7b5qXcmESEAi5tjb", "ct": "FMnyKTCpWqsoQ51Y0lvSjPUpQJQOYqjHh+SvLJ3gtAUpyKQoTE7jbq5ACPLarEs4lZxKk9rbpbmOtiq7EQrPe3oaBIu+eNZeZEyq+ozXkkJe2znY6X39BGFqXKRXekGuMHmf4+mEWUjnOE5E6fjHKdl3h3kNIRzDB+gIIzd67o5fZDK9PGq11PSEcflIBRxLIuUn3lmQmiQGtMTwrbjCW9gMUk7SwYmH8R4WRoM3HKRsJVKJkq77PLOL9aZeQOv+gr8Z76uyPvpVBSPXyqk26lWmtY3LgNUr4hJjiRu4YBcyXoU436NDyPofEfs0zvGtT8KaDx4APk5d6CLxHsWfQtg2Yn1wAse8alrzR2C1esRhLbueuGEwpOWwItJqt1KOTdstb1YufuirDI3dIw2/kUjYJxzEynoneJYctfbRyIa4+1qi6fi6bd3lZd6cYTyyk4VtiKVSUkFQeij/CmttS4wgVn1sOQv7vrleXp40Rxnh8w78Dk/zLLEvo0gIzrfyk9Ycpqh5SQL8NgeIrL9i87HYpHPeb5DevYG1RUWVbACgolPkYTaBnQLjYMZNOndKA/LqQWZ9yUg8Hvbw1vanNfdyRvTbpl06vPFvS/SjMPtI1RE6cWjkEcut1ImqeSOrzXRsVBEmrpmEnSyDnf6fsglT60/K9Yk="};
+var P = {"v": "d621c6f6", "iv": "dgzG1zlgtYZH+I37", "ct": "1LJBcFXLgzCJCno0QcuHTDhIFMP3sAcFicYCy9tNKBW4pRsjjGopthvwfqRnoLqOHXv4q16sDqI1vp6Kfvzk0FZx07ROYZwsfAx2qh2txnPs6HllJWorqPJItuvvM0mfV/JUjWbu6atWa04r3io6544zZ/5pbYaE95n7x3oKvBbe5dU91ULS3nDJZkDvp2PrdfaunPc5dS4abYNe2oNPlsrGqygGgVcZNLrpwJQ+Z7It5UefT5eUmDJ3FrDIy3CNW/YsPJrXOW6MGJLEQqIlyF+6iRaVB2k8JlMCsFX0c99TO8+lIphhKHYfri+oXB9eGRO519B/w38iNWlpIHalzIgw7UYvkhqcgvw8iJscfC0vSTaT2Hsgb7uWM0OhGbn+Fl+XEDWriSVIQwDvdRtEWRDo6VAROcD5bXda7IHyV43ICS/evFvbs68yTy6/3wTPC5QQHcijR15Z5bVrIY6uxeghp9202sBbinZaepTiI92Cv14ehaOIiwQbfkV731fwXqt/hY5tv5sU3jLpfyfRhQpeehCHH2NJirg5eboTSxILWtFI4huq5uv62Z0NMuGl3ImQFLioZHBvCJXJaZfW8zBGlalAMzr9dJ/57Wtd7zL27rnigXWoXDWtYZY+jQO7Zh7/hgplcEdg2rHq8Lw1ITzDPDbGANA="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -35,14 +35,19 @@ var P = {"v": "d621c6f6", "iv": "7b5qXcmESEAi5tjb", "ct": "FMnyKTCpWqsoQ51Y0lvSj
   var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } });
   db.auth.getSession().then(function (r) {
     var s = r.data && r.data.session; if (!s) return login();
-    var C = 'lv-k-' + P.v + '-' + s.user.id, k = null;
+    var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
-    if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} location.reload(); });
-    return db.rpc('site_key').then(function (x) {
-      if (x.error) throw x.error;
-      if (!x.data) return say('<h1>Waiting for approval</h1><p>You are signed in, but your teacher has not approved your account yet. Classes and learning materials open as soon as you are approved.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/">Learnova home</a>');
-      return open(x.data).then(function () { try { sessionStorage.setItem(C, x.data); } catch (e) {} });
-    });
+    if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });
+    return fetchKey();
+    function fetchKey() {
+      return (P.p ? db.rpc('page_key', { p: P.p }) : db.rpc('site_key')).then(function (x) {
+        if (x.error) throw x.error;
+        if (!x.data) return say(P.p ? '<h1>This page is not in your classes</h1><p>You can open the classes and lessons you have joined. To see this one, join its class from your dashboard; your teacher approves it. Premium access is needed for class materials.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'
+          : '<h1>Not open yet</h1><p>You are signed in. Class materials open when you have premium access and your teacher has approved you for a class.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>');
+        return open(x.data).then(function () { try { sessionStorage.setItem(C, x.data); } catch (e) {} },
+          function () { say('<h1>This page was updated</h1><p>Reload to open the newest version.</p><a class="btn" href="' + here + '">Reload</a>'); });
+      });
+    }
   }).catch(function () { say('<h1>Could not open this page</h1><p>Please sign in again.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a>'); });
 })();
 </script></body></html>

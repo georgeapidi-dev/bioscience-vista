@@ -1,4 +1,4 @@
-/* Learnova Virtual Laboratory engine · by George Apidi
+/* Learnova Virtual Laboratory engine · by Learnova
    One lab = one spec object passed to VLab.mount(spec). The engine draws the seven lab sections
    (background, plan, experiment, results, analyse, evaluate, about the model), keeps the results table,
    draws graphs on <canvas>, exports CSV, gives rule-based feedback (no AI needed) and saves the work
@@ -230,7 +230,7 @@
         '<h2>Results</h2><table><tr><th>Trial</th>' + cols.map(function (c) { return '<th>' + E(c.label) + (c.unit ? ' / ' + E(c.unit) : '') + '</th>'; }).join('') + '</tr>' + S.trials.map(function (r, i) { return '<tr><td>' + (i + 1) + '</td>' + cols.map(function (c) { return '<td>' + cell(r, c) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>' +
         (img ? '<h2>Graph</h2><img src="' + img + '" style="max-width:100%">' : '') +
         QS.map(function (q) { return '<h2>' + E(q.q) + '</h2><div class="a">' + E(S.answers[q.id] || '—') + '</div><p>Mark: ' + (S.scores[q.id] || 0) + ' / ' + q.marks + '</p>'; }).join('') +
-        '<p style="color:#666;font-size:.85em">Lab by George Apidi · biosciencevista.com</p>');
+        '<p style="color:#666;font-size:.85em">Lab by Learnova · biosciencevista.com</p>');
       w.document.close(); setTimeout(function () { try { w.print(); } catch (e) {} }, 400);
     }
 

@@ -1,4 +1,4 @@
-/* Science Help Desk · Learnova · by George Apidi
+/* Science Help Desk · Learnova · by Learnova
    No AI. A student's question is matched against George's lesson notes (lesson_notes) and shown at once.
    If the notes do not answer it, the student sends the question to the teacher, who answers it from the staff dashboard. */
 (function () {
@@ -294,7 +294,7 @@
       '<p class="msg" id="hst" role="status"></p></form><div id="hres" aria-live="polite"></div></section>' +
       '<aside><div class="panel"><h3>My questions<span id="hbadge"></span></h3><div id="hmine"><p class="small muted">Loading…</p></div></div>' +
       '<div class="panel" hidden><h3>Questions other students asked</h3><div id="hfaq"></div></div>' +
-      '<p class="small muted">Answers come from your teacher, George Apidi, and from his lesson notes. Do not share personal information in a question.</p></aside></div>';
+      '<p class="small muted">Answers come from your teacher and from the Learnova lesson notes. Do not share personal information in a question.</p></aside></div>';
     var st = app.querySelector('#hst'); st.textContent = 'Loading notes…';
     var tq = app.querySelector('#hq');
     Promise.all([

@@ -36,7 +36,7 @@
     clearInterval(LIVE);
     var h = location.hash.slice(1).split('/'), tab = h[0] || 'overview';
     if (ADMIN_TABS.indexOf(tab) >= 0 && !ME.admin) tab = 'overview';
-    var head = '<div class="row2"><div><p class="label">Teacher dashboard</p><h2>' + E(ME.profile.full_name || ME.user.email) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><button class="btn sm" type="button" id="so">Log out</button></div>' +
+    var head = '<div class="row2"><div><p class="label">Teacher dashboard</p><h2>' + E(ME.profile.full_name || ME.user.email) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><div class="cta">' + (ME.admin ? '<a class="btn main sm" href="/admin/">Admin: join requests, members, payments</a>' : '') + '<button class="btn sm" type="button" id="so">Log out</button></div></div>' +
       '<nav class="tabs" aria-label="Teacher sections">' + TABS.filter(function (t) { return ADMIN_TABS.indexOf(t[0]) < 0 || ME.admin; }).map(function (t) { return '<a href="#' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</a>'; }).join('') + '</nav><div id="pane"><p class="muted">Loading…</p></div>';
     app.innerHTML = head; app.querySelector('#so').onclick = S.signOut;
     var pane = app.querySelector('#pane');
@@ -103,7 +103,7 @@
       if (fb && fb.text) h += '<div class="fb"><b>Feedback:</b> ' + E(fb.text) + '</div>';
       h += '</section>';
     });
-    return h + '<p class="foot">Lesson by George Apidi · biosciencevista.com · printed ' + E(new Date().toLocaleString()) + '</p></div></body></html>';
+    return h + '<p class="foot">Lesson by Learnova · biosciencevista.com · printed ' + E(new Date().toLocaleString()) + '</p></div></body></html>';
   }
   function lessonWork(p, args) {
     p.innerHTML = '<p class="muted">Loading students\' lessons…</p>';
@@ -564,7 +564,7 @@
         '.bar{position:sticky;top:0;background:#fff;padding:8px 0;border-bottom:1px solid #ddd;margin-bottom:10px}@media print{.bar{display:none}}';
       var html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mark scheme · ' + E(qz.title) + '</title><style>' + css + '</style></head><body>' +
         '<div class="bar"><button onclick="print()">🖨 Print or save as PDF</button></div><h1>Mark scheme: ' + E(qz.title) + '</h1>' +
-        '<p class="meta">' + (qz.category === 'exam' ? 'Exam' : 'Quiz') + ' · ' + n + ' questions · ' + total + ' marks' + (qz.time_limit_minutes ? ' · ' + qz.time_limit_minutes + ' minutes' : '') + ' · Prepared by George Apidi · Learnova · Confidential: for teachers</p>' + body + '</body></html>';
+        '<p class="meta">' + (qz.category === 'exam' ? 'Exam' : 'Quiz') + ' · ' + n + ' questions · ' + total + ' marks' + (qz.time_limit_minutes ? ' · ' + qz.time_limit_minutes + ' minutes' : '') + ' · Prepared by Learnova · Learnova · Confidential: for teachers</p>' + body + '</body></html>';
       var w = window.open('', '_blank');
       if (w) { w.document.open(); w.document.write(html); w.document.close(); }
       else { var a2 = document.createElement('a'); a2.href = URL.createObjectURL(new Blob([html], { type: 'text/html' })); a2.download = 'mark-scheme-' + qz.title.replace(/[^\w]+/g, '-').slice(0, 60) + '.html'; a2.click(); }
@@ -1363,7 +1363,7 @@
       box.querySelector('#lwrep').onclick = function () {
         var w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to open the report.', true); return; }
         w.document.write('<!doctype html><meta charset="utf-8"><title>' + E(a.sim_title || a.sim) + ' · ' + E(who) + '</title><style>body{font:15px/1.5 system-ui,Arial;max-width:900px;margin:24px auto;padding:0 16px}table{border-collapse:collapse;width:100%;font-size:.9em}td,th{border:1px solid #ccc;padding:4px 6px;text-align:center}.tablewrap{overflow-x:auto}</style>' +
-          labDoc(a, who) + (a.teacher_comment ? '<h3>Teacher\'s comment</h3><p style="white-space:pre-wrap">' + E(a.teacher_comment) + '</p>' : '') + '<p style="color:#666;font-size:.85em">Learnova virtual laboratory report · George Apidi · biosciencevista.com</p>');
+          labDoc(a, who) + (a.teacher_comment ? '<h3>Teacher\'s comment</h3><p style="white-space:pre-wrap">' + E(a.teacher_comment) + '</p>' : '') + '<p style="color:#666;font-size:.85em">Learnova virtual laboratory report · Learnova · biosciencevista.com</p>');
         w.document.close();
       };
       box.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1454,9 +1454,9 @@
         var link = function () { var l = card.querySelector('.blink'); return l ? l.value.trim() : null; };
         var text = function (st) {
           var first = (b.booker === 'parent' ? b.contact_name : b.contact_name).split(' ')[0], when = slot() ? nice(slot()) : '';
-          if (st === 'declined') return 'Dear ' + first + ',\n\nThank you for your request for ' + b.subject + ' lessons. Unfortunately I am not available at the times you suggested. Could you send me a few other times that suit you?\n\nBest wishes,\nGeorge Apidi\nLearnova';
+          if (st === 'declined') return 'Dear ' + first + ',\n\nThank you for your request for ' + b.subject + ' lessons. Unfortunately I am not available at the times you suggested. Could you send me a few other times that suit you?\n\nBest wishes,\nLearnova';
           return 'Dear ' + first + ',\n\nThank you for booking ' + b.subject + ' lessons' + (b.student_name ? ' for ' + b.student_name : '') + '. I am happy to confirm your lesson on ' + when + ' (' + b.duration_min + ' minutes).\n\n' +
-            (b.mode === 'virtual' ? 'Join here: ' + (link() || '[meeting link]') + '\n\n' : 'Venue: ' + (b.location || '[venue]') + '\n\n') + 'Fee: [fee]\n\nPlease reply if you need to change anything.\n\nBest wishes,\nGeorge Apidi\nLearnova';
+            (b.mode === 'virtual' ? 'Join here: ' + (link() || '[meeting link]') + '\n\n' : 'Venue: ' + (b.location || '[venue]') + '\n\n') + 'Fee: [fee]\n\nPlease reply if you need to change anything.\n\nBest wishes,\nLearnova';
         };
         card.querySelectorAll('[data-reply]').forEach(function (a) { a.onclick = function (e) { e.preventDefault();
           var st = b.status === 'declined' ? 'declined' : 'confirmed', t = text(st);

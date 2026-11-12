@@ -3,43 +3,51 @@
   var S = window.BVS, E = S.E, app = document.getElementById('app'), mode = app.getAttribute('data-mode');
   if (!S.on) return S.notReady(app);
   var next = new URLSearchParams(location.search).get('next');
-  function go(me) { location.href = next && next.charAt(0) === '/' && next.charAt(1) !== '/' ? next : (me && me.staff ? '/staff/' : me && me.parent ? '/parent/' : '/dashboard/'); }
+  function go(me) { location.href = next && next.charAt(0) === '/' && next.charAt(1) !== '/' ? next : (me && me.staff ? '/staff/' : me && me.school ? '/teach/' : me && me.parent ? '/parent/' : '/dashboard/'); }
 
   if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'parent') return parentRegister();
-  if (mode === 'register') {
-    app.innerHTML = '<form class="form narrow" id="rf" novalidate><h2>Your details</h2>' +
-      '<p class="muted small">You need the class code your teacher gave you.</p>' +
-      '<label class="f">Full name<input id="rn" autocomplete="name" required placeholder="As it appears on your school records"></label>' +
-      '<label class="f">School email<input id="re" type="email" autocomplete="email" required></label>' +
+  if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'teacher') return accountForm('teacher');
+  if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'student') return accountForm('student');
+  if (mode === 'register') {   // no class codes: choose the kind of account first
+    app.innerHTML = '<div class="form narrow"><h2>Who is signing up?</h2><p class="muted small">After signing up, students choose their school or teacher and then their class. The teacher approves each student.</p>' +
+      '<a class="btn main" href="/register/?as=student" style="display:block;margin:10px 0;text-align:left">🎓 I am a student</a>' +
+      '<a class="btn main" href="/register/?as=teacher" style="display:block;margin:10px 0;text-align:left">🧑‍🏫 I am a teacher (my own school or private classes)</a>' +
+      '<a class="btn main" href="/register/?as=parent" style="display:block;margin:10px 0;text-align:left">👪 I am a parent or carer</a>' +
+      '<p class="small">Already registered? <a href="/login/' + (next ? '?next=' + encodeURIComponent(next) : '') + '">Log in</a></p></div>';
+    return;
+  }
+  function accountForm(kind) {
+    var T = kind === 'teacher';
+    app.innerHTML = '<form class="form narrow" id="rf" novalidate><h2>' + (T ? 'Teacher account' : 'Student account') + '</h2>' +
+      '<p class="muted small">' + (T ? 'Your classes, students and materials are private to you and your students. The Learnova admin approves new teachers; a premium subscription is needed to run classes.' :
+        'After signing up you choose your school or teacher, then your class. Your teacher approves you, and premium access opens the class materials.') + '</p>' +
+      '<label class="f">Full name<input id="rn" autocomplete="name" required placeholder="' + (T ? 'Your name as students know it' : 'As it appears on your school records') + '"></label>' +
+      (T ? '<label class="f">School (or "Private tutor")<input id="rs" autocomplete="organization" required maxlength="120"></label>' : '') +
+      '<label class="f">Email<input id="re" type="email" autocomplete="email" required></label>' +
       '<label class="f">Password (at least 8 characters)<input id="rp" type="password" autocomplete="new-password" minlength="8" required></label>' +
       '<label class="f">Confirm password<input id="rp2" type="password" autocomplete="new-password" required></label>' +
-      '<label class="f">Class code<input id="rc" autocomplete="off" required placeholder="6 letters and numbers" autocapitalize="characters" style="text-transform:uppercase"></label><p class="small" id="rcn" aria-live="polite"></p>' +
-      '<label class="chk"><input type="checkbox" id="ra" required> I will keep my password private and follow my school\'s rules for using this site.</label>' +
+      '<label class="chk"><input type="checkbox" id="ra" required> I will keep my password private' + (T ? ' and use student data only for teaching my own classes.' : ' and follow my school\'s rules for using this site.') + '</label>' +
       '<button class="btn main" type="submit">Create account</button><p class="msg" id="rm" role="alert"></p>' +
-      '<p class="small">Already registered? <a href="/login/' + (next ? '?next=' + encodeURIComponent(next) : '') + '">Log in</a> · Parent or carer? <a href="/register/?as=parent">Create a parent account</a></p></form>';
-    var code = app.querySelector('#rc'), cn = app.querySelector('#rcn'), t;
-    code.addEventListener('input', function () { clearTimeout(t); var v = code.value.trim(); cn.textContent = '';
-      if (v.length < 4) return; t = setTimeout(function () { S.db.rpc('check_join_code', { code: v }).then(function (r) { cn.innerHTML = r.data ? '<span class="ok-t">✓ ' + E(r.data) + '</span>' : '<span class="bad-t">Code not recognised. Check it with your teacher.</span>'; }); }, 350); });
+      '<p class="small">Already registered? <a href="/login/">Log in</a> · <a href="/register/">← Other account types</a></p></form>';
     app.querySelector('#rf').addEventListener('submit', function (e) {
       e.preventDefault(); var m = app.querySelector('#rm'); m.className = 'msg';
-      var n = app.querySelector('#rn').value.trim(), em = app.querySelector('#re').value.trim(), p = app.querySelector('#rp').value, p2 = app.querySelector('#rp2').value, c = code.value.trim().toUpperCase();
+      var n = app.querySelector('#rn').value.trim(), em = app.querySelector('#re').value.trim(), p = app.querySelector('#rp').value, p2 = app.querySelector('#rp2').value,
+          sc = T ? app.querySelector('#rs').value.trim() : '';
       if (n.split(/\s+/).length < 2) return m.textContent = 'Please give your first and last name.';
+      if (T && sc.length < 2) return m.textContent = 'Please type your school, or "Private tutor".';
       if (!/^\S+@\S+\.\S+$/.test(em)) return m.textContent = 'Please enter a valid email address.';
       if (p.length < 8) return m.textContent = 'Your password needs at least 8 characters.';
       if (p !== p2) return m.textContent = 'The two passwords do not match.';
       if (!app.querySelector('#ra').checked) return m.textContent = 'Please tick the box to agree.';
-      m.textContent = 'Checking your class code…';
-      S.db.rpc('check_join_code', { code: c }).then(function (r) {
-        if (!r.data) { m.textContent = 'That class code is not recognised. Check it with your teacher.'; return; }
-        m.textContent = 'Creating your account…';
-        return S.db.auth.signUp({ email: em, password: p, options: { data: { full_name: n, join_code: c }, emailRedirectTo: location.origin + '/login/' } }).then(function (res) {
-          if (res.error) { m.textContent = S.nice(res.error); return; }
-          if (res.data.session) { location.href = next && next.charAt(0) === '/' && next.charAt(1) !== '/' ? next : '/dashboard/'; return; }
-          app.innerHTML = '<section class="panel tint"><p class="label">Almost there</p><h2>Check your email</h2><p>We sent a confirmation link to <b>' + E(em) + '</b>. Open it to activate your account, then <a href="/login/">log in</a>. You are joining <b>' + E(r.data) + '</b>.</p><p class="small muted">No email after a few minutes? Check your spam folder.</p></section>';
-        });
+      m.textContent = 'Creating your account…';
+      var data = T ? { full_name: n, account_type: 'teacher', school_name: sc } : { full_name: n, account_type: 'student' };
+      S.db.auth.signUp({ email: em, password: p, options: { data: data, emailRedirectTo: location.origin + '/login/' } }).then(function (res) {
+        if (res.error) { m.textContent = S.nice(res.error); return; }
+        if (res.data.session) { location.href = T ? '/teach/' : '/dashboard/'; return; }
+        app.innerHTML = '<section class="panel tint"><p class="label">Almost there</p><h2>Check your email</h2><p>We sent a confirmation link to <b>' + E(em) + '</b>. Open it to activate your account, then <a href="/login/">log in</a>' +
+          (T ? '. The admin will then approve your teacher account.' : ' and choose your class.') + '</p><p class="small muted">No email after a few minutes? Check your spam folder.</p></section>';
       });
     });
-    return;
   }
 
   // ---- parent registration: needs the parent code the school gave for the child ----
@@ -76,9 +84,9 @@
 
   // ---- login ----
   var ROLE = {
-    student: ['Student', 'Use the school email and password you chose when you signed up.', '<a href="/register/">New student? Create an account</a>'],
+    student: ['Student', 'Use the school email and password you chose when you signed up.', '<a href="/register/?as=student">New student? Create an account</a>'],
     parent: ['Parent or carer', 'Use the email and password you chose for your parent account.', '<a href="/register/?as=parent">New parent? Create a parent account</a>'],
-    teacher: ['Teacher', 'Use your school staff email and password.', 'Teacher accounts are set up by the school.']
+    teacher: ['Teacher', 'Use the email and password of your teacher account.', '<a href="/register/?as=teacher">New teacher? Create a teacher account</a>']
   };
   // step 1: ask who is logging in, so the right account type and page are used
   function chooser() {
@@ -105,7 +113,7 @@
         if (r.error) { m.textContent = /confirm/i.test(r.error.message) ? 'Please confirm your email first: open the link we sent you.' : 'Email or password is not right.'; return; }
         S.me().then(function (me) {
           // the account must match the role chosen; otherwise sign out again
-          var ok = !!me && (role === 'teacher' ? me.staff : role === 'parent' ? me.parent : !me.staff);
+          var ok = !!me && (role === 'teacher' ? me.staff || me.school : role === 'parent' ? me.parent : !me.staff && !me.school);
           if (ok) return go(me);
           S.db.auth.signOut().then(function () { m.textContent = 'This is not a ' + info[0].toLowerCase() + ' account. Go back and choose the right option.'; });
         });

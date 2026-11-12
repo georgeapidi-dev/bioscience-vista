@@ -1,4 +1,4 @@
-/* DNA replication laboratory · Learnova · by George Apidi */
+/* DNA replication laboratory · Learnova · by Learnova */
 (function () {
   var M = window.LABM, LABS = window.LABS = window.LABS || {};
   LABS.dna = {

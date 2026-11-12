@@ -1,4 +1,4 @@
-/* Learnova shared script · by George Apidi */
+/* Learnova shared script · by Learnova */
 (function () {
   var BV = window.BV = window.BV || {};
   // menu + theme

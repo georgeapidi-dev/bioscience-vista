@@ -1,4 +1,4 @@
-/* Osmosis and diffusion laboratory · Learnova · by George Apidi */
+/* Osmosis and diffusion laboratory · Learnova · by Learnova */
 (function () {
   var M = window.LABM, LABS = window.LABS = window.LABS || {};
   LABS.osmosis = {

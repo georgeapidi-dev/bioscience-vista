@@ -1,4 +1,4 @@
-/* Teacher console · Learnova · by George Apidi */
+/* Teacher console · Learnova · by Learnova */
 (function () {
   var app = document.getElementById('app'), E = BV.esc, D = null, tab = 'marks', cur = 0, showCodes = false;
   var key = function () { return BV.store('bv-tk'); };

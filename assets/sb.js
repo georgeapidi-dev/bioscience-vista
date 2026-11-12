@@ -14,11 +14,16 @@
       var u = r.data.session && r.data.session.user; if (!u) return null;
       return Promise.all([
         S.db.from('profiles').select('*').eq('id', u.id).maybeSingle(),
-        S.db.from('user_roles').select('role').eq('user_id', u.id)
+        S.db.from('user_roles').select('role').eq('user_id', u.id),
+        S.db.rpc('my_access').then(function (r) { return r; }, function () { return { data: null }; })
       ]).then(function (x) {
         if (!x[0].error && !x[0].data) { return S.db.auth.signOut().then(function () { return null; }); }   // account was deleted
         var roles = (x[1].data || []).map(function (r) { return r.role; }), p = x[0].data || {};
         var me = { user: u, profile: p, roles: roles, admin: roles.indexOf('admin') >= 0, staff: roles.indexOf('teacher') >= 0 || roles.indexOf('admin') >= 0, parent: roles.indexOf('parent') >= 0, cls: null };
+        var a = me.access = x[2].data || { premium: false, classes: [] };   // premium access and the classes this account joined (migration 022)
+        me.school = !me.staff && (roles.indexOf('school_teacher') >= 0 || p.account_type === 'teacher');   // a teacher from another school: own classes only
+        me.classes = (a.classes || []).filter(function (c) { return c.status === 'approved'; });
+        me.ok = me.staff || me.parent || (me.school ? !!a.premium && roles.indexOf('school_teacher') >= 0 : !!a.premium && me.classes.length > 0);
         if (!p.class_id) return me;
         return S.db.from('classes').select('id,name,programme').eq('id', p.class_id).maybeSingle().then(function (c) { me.cls = c.data; return me; });
       });
@@ -33,14 +38,20 @@
       if (!me) { location.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); throw 'signed-out'; }
       if (opts.staff && !me.staff) { el.innerHTML = '<section class="panel"><h2>Teachers only</h2><p>This area is for teachers. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; throw 'not-staff'; }
       if (me.parent && !me.staff && !opts.parent && !opts.anyone) { location.href = '/parent/'; throw 'parent'; }   // parents have their own page
+      if (me.school && !opts.school && !opts.anyone) { location.href = '/teach/'; throw 'school'; }   // teachers from other schools have their own portal
       if (opts.parent && !me.parent && !me.staff) { el.innerHTML = '<section class="panel"><h2>Parents only</h2><p>This page is for parents. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; throw 'not-parent'; }
-      if (!opts.allowPending && !me.staff && !me.profile.approved) { S.updateNav(me); el.innerHTML = S.pendingBox(me); throw 'pending'; }
+      if (!opts.allowPending && !me.ok) { S.updateNav(me); el.innerHTML = S.pendingBox(me); throw 'pending'; }
       S.updateNav(me); return me;
     });
   };
   S.pendingBox = function (me) {
-    return '<section class="panel tint"><p class="label">Almost there</p><h2>Waiting for your teacher</h2><p>Your account' + (me.cls ? ' for <b>' + S.E(me.cls.name) + '</b>' : '') +
-      ' has been created. Your teacher will approve it soon; then your lessons, quizzes and simulations open here.</p><p class="small muted">Signed in as ' + S.E(me.user.email) + ' · <a href="#" onclick="BVS.signOut();return false">Log out</a></p></section>';
+    var a = me.access || {}, waiting = (a.classes || []).filter(function (c) { return c.status === 'pending'; });
+    var need = [];
+    if (!me.classes || !me.classes.length) need.push(waiting.length ? 'your teacher to approve you for <b>' + waiting.map(function (c) { return S.E(c.name); }).join(', ') + '</b>' : 'you to <a href="/dashboard/">join a class</a>');
+    if (!a.premium) need.push('<a href="/premium/">premium access</a>');
+    return '<section class="panel tint"><p class="label">Almost there</p><h2>Not open yet</h2><p>Lessons, quizzes and simulations open when your account has ' + (need.length ? 'these: ' + need.join(' and ') : 'an approved class and premium access') + '.</p>' +
+      '<div class="cta"><a class="btn main sm" href="/dashboard/">My dashboard</a>' + (a.premium ? '' : '<a class="btn sm" href="/premium/">Get premium</a>') + '</div>' +
+      '<p class="small muted">Signed in as ' + S.E(me.user.email) + ' · <a href="#" onclick="BVS.signOut();return false">Log out</a></p></section>';
   };
   /* anonymous visit log: page, where they came from, device type; a random id in this browser counts unique visitors (no IP address is kept) */
   S.logVisit = function () {
@@ -55,7 +66,7 @@
   S.nice = function (e) { var m = (e && (e.message || e.error_description || e)) || 'Something went wrong.'; return String(m).replace(/^.*?ERROR:\s*/, ''); };
   S.updateNav = function (me) {
     var a = document.querySelector('.cta-nav'); if (!a || !me) return;
-    a.textContent = me.staff ? 'Teacher dashboard' : me.parent ? "My child's progress" : 'My dashboard'; a.href = me.staff ? '/staff/' : me.parent ? '/parent/' : '/dashboard/';
+    a.textContent = me.staff || me.school ? 'Teacher dashboard' : me.parent ? "My child's progress" : 'My dashboard'; a.href = me.staff ? '/staff/' : me.school ? '/teach/' : me.parent ? '/parent/' : '/dashboard/';
   };
   S.pct = function (s, m) { return m ? Math.round(100 * s / m) : null; };
   S.when = function (t) { return t ? new Date(t).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : ''; };
