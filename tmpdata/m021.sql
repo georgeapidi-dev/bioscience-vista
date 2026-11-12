@@ -14,10 +14,7 @@ create index if not exists messages_recipient on public.messages (recipient, cre
 create index if not exists messages_sender on public.messages (sender, created_at desc);
 alter table public.messages enable row level security;
 
-create or replace function public.is_staff_user(u uuid) returns boolean
-language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.user_roles where user_id = u and role in ('teacher', 'admin'))
-$$;
+-- public.is_staff_user(uid) (migration 015) tells whether someone is a teacher or admin.
 
 drop policy if exists msg_read on public.messages;
 create policy msg_read on public.messages for select to authenticated using (sender = auth.uid() or recipient = auth.uid());
