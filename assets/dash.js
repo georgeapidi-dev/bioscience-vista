@@ -36,7 +36,7 @@
     var go = PROF ? Promise.resolve(PROF) : Promise.all([S.db.rpc('student_profile'), S.db.from('submission_analysis').select('*').eq('student_id', me.user.id).order('at', { ascending: false })]).then(function (x) { if (x[0].error) throw x[0].error; PROF = [x[0].data, x[1].data || []]; return PROF; });
     go.then(function (z) {
       var prof = z[0], subs = z[1];
-      box.innerHTML = '<div class="row2"><h3 style="margin:0">📊 My learning profile</h3>' + (prof.overall && prof.overall.items ? '<button type="button" class="btn sm" id="aip">🤖 Summarise my learning</button>' : '') + '</div>' +
+      box.innerHTML = '<div class="row2"><h3 style="margin:0">📊 My learning profile</h3>' + (prof.overall && prof.overall.items ? '<button type="button" class="btn sm" id="aip">📝 Summarise my learning</button>' : '') + '</div>' +
         '<p class="small muted">Built from the marks on every question you have handed in. It shows what you understand well, what to practise and where to find help.</p>' + A.profileHtml(prof, {}) +
         (subs.length ? '<h4>My analysed work</h4>' + subs.map(function (sa) { return '<details class="panel" data-sk="' + E(sa.sub_key) + '"><summary><b>' + E(sa.title) + '</b> <span class="small muted">' + E(S.when(sa.at)) + '</span> · ' + (sa.pct == null ? '–' : sa.pct + '%') + '</summary><div class="sbody small muted">Loading…</div></details>'; }).join('') : '');
       box.querySelectorAll('details[data-sk]').forEach(function (dd) { dd.ontoggle = function () { if (!dd.open || dd.getAttribute('data-l')) return; dd.setAttribute('data-l', 1);
@@ -44,7 +44,7 @@
         S.db.from('item_results').select('*').eq('sub_key', sk).order('id').then(function (r) { var b = dd.querySelector('.sbody'); b.className = 'sbody'; b.innerHTML = A.submissionHtml(sa, r.data || [], { settings: prof.settings, open: true }); }); }; });
       var b = box.querySelector('#aip'); if (b) b.onclick = function () { b.disabled = true; b.textContent = 'Summarising…';
         S.db.functions.invoke('analyse', { body: { profile: me.user.id } }).then(function (res) { var d = res.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } }
-          if (res.error || !d || !d.ok) { b.disabled = false; b.textContent = '🤖 Summarise my learning'; alert((d && d.error) || 'Not available right now. Your profile above is still up to date.'); return; }
+          if (res.error || !d || !d.ok) { b.disabled = false; b.textContent = '📝 Summarise my learning'; alert('Not available right now. Your profile above is still up to date.'); return; }
           PROF = null; myProfile(me); }); };
     }).catch(function (e) { box.innerHTML = '<h3>📊 My learning profile</h3><p class="small muted">' + (/student_profile|schema cache/.test(String(e && e.message)) ? 'Your learning profile will appear here soon.' : E(S.nice(e))) + '</p>'; });
   }
@@ -70,7 +70,7 @@
     h += '<section class="grp"><h3 class="sec-h">My results and feedback</h3>' + (res.length ? res.map(function (r) { var pc = S.pct(+r.score, +r.max_score);
       return '<article class="task"><div class="top2"><b>' + E(r.title || 'Task') + '</b><span class="score">' + (r.score == null ? 'Being marked' : E(r.score) + ' / ' + E(r.max_score) + (pc != null ? ' (' + pc + '%)' : '')) + '</span></div>' +
         '<div class="bar"><i style="width:' + (pc || 0) + '%"></i></div><span class="small muted">' + E(S.when(r.recorded_at)) + '</span>' +
-        (r.teacher_feedback ? '<div class="fb tch"><h4>Teacher feedback</h4>' + BV.md(r.teacher_feedback) + '</div>' : '') + (r.ai_feedback ? '<div class="fb ai"><h4>' + (/🤖/.test(r.ai_feedback) || !/⚙ Automatic/.test(r.ai_feedback) ? 'AI feedback' : 'Feedback') + '</h4>' + BV.md(r.ai_feedback) + '</div>' : '') + '</article>'; }).join('') :
+        (r.teacher_feedback ? '<div class="fb tch"><h4>Teacher feedback</h4>' + BV.md(r.teacher_feedback) + '</div>' : '') + (r.ai_feedback ? '<div class="fb ai"><h4>Feedback</h4>' + BV.md(String(r.ai_feedback).replace(/_🤖 Automatic AI feedback from your marks on each question\./, '_📝 Feedback from your marks on each question.').replace(/_⚙ Automatic feedback from your marks on each question\._/, '_📝 Feedback from your marks on each question._')) + '</div>' : '') + '</article>'; }).join('') :
       '<p class="emptybox">No results yet. Results appear here when you finish lessons and quizzes.</p>') + '</section>';
     h += '<details class="panel"><summary><b>My profile</b></summary><form id="pf" class="grp" style="margin-top:10px"><label class="f">Full name<input id="pn" value="' + E(me.profile.full_name) + '"></label><button class="btn sm" type="submit">Save</button><p class="msg" id="pm"></p></form>' +
       '<p class="small muted">Marks from before accounts were switched on are still on <a href="/progress/">My learning (personal code)</a>.</p></details>';

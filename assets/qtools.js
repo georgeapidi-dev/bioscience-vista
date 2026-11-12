@@ -158,7 +158,7 @@
   T.fbSource = function (row) {
     if (!row) return '';
     if (row.source === 'teacher') return '🧑‍🏫 Marked by your teacher';
-    if (row.source === 'ai') return row.reviewed ? '🤖 AI feedback · mark confirmed by your teacher' : '🤖 AI feedback · your teacher will confirm the mark';
+    if (row.source === 'ai') return row.reviewed ? '📝 Detailed feedback · mark confirmed by your teacher' : '📝 Detailed feedback · your teacher will confirm the mark';
     return row.reviewed ? '⚙️ Marked from your teacher\'s mark scheme · checked by your teacher' : '⚙️ Marked automatically from your teacher\'s mark scheme';
   };
   T.fbParts = function (f, correct) {   // f = {understood[], missing[], why[], explain, improve, next}

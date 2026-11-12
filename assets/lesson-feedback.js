@@ -1,7 +1,6 @@
 /* Learnova · lesson feedback: the same five-part feedback on every interactive lesson, worksheet and simulation question.
-   Instant and rule-based (works offline and without AI): what you did well, what is missing, why (misconceptions),
-   how to improve, and what to study next. Signed-in students can also ask for AI feedback on their written answers;
-   it comes from the server function "lesson-feedback" (the AI key never reaches the browser) and is labelled as AI. */
+   Instant and rule-based: what you did well, what is missing, why (misconceptions), how to improve, and what to study next.
+   Signed-in students also get detailed feedback on their written answers from the server function "lesson-feedback". */
 (function () {
   if (typeof window.SPEC !== 'object' || typeof window.show !== 'function' || typeof window.mark !== 'function') return;
   var SP = window.SPEC, esc = window.esc || function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
@@ -130,7 +129,7 @@
     if (!h) h = li('✓', 'Well done.');
     if (!ai) h = '<li class="lhead">' + esc(headline(d)) + '</li>' + h;
     var mk = ai ? (ai.mark != null ? ai.mark + '/' + d.max + ' suggested' : '') : d.got + '/' + d.max;
-    return '<div class="lq ' + (ai ? 'aibox ' : '') + cls + '"><div class="lh"><span>' + esc(d.q) + (mk ? ' · ' + esc(mk) : '') + '</span><span class="src' + (ai && src !== 'rule' ? ' ai' : '') + '">' + (!ai ? '⚙ Instant check' : src === 'teacher' ? '👩‍🏫 Teacher' : src === 'rule' ? '⚙ Re-marked' : '🤖 AI suggestion') + '</span></div><ul>' + h + '</ul></div>';
+    return '<div class="lq ' + (ai ? 'aibox ' : '') + cls + '"><div class="lh"><span>' + esc(d.q) + (mk ? ' · ' + esc(mk) : '') + '</span><span class="src' + (ai && src !== 'rule' ? ' ai' : '') + '">' + (!ai ? '⚙ Instant check' : src === 'teacher' ? '👩‍🏫 Teacher' : src === 'rule' ? '⚙ Re-marked' : '📝 Detailed feedback') + '</span></div><ul>' + h + '</ul></div>';
   }
   function render(n, m) {
     var box = document.getElementById('fb' + n); if (!box || !m) return;
@@ -143,10 +142,10 @@
     var texts = ds.filter(function (d) { return d.kind === 'text' && d.text && d.text.trim(); });
     if (texts.length) {
       var ai = document.createElement('div'); ai.className = 'lfai';
-      ai.innerHTML = '<button type="button">🤖 Get detailed AI feedback on my written answers</button><span class="small muted"></span>';
+      ai.innerHTML = '<button type="button">📝 Get detailed feedback on my written answers</button><span class="small muted"></span>';
       wrap.appendChild(ai);
       var btn = ai.querySelector('button'), note = ai.querySelector('span');
-      if (!window.BV_DB) { btn.disabled = true; btn.style.cursor = 'default'; note.textContent = 'Log in to Learnova to use AI feedback.'; }
+      if (!window.BV_DB) { btn.disabled = true; btn.style.cursor = 'default'; note.textContent = 'Log in to Learnova to get detailed feedback.'; }
       btn.onclick = function () { askAI(n, texts, wrap, btn, note); };
     }
     var models = box.querySelector('details.model'); box.insertBefore(wrap, models || null);
@@ -155,7 +154,7 @@
   function aiBlocks(n, ds, items, wrap, when, src) {
     var old = wrap.querySelector('.lfb-ai'); if (old) old.remove();
     var div = document.createElement('div'); div.className = 'lfb lfb-ai';
-    div.innerHTML = '<div class="small"><b>' + (src === 'rule' ? '⚙ Re-marked by your teacher' : src === 'teacher' ? '👩‍🏫 Teacher feedback' : '🤖 AI feedback') + '</b>' + (when ? ' · ' + esc(new Date(when).toLocaleString()) : '') + ' · a suggestion to help you improve; your teacher’s mark is the one that counts.</div>' +
+    div.innerHTML = '<div class="small"><b>' + (src === 'rule' ? '⚙ Re-marked by your teacher' : src === 'teacher' ? '👩‍🏫 Teacher feedback' : '📝 Detailed feedback') + '</b>' + (when ? ' · ' + esc(new Date(when).toLocaleString()) : '') + ' · to help you improve; your teacher’s mark is the one that counts.</div>' +
       items.map(function (a) { var d = ds.filter(function (x) { return x.q === a.q; })[0]; return d ? block(n, d, a, src) : ''; }).join('');
     wrap.insertBefore(div, wrap.querySelector('.lfai'));
   }
@@ -172,14 +171,14 @@
       var data = r.data; if (typeof data === 'string') { try { data = JSON.parse(data); } catch (e) { data = null; } }
       btn.disabled = false;
       if (r.error || !data || !data.ok) {
-        var msg = (data && data.error) || 'AI feedback is not available right now. Use the instant feedback and the model answers.';
-        if (r.error && r.error.context && r.error.context.json) { r.error.context.json().then(function (j) { note.textContent = (j && j.error) || msg; }, function () { note.textContent = msg; }); } else note.textContent = msg;
+        var msg = (data && data.error && !/\bAI\b/.test(data.error) && data.error) || 'Detailed feedback is not available right now. Use the instant feedback and the model answers.';
+        if (r.error && r.error.context && r.error.context.json) { r.error.context.json().then(function (j) { note.textContent = (j && j.error && !/\bAI\b/.test(j.error)) ? j.error : msg; }, function () { note.textContent = msg; }); } else note.textContent = msg;
         return;
       }
-      if (data.source !== 'ai') { note.textContent = (data.note || 'AI feedback is not available right now.') + ' Use the instant feedback above.'; return; }
+      if (data.source !== 'ai') { note.textContent = 'Detailed feedback is not available right now.' + ' Use the instant feedback above.'; return; }
       note.textContent = 'Done. Improve your answers in your book using these points.';
       aiBlocks(n, detail(n), data.items || [], wrap, new Date().toISOString(), 'ai');
-    }, function () { btn.disabled = false; note.textContent = 'AI feedback is not available right now. Use the instant feedback and the model answers.'; });
+    }, function () { btn.disabled = false; note.textContent = 'Detailed feedback is not available right now. Use the instant feedback and the model answers.'; });
   }
 
   // Whole-lesson feedback: built from every marked step so far, updated after each save.
