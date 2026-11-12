@@ -83,6 +83,7 @@
   function sentences(t) { return String(t || '').replace(/\s*\([^)]{0,80}\)/g, '').split(/(?<=[.!?])\s+(?=[A-Z0-9])/).map(function (x) { return x.trim(); }).filter(function (x) { return x.length > 25; }); }
   function bestSentences(text, q, n) {
     var qw = expand(words(q)), ss = sentences(text);
+    ss = ss.filter(function (x, i) { return ss.indexOf(x) === i; });
     var sc = ss.map(function (x, i) { return { x: x, i: i, s: hits(qw, words(x)) * 2 + (i === 0 ? 1.5 : 0) - (x.length > 260 ? 1 : 0) }; });
     return sc.filter(function (o) { return o.s > 0.5; }).sort(function (a, b) { return b.s - a.s; }).slice(0, n).sort(function (a, b) { return a.i - b.i; }).map(function (o) { return o.x; });
   }
@@ -95,7 +96,7 @@
         return res;
       }).then(function (res) {
         if (!res.length) return null;
-        var qw = words(ph), best = res.map(function (x, i) { return { x: x, s: hits(qw, words(x.title)) * 3 - i }; }).sort(function (a, b) { return b.s - a.s; })[0].x;
+        var qw = words(ph), best = res.map(function (x, i) { var tw = words(x.title), h = hits(qw, tw); return { x: x, s: h * 3 - i + (tw.length && h === tw.length ? 4 : 0) - (/\b(disease|failure|list|history|band|film|album|song)\b/i.test(x.title) ? 3 : 0) }; }).sort(function (a, b) { return b.s - a.s; })[0].x;
         return getJSON('https://' + host + '/api/rest_v1/page/summary/' + encodeURIComponent(best.title.replace(/ /g, '_'))).then(function (sm) {
           if (sm.type === 'disambiguation') return null;
           var more = getJSON('https://' + host + '/w/api.php?action=query&prop=extracts&explaintext=1&exsectionformat=plain&exchars=6000&format=json&origin=*&titles=' + encodeURIComponent(best.title))
@@ -148,7 +149,7 @@
     [/mutation|codon|transcription|translation|protein synthesis/, 'codon'], [/gel electrophoresis|dna profil/, 'gel'], [/mass|weight|gravity/, 'weight'], [/states of matter|solid|liquid|gas|particle/, 'states'], [/menstrual|hormone/, 'hormones']];
   function visuals(q, noteSteps, webSteps) {
     var box = app.querySelector('#hviz'), t = String(q).toLowerCase(), html = '';
-    var proc = /\b(process|steps?|stages?|cycle|sequence|pathway|happens?|order|method|procedure|formed|forms?|made|produced|works?|travels?|flows?)\b/.test(t) && !/\b(affect|effect|influence|relationship|change|depend)s?\b/.test(t);
+    var proc = (/^how (does|do|is|are)\b/.test(t.trim()) || /\b(process|steps?|stages?|cycle|sequence|pathway|happens?|order|method|procedure|formed|forms?|made|produced|works?|travels?|flows?)\b/.test(t)) && !/\b(affect|effect|influence|relationship|change|depend)s?\b/.test(t);
     var steps = noteSteps.concat(webSteps).filter(function (x, i, a) { return a.indexOf(x) === i; }).slice(0, 5);
     if (proc && steps.length >= 2) html += '<div class="panel"><p class="label">🔀 Flow chart</p>' + flow(steps) + '<p class="small muted">Built from the sentences in the answers above, in order.</p></div>';
     var m = SIMS.filter(function (x) { return x[0].test(t); })[0];
