@@ -48,9 +48,10 @@
     var head = (String(line).match(/^\[AUTO[^\]]*\]\s*/) || [''])[0], rest = String(line).slice(head.length), out = { answers: [], fb: {}, total: null, max: null, this: null };
     var t = head.match(/TOTAL=([\d.]+)\/([\d.]+)/), th = head.match(/THIS=([\d.]+)\/([\d.]+)/);
     if (t) { out.total = +t[1]; out.max = +t[2]; } if (th) out.this = [+th[1], +th[2]];
-    rest.split(/\s+‖\s+/).forEach(function (seg) {
+    rest.split(/\s*‖\s*/).forEach(function (seg) {
       if (/^Feedback:/.test(seg)) { seg.replace(/^Feedback:\s*/, '').split(/\s+\|\s+(?=Step \d+ \()/).forEach(function (f) { var m = f.match(/^Step (\d+) \(([\d.]+)\/([\d.]+)\):\s*(.*)$/); if (m) out.fb[m[1]] = { score: +m[2], max: +m[3], text: m[4] }; }); return; }
-      var i = seg.indexOf(': '); out.answers.push(i > 0 && i < 60 ? [seg.slice(0, i).trim(), seg.slice(i + 2).trim()] : ['', seg.trim()]);
+      seg = seg.trim(); if (/^[^:]{1,60}:$/.test(seg)) { out.answers.push([seg.slice(0, -1).trim(), '']); return; }
+      var i = seg.indexOf(': '); out.answers.push(i > 0 && i < 60 ? [seg.slice(0, i).trim(), seg.slice(i + 2).trim()] : ['', seg]);
     });
     return out;
   }
@@ -94,7 +95,7 @@
       if (!row) { h += '<p class="a blank">The student has not saved this step yet.</p></section>'; return; }
       lwParse(row.answers).answers.forEach(function (qa) {
         var lab = qa[0], ans = qa[1], q = st.q[lab] || (lab ? lab : ''), blank = !ans || ans === '-';
-        var body = lab === 'Table' && !blank ? '<div class="tbl">' + ans.split(/;\s*/).map(function (v) { return '<span>' + E(v) + '</span>'; }).join('') + '</div>' : E(blank ? 'No answer' : ans.replace(/ \/ /g, '\n'));
+        var body = lab === 'Table' && !blank ? '<div class="tbl">' + ans.split(/;\s*/).map(function (v) { return '<span>' + E(v) + '</span>'; }).join('') + '</div>' : E(blank ? (lab === 'Table' ? 'The choices in this table were not included in the saved work (the mark above includes them).' : 'No answer') : ans.replace(/ \/ /g, '\n'));
         h += '<div class="qa">' + (q ? '<div class="q">' + E(q) + '</div>' : '') + '<div class="a' + (blank ? ' blank' : '') + '">' + body + '</div>' +
           (mdl[lab] || mdl[q] ? '<details class="mdl"><summary>Model answer</summary><div>' + E(mdl[lab] || mdl[q]) + '</div></details>' : '') + '</div>';
       });
