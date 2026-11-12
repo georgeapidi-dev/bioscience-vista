@@ -207,9 +207,9 @@
         var u = r.data.session && r.data.session.user; if (!u) { $('#vl-save').textContent = 'Not signed in: your work is kept in this browser only. Sign in to hand it in to your teacher.'; return false; }
         var row = { id: S.id, student_id: u.id, sim: spec.id, sim_title: spec.title, variables: S.log.slice(-200), data: S.trials, answers: Object.assign({ _hypothesis: S.hyp }, S.answers), scores: S.scores,
           score: score(), max_score: MAX, hints: S.hints, trials: S.trials.length, started_at: S.started, updated_at: new Date().toISOString() };
-        if (submitted) { row.submitted_at = new Date().toISOString(); S.submitted = row.submitted_at; }
+        if (submitted) { row.submitted_at = new Date().toISOString(); S.submitted = row.submitted_at; } else if (S.submitted) row.submitted_at = S.submitted;
         return B.db.from('sim_attempts').upsert(row).then(function (x) {
-          $('#vl-save').textContent = x.error ? 'Saved in this browser. (Could not reach your account just now.)' : (submitted ? '✓ Handed in to your teacher at ' + new Date().toLocaleTimeString() + '.' : 'Saved to your account at ' + new Date().toLocaleTimeString() + '.');
+          $('#vl-save').textContent = x.error ? 'Saved in this browser. (Could not reach your account just now.)' : (submitted || S.submitted ? '✓ Handed in to your teacher' + (submitted ? ' at ' + new Date().toLocaleTimeString() : '') + '. Later changes are saved too.' : 'Saved to your account at ' + new Date().toLocaleTimeString() + '.');
           B.db.from('sim_attempts').select('teacher_comment').eq('id', S.id).maybeSingle().then(function (c) { var t = c && c.data && c.data.teacher_comment; if (t) $('#vl-save').insertAdjacentHTML('afterend', '<div class="vl-fb good" id="vl-tc"><b>Your teacher\'s comment:</b> ' + E(t) + '</div>'); var o = host.querySelectorAll('#vl-tc'); for (var i = 1; i < o.length; i++) o[i].remove(); });
           return !x.error;
         });
