@@ -345,6 +345,22 @@
     return String(scheme || '').split('\n').map(function (s) { return s.trim(); })
       .filter(function (s) { return s && !/^(accept|do not accept|don't accept|reject|award|note|ignore|allow|ora|owtte|max|\[max)/i.test(s); });
   };
+  /* A full-mark model answer written from the mark scheme (no AI): one sentence per mark point, first alternative of each,
+     "accept …" notes removed, joined in order. Used when a teacher saves a written question without a model answer. */
+  Q.modelFrom = function (scheme, kind) {
+    var pts = Q.points(scheme); if (!pts.length) return '';
+    var out = pts.map(function (p) {
+      p = p.replace(/\((accept|allow|ora|owtte|do not accept|reject|ignore)[^)]*\)/gi, '').replace(/\s*(;|,)?\s*\b(accept|allow)\b.*$/i, '').trim();
+      p = p.replace(/^(\d+\s*(marks?)?\s*[:.)-]\s*|[-•*]\s*)/i, '');
+      var alt = p.replace(/\s+OR\s+/g, ' or ').replace(/\s+\/\s+/g, ' or ').trim();
+      if (/^(any|max(imum)?)\s+\w+/i.test(alt) && alt.indexOf(':') > 0) alt = alt.slice(alt.indexOf(':') + 1).trim();
+      alt = alt.replace(/\s*\[\d+\]\s*$/, '').replace(/\s+/g, ' ');
+      if (!alt) return '';
+      alt = alt.charAt(0).toUpperCase() + alt.slice(1);
+      return /[.!?]$/.test(alt) ? alt : alt + '.';
+    }).filter(Boolean);
+    return out.join(kind === 'list' ? '\n' : ' ');
+  };
   Q.suggest = function (answer, scheme, max) {
     var aw = words(answer), joined = ' ' + aw.join(' ') + ' ', pts = Q.points(scheme), hits = [];
     if (!aw.length || !pts.length) return { got: aw.length ? null : 0, hits: pts.map(function () { return false; }) };
@@ -566,6 +582,9 @@
           if (q.kind === 'info') return;
           return db.from('question_answers').upsert({ question_id: r.data.id, correct_option: q.kind === 'short' ? null : q.correct, mark_scheme: q.scheme || null, rubric: q.rubric || null, explanation: q.explanation || null }).then(function (r2) {
             if (r2.error) throw r2.error;
+            // every written question gets a model answer: written from the mark scheme when the teacher has not written one (never overwrites)
+            var model = q.kind === 'short' && q.scheme ? Q.modelFrom(q.scheme) : '';
+            if (model) db.from('question_answers').update({ model_answer: model }).eq('question_id', r.data.id).or('model_answer.is.null,model_answer.eq.').then(function () {});
             if (!q.fb) return;
             return db.from('question_answers').update(q.fb).eq('question_id', r.data.id).then(function (r3) {
               if (r3.error) { Q.fbError = /column|schema cache/i.test(r3.error.message || '') ? 'Feedback rules need database update 013 before they can be saved.' : (r3.error.message || 'Feedback rules were not saved.'); }
