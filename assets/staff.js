@@ -3,7 +3,7 @@
    no service-role key or admin password is ever used in the browser. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, TOPICS = [], CLASSES = [];
-  var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['content', 'Content'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
+  var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['questions', '❓ Student questions'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['content', 'Content'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
   var ADMIN_TABS = ['bookings', 'roles', 'activity'];
 
   S.guard(app, { staff: true }).then(function (me) { ME = me; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(function () { window.addEventListener('hashchange', route); route(); })
@@ -39,7 +39,7 @@
       '<nav class="tabs" aria-label="Teacher sections">' + TABS.filter(function (t) { return ADMIN_TABS.indexOf(t[0]) < 0 || ME.admin; }).map(function (t) { return '<a href="#' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</a>'; }).join('') + '</nav><div id="pane"><p class="muted">Loading…</p></div>';
     app.innerHTML = head; app.querySelector('#so').onclick = S.signOut;
     var pane = app.querySelector('#pane');
-    ({ overview: overview, work: lessonWork, approvals: approvals, activity: activity, lessons: lessons, classes: classes, students: students, quizzes: quizzes, marking: marking, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
+    ({ overview: overview, work: lessonWork, questions: helpDesk, approvals: approvals, activity: activity, lessons: lessons, classes: classes, students: students, quizzes: quizzes, marking: marking, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
   }
 
   /* ---------- lesson work (each saved step from a lesson page) ---------- */
@@ -1190,6 +1190,57 @@
         (list.length ? '<div class="tablewrap"><table class="marks"><tr><th>When</th><th>What</th><th>Who</th><th>Page / class</th><th>Device</th><th>Came from</th></tr>' + list.map(function (e) {
           return '<tr><td class="small">' + E(S.when(e.at)) + '</td><td>' + (label[e.kind] || E(e.kind)) + '</td><td>' + (e.user_id ? E(nm[e.user_id] || 'account') : '<span class="muted">visitor</span>') + '</td><td class="small">' + E(e.path || '') + '</td><td class="small">' + E(e.kind === 'login' ? (/Mobi|Android|iPhone/i.test(e.device || '') ? 'phone' : 'computer') : (e.device || '')) + '</td><td class="small">' + E(e.referrer || '') + '</td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">Nothing in the last 7 days yet.</p>') +
         '<p class="small muted">Visits record the page, time, device type and the site a visitor came from. No IP addresses are stored. Showing the last 7 days.</p>';
+    });
+  }
+
+
+  /* ---------- Science Help Desk: questions students send from /tutor/ (no AI) ---------- */
+  var HD_NOTES = null;
+  function hdWords(t) { return (String(t || '').toLowerCase().match(/[a-z0-9]+/g) || []).filter(function (w) { return w.length > 3; }); }
+  function hdSuggest(q) {
+    var qw = hdWords(q); if (!HD_NOTES || !qw.length) return [];
+    return HD_NOTES.map(function (r) {
+      var n = r.notes || {}, tt = hdWords(n.title + ' ' + (n.terms || []).map(function (x) { return x.term; }).join(' ')), bb = hdWords([n.intro, (n.points || []).join(' ')].join(' ')), sc = 0;
+      qw.forEach(function (w) { if (tt.indexOf(w) >= 0) sc += 3; else if (bb.indexOf(w) >= 0) sc += 1; });
+      return { r: r, sc: sc };
+    }).filter(function (o) { return o.sc >= 3; }).sort(function (a, b) { return b.sc - a.sc; }).slice(0, 3).map(function (o) { return o.r; });
+  }
+  function helpDesk(p, args) {
+    var show = args[0] || 'open';
+    p.innerHTML = '<p class="muted">Loading…</p>';
+    Promise.all([S.db.rpc('help_inbox', { only_open: show === 'open' }), HD_NOTES ? null : S.db.from('lesson_notes').select('lesson,step,notes').limit(2000)]).then(function (x) {
+      if (x[1] && x[1].data) HD_NOTES = x[1].data;
+      var r = x[0];
+      if (r.error) { p.innerHTML = '<section class="panel"><h3>Student questions</h3><p class="msg">' + E(S.nice(r.error)) + '</p><p class="small muted">If this says the function does not exist, migration 018 has not been run yet.</p></section>'; return; }
+      var rows = r.data || [];
+      p.innerHTML = '<section class="panel"><div class="row2"><h3>Student questions</h3><span class="small muted">From the <a href="/tutor/" target="_blank">Science Help Desk</a>. Students see your answer there.</span></div>' +
+        '<nav class="tabs"><a href="#questions/open" aria-selected="' + (show === 'open') + '">Waiting for an answer</a><a href="#questions/all" aria-selected="' + (show === 'all') + '">All questions</a></nav>' +
+        (rows.length ? rows.map(function (q) {
+          var sug = q.status === 'open' ? hdSuggest(q.question + ' ' + (q.topic || '')) : [];
+          return '<article class="bkcard ' + (q.status === 'open' ? 'new' : 'done') + '" data-id="' + q.id + '"><div class="row2"><span><b>' + E(q.student || 'Student') + '</b>' + (q.class_name ? ' · ' + E(q.class_name) : '') +
+            (q.course ? ' · ' + E(q.course) : '') + (q.topic ? ' · ' + E(q.topic) : '') + '</span><span class="small muted">' + E(S.when ? S.when(q.created_at) : new Date(q.created_at).toLocaleString()) + '</span></div>' +
+            '<p style="white-space:pre-wrap"><b>Question:</b> ' + E(q.question) + '</p>' +
+            (sug.length ? '<p class="small muted">From your notes: ' + sug.map(function (n, i) { return '<button type="button" class="btn sm" data-sug="' + i + '">＋ ' + E((n.notes || {}).title || n.lesson) + '</button>'; }).join(' ') + '</p>' : '') +
+            '<label class="f">Your answer<textarea class="hda" rows="4">' + E(q.answer || '') + '</textarea></label>' +
+            '<label class="small"><input type="checkbox" class="hdf"' + (q.public_faq ? ' checked' : '') + '> Share this question and answer with all students (their name is not shown)</label>' +
+            '<div class="cta"><button class="btn main sm" data-act="answer" type="button">' + (q.answer ? 'Update answer' : 'Send answer') + '</button>' +
+            (q.status !== 'closed' ? '<button class="btn sm" data-act="close" type="button">Close without answer</button>' : '') + '<button class="btn sm" data-act="delete" type="button">Delete</button></div></article>';
+        }).join('') : '<p class="emptybox">' + (show === 'open' ? 'No questions are waiting. 🎉' : 'No questions yet.') + '</p>') + '</section>';
+      p.querySelectorAll('article[data-id]').forEach(function (card) {
+        var q = rows.filter(function (x) { return x.id === card.getAttribute('data-id'); })[0], ta = card.querySelector('.hda');
+        var sug = q.status === 'open' ? hdSuggest(q.question + ' ' + (q.topic || '')) : [];
+        card.querySelectorAll('[data-sug]').forEach(function (b) { b.onclick = function () {
+          var n = sug[+b.getAttribute('data-sug')].notes || {};
+          var t = (n.intro ? n.intro + '\n' : '') + (n.points || []).map(function (x) { return '• ' + x; }).join('\n') + (n.example ? '\nExample: ' + n.example : '');
+          ta.value = (ta.value.trim() ? ta.value.trim() + '\n\n' : '') + t; ta.focus(); }; });
+        card.querySelectorAll('[data-act]').forEach(function (b) { b.onclick = function () {
+          var act = b.getAttribute('data-act');
+          if (act === 'delete') { if (!confirm('Delete this question for good?')) return; S.db.from('help_questions').delete().eq('id', q.id).then(function (r) { if (ok(r, 'Question deleted')) helpDesk(p, args); }); return; }
+          if (act === 'close') { S.db.from('help_questions').update({ status: 'closed' }).eq('id', q.id).then(function (r) { if (ok(r, 'Closed')) helpDesk(p, args); }); return; }
+          var a = ta.value.trim(); if (!a) { toast('Write the answer first.', true); return; }
+          S.db.from('help_questions').update({ answer: a.slice(0, 8000), public_faq: card.querySelector('.hdf').checked }).eq('id', q.id).then(function (r) { if (ok(r, 'Answer sent to the student')) helpDesk(p, args); });
+        }; });
+      });
     });
   }
 
