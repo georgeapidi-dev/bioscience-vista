@@ -240,9 +240,12 @@
   }
 
   // Concept notes before the questions of steps that start straight with questions (written by "lesson-notes", stored in lesson_notes)
+  function userToken() {   // lesson notes are for signed-in, approved accounts: send the student's own sign-in token
+    try { var ref = new URL(window.SB_URL).hostname.split('.')[0], t = JSON.parse(localStorage.getItem('sb-' + ref + '-auth-token') || 'null'); return (t && (t.access_token || (t.currentSession && t.currentSession.access_token))) || window.SB_KEY; } catch (e) { return window.SB_KEY; }
+  }
   function conceptNotes() {
     if (!window.SB_URL || !window.SB_KEY || !window.fetch) return;
-    fetch(window.SB_URL + '/rest/v1/lesson_notes?select=step,notes&lesson=eq.' + encodeURIComponent(SP.id), { headers: { apikey: window.SB_KEY, Authorization: 'Bearer ' + window.SB_KEY } })
+    fetch(window.SB_URL + '/rest/v1/lesson_notes?select=step,notes&lesson=eq.' + encodeURIComponent(SP.id), { headers: { apikey: window.SB_KEY, Authorization: 'Bearer ' + userToken() } })
       .then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) {
         (rows || []).forEach(function (r) {
           var sec = document.getElementById('step' + r.step), n = r.notes || {}; if (!sec || sec.querySelector('.bv-cnotes')) return;

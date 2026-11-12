@@ -1,4 +1,48 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Science Help Desk · Learnova</title><link rel="canonical" href="/tutor/"><meta http-equiv="refresh" content="0; url=/tutor/">
-<script>location.replace('/tutor/' + location.search);</script></head>
-<body style="font:16px system-ui,sans-serif;padding:24px">The Science Help Desk has moved: <a href="/tutor/">open the Science Help Desk</a>.</body></html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in · Learnova</title><meta name="robots" content="noindex">
+<style>
+:root{--bg:#f6f8f6;--card:#fff;--ink:#1f2a24;--muted:#5d6b62;--green:#1b6b3a;--line:#d5e0d8}
+@media (prefers-color-scheme:dark){:root{--bg:#111714;--card:#1a221d;--ink:#e6efe9;--muted:#9fb0a5;--green:#5fbf83;--line:#2f3d34}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding:16px}
+#box{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;display:none}
+h1{margin:0 0 6px;font-size:1.3rem}p{margin:0 0 14px;color:var(--muted);font-size:.93rem}
+a.btn{display:block;text-align:center;font-weight:600;border-radius:9px;padding:11px;background:var(--green);color:#fff;text-decoration:none;margin-top:8px}
+a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)}
+@media (prefers-color-scheme:dark){a.btn{color:#0d1510}a.btn.alt{color:var(--green)}}
+#wait{color:var(--muted)}
+</style></head><body>
+<div id="wait">Opening…</div><div id="box" role="alert"></div>
+<script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
+<script>
+var P = {"v": "d621c6f6", "iv": "raEYXTbwqEWajh3J", "ct": "Q04c+ldzDyYuj6ftly2AGHWZCsuBgV/BsjijyFHF1vB+i3PLoOw6Z4MszNxDKekTFvm6qR2w0n+U7JfvWr7U5oLbM1wyO4Rx39VZg9QbzmoV5N+FGS5XzG5BfR9NjK3RQmpDULBspx0Bn0SBoo82TcGDdkItm3j/wOxz2JKhzzFXIciJ6UJyreZXj1+jMg/RjQn2KMqr7tdxydzEE2cK4Pl3nMOMUGRvkpnTPkxVOc6M0IyOEJmA5q44c6dl2P0wKxKugYa+Gwoa318hK1LeVYQ36krZFunNseqbSyHjK5kyVj4Wq1Viv0tgKazbvspW2F9TRcdFJwweiAyDFMw1Zka/O9sIYr5jaIQLT4qHqbC2j35Zv1hZ6Xl/krlJvno65iMN7+W3nnCoAAPrj2XtHy4yVtGRqmpBkCw5f9qYrwL/fCznZP0HJwz2hjA4/gWkyo+QAFylklzAIi3ZsjcslySpk5ytNvLFb/v/BIx5kLKOBDXJD6m0yoBVb6liHHKnxTrEd2Xf0awETjejg8VY5mOfhuogNKq3frFuiA5fQGD6X+5FGap5DQOh6mRST7d8zaFUfyqfpH4imBNxq+pon3pTes75or18tBfRKtEOHOcG/1eevm3wgI9HPctZX9EuKeeCXboljHMf+R8pOljsgZMHjEGioqQ="};
+(function () {
+  if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
+  var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
+  function u8(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+  function say(h) { document.getElementById('wait').style.display = 'none'; var b = document.getElementById('box'); b.innerHTML = h; b.style.display = 'block'; }
+  function login() { location.replace('/login/?next=' + encodeURIComponent(here)); }
+  function open(k) {
+    return crypto.subtle.importKey('raw', u8(k), 'AES-GCM', false, ['decrypt'])
+      .then(function (key) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8(P.iv) }, key, u8(P.ct)); })
+      .then(function (pt) { var html = te.decode(pt); document.open(); document.write(html); document.close(); });
+  }
+  if (!window.crypto || !crypto.subtle) { say('<h1>Browser not supported</h1><p>Please use Chrome, Edge, Safari or Firefox.</p>'); return; }
+  var BV = window.BV || {};
+  if (!window.supabase || !BV.sbUrl) { say('<h1>Could not open this page</h1><p>Check your internet connection and reload.</p>'); return; }
+  try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('mas-key-') === 0) localStorage.removeItem(k); }); } catch (e) {}
+  var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } });
+  db.auth.getSession().then(function (r) {
+    var s = r.data && r.data.session; if (!s) return login();
+    var C = 'lv-k-' + P.v + '-' + s.user.id, k = null;
+    try { k = sessionStorage.getItem(C); } catch (e) {}
+    if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} location.reload(); });
+    return db.rpc('site_key').then(function (x) {
+      if (x.error) throw x.error;
+      if (!x.data) return say('<h1>Waiting for approval</h1><p>You are signed in, but your teacher has not approved your account yet. Classes and learning materials open as soon as you are approved.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/">Learnova home</a>');
+      return open(x.data).then(function () { try { sessionStorage.setItem(C, x.data); } catch (e) {} });
+    });
+  }).catch(function () { say('<h1>Could not open this page</h1><p>Please sign in again.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a>'); });
+})();
+</script></body></html>
