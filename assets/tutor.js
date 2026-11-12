@@ -8,7 +8,7 @@
   var STOP = ('a an the and or but if of to in on at by for with from as is are was were be been being it its this that these those what which who whom why how when where ' +
     'do does did done can could should would will shall may might must i me my we our you your he she they them their there here than then so not no yes ' +
     'about into out up down over under again more most some any each other such only own same very just also explain describe state define give name list ' +
-    'please help understand mean means meaning difference between example examples tell')
+    'please help understand mean means meaning difference between example examples tell made make makes take takes get gets use used uses work works happen happens called call one way thing things')
     .split(' ').reduce(function (o, w) { o[w] = 1; return o; }, {});
   function pref(k, v) { try { if (v === undefined) return localStorage.getItem('bv-help-' + k); localStorage.setItem('bv-help-' + k, v); } catch (e) { return null; } }
   function stem(w) { return w.replace(/is(e|ed|es|ing|ation)$/, 'iz$1').replace(/(ies)$/, 'y').replace(/(sses)$/, 'ss').replace(/([^s])s$/, '$1').replace(/(ing|ed)$/, ''); }
@@ -85,7 +85,8 @@
     var qw = expand(words(q)), ss = sentences(text);
     ss = ss.filter(function (x, i) { return ss.indexOf(x) === i; });
     var sc = ss.map(function (x, i) { return { x: x, i: i, s: hits(qw, words(x)) * 2 + (i === 0 ? 1.5 : 0) - (x.length > 260 ? 1 : 0) }; });
-    return sc.filter(function (o) { return o.s > 0.5; }).sort(function (a, b) { return b.s - a.s; }).slice(0, n).sort(function (a, b) { return a.i - b.i; }).map(function (o) { return o.x; });
+    var need = Math.min(2, qw.filter(function (w, i) { return qw.indexOf(w) === i; }).length) * 2;
+    return sc.filter(function (o) { return o.s >= need || (o.i === 0 && /\b(what (is|are)|define)\b/i.test(q) && o.s > 1); }).sort(function (a, b) { return b.s - a.s; }).slice(0, n).sort(function (a, b) { return a.i - b.i; }).map(function (o) { return o.x; });
   }
   function web(q, topic, notePick, seq) {
     var ph = phrase(q, topic), host = simpleWiki() ? 'simple.wikipedia.org' : 'en.wikipedia.org';
