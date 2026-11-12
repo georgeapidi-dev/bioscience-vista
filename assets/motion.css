@@ -118,3 +118,4 @@ header.top.scrolled{box-shadow:0 6px 24px rgba(15,23,42,.10);backdrop-filter:sat
 .course .ic{transition:transform .3s}.course:hover .ic{transform:rotate(-8deg) scale(1.08)}
 .hm-ph.p3{bottom:16%;right:-2%}
 .hm-live{left:0;bottom:0}
+@media (max-width:600px){.hm-cta a{padding:11px 16px;font-size:.95rem;white-space:nowrap}.hm-cta a.p{flex:1 1 100%;justify-content:center}.hm-hero{border-radius:22px;padding:22px 18px}.hm-pill{font-size:.82rem}}
