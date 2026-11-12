@@ -85,10 +85,14 @@
     var base = words(q + ' ' + (topic || '')), qw = expand(base).filter(function (w, i, a) { return a.indexOf(w) === i; }), ty = qType(q), cands = [];
     notes.slice(0, 3).forEach(function (x, rank) {
       var n = x.n, wt = [1, 0.7, 0.5][rank];
-      function add(text, kind, extra) { if (text) cands.push({ text: String(text).trim(), kind: kind, x: x, wt: wt, extra: extra || 0 }); }
+      function add(text, kind, extra) {   // one sentence per candidate, so the answer stays short
+        if (!text) return;
+        var parts = kind === 'term' ? [String(text)] : String(text).split(/(?<=[.!?])\s+(?=[A-Z0-9])/);
+        parts.forEach(function (t) { t = t.trim(); if (t.length > 2) cands.push({ text: t, kind: kind, x: x, wt: wt, extra: extra || 0 }); });
+      }
       add(n.intro, 'intro');
       (n.points || []).forEach(function (pt) { add(pt, 'point'); });
-      (n.terms || []).forEach(function (t) { var tw = words(t.term), hit = tw.length > 0 && tw.every(function (w) { return base.indexOf(w) >= 0; }); add(t.term + ': ' + t.meaning, 'term', hit ? 4 : 0); cands[cands.length - 1].term = t.term; cands[cands.length - 1].meaning = t.meaning; });
+      (n.terms || []).forEach(function (t) { if (/^(function|job|structure|use|role|example|process)$/i.test(t.term.trim())) return; var tw = words(t.term), hit = tw.length > 0 && tw.every(function (w) { return base.indexOf(w) >= 0; }); add(t.term + ': ' + t.meaning, 'term', hit ? 4 : 0); cands[cands.length - 1].term = t.term; cands[cands.length - 1].meaning = t.meaning; });
       add(n.example, 'example');
     });
     cands.forEach(function (c) {
@@ -111,6 +115,7 @@
       var cw = words(c.text); if (pick.some(function (p) { if ((p.kind === 'term') !== (c.kind === 'term')) return false; var pw = words(p.text), same = cw.filter(function (w) { return pw.indexOf(w) >= 0; }).length; return same / Math.max(1, Math.min(cw.length, pw.length)) > 0.75; })) return;
       if (c.kind === 'term' && (ty.ex || ty.cmp || ty.why) && pick.filter(function (p) { return p.kind === 'term'; }).length >= 1) return;
       if (c.kind === 'term' && pick.filter(function (p) { return p.kind === 'term'; }).length >= 2) return;
+      if (c.kind === 'term' && pick.some(function (p) { return p.kind === 'term' && p.term.toLowerCase() === c.term.toLowerCase(); })) return;
       pick.push(c);
     });
     if (ty.ex && !pick.some(function (p) { return p.kind === 'example'; })) { var ex = cands.filter(function (c) { return c.kind === 'example' && c.s > 0; }).sort(function (a, b) { return b.s - a.s; })[0]; if (ex) { if (pick.length >= max) pick.pop(); pick.push(ex); } }
