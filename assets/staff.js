@@ -3,7 +3,7 @@
    no service-role key or admin password is ever used in the browser. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, TOPICS = [], CLASSES = [];
-  var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['questions', '❓ Student questions'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['content', 'Content'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
+  var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['questions', '❓ Student questions'], ['labs', '🔬 Lab work'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['content', 'Content'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
   var ADMIN_TABS = ['bookings', 'roles', 'activity'];
 
   S.guard(app, { staff: true }).then(function (me) { ME = me; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(function () { window.addEventListener('hashchange', route); route(); })
@@ -39,7 +39,7 @@
       '<nav class="tabs" aria-label="Teacher sections">' + TABS.filter(function (t) { return ADMIN_TABS.indexOf(t[0]) < 0 || ME.admin; }).map(function (t) { return '<a href="#' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</a>'; }).join('') + '</nav><div id="pane"><p class="muted">Loading…</p></div>';
     app.innerHTML = head; app.querySelector('#so').onclick = S.signOut;
     var pane = app.querySelector('#pane');
-    ({ overview: overview, work: lessonWork, questions: helpDesk, approvals: approvals, activity: activity, lessons: lessons, classes: classes, students: students, quizzes: quizzes, marking: marking, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
+    ({ overview: overview, work: lessonWork, questions: helpDesk, labs: labWork, approvals: approvals, activity: activity, lessons: lessons, classes: classes, students: students, quizzes: quizzes, marking: marking, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
   }
 
   /* ---------- lesson work (each saved step from a lesson page) ---------- */
@@ -582,14 +582,14 @@
         '<div class="row2"><label class="f">Name<input id="sn" value="' + E(pr.full_name) + '"></label><label class="f">Class<select id="sc">' + classOpts(pr.class_id, '(no class)') + '</select></label><label class="f">Student number<input id="snum" value="' + E(pr.student_number || '') + '"></label><button class="btn sm" id="ss" type="button">Save</button></div></section>' +
         '<section class="panel"><h3>Lesson progress</h3>' + ((x[2].data || []).length ? x[2].data.map(function (l) { return '<div class="row2"><span class="small">' + E(l.lessons ? l.lessons.title : '') + '</span><span class="small muted">' + l.percent + '%</span></div><div class="bar"><i style="width:' + l.percent + '%"></i></div>'; }).join('') : '<p class="muted">No lessons opened yet.</p>') + '</section>' +
         '<section class="panel"><div class="row2"><h3 style="margin:0">📌 To-do list</h3>' + (pr.class_id ? '<button type="button" class="btn sm main" id="stw">＋ Set work for ' + E((pr.full_name || 'this student').split(' ')[0]) + '</button>' : '') + '</div><div id="stform"></div><div id="stlist" class="small muted">' + (pr.class_id ? 'Loading…' : 'Put this student in a class first.') + '</div></section>' +
-        '<section class="panel" id="anbox"><p class="muted">Loading learning profile…</p></section>' +
+        '<section class="panel" id="anbox"><p class="muted">Loading learning profile…</p></section>' + '<section class="panel" id="labbox"><p class="muted">Loading lab work…</p></section>' +
         '<section class="panel" id="pbox"><p class="muted">Loading parents…</p></section>' +
         '<section class="grp"><h3 class="sec-h">Results and feedback</h3>' + ((x[1].data || []).length ? x[1].data.map(function (r) {
           return '<article class="task" data-r="' + r.id + '"><div class="top2"><b>' + E(r.title) + '</b><span class="small muted">' + E(S.when(r.recorded_at)) + '</span></div>' +
             '<div class="row2"><label class="f">Score<input type="number" step="0.5" data-k="score" value="' + E(r.score == null ? '' : r.score) + '" style="max-width:90px"></label><span>/ ' + E(r.max_score) + '</span></div>' +
             '<label class="f">Teacher feedback<textarea rows="3" data-k="teacher_feedback">' + E(r.teacher_feedback || '') + '</textarea></label>' + (r.ai_feedback ? '<div class="fb ai"><h4>Automatic feedback</h4>' + BV.md(r.ai_feedback) + '</div>' : '') +
             '<div class="acts"><button class="btn sm main" type="button" data-a="save">Save feedback</button><button class="btn sm" type="button" data-a="auto" title="Write the automatic feedback again from the marks on each question">🔁 Refresh automatic feedback</button>' + (r.attempt_id ? '<a class="btn sm" href="#marking/' + r.attempt_id + '">Open answers</a>' : '') + '</div></article>'; }).join('') : '<p class="emptybox">No results yet.</p>') + '</section>';
-      parentsBox(p, sid); studentTodo(p, sid, pr); studentAnalysis(p, sid, pr);
+      parentsBox(p, sid); studentTodo(p, sid, pr); studentAnalysis(p, sid, pr); labList(p.querySelector('#labbox'), { sid: sid }, true);
       p.querySelector('#ss').onclick = function () { S.db.from('profiles').update({ full_name: p.querySelector('#sn').value.trim(), class_id: p.querySelector('#sc').value || null, student_number: p.querySelector('#snum').value.trim() || null }).eq('id', sid).then(function (r) { ok(r, 'Student saved'); }); };
       p.querySelectorAll('[data-r]').forEach(function (a) { a.querySelector('[data-a=auto]').onclick = function () { var b = this; b.disabled = true; b.textContent = 'Writing feedback…';
         S.db.functions.invoke('result-feedback', { body: { result_id: a.getAttribute('data-r') } }).then(function (r) { var d = r.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } }
@@ -1193,6 +1193,65 @@
     });
   }
 
+
+
+  /* ---------- virtual laboratory work (Simulations & Virtual Laboratories centre; table sim_attempts, migration 019) ---------- */
+  var LABNAMES = { enzyme: 'Enzyme activity', osmosis: 'Osmosis', dna: 'DNA replication', heart: 'Heart and circulation', titration: 'Acid–base titration' };
+  function labWork(p, args) {
+    var cls = args[0] || '', which = args[1] || '';
+    p.innerHTML = '<section class="panel"><div class="row2"><h3 style="margin:0">🔬 Lab work</h3><a class="btn sm" href="/simulations/" target="_blank">Open the Simulations centre</a></div>' +
+      '<p class="small muted">Work students do in the virtual laboratories: their results tables, graphs, answers and marks. To set a lab for a class, use the class <b>📌 To-do list</b> and choose <b>🔬 Simulation</b>.</p>' +
+      '<div class="row2" style="justify-content:flex-start;flex-wrap:wrap"><label class="f">Class<select id="lwc">' + classOpts(cls, 'All my classes') + '</select></label>' +
+      '<label class="f">Laboratory<select id="lwl"><option value="">All laboratories</option>' + Object.keys(LABNAMES).map(function (k) { return '<option value="' + k + '"' + (k === which ? ' selected' : '') + '>' + E(LABNAMES[k]) + '</option>'; }).join('') + '</select></label></div>' +
+      '<div id="lwsum"></div><div id="lwlist"><p class="muted">Loading…</p></div></section>';
+    var go = function () { location.hash = 'labs/' + p.querySelector('#lwc').value + '/' + p.querySelector('#lwl').value; };
+    p.querySelector('#lwc').onchange = go; p.querySelector('#lwl').onchange = go;
+    labList(p.querySelector('#lwlist'), { cls: cls || null, which: which || null }, false, p.querySelector('#lwsum'));
+  }
+  function labList(box, f, compact, sumBox) {
+    S.db.rpc('sim_work', { cls: f.cls || null, which: f.which || null, sid: f.sid || null }).then(function (r) {
+      if (r.error) { box.innerHTML = (compact ? '<h3>🔬 Lab work</h3>' : '') + '<p class="small muted">' + (/sim_work|does not exist/i.test(r.error.message) ? 'Lab work appears here once migration 019 has been run.' : E(S.nice(r.error))) + '</p>'; return; }
+      var rows = r.data || [];
+      if (sumBox) {
+        var by = {}; rows.forEach(function (x) { var b = by[x.sim] = by[x.sim] || { n: 0, sub: 0, pc: [], st: {} }; b.n++; b.st[x.student_id] = 1; if (x.submitted_at) b.sub++; if (x.max_score) b.pc.push(100 * x.score / x.max_score); });
+        sumBox.innerHTML = Object.keys(by).length ? '<div class="tablewrap"><table class="marks"><tr><th>Laboratory</th><th>Students</th><th>Handed in</th><th>Mean mark</th></tr>' + Object.keys(by).map(function (k) { var b = by[k], m = b.pc.length ? Math.round(b.pc.reduce(function (s, v) { return s + v; }, 0) / b.pc.length) : null;
+          return '<tr><td>' + E(LABNAMES[k] || k) + '</td><td>' + Object.keys(b.st).length + '</td><td>' + b.sub + ' / ' + b.n + '</td><td>' + (m == null ? '—' : m + ' %') + '</td></tr>'; }).join('') + '</table></div>' : '';
+      }
+      box.innerHTML = (compact ? '<h3>🔬 Lab work</h3>' : '') + (rows.length ? '<div class="tablewrap"><table class="marks"><tr>' + (compact ? '' : '<th>Student</th><th>Class</th>') + '<th>Laboratory</th><th>Trials</th><th>Hints</th><th>Mark</th><th>Status</th><th></th></tr>' +
+        rows.map(function (x) { return '<tr>' + (compact ? '' : '<td>' + E(x.student || '') + '</td><td>' + E(x.class_name || '') + '</td>') + '<td>' + E(x.sim_title || LABNAMES[x.sim] || x.sim) + '</td><td>' + x.trials + '</td><td>' + x.hints + '</td><td>' + (+x.score) + ' / ' + (+x.max_score) + '</td>' +
+          '<td class="small">' + (x.submitted_at ? '✓ handed in ' + E(S.when(x.submitted_at)) : 'in progress · ' + E(S.when(x.updated_at))) + '</td><td><button type="button" class="btn sm" data-lw="' + x.id + '">View</button></td></tr>'; }).join('') + '</table></div>'
+        : '<p class="small muted">No laboratory work yet.</p>') + '<div id="lwview"></div>';
+      box.querySelectorAll('[data-lw]').forEach(function (b) { b.onclick = function () { labView(box.querySelector('#lwview'), b.getAttribute('data-lw'), rows.filter(function (x) { return x.id === b.getAttribute('data-lw'); })[0]); }; });
+    });
+  }
+  function labDoc(a, who) {
+    var rows = a.data || [], cols = rows.length ? Object.keys(rows[0]).filter(function (k) { return k[0] !== '_'; }) : [], ans = a.answers || {}, sc = a.scores || {};
+    var vars = {}; (a.variables || []).forEach(function (v) { vars[v[1]] = (vars[v[1]] || 0) + 1; });
+    return '<h2 style="margin-top:0">' + E(a.sim_title || a.sim) + '</h2><p class="small">' + E(who) + ' · started ' + E(new Date(a.started_at).toLocaleString()) + (a.submitted_at ? ' · handed in ' + E(new Date(a.submitted_at).toLocaleString()) : ' · not handed in yet') +
+      ' · mark <b>' + (+a.score) + ' / ' + (+a.max_score) + '</b> · ' + a.trials + ' trials · ' + a.hints + ' hints</p>' +
+      '<p class="small"><b>Controls changed:</b> ' + (Object.keys(vars).length ? Object.keys(vars).map(function (k) { return E(k) + ' (' + vars[k] + '×)'; }).join(', ') : 'none recorded') + '</p>' +
+      '<h3>Hypothesis</h3><p style="white-space:pre-wrap">' + E(ans._hypothesis || '—') + '</p>' + (sc._hyp != null ? '<p class="small">Mark: ' + sc._hyp + '</p>' : '') +
+      '<h3>Results</h3>' + (rows.length ? '<div class="tablewrap"><table class="marks"><tr><th>#</th>' + cols.map(function (c) { return '<th>' + E(c) + '</th>'; }).join('') + '</tr>' + rows.map(function (r, i) { return '<tr><td>' + (i + 1) + '</td>' + cols.map(function (c) { var v = r[c]; return '<td>' + E(typeof v === 'number' ? +v.toFixed(3) : v) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table></div>' : '<p class="small muted">No results recorded.</p>') +
+      '<h3>Answers</h3>' + (Object.keys(ans).filter(function (k) { return k !== '_hypothesis'; }).map(function (k) { return '<p><b>' + E(k) + '</b> <span class="small">(' + (sc[k] == null ? 'not checked' : 'mark ' + sc[k]) + ')</span><br><span style="white-space:pre-wrap">' + E(ans[k] || '—') + '</span></p>'; }).join('') || '<p class="small muted">No answers yet.</p>');
+  }
+  function labView(box, id, meta) {
+    box.innerHTML = '<p class="muted">Loading…</p>';
+    S.db.from('sim_attempts').select('*').eq('id', id).maybeSingle().then(function (r) {
+      if (r.error || !r.data) { box.innerHTML = '<p class="msg">Could not open this lab work.</p>'; return; }
+      var a = r.data, who = (meta && meta.student) || 'Student';
+      box.innerHTML = '<section class="panel tint">' + labDoc(a, who) + '<label class="f">Comment for the student<textarea id="lwcm" rows="3">' + E(a.teacher_comment || '') + '</textarea></label>' +
+        '<div class="acts"><button type="button" class="btn sm main" id="lwsave">Save comment</button><button type="button" class="btn sm" id="lwrep">📄 HTML report</button><button type="button" class="btn sm" id="lwx">Close</button></div></section>';
+      box.querySelector('#lwx').onclick = function () { box.innerHTML = ''; };
+      box.querySelector('#lwsave').onclick = function () { S.db.from('sim_attempts').update({ teacher_comment: box.querySelector('#lwcm').value.trim() || null }).eq('id', id).then(function (x) { ok(x, 'Comment saved'); }); };
+      box.querySelector('#lwrep').onclick = function () {
+        var w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to open the report.', true); return; }
+        w.document.write('<!doctype html><meta charset="utf-8"><title>' + E(a.sim_title || a.sim) + ' · ' + E(who) + '</title><style>body{font:15px/1.5 system-ui,Arial;max-width:900px;margin:24px auto;padding:0 16px}table{border-collapse:collapse;width:100%;font-size:.9em}td,th{border:1px solid #ccc;padding:4px 6px;text-align:center}.tablewrap{overflow-x:auto}</style>' +
+          labDoc(a, who) + (a.teacher_comment ? '<h3>Teacher\'s comment</h3><p style="white-space:pre-wrap">' + E(a.teacher_comment) + '</p>' : '') + '<p style="color:#666;font-size:.85em">Learnova virtual laboratory report · George Apidi · biosciencevista.com</p>');
+        w.document.close();
+      };
+      box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
 
   /* ---------- Science Help Desk: questions students send from /tutor/ (no AI) ---------- */
   var HD_NOTES = null;
