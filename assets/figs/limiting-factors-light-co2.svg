@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 360" font-family="Arial, Helvetica, sans-serif" font-size="14">
+<rect width="560" height="360" fill="#fff"/>
+<g stroke="#111" stroke-width="2" fill="none"><line x1="70" y1="300" x2="530" y2="300"/><line x1="70" y1="300" x2="70" y2="30"/></g>
+<path d="M70 300 C 150 170, 210 110, 300 95 S 460 90, 520 90" fill="none" stroke="#1d4ed8" stroke-width="3.5"/>
+<path d="M70 300 C 140 210, 190 175, 260 170 S 460 168, 520 168" fill="none" stroke="#dc2626" stroke-width="3.5"/>
+<text x="400" y="80" fill="#1d4ed8" font-weight="bold">high CO₂</text>
+<text x="400" y="158" fill="#dc2626" font-weight="bold">low CO₂</text>
+<text x="300" y="340" text-anchor="middle">Light intensity / arbitrary units</text>
+<text x="25" y="165" text-anchor="middle" transform="rotate(-90 25 165)">Rate of photosynthesis</text>
+<g fill="#475569" font-size="13"><text x="105" y="250">A: rising</text><text x="300" y="195">B: plateau</text></g>
+<text x="290" y="22" text-anchor="middle" font-size="12" fill="#475569">Effect of light intensity on photosynthesis at two CO₂ concentrations</text>
+</svg>
