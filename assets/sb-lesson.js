@@ -74,10 +74,16 @@
     }
     var p = orig.apply(this, arguments);
     try {
-      if (who && String(url).indexOf('/formResponse') >= 0 && opts && opts.body) {
+      // Older lessons save each step to a Google Form. Copy every step into the site database too (lesson_work),
+      // so it appears in the teacher's Lesson work and, for signed-in students, on their dashboard.
+      if (String(url).indexOf('/formResponse') >= 0 && opts && opts.body) {
         var lesson = field(opts.body, 'entry.278587299'), step = parseInt(field(opts.body, 'entry.221444120'), 10), ans = field(opts.body, 'entry.1787489026') || '';
-        var m = /TOTAL=([\d.]+)\s*\/\s*([\d.]+)/.exec(ans);
-        if (lesson && m) db.rpc('record_lesson_result', { lesson_ext_id: lesson, got: +m[1], out_of: +m[2], step: isNaN(step) ? null : step }).then(function (r) { if (r.error && window.console) console.warn('Learnova account:', r.error.message); });
+        var nm = (field(opts.body, 'entry.1904342126') || '').trim(), cl = (field(opts.body, 'entry.386386694') || '').trim();
+        if (lesson && ans && (nm || who)) {
+          window.fetch(BV.sbUrl + '/rest/v1/lesson_work', { method: 'POST', headers: { 'apikey': BV.sbKey, 'Authorization': 'Bearer ' + BV.sbKey, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ lesson: lesson.slice(0, 60), student_name: (nm || (who && who.email) || 'Student').slice(0, 80), class_name: cl ? cl.slice(0, 80) : null, step: Math.max(1, Math.min(12, isNaN(step) ? 1 : step)), answers: ans.slice(0, 19900) }) })
+            .then(function (r) { if (!r.ok && window.console) console.warn('Learnova: step not copied to the site database', r.status); }, function () {});
+        }
       }
     } catch (e) {}
     return p;
