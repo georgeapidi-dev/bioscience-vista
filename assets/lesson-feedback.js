@@ -256,7 +256,9 @@
             ((n.terms || []).length ? '<p><b>Key words</b></p><ul>' + n.terms.map(function (t) { return '<li><b>' + esc(t.term) + '</b>: ' + esc(t.meaning) + '</li>'; }).join('') + '</ul>' : '') +
             (n.example ? '<p><b>Example:</b> ' + esc(n.example) + '</p>' : '') +
             (n.image && n.image.src ? '<figure style="margin:10px 0 0;text-align:center"><img src="' + esc(n.image.src) + '" alt="' + esc(n.image.caption || n.image.title || '') + '" loading="lazy" style="max-width:100%;max-height:360px;border-radius:8px;background:#fff">' +
-              '<figcaption class="small">' + esc(n.image.caption || '') + '<br><span style="opacity:.75">Image: <a href="' + esc(n.image.page || '#') + '" target="_blank" rel="noopener">' + esc(n.image.title || 'source') + '</a>' + (n.image.artist ? ' · ' + esc(n.image.artist) : '') + ', ' + esc(n.image.license || '') + ', via Wikimedia Commons</span></figcaption></figure>' : '');
+              '<figcaption class="small">' + esc(n.image.caption || '') + '<br><span style="opacity:.75">Image: <a href="' + esc(n.image.page || '#') + '" target="_blank" rel="noopener">' + esc(n.image.title || 'source') + '</a>' + (n.image.artist ? ' · ' + esc(n.image.artist) : '') + ', ' + esc(n.image.license || '') + ', via Wikimedia Commons</span></figcaption></figure>' :
+             n.drawn && n.drawn.svg ? '<figure style="margin:10px 0 0;text-align:center"><img src="data:image/svg+xml;charset=utf-8,' + encodeURIComponent(n.drawn.svg) + '" alt="' + esc(n.drawn.caption || 'Diagram') + '" style="width:100%;max-width:640px;border-radius:8px;background:#fff;border:1px solid #e2e8f0">' +
+              '<figcaption class="small">' + esc(n.drawn.caption || '') + '<br><span style="opacity:.75">Diagram drawn for Learnova</span></figcaption></figure>' : '');
           var card = q.closest('.card') || q; card.parentNode.insertBefore(box, card);
         });
       }, function () {});
