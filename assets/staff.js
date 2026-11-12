@@ -42,19 +42,108 @@
     ({ overview: overview, work: lessonWork, questions: helpDesk, labs: labWork, approvals: approvals, activity: activity, lessons: lessons, classes: classes, students: students, quizzes: quizzes, marking: marking, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
   }
 
-  /* ---------- lesson work (each saved step from a lesson page) ---------- */
-  function lessonWork(p) {
-    p.innerHTML = '<p class="muted">Loading…</p>';
-    S.db.from('lesson_work').select('*').order('saved_at', { ascending: false }).limit(200).then(function (r) {
-      if (r.error) { p.innerHTML = '<p class="msg">' + E(S.nice(r.error)) + '</p>'; return; }
-      var rows = r.data || [];
-      p.innerHTML = '<section class="panel"><h3>Lesson work</h3><p class="muted">Each row is one step a student saved on a lesson page (latest 200).</p>' +
-        (rows.length ? '<div class="tablewrap"><table class="marks"><tr><th>When</th><th>Student</th><th>Class</th><th>Lesson</th><th>Step</th><th>Work</th></tr>' +
-          rows.map(function (x) {
-            return '<tr><td>' + E(new Date(x.saved_at).toLocaleString()) + '</td><td>' + E(x.student_name) + '</td><td>' + E(x.class_name || '') + '</td><td>' + E(x.lesson) + '</td><td>' + x.step +
-              '</td><td><pre style="white-space:pre-wrap;margin:0;font-size:.85em">' + E(x.answers) + '</pre></td></tr>';
-          }).join('') + '</table></div>' : '<p class="emptybox">No student work saved yet.</p>') + '</section>';
+  /* ---------- lesson work: each student's completed interactive lesson, shown as a finished document ---------- */
+  var LW = null;   // cache: {rows, steps, specs}
+  function lwParse(line) {
+    var head = (String(line).match(/^\[AUTO[^\]]*\]\s*/) || [''])[0], rest = String(line).slice(head.length), out = { answers: [], fb: {}, total: null, max: null, this: null };
+    var t = head.match(/TOTAL=([\d.]+)\/([\d.]+)/), th = head.match(/THIS=([\d.]+)\/([\d.]+)/);
+    if (t) { out.total = +t[1]; out.max = +t[2]; } if (th) out.this = [+th[1], +th[2]];
+    rest.split(/\s+‖\s+/).forEach(function (seg) {
+      if (/^Feedback:/.test(seg)) { seg.replace(/^Feedback:\s*/, '').split(/\s+\|\s+(?=Step \d+ \()/).forEach(function (f) { var m = f.match(/^Step (\d+) \(([\d.]+)\/([\d.]+)\):\s*(.*)$/); if (m) out.fb[m[1]] = { score: +m[2], max: +m[3], text: m[4] }; }); return; }
+      var i = seg.indexOf(': '); out.answers.push(i > 0 && i < 60 ? [seg.slice(0, i).trim(), seg.slice(i + 2).trim()] : ['', seg.trim()]);
     });
+    return out;
+  }
+  function lwLoad(force) {
+    if (LW && !force) return Promise.resolve(LW);
+    var all = [], page = function (from) { return S.db.from('lesson_work').select('*').order('saved_at', { ascending: false }).range(from, from + 999).then(function (r) { if (r.error) throw r.error; all = all.concat(r.data || []); return (r.data || []).length === 1000 && from < 4000 ? page(from + 1000) : all; }); };
+    return Promise.all([page(0), fetch('/assets/lesson-steps.json').then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }),
+      S.db.from('lesson_specs').select('lesson,title,spec').then(function (r) { var o = {}; (r.data || []).forEach(function (x) { o[x.lesson] = x; }); return o; }, function () { return {}; })])
+      .then(function (x) { LW = { rows: x[0], steps: x[1], specs: x[2] }; return LW; });
+  }
+  function lwGroups(rows) {   // one group per student + class + lesson, keeping the latest save of each step
+    var g = {}, order = [];
+    rows.forEach(function (r) {
+      var k = (r.student_name || '').trim().toLowerCase() + '|' + (r.class_name || '').trim().toLowerCase() + '|' + r.lesson;
+      if (!g[k]) { g[k] = { key: k, student: r.student_name, cls: r.class_name || '', lesson: r.lesson, steps: {}, last: r.saved_at, latest: r }; order.push(k); }
+      if (!g[k].steps[r.step]) g[k].steps[r.step] = r;
+    });
+    return order.map(function (k) { var x = g[k], p = lwParse(x.latest.answers); x.total = p.total; x.max = p.max; x.fb = p.fb; return x; });
+  }
+  function lwDoc(x) {
+    var info = (LW.steps || {})[x.lesson] || { title: x.lesson, steps: {} }, spec = ((LW.specs || {})[x.lesson] || {}).spec || {}, models = spec.models || {};
+    var nums = Object.keys(info.steps).length ? Object.keys(info.steps) : Object.keys(x.steps); nums = nums.map(Number).sort(function (a, b) { return a - b; });
+    var done = Object.keys(x.steps).length, pc = x.max ? Math.round(100 * x.total / x.max) : null;
+    var css = 'body{font:15px/1.55 system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#0f172a;background:#f6f8fb;margin:0}.wrap{max-width:880px;margin:0 auto;padding:22px 18px 40px}' +
+      'header{background:linear-gradient(135deg,#0f766e,#1d4ed8);color:#fff;border-radius:18px;padding:20px 22px;margin-bottom:16px}header h1{margin:.1em 0 .3em;font-size:1.5rem}header .meta{opacity:.92;font-size:.92rem}' +
+      '.score{display:flex;align-items:center;gap:12px;margin-top:12px}.bar{flex:1;height:10px;border-radius:99px;background:rgba(255,255,255,.3);overflow:hidden}.bar i{display:block;height:100%;background:#fde68a}.score b{font-size:1.3rem}' +
+      '.step{background:#fff;border:1px solid #dde3ea;border-radius:16px;padding:16px 18px;margin:12px 0}.step.miss{opacity:.6;border-style:dashed}.sh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.ph{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:#0f766e;font-weight:700}' +
+      '.step h2{margin:.1em 0 .4em;font-size:1.12rem}.mk{white-space:nowrap;border-radius:99px;padding:4px 12px;font-weight:700;font-size:.9rem;background:#e2e8f0}.mk.full{background:#dcfce7;color:#166534}.mk.part{background:#fef3c7;color:#92400e}.mk.low{background:#fee2e2;color:#991b1b}' +
+      '.qa{border-top:1px solid #eef2f6;padding:10px 0}.q{font-weight:600;margin-bottom:4px}.a{background:#f1f5f9;border-radius:10px;padding:8px 12px;white-space:pre-wrap}.a.blank{color:#94a3b8;font-style:italic}' +
+      '.mdl{margin-top:6px;font-size:.9rem}.mdl summary{cursor:pointer;color:#166534}.mdl div{background:#f0fdf4;border-radius:10px;padding:8px 12px;margin-top:4px}.fb{background:#eff6ff;border-left:4px solid #1d4ed8;border-radius:8px;padding:8px 12px;margin-top:10px;font-size:.92rem}' +
+      '.tbl{display:flex;flex-wrap:wrap;gap:6px}.tbl span{background:#e0f2fe;border-radius:8px;padding:3px 9px}.foot{color:#64748b;font-size:.82rem;margin-top:20px}@media print{body{background:#fff}.step{break-inside:avoid}.mdl{display:none}header{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
+    var h = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + E(info.title) + ' · ' + E(x.student) + '</title><style>' + css + '</style></head><body><div class="wrap">' +
+      '<header><div class="meta">Completed interactive lesson · Learnova</div><h1>' + E(info.title) + '</h1><div class="meta"><b>' + E(x.student) + '</b> · ' + E(x.cls) + ' · ' + done + ' of ' + nums.length + ' steps saved · last saved ' + E(new Date(x.last).toLocaleString()) + '</div>' +
+      (pc != null ? '<div class="score"><b>' + x.total + ' / ' + x.max + '</b><div class="bar"><i style="width:' + pc + '%"></i></div><b>' + pc + '%</b></div>' : '') + '</header>';
+    nums.forEach(function (n) {
+      var st = info.steps[n] || { title: '', phase: 'Step ' + n, q: {} }, row = x.steps[n], fb = x.fb[n], mdl = {};
+      (models[n] || []).forEach(function (m) { mdl[m[0]] = m[1]; });
+      var cls = fb ? (fb.score >= fb.max ? 'full' : fb.score >= fb.max / 2 ? 'part' : 'low') : '';
+      h += '<section class="step' + (row ? '' : ' miss') + '"><div class="sh"><div><div class="ph">' + E(st.phase || 'Step ' + n) + '</div><h2>' + E(st.title || 'Step ' + n) + '</h2></div>' +
+        (fb ? '<span class="mk ' + cls + '">' + fb.score + ' / ' + fb.max + '</span>' : row ? '<span class="mk">not marked</span>' : '<span class="mk">not saved</span>') + '</div>';
+      if (!row) { h += '<p class="a blank">The student has not saved this step yet.</p></section>'; return; }
+      lwParse(row.answers).answers.forEach(function (qa) {
+        var lab = qa[0], ans = qa[1], q = st.q[lab] || (lab ? lab : ''), blank = !ans || ans === '-';
+        var body = lab === 'Table' && !blank ? '<div class="tbl">' + ans.split(/;\s*/).map(function (v) { return '<span>' + E(v) + '</span>'; }).join('') + '</div>' : E(blank ? 'No answer' : ans.replace(/ \/ /g, '\n'));
+        h += '<div class="qa">' + (q ? '<div class="q">' + E(q) + '</div>' : '') + '<div class="a' + (blank ? ' blank' : '') + '">' + body + '</div>' +
+          (mdl[lab] || mdl[q] ? '<details class="mdl"><summary>Model answer</summary><div>' + E(mdl[lab] || mdl[q]) + '</div></details>' : '') + '</div>';
+      });
+      if (fb && fb.text) h += '<div class="fb"><b>Feedback:</b> ' + E(fb.text) + '</div>';
+      h += '</section>';
+    });
+    return h + '<p class="foot">Lesson by George Apidi · biosciencevista.com · printed ' + E(new Date().toLocaleString()) + '</p></div></body></html>';
+  }
+  function lessonWork(p, args) {
+    p.innerHTML = '<p class="muted">Loading students\' lessons…</p>';
+    lwLoad(args && args[0] === 'refresh').then(function () {
+      var groups = lwGroups(LW.rows), classes = [], lessons = [];
+      groups.forEach(function (g) { if (g.cls && classes.indexOf(g.cls) < 0) classes.push(g.cls); if (lessons.indexOf(g.lesson) < 0) lessons.push(g.lesson); });
+      classes.sort(); lessons.sort(function (a, b) { return ((LW.steps[a] || {}).title || a).localeCompare((LW.steps[b] || {}).title || b); });
+      p.innerHTML = '<section class="panel"><div class="row2"><div><h3 style="margin:0">Lesson work</h3><p class="small muted" style="margin:.3em 0 0">Each card is one student\'s interactive lesson, put together from every step they saved.</p></div><a class="btn sm" href="#work/refresh">↻ Refresh</a></div>' +
+        '<div class="row2" style="justify-content:flex-start;flex-wrap:wrap;margin-top:10px"><label class="f">Class<select id="lwc"><option value="">All classes</option>' + classes.map(function (c) { return '<option>' + E(c) + '</option>'; }).join('') + '</select></label>' +
+        '<label class="f" style="min-width:240px">Lesson<select id="lwl"><option value="">All lessons</option>' + lessons.map(function (l) { return '<option value="' + E(l) + '">' + E((LW.steps[l] || {}).title || l) + '</option>'; }).join('') + '</select></label>' +
+        '<label class="f">Student<input id="lws" type="search" placeholder="Name"></label><span class="small muted" id="lwn"></span></div></section>' +
+        '<div id="lwgrid" class="lwgrid"></div><div id="lwdoc"></div>' +
+        '<style>.lwgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;margin:12px 0}.lwc{border:1px solid var(--line,#dde3ea);border-radius:14px;padding:12px 14px;background:var(--card,#fff);display:grid;gap:6px}' +
+        '.lwc .t{font-weight:700}.lwc .s{font-size:.85rem;color:var(--muted,#64748b)}.lwc .bar{height:8px;border-radius:99px;background:#e2e8f0;overflow:hidden}.lwc .bar i{display:block;height:100%;background:#0f766e}.lwframe{width:100%;height:80vh;border:1px solid var(--line,#dde3ea);border-radius:14px;background:#fff}</style>';
+      function draw() {
+        var c = p.querySelector('#lwc').value, l = p.querySelector('#lwl').value, q = p.querySelector('#lws').value.trim().toLowerCase();
+        var list = groups.filter(function (g) { return (!c || g.cls === c) && (!l || g.lesson === l) && (!q || (g.student || '').toLowerCase().indexOf(q) >= 0); });
+        p.querySelector('#lwn').textContent = list.length + ' lesson' + (list.length === 1 ? '' : 's');
+        p.querySelector('#lwgrid').innerHTML = list.length ? list.slice(0, 300).map(function (g, i) {
+          var info = LW.steps[g.lesson] || {}, nSteps = Object.keys(info.steps || {}).length || Object.keys(g.steps).length, done = Object.keys(g.steps).length, pc = g.max ? Math.round(100 * g.total / g.max) : null;
+          return '<div class="lwc"><div class="t">' + E(g.student) + '</div><div class="s">' + E(g.cls) + '</div><div>' + E(info.title || g.lesson) + '</div>' +
+            '<div class="s">' + done + ' of ' + nSteps + ' steps · ' + (pc != null ? '<b>' + g.total + ' / ' + g.max + '</b> (' + pc + '%)' : 'no marks yet') + ' · ' + E(S.when(g.last)) + '</div>' +
+            (pc != null ? '<div class="bar"><i style="width:' + pc + '%"></i></div>' : '') +
+            '<div class="acts"><button type="button" class="btn sm main" data-v="' + E(g.key) + '">📄 View completed lesson</button><button type="button" class="btn sm" data-d="' + E(g.key) + '" title="Download as an HTML file">⬇ HTML</button></div></div>';
+        }).join('') : '<p class="emptybox">No lesson work matches.</p>';
+        var byKey = {}; groups.forEach(function (g) { byKey[g.key] = g; });
+        p.querySelectorAll('[data-v]').forEach(function (b) { b.onclick = function () { var g = byKey[b.getAttribute('data-v')], d = p.querySelector('#lwdoc'), html = lwDoc(g);
+          d.innerHTML = '<section class="panel"><div class="row2"><h3 style="margin:0">' + E(g.student) + ' · ' + E((LW.steps[g.lesson] || {}).title || g.lesson) + '</h3><div class="acts"><button type="button" class="btn sm" id="lwopen">↗ Open in a new tab / print</button><button type="button" class="btn sm" id="lwdl">⬇ Download HTML</button><button type="button" class="btn sm" id="lwx">Close</button></div></div><iframe class="lwframe" title="Completed lesson"></iframe></section>';
+          d.querySelector('iframe').srcdoc = html;
+          d.querySelector('#lwx').onclick = function () { d.innerHTML = ''; };
+          d.querySelector('#lwdl').onclick = function () { lwSave(g, html); };
+          d.querySelector('#lwopen').onclick = function () { var w = window.open(URL.createObjectURL(new Blob([html], { type: 'text/html' })), '_blank'); if (!w) toast('Allow pop-ups to open the lesson.', true); };
+          d.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
+        p.querySelectorAll('[data-d]').forEach(function (b) { b.onclick = function () { var g = byKey[b.getAttribute('data-d')]; lwSave(g, lwDoc(g)); }; });
+      }
+      ['#lwc', '#lwl', '#lws'].forEach(function (s) { p.querySelector(s).addEventListener('input', draw); });
+      draw();
+    }).catch(function (e) { p.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
+  }
+  function lwSave(g, html) {
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    a.download = (g.student || 'student').replace(/[^\w]+/g, '-') + '_' + g.lesson + '.html'; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
   }
 
   /* ---------- overview ---------- */
