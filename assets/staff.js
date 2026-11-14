@@ -38,7 +38,7 @@
   ].join('\n'); document.head.appendChild(st); })();
   var TABHUE = { overview: '#7c3aed', work: '#2563eb', questions: '#db2777', labs: '#0891b2', approvals: '#ea580c', classes: '#059669', students: '#4f46e5', quizzes: '#ca8a04', lessons: '#0d9488', marking: '#dc2626', content: '#9333ea' };
 
-  S.guard(app, TEACH ? { school: true, allowPending: true } : { staff: true }).then(function (me) { ME = me; if (TEACH && !teachGate(me)) throw 'gate'; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(function () { window.addEventListener('hashchange', route); route(); })
+  S.guard(app, TEACH ? { school: true, allowPending: true } : { staff: true }).then(function (me) { ME = me; if (TEACH && !teachGate(me)) throw 'gate'; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(firstClasses).then(function () { window.addEventListener('hashchange', route); route(); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
   function teachGate(me) {   // teachers from other schools: approved account + premium; the admin and main-site teachers always
@@ -1719,6 +1719,14 @@
     });
   }
   var COURSES = null, TC = { cur: null, tab: 'students' };
+  function firstClasses() {
+    var md = (ME.user && ME.user.user_metadata) || {}, tried = false; try { tried = sessionStorage.getItem('bv-classes-tried') === '1'; } catch (e) {}
+    if (!TEACH || ME.admin || CLASSES.length || ARCHIVED.length || !md.courses || !md.courses.length || md.courses_applied || tried) return;
+    try { sessionStorage.setItem('bv-classes-tried', '1'); } catch (e) {}
+    return courseList().then(function (cs) { var name = {}; cs.forEach(function (k) { name[k.slug] = k.name; });
+      return md.courses.filter(function (c) { return name[c]; }).reduce(function (p, c) { return p.then(function () { return S.db.rpc('create_school_class', { nm: name[c], course_slug: c, descr: null, is_listed: true }).then(function () {}, function () {}); }); }, Promise.resolve());
+    }).then(function () { return S.db.auth.updateUser({ data: { courses_applied: true } }).then(function () {}, function () {}); }).then(refs).then(function () { if (CLASSES.length) toast('Your classes are ready: ' + CLASSES.map(function (c) { return c.name; }).join(', ')); }, function () {});
+  }
   function courseList() { return COURSES ? Promise.resolve(COURSES) : S.db.rpc('course_list').then(function (r) { COURSES = r.data || []; return COURSES; }); }
   function teachClasses(p, args) {
     if (args && args[0]) return refs().then(function () { classPage(p, args[0], args[1]); });
