@@ -1098,6 +1098,7 @@
             .then(function (r2) { if (ok(r2, 'Quiz saved')) { if (isNew) location.hash = 'quizzes/' + qid; else quizEdit(p, qid); } });
         }); };
       var del = p.querySelector('#del'); if (del) del.onclick = function () { if (del.dataset.sure) { S.db.from('quizzes').delete().eq('id', id).then(function (r) { if (ok(r, 'Quiz deleted')) location.hash = 'quizzes'; }); } else { del.dataset.sure = 1; del.textContent = 'Click again to delete (attempts are deleted too)'; } };
+      apLayout(p, isNew);
       if (isNew) return;
       var listEl = p.querySelector('#qlist'), removed = [];
       function wire(el) { Q.wireCard(el); el.querySelector('[data-act=del]').onclick = function () { if (el.dataset.id) removed.push(el.dataset.id); el.remove(); }; }
@@ -1123,6 +1124,102 @@
         }).then(function (r) { if (r.error) throw r.error; toast(Q.fbError ? 'Questions saved. ' + Q.fbError : 'Questions saved', !!Q.fbError); quizEdit(p, id); }).catch(function (e) { btn.disabled = false; toast(S.nice(e), true); });
       };
     });
+  }
+
+  /* ---------- lesson builder: a built lesson as one HTML file (the teacher's own lesson; opens in any browser, works offline) ---------- */
+  function lessonHtmlFile(id) {
+    return Promise.all([S.db.from('quizzes').select('id,title,instructions').eq('id', id).maybeSingle(),
+      S.db.from('quiz_questions').select('position, questions(id,kind,prompt,options,marks,image_url,section, question_answers(correct_option,model_answer,mark_scheme,explanation))').eq('quiz_id', id).order('position')]).then(function (x) {
+      var q = x[0].data; if (!q) throw new Error('That lesson was not found.');
+      var STEPS = ['Question', 'Explore', 'Test', 'Explain', 'Challenge', 'Reflect'], by = {}, keys = {};
+      (x[1].data || []).forEach(function (z) { var o = z.questions || {}, a = o.question_answers || {}; if (Array.isArray(a)) a = a[0] || {}; var sec = STEPS.indexOf(o.section) >= 0 ? o.section : 'Explore'; (by[sec] = by[sec] || []).push(o);
+        keys[o.id] = { c: a.correct_option, m: a.model_answer || a.mark_scheme || '', e: a.explanation || '' }; });
+      var author = (ME.profile && ME.profile.full_name) || 'the teacher', n = 0;
+      var body = STEPS.filter(function (st) { return by[st]; }).map(function (st, si) {
+        return '<section class="step" data-step="' + si + '"><h2><span>STEP ' + (si + 1) + '</span> ' + E(st) + '</h2>' + by[st].map(function (o) {
+          var pic = o.image_url ? '<img src="' + E(o.image_url) + '" alt="Picture for this part of the lesson">' : '', txt = BVT.rich(o.prompt, false);
+          if (o.kind === 'info') return '<div class="note">' + txt + pic + '</div>';
+          n++; var marks = o.marks ? ' <em>[' + o.marks + ']</em>' : '';
+          return '<div class="q" data-q="' + o.id + '" data-kind="' + E(o.kind) + '"><div class="ql"><b>' + n + '.</b> ' + txt + marks + '</div>' + pic +
+            (o.kind === 'short' ? '<textarea rows="' + (o.marks >= 3 ? 6 : 3) + '" placeholder="Type your answer"></textarea>' :
+              (o.options || []).map(function (op, j) { return '<label class="opt"><input type="radio" name="q' + o.id + '" value="' + j + '"> <b>' + 'ABCDEFGH'.charAt(j) + '.</b> ' + E(op) + '</label>'; }).join('')) + '<div class="fb" hidden></div></div>'; }).join('') +
+          '<p><button type="button" class="check">Check this step</button> <span class="score"></span></p></section>'; }).join('');
+      var data = btoa(unescape(encodeURIComponent(JSON.stringify(keys))));
+      var css = 'body{font:17px/1.6 system-ui,Segoe UI,Arial,sans-serif;margin:0;background:#f5f3ff;color:#172033}main{max-width:860px;margin:0 auto;padding:16px}header{background:linear-gradient(135deg,#4338ca,#c026d3 60%,#f97316);color:#fff;padding:26px 16px;border-radius:0 0 18px 18px}header h1{margin:.2em 0}header p{margin:.2em 0;opacity:.95}' +
+        '.step{background:#fff;border-radius:14px;padding:16px 18px;margin:16px 0;box-shadow:0 2px 10px rgba(30,27,75,.08)}.step h2{margin:0 0 10px;color:#4338ca}.step h2 span{font-size:.7em;background:#ede9fe;color:#5b21b6;border-radius:99px;padding:2px 10px;margin-right:6px;vertical-align:middle}' +
+        '.note{background:#f8fafc;border-left:5px solid #7c3aed;border-radius:8px;padding:10px 14px;margin:10px 0}.q{border-top:1px solid #e2e8f0;padding:12px 0}img{max-width:100%;max-height:420px;border-radius:8px;display:block;margin:8px 0}textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px solid #94a3b8;border-radius:8px}' +
+        '.opt{display:block;padding:6px 8px;border:1px solid #e2e8f0;border-radius:8px;margin:4px 0}.fb{margin-top:8px;padding:8px 12px;border-radius:8px;background:#ecfdf5;border:1px solid #6ee7b7}.fb.bad{background:#fef2f2;border-color:#fca5a5}button{font:inherit;font-weight:700;background:#4338ca;color:#fff;border:0;border-radius:10px;padding:9px 16px;cursor:pointer}' +
+        'table{border-collapse:collapse}td,th{border:1px solid #cbd5e1;padding:4px 8px}.score{font-weight:700;color:#5b21b6}footer{text-align:center;color:#64748b;font-size:.85em;padding:20px}.qp{display:block;margin:.3em 0}@media print{button{display:none}}';
+      var js = "var K=JSON.parse(decodeURIComponent(escape(atob('" + data + "'))));function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}" +
+        "try{var S0=JSON.parse(localStorage.getItem(location.pathname+'#lesson')||'{}')}catch(e){var S0={}}" +
+        "document.querySelectorAll('.q').forEach(function(q){var id=q.getAttribute('data-q'),t=q.querySelector('textarea');if(t){t.value=S0[id]||'';t.oninput=save}else q.querySelectorAll('input').forEach(function(r){if(String(S0[id])===r.value)r.checked=true;r.onchange=save})});" +
+        "function val(q){var t=q.querySelector('textarea');if(t)return t.value.trim();var r=q.querySelector('input:checked');return r?r.value:''}" +
+        "function save(){var o={};document.querySelectorAll('.q').forEach(function(q){o[q.getAttribute('data-q')]=val(q)});try{localStorage.setItem(location.pathname+'#lesson',JSON.stringify(o))}catch(e){}}" +
+        "document.querySelectorAll('.check').forEach(function(b){b.onclick=function(){var st=b.closest('.step'),qs=st.querySelectorAll('.q'),todo=0,got=0,max=0;qs.forEach(function(q){if(!val(q))todo++});" +
+        "if(todo){st.querySelector('.score').textContent='Answer every question in this step first ('+todo+' left).';return}" +
+        "qs.forEach(function(q){var k=K[q.getAttribute('data-q')]||{},f=q.querySelector('.fb'),v=val(q);f.hidden=false;if(q.getAttribute('data-kind')==='short'){f.className='fb';f.innerHTML='<b>Model answer:</b> '+esc(k.m||'Ask your teacher.')+(k.e?'<br>'+esc(k.e):'')+'<br><i>Compare it with your answer and correct your work.</i>'}" +
+        "else{max++;var ok=String(k.c)===v;if(ok)got++;f.className='fb'+(ok?'':' bad');f.innerHTML=(ok?'✓ Correct.':'✗ The correct answer is '+'ABCDEFGH'.charAt(k.c)+'.')+(k.e?' '+esc(k.e):'')}});" +
+        "st.querySelector('.score').textContent=max?'Multiple choice in this step: '+got+' / '+max:'Compare your answers with the model answers.'}});";
+      var html = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + E(q.title) + '</title><style>' + css + '</style></head><body><header><main style="padding:0 16px"><p>Interactive lesson</p><h1>' + E(q.title) + '</h1><p>Prepared by ' + E(author) + ' · Learnova</p></main></header><main>' +
+        (q.instructions ? '<section class="step"><h2>Learning objectives</h2><ul>' + String(q.instructions).split('\n').filter(function (l) { return l.trim(); }).map(function (l) { return '<li>' + E(l.trim()) + '</li>'; }).join('') + '</ul></section>' : '') +
+        body + '</main><footer>' + E(q.title) + ' · Prepared by ' + E(author) + ' · made with the Learnova lesson builder · answers are kept on this device</footer><script>' + js + '<\/script></body></html>';
+      var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+      a.download = (q.title || 'lesson').replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').slice(0, 70) + '.html'; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    });
+  }
+
+  /* ---------- assessment builder layout, in the style of AssessPrep: a top bar, a numbered question navigator on the left,
+     one question at a time in the middle, and the settings and mark scheme on their own tabs. Only the layout changes:
+     every field and button keeps working exactly as before. ---------- */
+  function apLayout(p, isNew) {
+    var f = p.querySelector('#qf'); if (!f || p.querySelector('.ap-top')) return;
+    if (!document.getElementById('ap-css')) { var st = document.createElement('style'); st.id = 'ap-css';
+      st.textContent = '.ap-top{position:sticky;top:0;z-index:20;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:linear-gradient(90deg,#1e1b4b,#4338ca);color:#fff;border-radius:12px;padding:10px 14px;margin:0 0 10px}.ap-top a{color:#c7d2fe}.ap-top b.t{font-size:1.1rem;flex:1;min-width:160px}.ap-top .pill{background:rgba(255,255,255,.18);color:#fff}' +
+        '.ap-tabs{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}.ap-tabs button{border:0;border-radius:10px 10px 0 0;padding:9px 16px;font:inherit;font-weight:700;background:#e0e7ff;color:#3730a3;cursor:pointer}.ap-tabs button[aria-selected=true]{background:#4338ca;color:#fff}' +
+        '.ap-grid{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start}.ap-nav{position:sticky;top:64px;display:grid;gap:6px;max-height:calc(100vh - 90px);overflow:auto;padding:8px;background:#eef2ff;border-radius:12px}' +
+        '.ap-nav button{display:flex;justify-content:space-between;gap:6px;align-items:center;border:2px solid transparent;border-radius:10px;padding:7px 9px;background:#fff;font:inherit;cursor:pointer;text-align:left}.ap-nav button.on{border-color:#4338ca;background:#e0e7ff;font-weight:700}.ap-nav button small{color:#64748b}.ap-nav .add{background:#4338ca;color:#fff;justify-content:center;font-weight:700}' +
+        '.ap-one .qe{display:none}.ap-one .qe.ap-cur{display:block}.ap-step{display:flex;justify-content:space-between;gap:8px;margin-top:10px}@media (max-width:760px){.ap-grid{grid-template-columns:1fr}.ap-nav{position:static;display:flex;flex-wrap:wrap;max-height:none}}';
+      document.head.appendChild(st); }
+    var D = function (c, h) { var d = document.createElement('div'); d.className = c; if (h) d.innerHTML = h; return d; };
+    var ms = p.querySelector('#msbox'), list = p.querySelector('#qlist'), qsec = list ? list.parentNode : null, back = p.querySelector('p'), pv = f.querySelector('a[href*="/preview"]');
+    var top = D('ap-top', '<a href="#quizzes">← All</a><b class="t"></b><span class="pill" data-tot></span><span class="pill" data-pub></span>' + (qsec ? '<button type="button" class="btn main sm" data-save>💾 Save questions</button>' : '') + (pv ? '<a class="btn sm" href="' + pv.getAttribute('href') + '" style="color:#1e1b4b">👁 Preview</a>' : ''));
+    var tabs = D('ap-tabs'), panes = {};
+    [['questions', '① Questions', qsec], ['scheme', '② Mark scheme', ms], ['settings', '⚙ Settings', f]].forEach(function (t) { if (!t[2]) return;
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = t[1]; b.setAttribute('data-tab', t[0]); tabs.appendChild(b); panes[t[0]] = t[2];
+      b.onclick = function () { show(t[0]); }; });
+    function show(k) { Object.keys(panes).forEach(function (n) { (n === 'questions' ? grid : panes[n]).hidden = n !== k; }); tabs.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-selected', String(b.getAttribute('data-tab') === k)); }); try { sessionStorage.setItem('ap-tab', k); } catch (e) {} }
+    var grid = D('ap-grid'), nav = D('ap-nav'), main = D('ap-main');
+    if (back) back.remove();
+    p.insertBefore(top, p.firstChild); p.insertBefore(tabs, top.nextSibling);
+    if (qsec) { p.insertBefore(grid, qsec); grid.appendChild(nav); grid.appendChild(main); main.appendChild(qsec); list.classList.add('ap-one');
+      var stepper = D('ap-step', '<button type="button" class="btn sm" data-prev>‹ Previous question</button><button type="button" class="btn sm" data-next>Next question ›</button>'); main.appendChild(stepper); }
+    /* settings made simpler: the rarely changed parts fold away */
+    var more = document.createElement('details'), sum = document.createElement('summary'); sum.innerHTML = '<b>More options</b>: how written answers are marked, and exam security'; more.appendChild(sum);
+    [].slice.call(f.querySelectorAll('fieldset')).forEach(function (fs) { var lg = fs.querySelector('legend'); if (lg && /Marking and feedback|Exam security/.test(lg.textContent)) { if (!more.parentNode) fs.parentNode.insertBefore(more, fs); more.appendChild(fs); } });
+    var cur = 0;
+    function cards() { return list ? [].slice.call(list.querySelectorAll('.qe')) : []; }
+    function paint() {
+      var cs = cards(), tot = 0; if (cur >= cs.length) cur = Math.max(0, cs.length - 1);
+      nav.innerHTML = cs.map(function (c, i) { var m = +((c.querySelector('[data-f=marks]') || {}).value || 0), k = (c.querySelector('[data-f=kind]') || {}).value || ''; tot += k === 'info' ? 0 : m;
+        return '<button type="button" data-i="' + i + '"' + (i === cur ? ' class="on"' : '') + '><span>' + (k === 'info' ? 'ℹ️' : k === 'short' ? '✍️' : '🔘') + ' Q' + (i + 1) + '</span><small>' + (k === 'info' ? 'text' : m + ' mk') + '</small></button>'; }).join('') + '<button type="button" class="add" data-add>＋ Add question</button>';
+      cs.forEach(function (c, i) { c.classList.toggle('ap-cur', i === cur); });
+      nav.querySelectorAll('[data-i]').forEach(function (b) { b.onclick = function () { cur = +b.getAttribute('data-i'); paint(); }; });
+      nav.querySelector('[data-add]').onclick = function () { p.querySelector('#qadd').click(); cur = cards().length - 1; paint(); };
+      top.querySelector('[data-tot]').textContent = cs.length + ' question' + (cs.length === 1 ? '' : 's') + ' · ' + tot + ' marks';
+    }
+    function head() { top.querySelector('.t').textContent = f.querySelector('#t').value || (isNew ? 'New quiz or exam' : 'Untitled'); var pb = f.querySelector('#pb'); top.querySelector('[data-pub]').textContent = pb && pb.checked ? 'Published' : 'Draft'; }
+    f.addEventListener('input', head); f.addEventListener('change', head); head();
+    if (qsec) {
+      var qa = p.querySelector('#qadd'); if (qa) qa.parentNode.hidden = true;
+      top.querySelector('[data-save]').onclick = function () { p.querySelector('#qsave').click(); };
+      stepper.querySelector('[data-prev]').onclick = function () { cur = Math.max(0, cur - 1); paint(); };
+      stepper.querySelector('[data-next]').onclick = function () { cur = Math.min(cards().length - 1, cur + 1); paint(); };
+      new MutationObserver(function () { clearTimeout(paint.t); paint.t = setTimeout(paint, 30); }).observe(list, { childList: true });
+      list.addEventListener('change', function (e) { if (e.target.matches && e.target.matches('[data-f=marks],[data-f=kind]')) paint(); });
+      paint();
+    }
+    var want = 'questions'; try { want = sessionStorage.getItem('ap-tab') || 'questions'; } catch (e) {}
+    show(panes[want] ? want : qsec ? 'questions' : 'settings');
   }
 
   /* ---------- teacher preview: the quiz or exam as students see it; nothing is saved ---------- */
@@ -1271,7 +1368,8 @@
         '<p class="small muted">Type your lesson objectives, upload any file (PDF, Word, PowerPoint, Excel, web page, text or pictures), or both. The site turns them into a six-step inquiry lesson (question, explore, test, explain, challenge, reflect) where students type or handwrite their answers. You can change everything before publishing.</p>' +
         ((r.data || []).length ? '<div class="tablewrap"><table class="marks"><tr><th>Lesson</th><th>Items</th><th>Classes</th><th>Status</th><th></th></tr>' + r.data.map(function (q) {
           return '<tr><td><a href="#lessons/' + q.id + '">' + E(q.title) + '</a></td><td>' + q.quiz_questions.length + '</td><td class="small">' + E(q.quiz_classes.map(function (c) { return cn[c.class_id] || '…'; }).join(', ') || '–') + '</td><td>' + (q.published ? '<span class="pill">Published</span>' : 'Draft') + '</td>' +
-            '<td><a class="small" href="/lesson/#' + q.id + '" target="_blank" rel="noopener">Preview ↗</a></td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No interactive lessons yet.</p>');
+            '<td><a class="small" href="/lesson/#' + q.id + '" target="_blank" rel="noopener">Preview ↗</a> <button type="button" class="btn sm" data-html="' + q.id + '" title="Save this lesson as one HTML file that opens in any browser">⬇ HTML file</button></td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No interactive lessons yet.</p>');
+      p.querySelectorAll('[data-html]').forEach(function (b) { b.onclick = function () { b.disabled = true; lessonHtmlFile(b.getAttribute('data-html')).then(function () { b.disabled = false; toast('HTML file saved to your downloads'); }, function (e) { b.disabled = false; toast(S.nice(e), true); }); }; });
     });
   }
   function lessonEdit(p, id, topicId) {
