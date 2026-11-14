@@ -12,11 +12,12 @@
     ['IB Diploma Biology', [['bio-sl', 'Standard level'], ['bio-hl', 'Higher level']]], ['IB Diploma Chemistry', [['chem-sl', 'Standard level'], ['chem-hl', 'Higher level']]],
     ['IB Diploma Physics', [['phys-sl', 'Standard level'], ['phys-hl', 'Higher level']]], ['IB Environmental Systems & Societies', [['ess-sl', 'Standard level'], ['ess-hl', 'Higher level']]],
     ['IB Mathematics: Analysis and Approaches', [['maths-aa-sl', 'Standard level'], ['maths-aa-hl', 'Higher level']]], ['IB Mathematics: Applications and Interpretation', [['maths-ai-sl', 'Standard level'], ['maths-ai-hl', 'Higher level']]],
-    ['IGCSE Biology', [['igcse-bio', '']], 1], ['IGCSE Chemistry', [['igcse-chem', '']], 1], ['AS & A Level Biology', [['alevel-bio', '']], 1], ['AS & A Level Chemistry', [['alevel-chem', '']]]];
+    ['IGCSE Biology', [['igcse-bio-core', 'Core'], ['igcse-bio-ext', 'Extended']], 1], ['IGCSE Chemistry', [['igcse-chem-core', 'Core'], ['igcse-chem-ext', 'Extended']], 1],
+    ['AS & A Level Biology', [['alevel-bio-as', 'AS Level'], ['alevel-bio-a2', 'A2 Level']], 1], ['AS & A Level Chemistry', [['alevel-chem-as', 'AS Level'], ['alevel-chem-a2', 'A2 Level (lessons coming soon)', 1]]]];
   function coursePicker(label) {
     return '<fieldset class="grp" id="rcs" style="border:1px solid var(--line);border-radius:12px;padding:12px"><legend><b>' + label + '</b></legend>' + CAT.map(function (c, i) {
       return '<div class="row2" style="justify-content:flex-start;gap:10px;padding:4px 0"><label class="chk" style="flex:1;min-width:200px"><input type="checkbox" data-course="' + i + '"' + (c[2] ? ' disabled' : '') + '> ' + E(c[0]) + (c[2] ? ' <span class="small muted">(lessons coming soon)</span>' : '') + '</label>' +
-        (c[1].length > 1 ? '<select data-level="' + i + '" aria-label="Grade or level for ' + E(c[0]) + '" style="max-width:190px">' + c[1].map(function (l) { return '<option value="' + l[0] + '">' + E(l[1]) + '</option>'; }).join('') + '</select>' : '') + '</div>'; }).join('') + '</fieldset>';
+        (c[1].length > 1 ? '<select data-level="' + i + '" aria-label="Grade or level for ' + E(c[0]) + '" style="max-width:190px">' + c[1].map(function (l) { return '<option value="' + l[0] + '"' + (l[2] ? ' disabled' : '') + '>' + E(l[1]) + '</option>'; }).join('') + '</select>' : '') + '</div>'; }).join('') + '</fieldset>';
   }
   function chosen() { var out = []; app.querySelectorAll('[data-course]:checked').forEach(function (b) { var i = +b.getAttribute('data-course'), s = app.querySelector('[data-level="' + i + '"]'); out.push(s ? s.value : CAT[i][1][0][0]); }); return out; }
   if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'student') return accountForm('student');
@@ -39,7 +40,7 @@
         'After signing up you choose your school or teacher, then your class. Your teacher approves you, and premium access opens the class materials.') + '</p>' +
       '<label class="f">Full name<input id="rn" autocomplete="name" required placeholder="' + (T ? 'Your name as students know it' : 'As it appears on your school records') + '"></label>' +
       (T ? '<label class="f">School (choose it from the list, or type it if it is new; "Private tutor" if you have none)<input id="rs" list="rsl" autocomplete="organization" required maxlength="120"><datalist id="rsl"></datalist></label>' : '') +
-      (T ? coursePicker('Courses you teach (one class is made for each, ready for your students, once your account is approved)') : L ? coursePicker('Courses you want to learn') : '') +
+      (T ? coursePicker('Courses you teach (one class is made for each, ready for your students, once your account is approved)') : L ? coursePicker('Courses you want to learn, with your level (HL includes the SL lessons; Extended includes Core)') : '') +
       '<label class="f">Email<input id="re" type="email" autocomplete="email" required></label>' +
       '<label class="f">Password (at least 8 characters)<input id="rp" type="password" autocomplete="new-password" minlength="8" required></label>' +
       '<label class="f">Confirm password<input id="rp2" type="password" autocomplete="new-password" required></label>' +

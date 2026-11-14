@@ -29,10 +29,14 @@
       var SELF = { 'grade-6': '8088c43e-df14-450b-96bf-be2a3d22ddc3', 'grade-7': 'ffae26ae-0729-45ff-a74d-d00a6a175c5d', 'grade-8': '0a9ddb8d-fd87-4d87-a8a6-af930adeda5e', 'grade-9': 'd3035007-4aff-4e81-897b-98fee264c440', 'grade-10': '555803ba-f054-47e5-88c0-9f7e8bf7b980',
         'bio-sl': 'def0764f-1b4b-4677-986a-7951a3a8bcc8', 'bio-hl': '4a8bc687-91c0-4a7f-bf50-4e6cd7c4c005', 'chem-sl': 'afcd66af-408f-414b-957f-fc5714573943', 'chem-hl': 'df1516ec-1dae-42ab-821c-d5d0bf01a884', 'phys-sl': '8e63926a-5ba1-4d5b-8888-7e2ec7693830', 'phys-hl': 'f233a3aa-de4e-4c49-a62f-9bff3c895343',
         'ess-sl': '0d843ca5-1e56-4b69-8c6e-493a60460f28', 'ess-hl': '8e664688-9126-436e-9a3d-76ce1591b904', 'maths-aa-sl': '65e0e834-5b20-47da-a599-2c55fdc9ecb1', 'maths-aa-hl': '95523f71-74cd-44fb-a91c-631622f5baa8', 'maths-ai-sl': '0db2a462-8905-4fbe-b88c-b46c66adf9b6', 'maths-ai-hl': '47038381-beac-45de-964c-12f7ef764d08',
-        'igcse-bio': '2374096e-b1db-4d43-bf80-312ad2975e00', 'igcse-chem': 'ae72a63f-16ab-4d7a-b508-5a832f5a0f13', 'alevel-bio': '22a62d37-9d0d-48ae-b7fa-e51fcc99a49b', 'alevel-chem': '13524323-f56c-499d-972c-8f9bc07cc4b1' };   // Independent learners class of each course
+        'igcse-bio': '2374096e-b1db-4d43-bf80-312ad2975e00', 'igcse-chem': 'ae72a63f-16ab-4d7a-b508-5a832f5a0f13', 'alevel-bio': '22a62d37-9d0d-48ae-b7fa-e51fcc99a49b', 'alevel-chem': '13524323-f56c-499d-972c-8f9bc07cc4b1',
+        'alevel-chem-as': 'aa2a9b6f-86a1-5fef-b41e-371a38acef7e', 'alevel-chem-a2': '3d0c6bd5-8c86-51eb-94d1-2f7da875f738', 'alevel-bio-as': 'e7e33efc-aa0d-5519-b6f0-377eac0cce72', 'alevel-bio-a2': '6cfe1147-4e25-5140-8e86-2ccf5a0dc64d',
+        'igcse-bio-core': 'b4412ae4-623a-5b9a-b674-32f76f0dd6de', 'igcse-bio-ext': 'a3cd0f9d-9bad-53ec-810f-020824fa6223', 'igcse-chem-core': '6f614fa4-f4aa-5761-9d01-ac8826f8cf6d', 'igcse-chem-ext': '7e4e0f52-a837-54da-b5de-2a176f39fdb7' };   // Independent learners class of each course
       try { sessionStorage.setItem('bv-courses-tried', '1'); } catch (e) {}
       app.innerHTML = '<p class="muted">Setting up your courses…</p>';
-      return md.courses.map(function (c) { return SELF[c]; }).filter(Boolean).reduce(function (p, id) { return p.then(function () { return S.db.rpc('request_join', { cid: id }).then(function () {}, function () {}); }); }, Promise.resolve())
+      return md.courses.filter(function (c) { return SELF[c]; }).reduce(function (p, c) { return p.then(function () { return S.db.rpc('request_join', { cid: SELF[c] }).then(function (x) {
+          var base = c.replace(/-(as|a2|core|ext)$/, ''); if (x && x.error && base !== c && SELF[base]) return S.db.rpc('request_join', { cid: SELF[base] }).then(function () {}, function () {});   // the level class is made by migration 032; until then the whole-course class
+        }, function () {}); }); }, Promise.resolve())
         .then(function () { return S.db.auth.updateUser({ data: { courses_applied: true } }); }).then(function () { location.reload(); }, function () { location.reload(); });
     }
     if (me.staff && !new URLSearchParams(location.search).get('student')) { location.href = '/staff/'; return; }

@@ -12,12 +12,18 @@
   function list() {
     app.innerHTML = '<p class="muted">Loading the Assessment centre…</p>';
     Promise.all([
-      S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results,topic_id, topics(name), quiz_classes(class_id, classes(id,name,archived_at))').in('published', (ME.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false }),
+      S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results,topic_id, topics(name), quiz_classes(class_id, published, classes(id,name,archived_at))').in('published', (ME.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false }),
       S.db.from('quiz_attempts').select('id,quiz_id,status,score,max_score,submitted_at,released').eq('student_id', ME.user.id),
       EXAM ? Promise.resolve({ data: [] }) : S.db.from('lessons').select('id,title,url,topic_id,sort_order,published').order('sort_order').then(function (r) { return r; }, function () { return { data: [] }; }),
-      EXAM ? Promise.resolve({ data: [] }) : S.db.from('topics').select('id,parent_id').then(function (r) { return r; }, function () { return { data: [] }; })
+      EXAM ? Promise.resolve({ data: [] }) : S.db.from('topics').select('id,parent_id').then(function (r) { return r; }, function () { return { data: [] }; }),
+      ME.staff ? Promise.resolve({ data: [] }) : S.db.from('material_requests').select('quiz_id,class_id,status').eq('student_id', ME.user.id).not('quiz_id', 'is', null).then(function (r) { return r.error ? { data: [] } : r; }, function () { return { data: [] }; })
     ]).then(function (x) {
       if (x[0].error) return fail(x[0]);
+      // a set linked to my class but not opened for it yet: shown with a lock; the teacher opens it when I ask
+      var myCls = {}; (ME.classes || []).forEach(function (c) { myCls[c.id] = 1; });
+      var asked = {}; ((x[4] && x[4].data) || []).forEach(function (r) { asked[r.quiz_id] = r.status; });
+      function lockOf(q) { if (ME.staff) return null; var links = (q.quiz_classes || []).filter(function (k) { return myCls[k.class_id]; });
+        if (!links.length || links.some(function (k) { return k.published; })) return null; return links[0].class_id; }
       // each set of exam-style questions is shown with the interactive lessons of its topic (the topic itself and its subtopics)
       var parent = {}; ((x[3] && x[3].data) || []).forEach(function (t) { parent[t.id] = t.parent_id; });
       var LES = ((x[2] && x[2].data) || []).filter(function (l) { return l.published !== false && l.url; });
@@ -29,7 +35,8 @@
         var mine = at.filter(function (a) { return a.quiz_id === q.id; }), done = mine.filter(function (a) { return a.status !== 'in_progress'; }), live = mine.filter(function (a) { return a.status === 'in_progress'; })[0];
         var open = (!q.opens_at || new Date(q.opens_at) <= now) && (!q.due_at || new Date(q.due_at) >= now), left = q.max_attempts - mine.length;
         var best = done.reduce(function (b, a) { var st = !q.show_results && !a.released ? 'held' : a.status; return a.score != null && (b == null || +a.score > b.score) ? { score: +a.score, max: +a.max_score, status: st } : b; }, null);
-        var btn = live ? '<a class="btn main sm" href="#' + q.id + '">Continue</a>' : open && left > 0 ? '<a class="btn main sm" href="#' + q.id + '">' + (done.length ? 'Try again' : 'Start') + '</a>' : done.length ? '<a class="btn sm" href="#' + q.id + '">See my result</a>' : '<span class="pill">' + (q.opens_at && new Date(q.opens_at) > now ? 'Opens ' + E(S.when(q.opens_at)) : 'Closed') + '</span>';
+        var lockCls = lockOf(q);
+        var btn = lockCls ? (asked[q.id] === 'pending' ? '<span class="pill">🔒 Requested · waiting for your teacher</span>' : '<span class="small muted">🔒 Opens when your teacher approves it</span> <button type="button" class="btn sm" data-reqq="' + q.id + '" data-cls="' + lockCls + '">' + (asked[q.id] === 'declined' ? 'Ask again' : 'Request') + '</button>') : live ? '<a class="btn main sm" href="#' + q.id + '">Continue</a>' : open && left > 0 ? '<a class="btn main sm" href="#' + q.id + '">' + (done.length ? 'Try again' : 'Start') + '</a>' : done.length ? '<a class="btn sm" href="#' + q.id + '">See my result</a>' : '<span class="pill">' + (q.opens_at && new Date(q.opens_at) > now ? 'Opens ' + E(S.when(q.opens_at)) : 'Closed') + '</span>';
         return '<article class="task"><div class="top2"><b>' + E(q.title) + '</b>' + (best ? '<span class="score">' + (best.status === 'held' ? 'Waiting for your teacher' : best.status === 'needs_marking' ? 'Being marked' : best.score + ' / ' + best.max) + '</span>' : '') + '</div>' +
           '<span class="small muted">' + [q.topics && q.topics.name, q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : 'No time limit', q.due_at ? 'Due ' + S.when(q.due_at) : '', q.max_attempts + ' attempt' + (q.max_attempts > 1 ? 's' : '')].filter(Boolean).map(E).join(' · ') + '</span>' +
           (q.instructions ? '<p class="small">' + E(q.instructions) + '</p>' : '') + '<div class="acts">' + btn + '</div>' + lessonsOf(q) + '</article>';
@@ -54,6 +61,8 @@
           return '<section class="grp panel"><h3 class="sec-h">🏫 ' + E(groups[g].name) + '</h3>' +
             '<h4>To do</h4>' + (todo.length ? todo.map(card).join('') : '<p class="emptybox">Nothing to do right now.</p>') +
             (past.length ? '<h4>Completed</h4>' + past.map(card).join('') : '') + '</section>'; }).join('');
+      app.querySelectorAll('[data-reqq]').forEach(function (b) { b.onclick = function () { b.disabled = true;
+        S.db.rpc('request_quiz', { qid: b.getAttribute('data-reqq'), cid: b.getAttribute('data-cls') }).then(function (r) { if (r.error) { b.disabled = false; alert(S.nice(r.error)); return; } list(); }); }; });
       app.querySelectorAll('[data-g]').forEach(function (b) { b.onclick = function () { var u = new URL(location.href); if (b.getAttribute('data-g')) u.searchParams.set('class', b.getAttribute('data-g')); else u.searchParams.delete('class'); history.replaceState(null, '', u); list(); }; });
     });
   }

@@ -30,6 +30,9 @@
 
       function count(t) { var n = (L[t.id] || []).length + (R[t.id] || []).length + (SIM[t.id] || []).length; (KIDS[t.id] || []).forEach(function (k) { n += count(k); }); return n; }
       function lessonCard(l) {
+        var lk = CAT[l.id];
+        if (lk) return '<div class="lcard" style="opacity:.92"><span class="ic">🔒</span><span><b>' + E(l.title) + '</b><span class="small muted">' + E(l.summary || '') + ' · opens when your teacher approves it</span></span>' +
+          (lk.status === 'pending' ? '<span class="pill">Requested · waiting</span>' : '<button type="button" class="btn sm" data-ask="' + l.id + '" data-cls="' + lk.class_id + '">' + (lk.status === 'declined' ? 'Ask again' : 'Request') + '</button>') + '</div>';
         var p = prog[l.id], pc = p ? p.percent : 0, il = /^IL-/.test(l.external_id || '');
         return '<a class="lcard" href="' + E(l.url || '#') + '"><span class="ic">' + (il ? '📘' : '🧪') + '</span><span><b>' + E(l.title) + '</b><span class="small muted">' + E(l.summary || '') + (l.max_marks ? ' · ' + l.max_marks + ' marks' : '') + '</span>' +
           '<span class="bar" title="' + pc + '% done"><i style="width:' + pc + '%"></i></span></span><span class="go">' + (p && p.status === 'completed' ? 'Review ✓' : p ? 'Continue' : 'Start') + '</span></a>';
@@ -42,10 +45,13 @@
       function match(t) { if (!q) return true; var txt = (t.name + ' ' + (t.code || '') + ' ' + (L[t.id] || []).map(function (l) { return l.title; }).join(' ')).toLowerCase(); return txt.indexOf(q) >= 0 || (KIDS[t.id] || []).some(match); }
       /* In a teacher's class you see the lessons your teacher added. The rest of the course can be asked for here; your teacher decides.
          (Needs migration 031; before that, and for independent learners, there is nothing to show.) */
-      var rq = document.createElement('section'); rq.id = 'lcreq'; app.before(rq);
+      var rq = document.createElement('section'); rq.id = 'lcreq'; app.before(rq); var CAT = {};
       function requests() {
         S.db.rpc('class_catalogue').then(function (r) {
-          var rows = r.data || []; if (r.error || !rows.length) { rq.innerHTML = ''; return; }
+          var rows = r.data || []; CAT = {}; if (!r.error) rows.forEach(function (x) { CAT[x.lesson_id] = x; });
+          var known = {}; lessons.forEach(function (l) { known[l.id] = 1; }); rows = rows.filter(function (x) { return !known[x.lesson_id]; });   // lessons already in the lists below get their Request button there
+          draw();
+          if (r.error || !rows.length) { rq.innerHTML = ''; return; }
           var by = {}, order = []; rows.forEach(function (x) { var k = x.class_name + ' · ' + x.topic; if (!by[k]) { by[k] = []; order.push(k); } by[k].push(x); });
           var waiting = rows.filter(function (x) { return x.status === 'pending'; }).length, was = rq.querySelector('details'), open = was && was.open;
           rq.innerHTML = '<details class="panel tint"' + (open ? ' open' : '') + '><summary style="cursor:pointer;font-weight:700">➕ Ask your teacher for more lessons <span class="small muted">' + rows.length + ' more in your course' + (waiting ? ' · ' + waiting + ' waiting for your teacher' : '') + '</span></summary>' +
@@ -58,7 +64,9 @@
       }
       if (!me.staff) requests();
       var grade = null; try { grade = localStorage.getItem('bv-grade'); } catch (e) {}
-      var MORE = { 'myp-science': '/myp/', 'ib-biology': '/ib/', 'a-level-biology': '/a-level/', 'igcse-biology': '/igcse/', 'ib-maths-aa': '/maths/', 'ib-maths-ai': '/maths/', 'ib-chemistry': '/chemistry/', 'igcse-chemistry': '/chemistry/', 'a-level-chemistry': '/chemistry/' };
+      var MORE = { 'myp-science': '/myp/', 'ib-biology': '/biology/', 'a-level-biology': '/biology/', 'igcse-biology': '/biology/', 'ib-maths-aa': '/maths/', 'ib-maths-ai': '/maths/', 'ib-chemistry': '/chemistry/', 'igcse-chemistry': '/chemistry/', 'a-level-chemistry': '/chemistry/', 'ib-physics': '/physics/', 'ib-ess': '/environmental-systems/' };
+      app.addEventListener('click', function (e) { var k = e.target.closest ? e.target.closest('[data-ask]') : null; if (!k) return; k.disabled = true;
+        S.db.rpc('request_material', { lid: k.getAttribute('data-ask'), cid: k.getAttribute('data-cls') }).then(function (x) { if (x.error) { k.disabled = false; alert(S.nice(x.error)); return; } requests(); }); });
       app.addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('[data-grade]') : null; if (!b) return; grade = b.getAttribute('data-grade'); try { localStorage.setItem('bv-grade', grade); } catch (x) {} draw(); });
       window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (h && subjects.some(function (z) { return z.slug === h; })) { cur = h; q = ''; draw(); } });
       function draw() {
@@ -72,7 +80,7 @@
         var grades = s.slug === 'myp-science' ? all0.map(function (t) { return t.programme; }).filter(function (g, i, a) { return g && a.indexOf(g) === i; }).sort() : [];
         if (grades.length > 1 && grades.indexOf(grade) < 0) grade = grades[0];
         var tops = all0.filter(function (t) { return grades.length < 2 || q || t.programme === grade; }).filter(match).filter(function (t) { return !onlyLessons || count(t); });
-        var bar = '<div class="lc-bar"><b>' + E(s.name) + '</b><a class="btn sm" href="/quizzes/">📝 Exam-style questions</a><a class="btn sm" href="/exams/">🧪 Examinations</a><a class="btn sm" href="/simulations/">🔬 Virtual labs</a>' + (MORE[s.slug] ? '<a class="btn sm" href="' + MORE[s.slug] + '">📂 Slides, videos and other resources</a>' : '') + '</div>' +
+        var bar = '<div class="lc-bar"><b>' + E(s.name) + '</b><a class="btn sm" href="/quizzes/">📝 Exam-style questions</a><a class="btn sm" href="/exams/">🧪 Examinations</a><a class="btn sm" href="/simulations/">🔬 Virtual labs</a>' + (MORE[s.slug] ? '<a class="btn sm" href="' + MORE[s.slug] + '">📚 Subject page: all levels</a>' : '') + '</div>' +
           (grades.length > 1 ? '<div class="lc-grades" role="group" aria-label="Grade">' + grades.map(function (g) { var n = +String(g).replace(/\D/g, ''); return '<button type="button" data-grade="' + E(g) + '" aria-pressed="' + (g === grade) + '">Grade ' + (n + 5) + ' <span class="small">· ' + E(g) + '</span></button>'; }).join('') + '</div>' : '');
         var make = me.staff ? '<div class="panel tint row2 lmake"><span><b>Teachers:</b> turn any file (PDF, Word, PowerPoint, Excel, web page, text or pictures) into an interactive six-step lesson. Use <b>＋ Add lesson</b> in a subtopic to file it there.</span><a class="btn main sm" href="/staff/#lessons/new">✨ Create an interactive lesson from a file</a></div>' : '';
         var addHere = function (t) { return me.staff ? '<a class="addles small" href="/staff/#lessons/new/' + t.id + '">＋ Add lesson</a>' : ''; };
