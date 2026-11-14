@@ -283,6 +283,7 @@
     else if (/\bib\b|\bdp ?\d?\b|diploma|\b(bio|chem|phys|ess)-(hl|sl)\b/.test(t)) k.prog = 'IB DP';
     k.subj = /\bess\b|environmental/.test(t) ? 'environmental' : /chem/.test(t) ? 'chemistry' : /phys/.test(t) ? 'physics' : /\bbio/.test(t) ? 'biology' : '';
     if (!k.prog && k.subj) k.prog = 'IB DP';   // "Chemistry", "PHYSICS": the site's subject classes are IB DP
+    k.level = /\bhl\b|-hl\b|higher/.test(t) ? 'HL' : /\bsl\b|-sl\b|standard/.test(t) ? 'SL' : '';
     k.any = !k.prog;
     k.label = k.any ? '' : (k.prog === 'IB DP' && k.subj ? 'IB DP ' + k.subj.replace('environmental', 'ESS').replace(/^./, function (x) { return x.toUpperCase(); }) : k.prog);
     return k;
@@ -292,7 +293,14 @@
     var subj = ((t.subjects || p.subjects || {}).name || '').toLowerCase();
     return { prog: t.programme || p.programme || '', subj: subj, sname: (t.subjects || p.subjects || {}).name || '' };
   }
+  function guessKey(it) {   // simulations and links with no topic: read the subject from the title
+    var t = (it.title || '') + ' ' + (it.url || '');
+    if (/titration|acid|chromatograph|separating|mixture|enthalpy|redox/i.test(t)) return { prog: /chromatograph|separating|mixture/i.test(t) ? 'MYP 1' : 'IB DP', subj: 'chemistry' };
+    if (/circuit|force|wave|motion|projectile/i.test(t)) return { prog: 'IB DP', subj: 'physics' };
+    return { prog: 'IB DP', subj: 'biology', loose: true };
+  }
   function keyFits(k, want) {
+    if (k.loose && want.subj !== 'chemistry' && want.subj !== 'physics') return true;   // biology labs suit any biology or science class
     if (want.any) return true;
     if (!sameProg(k.prog, want.prog)) return false;
     return !want.subj || !k.subj || k.subj.indexOf(want.subj) >= 0 || (k.subj.indexOf('science') >= 0 && want.prog.indexOf('MYP') === 0);
@@ -304,30 +312,44 @@
   }
   function urlFor(kind, it) { return kind === 'quiz' ? ({ exam: '/exams/', lesson: '/lesson/' }[it.category] || '/quizzes/') + '#' + it.id : it.url || ''; }
   // The "Set work" form. kids: the class roster; pre: students ticked to start with (empty = whole class).
+  var MATS = {};
+  function classMats(cid) {
+    if (MATS[cid]) return Promise.resolve(MATS[cid]);
+    return S.db.from('class_materials').select('path,sort').eq('class_id', cid).order('sort').then(function (r) { MATS[cid] = (r.data || []).map(function (x) { return x.path; }); return MATS[cid]; });
+  }
   function assignForm(host, c, kids, pre, done) {
-    pickLists().then(function (L) {
+    Promise.all([pickLists(), classMats(c.id)]).then(function (x) { return x[0]; }).then(function (L) {
       // Only this class's lessons by default (its programme and subject), grouped by topic; "other classes" is opt-in.
-      var want = classKey(c), others = false, q = '';
-      var fits = function (it) { var k = topicKey(it.topic_id); return keyFits(k, want); };
+      // Only this class's materials: its own lessons (class_materials), quizzes and exams set for it, and notes,
+      // files and simulations for its programme, subject and level (SL classes do not get HL-only items).
+      var want = classKey(c), q = '', own = MATS[c.id] || [];
+      var hlOnly = function (t) { return /\(HL\)|\bAHL\b|HL only/i.test(t || ''); };
+      var levelOk = function (t) { return want.level !== 'SL' || !hlOnly(t); };
+      var fits = function (it) {
+        if (!levelOk(it.title)) return false;
+        if (it.topic_id) return keyFits(topicKey(it.topic_id), want);
+        return keyFits(guessKey(it), want);
+      };
       var opts = function (kind) {
-        var match = function (t) { return !q || t.toLowerCase().indexOf(q) >= 0; };
+        var match = function (t) { return !q || (t || '').toLowerCase().indexOf(q) >= 0; };
         if (kind === 'quiz') {
-          var mine = function (x) { return (x.quiz_classes || []).some(function (r) { return r.class_id === c.id; }); };
-          var qs = L.quiz.filter(function (x) { return match(x.title) && (others || mine(x) || !L.quiz.some(mine)); });
-          return qs.map(function (x) { return '<option value="' + x.id + '">' + (x.category === 'exam' ? '🧪 ' : x.category === 'lesson' ? '📘 ' : '📝 ') + E(x.title) + (x.published ? '' : ' (draft)') + '</option>'; }).join('');
+          var qs = L.quiz.filter(function (x) { return match(x.title) && (x.quiz_classes || []).some(function (r) { return r.class_id === c.id; }); });
+          return qs.map(function (x) { return '<option value="' + x.id + '">' + (x.category === 'exam' ? '🧪 Exam · ' : x.category === 'lesson' ? '📘 ' : '📝 ') + E(x.title) + (x.published ? '' : ' (draft)') + '</option>'; }).join('');
         }
-        var all = (L[kind] || []).filter(function (it) { return match(it.title); });
-        var list = want.any || others ? all : all.filter(fits);
-        if (!list.length && !others && !q) list = all;   // nothing tagged for this class yet: show everything rather than an empty list
+        var list = (L[kind] || []).filter(function (it) {
+          if (!match(it.title)) return false;
+          if (kind === 'lesson' && own.length) return own.indexOf(it.url) >= 0;
+          return want.any || fits(it);
+        });
+        if (kind === 'lesson' && own.length) list.sort(function (a, b) { return own.indexOf(a.url) - own.indexOf(b.url); });
         var groups = [], by = {};
-        list.forEach(function (it) { var g = topicLabel(it.topic_id, !fits(it)); if (!by[g]) { by[g] = []; groups.push(g); } by[g].push(it); });
-        if (others && !want.any) groups.sort(function (a, b) { return (a.indexOf(' · ') > 0) - (b.indexOf(' · ') > 0); });   // this class's topics first
+        list.forEach(function (it) { var g = topicLabel(it.topic_id, false); if (!by[g]) { by[g] = []; groups.push(g); } by[g].push(it); });
         return groups.map(function (g) { return '<optgroup label="' + E(g) + '">' + by[g].map(function (it) { return '<option value="' + it.id + '">' + E(it.title) + '</option>'; }).join('') + '</optgroup>'; }).join('');
       };
       host.innerHTML = '<section class="panel tint"><h3 style="margin-top:0">📌 Set work' + (pre.length === 1 ? ' for ' + E((kids.filter(function (k) { return k.id === pre[0]; })[0] || {}).full_name || 'this student') : ' for ' + E(c.name)) + '</h3>' +
         '<div class="row2" style="flex-wrap:wrap;justify-content:flex-start;align-items:flex-end">' +
         '<label class="f">What<select id="ak"><option value="lesson">🧪 Lesson (interactive or Learning centre)</option><option value="quiz">📝 Quiz or exam</option><option value="resource">📄 Notes or file</option><option value="sim">🔬 Simulation</option><option value="link">🔗 Web link</option><option value="task">✏️ Other task (book, homework…)</option></select></label>' +
-        '<label class="f" id="aiw" style="min-width:280px;flex:1">Which <span class="small muted" id="aif"></span><input id="aq" type="search" placeholder="Search…" style="margin-bottom:6px"><select id="ai"></select><span class="small"><label class="chk"><input type="checkbox" id="aoth"> Show items from other classes too</label></span></label><label class="f" id="auw" hidden style="flex:1">Link<input id="au" type="url" placeholder="https://"></label></div>' +
+        '<label class="f" id="aiw" style="min-width:280px;flex:1">Which <span class="small muted" id="aif"></span><input id="aq" type="search" placeholder="Search…" style="margin-bottom:6px"><select id="ai"></select></label><label class="f" id="auw" hidden style="flex:1">Link<input id="au" type="url" placeholder="https://"></label></div>' +
         '<div class="row2" style="flex-wrap:wrap;justify-content:flex-start"><label class="f" style="flex:1;min-width:240px">Title<input id="at" maxlength="160"></label><label class="f">Due<input id="ad" type="datetime-local"></label></div>' +
         '<label class="f">Instructions for students (optional)<textarea id="ain" rows="2" placeholder="e.g. Finish steps 1–3 and correct your answers in your book."></textarea></label>' +
         '<fieldset style="border:1px solid var(--line);border-radius:10px;padding:8px 12px"><legend class="small"><b>Who</b></legend>' +
@@ -338,10 +360,10 @@
       var $ = function (q) { return host.querySelector(q); };
       function fill() { var k = $('#ak').value, picks = ['lesson', 'quiz', 'resource', 'sim'].indexOf(k) >= 0;
         $('#aiw').hidden = !picks; $('#auw').hidden = k !== 'link';
-        if (picks) { var o = opts(k), n = (o.match(/<option /g) || []).length; $('#ai').innerHTML = '<option value="">Choose… (' + n + ')</option>' + o;
-          $('#aif').textContent = others || want.any ? '' : k === 'quiz' ? '· quizzes for ' + c.name : '· ' + want.label; } }
+        if (picks) { var o = opts(k), n = (o.match(/<option /g) || []).length;
+          $('#ai').innerHTML = '<option value="">' + (n ? 'Choose… (' + n + ' for ' + E(c.name) + ')' : q ? 'Nothing matches your search' : k === 'quiz' ? 'No quizzes or exams set for this class yet' : 'Nothing for this class yet') + '</option>' + o;
+          $('#aif').textContent = '· ' + c.name + (want.label ? ' (' + want.label + (want.level ? ' ' + want.level : '') + ')' : ''); } }
       $('#aq').oninput = function () { q = this.value.trim().toLowerCase(); fill(); };
-      $('#aoth').onchange = function () { others = this.checked; fill(); };
       $('#ak').onchange = function () { fill(); $('#at').value = ''; };
       $('#ai').onchange = function () { var k = $('#ak').value, it = (L[k] || []).filter(function (x) { return x.id === $('#ai').value; })[0]; if (it) $('#at').value = it.title; };
       host.querySelectorAll('[name=aw]').forEach(function (r) { r.onchange = function () { $('#asl').hidden = host.querySelector('[name=aw]:checked').value !== 'some'; }; });
