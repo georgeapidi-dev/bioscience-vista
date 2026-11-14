@@ -1828,6 +1828,16 @@
       var ids = sess.map(function (s2) { return s2.id; });
       return (ids.length ? S.db.from('attendance').select('session_id,student_id,status,note').in('session_id', ids) : Promise.resolve({ data: [] })).then(function (a) {
         var marks = {}; (a.data || []).forEach(function (r) { (marks[r.session_id] = marks[r.session_id] || {})[r.student_id] = r; });
+        // registers fill themselves in: today's register is made automatically with every student in the class (marked present),
+        // and anyone who joins the class later is added to today's register as soon as it is opened
+        var today = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10), T0 = sess.filter(function (s2) { return s2.held_on === today; })[0];
+        if (kids.length && !T0 && !state.autoDone) { state.autoDone = true;
+          return S.db.from('class_sessions').insert({ class_id: c.id, held_on: today, title: 'Lesson · ' + new Date().toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' }) }).select('id').single().then(function (r) {
+            if (r.error) { toast(S.nice(r.error), true); return; } state.session = r.data.id;
+            return S.db.from('attendance').insert(kids.map(function (k) { return { session_id: r.data.id, student_id: k.id, status: 'present' }; })).then(function () { toast('Today\'s register is ready with ' + kids.length + ' students'); return registerBoard(body, c, state); }); }); }
+        if (T0) { var missing = kids.filter(function (k) { return !(marks[T0.id] || {})[k.id]; });
+          if (missing.length && !state.autoAdd) { state.autoAdd = true;
+            return S.db.from('attendance').insert(missing.map(function (k) { return { session_id: T0.id, student_id: k.id, status: 'present' }; })).then(function () { return registerBoard(body, c, state); }); } }
         var pick = state.session && sess.some(function (s2) { return s2.id === state.session; }) ? state.session : (sess[0] && sess[0].id);
         var S0 = sess.filter(function (s2) { return s2.id === pick; })[0];
         // attendance % per student over all registers
@@ -1835,7 +1845,7 @@
         body.innerHTML = '<section class="panel tint"><form id="nreg" class="row2" style="flex-wrap:wrap;justify-content:flex-start;gap:8px"><b>＋ New register</b><input type="date" id="rd" value="' + new Date().toISOString().slice(0, 10) + '" aria-label="Date">' +
           '<select id="rl" aria-label="Lesson" style="min-width:240px"><option value="">Lesson taught (optional)…</option>' + own.map(function (pth) { return '<option value="' + E(pth) + '">' + E(mt[pth] || pth) + '</option>'; }).join('') + '</select>' +
           '<input id="rt" placeholder="Title, e.g. Period 3 · Osmosis practical" maxlength="160" style="flex:1;min-width:200px"><button class="btn main sm" type="submit">Create register</button></form>' +
-          '<p class="small muted">Make a register for every lesson you teach. Everyone starts as present; tap a student to change it. Marks save straight away.</p></section>' +
+          '<p class="small muted">Today\'s register is made for you automatically with every student\'s name, and students who join the class are added straight away. Everyone starts as present: tap Late, Absent or Excused to change it. Marks save straight away. Add another register here for a second lesson on the same day.</p></section>' +
           (sess.length ? '<div class="row2" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><label class="f">Register<select id="rs">' + sess.map(function (s2) { var n = Object.keys(marks[s2.id] || {}).length;
             return '<option value="' + s2.id + '"' + (s2.id === pick ? ' selected' : '') + '>' + E(s2.held_on) + ' · ' + E(s2.title) + ' (' + n + '/' + kids.length + ')</option>'; }).join('') + '</select></label>' +
             '<button class="btn sm" type="button" id="rall">✓ Mark everyone not yet marked present</button><button class="btn sm" type="button" id="rdel">Delete this register</button></div>' : '<p class="emptybox">No registers yet. Create one above for today\'s lesson.</p>') +
