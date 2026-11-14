@@ -4,6 +4,7 @@
   var BV = window.BV || {};
   if (!BV.sbUrl || !BV.sbKey || !window.supabase || !window.fetch) return;
   var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } }), who = null;
+  window.BV_LDB = db;   // the question tools send a student's graphs and drawings with the same sign-in (site_assets/qtools.js)
   // "Try again" from the dashboard: clear this lesson's saved answers on this device and start a new attempt.
   // The first attempt's mark stays on record for class students; independent learners keep their best mark.
   var QS0 = new URLSearchParams(location.search), LID = QS0.get('lid') || window.LESSON_ID || (window.SPEC && SPEC.id) || '', AK = 'lv-attempt:' + location.pathname;

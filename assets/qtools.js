@@ -270,9 +270,22 @@
         if (k === 'table') { w.appendChild(T.tableTool(ta)); return; }
         var sk = 'bv-pad:' + location.pathname + ':' + key + ':' + k, saved = ''; try { saved = localStorage.getItem(sk) || ''; } catch (e) {}
         var note = k === 'graph' ? '[My graph is drawn in the graph tool.]' : '[My diagram is drawn in the drawing tool.]';
-        w.innerHTML = '<div data-padhost></div><p class="small muted" style="margin:4px 0 0">Your ' + (k === 'graph' ? 'graph' : 'drawing') + ' is kept on this device with the lesson. Describe it in your written answer too.</p>';
+        var what = k === 'graph' ? 'graph' : 'drawing';
+        w.innerHTML = '<div data-padhost></div><p class="small muted" data-sent style="margin:4px 0 0">Your ' + what + ' is saved as you work.</p>';
+        var sent = w.querySelector('[data-sent]'), timer = null;
+        function send() {   // the picture goes to the teacher with the student's sign-in (table lesson_drawings, migration 035); until then it stays on this device
+          var d = ''; try { d = pad && pad.get && pad.get(); } catch (e) {} if (!d) return;
+          var db = window.BV_LDB; if (!db) { sent.textContent = 'Your ' + what + ' is kept on this device.'; return; }
+          db.auth.getSession().then(function (r) {
+            if (!(r.data && r.data.session)) { sent.textContent = 'Your ' + what + ' is kept on this device. Sign in to send it to your teacher.'; return; }
+            var lesson = String(window.LESSON_ID || (window.SPEC && window.SPEC.id) || location.pathname.replace(/\//g, '') || 'lesson').slice(0, 60);
+            return db.from('lesson_drawings').upsert({ lesson: lesson, path: location.pathname.slice(0, 120), qkey: String(key).slice(0, 60), kind: k === 'graph' ? 'graph' : 'draw', label: String(text || '').replace(/\s+/g, ' ').trim().slice(0, 300), image: d, updated_at: new Date().toISOString() }, { onConflict: 'student_id,lesson,qkey,kind' })
+              .then(function (x) { sent.textContent = x.error ? 'Your ' + what + ' is kept on this device (it could not be sent just now).' : '✓ Your ' + what + ' was sent to your teacher at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '.'; });
+          }).then(null, function () { sent.textContent = 'Your ' + what + ' is kept on this device (it could not be sent just now).'; });
+        }
         var pad = T.pad(w.querySelector('[data-padhost]'), { mode: k === 'graph' ? 'graph' : 'draw', value: saved, onchange: function () {
           try { var d = pad && pad.get && pad.get(); if (d) localStorage.setItem(sk, d); } catch (e) {}
+          sent.textContent = 'Saving your ' + what + '…'; clearTimeout(timer); timer = setTimeout(send, 1500);
           if (ta.value.indexOf(note) < 0) { ta.value = ta.value.replace(/\s+$/, '') + (ta.value.trim() ? '\n' : '') + note; fire(ta); } } });
       };
       bar.appendChild(b);

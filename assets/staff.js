@@ -158,6 +158,11 @@
     });
     return order.map(function (k) { var x = g[k], p = lwParse(x.latest.answers); x.total = p.total; x.max = p.max; x.fb = p.fb; return x; });
   }
+  function lwDraw(g) {   // graphs and drawings the student made inside the lesson's questions (migration 035; before it the list is empty)
+    if (g.drawLoaded) return Promise.resolve(); var done = function (rows) { g.draw = rows || []; g.drawLoaded = true; };
+    if (!g.sid) { done([]); return Promise.resolve(); }
+    return S.db.from('lesson_drawings').select('qkey,kind,label,image,updated_at').eq('student_id', g.sid).eq('lesson', g.lesson).order('qkey').then(function (r) { done(r.error ? [] : r.data); }, function () { done([]); });
+  }
   function lwDoc(x) {
     var info = (LW.steps || {})[x.lesson] || { title: x.lesson, steps: {} }, spec = ((LW.specs || {})[x.lesson] || {}).spec || {}, models = spec.models || {};
     var nums = Object.keys(info.steps).length ? Object.keys(info.steps) : Object.keys(x.steps); nums = nums.map(Number).sort(function (a, b) { return a - b; });
@@ -189,6 +194,8 @@
       if (fb && fb.text) h += '<div class="fb"><b>Feedback:</b> ' + E(fb.text) + '</div>';
       h += '</section>';
     });
+    if (x.draw && x.draw.length) h += '<section class="step"><div class="sh"><div><div class="ph">Made with the tools inside the questions</div><h2>Graphs and drawings</h2></div></div>' + x.draw.map(function (d) {
+      return '<div class="qa"><div class="q">' + E((d.kind === 'graph' ? 'Graph' : 'Drawing') + ' · ' + (d.label || d.qkey)) + '</div><img src="' + E(d.image) + '" alt="' + (d.kind === 'graph' ? 'Student graph' : 'Student drawing') + '" style="max-width:100%;border:1px solid #cbd5e1;border-radius:8px;background:#fff"><div class="small" style="color:#64748b">Last changed ' + E(S.when(d.updated_at)) + '</div></div>'; }).join('') + '</section>';
     return h + '<p class="foot">Lesson by Learnova · biosciencevista.com · printed ' + E(new Date().toLocaleString()) + '</p></div></body></html>';
   }
   function lessonWork(p, args) {
@@ -227,14 +234,15 @@
             '<div class="acts"><button type="button" class="btn sm main" data-v="' + E(g.key) + '">📄 View completed lesson</button><button type="button" class="btn sm" data-d="' + E(g.key) + '" title="Download as an HTML file">⬇ HTML</button></div></div>';
         }).join('') : '<p class="emptybox">No lesson work matches.</p>';
         var byKey = {}; groups.forEach(function (g) { byKey[g.key] = g; });
-        p.querySelectorAll('[data-v]').forEach(function (b) { b.onclick = function () { var g = byKey[b.getAttribute('data-v')], d = p.querySelector('#lwdoc'), html = lwDoc(g);
+        p.querySelectorAll('[data-v]').forEach(function (b) { b.onclick = function () { var g = byKey[b.getAttribute('data-v')]; if (!g.drawLoaded) lwDraw(g).then(function () { if (g.draw.length) b.onclick(); });   /* the student's graphs and drawings arrive a moment later and are added to the document */
+          var d = p.querySelector('#lwdoc'), html = lwDoc(g);
           d.innerHTML = '<section class="panel"><div class="row2"><h3 style="margin:0">' + E(g.student) + ' · ' + E((LW.steps[g.lesson] || {}).title || g.lesson) + '</h3><div class="acts"><button type="button" class="btn sm" id="lwopen">↗ Open in a new tab / print</button><button type="button" class="btn sm" id="lwdl">⬇ Download HTML</button><button type="button" class="btn sm" id="lwx">Close</button></div></div><iframe class="lwframe" title="Completed lesson"></iframe></section>';
           d.querySelector('iframe').srcdoc = html;
           d.querySelector('#lwx').onclick = function () { d.innerHTML = ''; };
           d.querySelector('#lwdl').onclick = function () { lwSave(g, html); };
           d.querySelector('#lwopen').onclick = function () { var w = window.open(URL.createObjectURL(new Blob([html], { type: 'text/html' })), '_blank'); if (!w) toast('Allow pop-ups to open the lesson.', true); };
           d.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
-        p.querySelectorAll('[data-d]').forEach(function (b) { b.onclick = function () { var g = byKey[b.getAttribute('data-d')]; lwSave(g, lwDoc(g)); }; });
+        p.querySelectorAll('[data-d]').forEach(function (b) { b.onclick = function () { var g = byKey[b.getAttribute('data-d')]; lwDraw(g).then(function () { lwSave(g, lwDoc(g)); }); }; });
       }
       ['#lwl', '#lws'].forEach(function (s) { p.querySelector(s).addEventListener('input', draw); });
       draw();
