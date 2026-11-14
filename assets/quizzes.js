@@ -1,8 +1,8 @@
-/* Quiz centre · Learnova (marking is done on the server by submit_quiz) */
+/* Assessment centre · Learnova: exam-style questions (/quizzes/) and examinations (/exams/). Marking is done on the server by submit_quiz. */
 (function () {
   var T = window.BVT;
   var S = window.BVS, E = S.E, app = document.getElementById('app'), timer = null, beat = null, GUARD = null, ME;
-  var EXAM = app.getAttribute('data-mode') === 'exam', NOUN = EXAM ? 'exam' : 'quiz', HOME = EXAM ? '/exams/' : '/quizzes/';
+  var EXAM = app.getAttribute('data-mode') === 'exam', NOUN = EXAM ? 'examination' : 'question set', HOME = EXAM ? '/exams/' : '/quizzes/';
   S.guard(app).then(function (me) { ME = me; route(); window.addEventListener('hashchange', route); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
@@ -10,12 +10,19 @@
   function fail(r) { app.innerHTML = '<section class="panel"><p class="msg">' + E(S.nice(r.error || r)) + '</p><p><a href="#">← All ' + NOUN + 's</a></p></section>'; }
 
   function list() {
-    app.innerHTML = '<p class="muted">Loading quizzes…</p>';
+    app.innerHTML = '<p class="muted">Loading the Assessment centre…</p>';
     Promise.all([
-      S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results, topics(name), quiz_classes(class_id, classes(id,name,archived_at))').in('published', (ME.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false }),
-      S.db.from('quiz_attempts').select('id,quiz_id,status,score,max_score,submitted_at,released').eq('student_id', ME.user.id)
+      S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results,topic_id, topics(name), quiz_classes(class_id, classes(id,name,archived_at))').in('published', (ME.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false }),
+      S.db.from('quiz_attempts').select('id,quiz_id,status,score,max_score,submitted_at,released').eq('student_id', ME.user.id),
+      EXAM ? Promise.resolve({ data: [] }) : S.db.from('lessons').select('id,title,url,topic_id,sort_order,published').order('sort_order').then(function (r) { return r; }, function () { return { data: [] }; }),
+      EXAM ? Promise.resolve({ data: [] }) : S.db.from('topics').select('id,parent_id').then(function (r) { return r; }, function () { return { data: [] }; })
     ]).then(function (x) {
       if (x[0].error) return fail(x[0]);
+      // each set of exam-style questions is shown with the interactive lessons of its topic (the topic itself and its subtopics)
+      var parent = {}; ((x[3] && x[3].data) || []).forEach(function (t) { parent[t.id] = t.parent_id; });
+      var LES = ((x[2] && x[2].data) || []).filter(function (l) { return l.published !== false && l.url; });
+      function lessonsOf(q) { if (!q.topic_id) return ''; var ls = LES.filter(function (l) { return l.topic_id === q.topic_id || parent[l.topic_id] === q.topic_id; }); if (!ls.length) return '';
+        return '<div class="qlessons"><span class="small muted">📘 Interactive lessons for this topic</span><div class="cta" style="justify-content:flex-start">' + ls.map(function (l) { return '<a class="btn sm" href="' + E(l.url) + '">' + E(String(l.title || '').split(':')[0]) + '</a>'; }).join('') + '</div></div>'; }
       var qs = x[0].data || [], at = x[1].data || [], now = new Date();
       if (ME.staff) qs = qs.filter(function () { return true; });
       function card(q) {
@@ -25,7 +32,7 @@
         var btn = live ? '<a class="btn main sm" href="#' + q.id + '">Continue</a>' : open && left > 0 ? '<a class="btn main sm" href="#' + q.id + '">' + (done.length ? 'Try again' : 'Start') + '</a>' : done.length ? '<a class="btn sm" href="#' + q.id + '">See my result</a>' : '<span class="pill">' + (q.opens_at && new Date(q.opens_at) > now ? 'Opens ' + E(S.when(q.opens_at)) : 'Closed') + '</span>';
         return '<article class="task"><div class="top2"><b>' + E(q.title) + '</b>' + (best ? '<span class="score">' + (best.status === 'held' ? 'Waiting for your teacher' : best.status === 'needs_marking' ? 'Being marked' : best.score + ' / ' + best.max) + '</span>' : '') + '</div>' +
           '<span class="small muted">' + [q.topics && q.topics.name, q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : 'No time limit', q.due_at ? 'Due ' + S.when(q.due_at) : '', q.max_attempts + ' attempt' + (q.max_attempts > 1 ? 's' : '')].filter(Boolean).map(E).join(' · ') + '</span>' +
-          (q.instructions ? '<p class="small">' + E(q.instructions) + '</p>' : '') + '<div class="acts">' + btn + '</div></article>';
+          (q.instructions ? '<p class="small">' + E(q.instructions) + '</p>' : '') + '<div class="acts">' + btn + '</div>' + lessonsOf(q) + '</article>';
       }
       // each quiz sits under the class it is set for (a student sees only their own classes)
       var mine = {}; (ME.classes || []).forEach(function (c) { mine[c.id] = c.name; });
@@ -38,7 +45,8 @@
       order.sort(function (a, b) { return groups[a].name.localeCompare(groups[b].name); });
       var isDone = function (q) { return at.some(function (a) { return a.quiz_id === q.id && a.status !== 'in_progress'; }); };
       var pick = new URLSearchParams(location.search).get('class') || (order.length === 1 ? order[0] : '');
-      app.innerHTML = '<div class="row2"><div><p class="label">' + (EXAM ? 'Online exams' : 'Quiz centre') + '</p><h2>Your ' + NOUN + 's</h2></div><a class="btn sm" href="/dashboard/">My dashboard</a></div>' +
+      app.innerHTML = '<div class="row2"><div><p class="label">Assessment centre</p><h2>' + (EXAM ? 'Examinations' : 'Exam-style questions') + '</h2><p class="muted small">' + (EXAM ? 'Timed examinations set by your teacher.' : 'Topic-by-topic practice questions, each with the interactive lessons it goes with.') + '</p></div><a class="btn sm" href="/dashboard/">My dashboard</a></div>' +
+        '<nav class="cta" aria-label="Assessment centre" style="justify-content:flex-start;margin:6px 0 14px"><a class="btn' + (EXAM ? '' : ' main') + '" href="/quizzes/"' + (EXAM ? '' : ' aria-current="page"') + '>📝 Exam-style questions</a><a class="btn' + (EXAM ? ' main' : '') + '" href="/exams/"' + (EXAM ? ' aria-current="page"' : '') + ' style="--c:#7c3aed">🧪 Examinations</a></nav>' +
         (ME.staff ? '<p class="panel tint small">You are signed in as an admin. Students only see ' + NOUN + 's set for their own classes. Build and set them in the <a href="/staff/#quizzes">Teacher dashboard</a>.</p>' : '') +
         (!order.length && !ME.staff ? '<p class="panel tint">Join a class on <a href="/dashboard/">your dashboard</a> to see your ' + NOUN + 's.</p>' : '') +
         (order.length > 1 ? '<div class="cta" role="tablist"><button type="button" class="btn sm' + (pick ? '' : ' main') + '" data-g="">All classes</button>' + order.map(function (g) { return '<button type="button" class="btn sm' + (pick === g ? ' main' : '') + '" data-g="' + E(g) + '">' + E(groups[g].name) + ' (' + groups[g].qs.length + ')</button>'; }).join('') + '</div>' : '') +
