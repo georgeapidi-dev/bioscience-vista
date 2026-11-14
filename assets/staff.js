@@ -11,7 +11,7 @@
   // My classes is colourful: every class has its own colour, used on its buttons, cards and page banner
   var HUES = ['#7c3aed', '#2563eb', '#0891b2', '#059669', '#ea580c', '#db2777', '#ca8a04', '#dc2626', '#4f46e5', '#0d9488'];
   function hue(id) { var i = CLASSES.map(function (c) { return c.id; }).indexOf(id); if (i < 0) { i = 0; for (var k = 0; k < String(id).length; k++) i = (i * 31 + String(id).charCodeAt(k)) >>> 0; } return HUES[i % HUES.length]; }
-  (function () { if (!TEACH || document.getElementById('teach-css')) return; var st = document.createElement('style'); st.id = 'teach-css'; st.textContent = [
+  (function () { if (document.getElementById('teach-css')) return; var st = document.createElement('style'); st.id = 'teach-css'; st.textContent = [
     '.teach-ui nav.tabs{gap:8px;border:0}',
     '.teach-ui nav.tabs a{--k:#2563eb;border:2px solid color-mix(in srgb,var(--k) 35%,transparent);background:color-mix(in srgb,var(--k) 10%,transparent);color:var(--k);font-weight:700;border-radius:999px;transition:transform .15s,box-shadow .15s}',
     '.teach-ui nav.tabs a:hover{transform:translateY(-2px);box-shadow:0 6px 16px color-mix(in srgb,var(--k) 30%,transparent)}',
@@ -80,11 +80,11 @@
     clearInterval(LIVE);
     var h = location.hash.slice(1).split('/'), tab = h[0] || 'overview';
     if (ADMIN_TABS.indexOf(tab) >= 0 && (!ME.admin || TEACH)) tab = 'overview';
-    var head = '<div class="row2"><div><p class="label">' + (TEACH ? 'My classes' + (ME.profile.school_name ? ' · ' + E(ME.profile.school_name) : '') : 'Main site · courses and their classes') + '</p><h2>' + E(ME.profile.full_name || ME.user.email) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><div class="cta">' + (TEACH ? '<a class="btn sm" href="/messages/">Messages</a>' + (ME.admin ? '' : '<a class="btn sm" href="/premium/">Premium</a>') : ME.admin ? '<a class="btn main sm" href="/admin/">Admin: join requests, members, payments</a>' : '') + '<button class="btn sm" type="button" id="so">Log out</button></div></div>' +
+    var head = '<div class="row2 cband" style="--k:' + (TEACH ? '#059669' : '#2563eb') + '"><div><p class="label">' + (TEACH ? 'My classes' + (ME.profile.school_name ? ' · ' + E(ME.profile.school_name) : '') : 'Main site · courses and their classes') + '</p><h2>' + E(ME.profile.full_name || ME.user.email) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><div class="cta">' + '<a class="btn sm" href="/board/">🖊 Whiteboard</a>' + (TEACH ? '<a class="btn sm" href="/messages/">Messages</a>' + (ME.admin ? '' : '<a class="btn sm" href="/premium/">Premium</a>') : ME.admin ? '<a class="btn main sm" href="/admin/">Admin: join requests, members, payments</a>' : '') + '<button class="btn sm" type="button" id="so">Log out</button></div></div>' +
       '<nav class="tabs" aria-label="Teacher sections">' + TABS.filter(function (t) { return ADMIN_TABS.indexOf(t[0]) < 0 || (ME.admin && !TEACH); }).map(function (t) { return '<a href="#' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</a>'; }).join('') + '</nav><div id="pane"><p class="muted">Loading…</p></div>';
     app.innerHTML = head; app.querySelector('#so').onclick = S.signOut;
-    app.classList.toggle('teach-ui', TEACH);
-    if (TEACH) app.querySelectorAll('nav.tabs a').forEach(function (a) { var k = TABHUE[a.getAttribute('href').slice(1)]; if (k) a.style.setProperty('--k', k); });
+    app.classList.add('teach-ui');
+    app.querySelectorAll('nav.tabs a').forEach(function (a) { var k = TABHUE[a.getAttribute('href').slice(1)]; if (k) a.style.setProperty('--k', k); });
     var pane = app.querySelector('#pane');
     ({ overview: TEACH ? teachOverview : overview, work: lessonWork, questions: helpDesk, labs: labWork, approvals: TEACH ? teachApprovals : approvals, activity: activity, lessons: lessons, classes: TEACH ? teachClasses : classes, students: students, quizzes: quizzes, marking: marking, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
   }
@@ -329,12 +329,12 @@
     sub = ['lessons', 'todo', 'analysis', 'register', 'activity'].indexOf(sub) >= 0 ? sub : 'quizzes';
     var state = { filter: 'all', open: {}, lesson: null, live: true };
     try { state.lesson = sessionStorage.getItem('bv-cl-' + cid) || null; } catch (e) {}
-    p.innerHTML = '<p class="small"><a href="#classes">← All classes</a></p><div class="row2' + (TEACH ? ' cband" style="--k:' + hue(c.id) : '') + '"><div><p class="label">' + E(c.programme || 'Class') + '</p><h2 style="margin:0">' + E(c.name) + '</h2></div>' +
+    p.innerHTML = '<p class="small"><a href="#classes">← All classes</a></p><div class="row2' + ' cband" style="--k:' + hue(c.id) + '"><div><p class="label">' + E(c.programme || 'Class') + '</p><h2 style="margin:0">' + E(c.name) + '</h2></div>' +
       '<div class="small muted" style="text-align:right">' + (TEACH ? '' : 'Join code <b class="code">' + E(c.join_code) + '</b><br>') + '<label class="chk" style="display:inline-flex"><input type="checkbox" id="lv" checked> Live: update every 15 seconds</label> <span id="stamp"></span></div></div>' +
-      '<nav class="tabs" aria-label="Class sections"' + (TEACH ? ' data-cnav' : '') + '><a href="#classes/' + cid + '/quizzes" aria-selected="' + (sub === 'quizzes') + '">📝 Quizzes and exams</a><a href="#classes/' + cid + '/lessons" aria-selected="' + (sub === 'lessons') + '">🧪 Interactive lessons</a><a href="#classes/' + cid + '/todo" aria-selected="' + (sub === 'todo') + '">📌 To-do list</a><a href="#classes/' + cid + '/register" aria-selected="' + (sub === 'register') + '">🗒 Register</a><a href="#classes/' + cid + '/activity" aria-selected="' + (sub === 'activity') + '">👀 Activity</a><a href="#classes/' + cid + '/analysis" aria-selected="' + (sub === 'analysis') + '">📊 Analysis</a></nav>' +
+      '<nav class="tabs" aria-label="Class sections"' + ' data-cnav' + '><a href="#classes/' + cid + '/quizzes" aria-selected="' + (sub === 'quizzes') + '">📝 Quizzes and exams</a><a href="#classes/' + cid + '/lessons" aria-selected="' + (sub === 'lessons') + '">🧪 Interactive lessons</a><a href="#classes/' + cid + '/todo" aria-selected="' + (sub === 'todo') + '">📌 To-do list</a><a href="#classes/' + cid + '/register" aria-selected="' + (sub === 'register') + '">🗒 Register</a><a href="#classes/' + cid + '/activity" aria-selected="' + (sub === 'activity') + '">👀 Activity</a><a href="#classes/' + cid + '/analysis" aria-selected="' + (sub === 'analysis') + '">📊 Analysis</a></nav>' +
       '<div id="cbody"><p class="muted">Loading…</p></div>';
     var body = p.querySelector('#cbody'), busy = false;
-    if (TEACH) { var CH = { quizzes: '#ca8a04', lessons: '#0d9488', todo: '#7c3aed', register: '#059669', activity: '#db2777', analysis: '#2563eb' };
+    { var CH = { quizzes: '#ca8a04', lessons: '#0d9488', todo: '#7c3aed', register: '#059669', activity: '#db2777', analysis: '#2563eb' };
       p.querySelectorAll('[data-cnav] a').forEach(function (a) { var k = CH[a.getAttribute('href').split('/')[2]]; if (k) a.style.setProperty('--k', k); }); }
     function load() {
       if (busy) return; busy = true;

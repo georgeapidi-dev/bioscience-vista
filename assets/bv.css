@@ -325,3 +325,30 @@ details.panel>summary::-webkit-details-marker{display:none}
 @keyframes tdot{0%,80%,100%{opacity:.25}40%{opacity:1}}
 @media (max-width:820px){.tutor{grid-template-columns:1fr}.tside{position:static;order:2}.tstart{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.tchat{max-height:none;min-height:300px}}
 @media (prefers-reduced-motion:reduce){.tdots i{animation:none}}
+
+/* ---------- Colour kit: every dashboard, tab bar, tile and button row is colourful by default (new pages included) ---------- */
+.tabs{gap:8px;border-bottom:0}
+.tabs a{--k:#2563eb;border:2px solid color-mix(in srgb,var(--k) 35%,transparent);background:color-mix(in srgb,var(--k) 10%,transparent);color:var(--k);font-weight:700;transition:transform .15s,box-shadow .15s}
+.tabs a:nth-child(10n+1){--k:#7c3aed}.tabs a:nth-child(10n+2){--k:#2563eb}.tabs a:nth-child(10n+3){--k:#db2777}.tabs a:nth-child(10n+4){--k:#0891b2}.tabs a:nth-child(10n+5){--k:#ea580c}
+.tabs a:nth-child(10n+6){--k:#059669}.tabs a:nth-child(10n+7){--k:#4f46e5}.tabs a:nth-child(10n+8){--k:#ca8a04}.tabs a:nth-child(10n+9){--k:#0d9488}.tabs a:nth-child(10n+10){--k:#dc2626}
+.tabs a:hover{transform:translateY(-2px);box-shadow:0 6px 16px color-mix(in srgb,var(--k) 28%,transparent)}
+.tabs a[aria-selected="true"]{background:linear-gradient(135deg,var(--k),color-mix(in srgb,var(--k) 72%,#fff));color:#fff;border-color:transparent;box-shadow:0 6px 18px color-mix(in srgb,var(--k) 38%,transparent)}
+[role="tablist"]>.btn{--c:#2563eb;border-radius:999px}
+[role="tablist"]>.btn:nth-child(8n+1){--c:#7c3aed}[role="tablist"]>.btn:nth-child(8n+2){--c:#2563eb}[role="tablist"]>.btn:nth-child(8n+3){--c:#059669}[role="tablist"]>.btn:nth-child(8n+4){--c:#ea580c}
+[role="tablist"]>.btn:nth-child(8n+5){--c:#ca8a04}[role="tablist"]>.btn:nth-child(8n+6){--c:#db2777}[role="tablist"]>.btn:nth-child(8n+7){--c:#0891b2}[role="tablist"]>.btn:nth-child(8n+8){--c:#dc2626}
+[role="tablist"]>.btn:not(.main){background:color-mix(in srgb,var(--c) 10%,transparent)}
+#app .btn.main,.btn.main{background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 72%,#fff));box-shadow:0 4px 14px color-mix(in srgb,var(--c) 30%,transparent)}
+#app .stats .stat{--k:#7c3aed;color:#fff;border:0;background:linear-gradient(135deg,var(--k),color-mix(in srgb,var(--k) 70%,#fff));box-shadow:0 8px 20px color-mix(in srgb,var(--k) 28%,transparent)}
+#app .stats .stat:nth-child(5n+1){--k:#7c3aed}#app .stats .stat:nth-child(5n+2){--k:#2563eb}#app .stats .stat:nth-child(5n+3){--k:#ea580c}#app .stats .stat:nth-child(5n+4){--k:#059669}#app .stats .stat:nth-child(5n+5){--k:#db2777}
+#app .stats .stat b,#app .stats .stat .muted,#app .stats .stat a,#app .stats .stat span{color:#fff!important}
+#app .cta>.btn:not(.main):nth-child(6n+1),#app .acts>.btn:not(.main):nth-child(6n+1){--c:#2563eb}
+#app .cta>.btn:not(.main):nth-child(6n+2),#app .acts>.btn:not(.main):nth-child(6n+2){--c:#7c3aed}
+#app .cta>.btn:not(.main):nth-child(6n+3),#app .acts>.btn:not(.main):nth-child(6n+3){--c:#0d9488}
+#app .cta>.btn:not(.main):nth-child(6n+4),#app .acts>.btn:not(.main):nth-child(6n+4){--c:#ea580c}
+#app .cta>.btn:not(.main):nth-child(6n+5),#app .acts>.btn:not(.main):nth-child(6n+5){--c:#db2777}
+#app .cta>.btn:not(.main):nth-child(6n+6),#app .acts>.btn:not(.main):nth-child(6n+6){--c:#ca8a04}
+#app .panel>h3:first-child,#app .panel>.row2:first-child h3{background:linear-gradient(90deg,#7c3aed,#2563eb 50%,#0d9488);-webkit-background-clip:text;background-clip:text;color:transparent}
+#app table.marks th{background:color-mix(in srgb,#2563eb 9%,transparent)}
+.cband{--k:#7c3aed;border-radius:18px;padding:18px 20px;color:#fff;background:linear-gradient(120deg,var(--k),color-mix(in srgb,var(--k) 75%,#fff));box-shadow:0 10px 26px color-mix(in srgb,var(--k) 35%,transparent);margin:0 0 14px}
+.cband h2,.cband h3,.cband .label,.cband .muted,.cband a:not(.btn),.cband .small{color:#fff!important}
+#app .cband .btn{color:#fff!important;border-color:rgba(255,255,255,.75)!important;background:rgba(255,255,255,.16)!important;box-shadow:none}
