@@ -1218,7 +1218,7 @@
         if (ask) ask.onclick = function () { ask.disabled = true; ask.textContent = '🤖 Asking AI…';
           S.db.functions.invoke('ai-mark', { body: { attempt: aid } }).then(function (res) {
             var d = res && res.data; if (res.error || !d || d.ok === false) { toast((d && d.error) || 'AI marking is unavailable right now. You can mark these answers yourself.', true); ask.disabled = false; ask.textContent = '🤖 Try AI again'; return; }
-            toast(d.marked ? 'AI suggestions added for ' + d.marked + ' answer' + (d.marked > 1 ? 's' : '') + '. Check each one.' : 'Nothing needed AI marking.'); markOne(p, aid);
+            toast(d.marked ? 'AI suggestions added for ' + d.marked + ' answer' + (d.marked > 1 ? 's' : '') + '. Check each one.' + (d.waiting ? ' ' + d.waiting + ' more ' + (d.waiting > 1 ? 'are' : 'is') + ' waiting: press Ask AI again in a minute.' : '') : 'Nothing needed AI marking.'); markOne(p, aid);
           }, function () { toast('AI marking is unavailable right now. You can mark these answers yourself.', true); ask.disabled = false; });
         };
         function saveAll() {

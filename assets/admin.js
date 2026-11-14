@@ -22,9 +22,10 @@
       var ok = d && d.ok, col = ok ? '#15803d' : (d && d.state === 'busy' ? '#b45309' : '#b91c1c'), bg = ok ? '#f0fdf4' : (d && d.state === 'busy' ? '#fffbeb' : '#fef2f2');
       box.style.background = bg; box.style.borderColor = col;
       box.innerHTML = '<b style="color:' + col + '">' + (ok ? '🟢 AI helper: working' : (d && d.state === 'busy' ? '🟠 AI helper: busy' : '🔴 AI helper: off')) + '</b> · ' + E(d && d.message || 'Could not check.') +
-        (d && d.model ? ' <span class="muted">Model: ' + E(d.model) + '.</span>' : '') +
+        (d && d.provider ? ' <span class="muted">Service: ' + E(d.provider) + (d.model ? ', model ' + E(d.model) : '') + '.</span>' : '') +
         (ok ? '' : ' <span class="muted">Marking by rules and by teachers still works.</span>') +
-        (d && d.state === 'no_credit' ? ' <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener">Open billing</a>' : '') +
+        (d && d.link === 'https://console.anthropic.com/settings/billing' && d.state === 'no_credit' ? ' <a href="' + d.link + '" target="_blank" rel="noopener">Open billing</a>' : '') +
+        (d && d.link === 'https://console.groq.com/keys' && d.state === 'bad_key' ? ' <a href="' + d.link + '" target="_blank" rel="noopener">Open Groq keys</a>' : '') +
         ' <button type="button" class="btn sm" id="aisb" style="margin-left:6px">Check again</button>';
       box.querySelector('#aisb').onclick = function () { aiStatus(true); };
     };
