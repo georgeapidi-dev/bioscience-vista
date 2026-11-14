@@ -94,6 +94,36 @@
           m.className = 'msg ok'; m.textContent = 'Thank you! Your review will appear after a quick check.'; }); };
     });
   }
+  // Revise next: the student's weakest topics from their own marked answers, each with a lesson, a simulation and a quiz that fit
+  function reviseNext(me, prog) {
+    var box = app.querySelector('#revise'); if (!box) return;
+    S.db.from('item_results').select('topic_id,topic,skill,got,max,state').eq('student_id', me.user.id).limit(3000).then(function (r) {
+      var T = {}; (r.data || []).forEach(function (x) { if (x.got == null || !x.max || !x.topic) return;
+        var t = T[x.topic] || (T[x.topic] = { name: x.topic, id: x.topic_id, got: 0, max: 0, n: 0, skills: {} }); t.got += +x.got; t.max += +x.max; t.n++; if (x.topic_id) t.id = x.topic_id;
+        var k = x.skill || 'other', sk = t.skills[k] || (t.skills[k] = { got: 0, max: 0 }); sk.got += +x.got; sk.max += +x.max; });
+      var all = Object.keys(T).map(function (k) { var t = T[k]; t.pct = Math.round(100 * t.got / t.max); return t; }).filter(function (t) { return t.n >= 2 && t.max >= 3; });
+      if (!all.length) { box.innerHTML = '<h3>🎯 Revise next</h3><p class="small muted">Finish a quiz or an interactive lesson and your personal revision list will appear here.</p>'; return; }
+      var weak = all.filter(function (t) { return t.pct < 80; }).sort(function (a, b) { return a.pct - b.pct; }).slice(0, 3);
+      if (!weak.length) { var best = all.sort(function (a, b) { return b.pct - a.pct; })[0];
+        box.innerHTML = '<h3>🎯 Revise next</h3><p>🌟 You are at 80% or more in every topic you have been marked on. Strongest: <b>' + E(best.name) + '</b> (' + best.pct + '%). Try the next lesson in your learning plan, or a challenge quiz.</p>'; return; }
+      var ids = weak.map(function (t) { return t.id; }).filter(Boolean), done = {}; prog.forEach(function (p) { if (p.status === 'completed') done[p.lesson_id] = 1; });
+      var none = Promise.resolve({ data: [] });
+      Promise.all([ids.length ? S.db.from('lessons').select('id,title,url,topic_id,sort_order').in('topic_id', ids).eq('published', true).order('sort_order').limit(60) : none,
+                   ids.length ? S.db.from('simulations').select('title,url,topic_id').in('topic_id', ids).eq('published', true).limit(20) : none,
+                   ids.length ? S.db.from('quizzes').select('id,title,topic_id').in('topic_id', ids).limit(30) : none]).then(function (x) {
+        var L = x[0].data || [], SI = x[1].data || [], Q = x[2].data || [];
+        var skillName = { recall: 'recalling facts', explanation: 'explaining', calculation: 'calculation', skills: 'practical and data skills' };
+        box.innerHTML = '<h3>🎯 Revise next</h3><p class="small muted">Your ' + (weak.length === 1 ? 'topic' : weak.length + ' topics') + ' with the most marks still to gain, from your own marked answers. Only you and your teacher see this.</p><div class="grp">' + weak.map(function (t) {
+          var ls = L.filter(function (l) { return l.topic_id === t.id; }).sort(function (a, b) { return (done[a.id] ? 1 : 0) - (done[b.id] ? 1 : 0); }).slice(0, 2), si = SI.filter(function (s2) { return s2.topic_id === t.id; })[0], qz = Q.filter(function (q) { return q.topic_id === t.id; })[0];
+          var ws = Object.keys(t.skills).map(function (k) { var v = t.skills[k]; return { k: k, pct: v.max ? 100 * v.got / v.max : 100, max: v.max }; }).filter(function (v) { return v.max >= 2; }).sort(function (a, b) { return a.pct - b.pct; })[0];
+          var links = ls.map(function (l) { return '<a class="btn sm" href="' + E(l.url) + '">' + (done[l.id] ? '↻ Revisit: ' : '📘 ') + E(l.title) + '</a>'; }).join('') + (si ? '<a class="btn sm" href="' + E(si.url) + '">🧪 ' + E(si.title) + '</a>' : '') + (qz ? '<a class="btn sm" href="/quizzes/#' + qz.id + '">📝 Practise: ' + E(qz.title) + '</a>' : '');
+          return '<div class="item"><span class="meta">' + t.pct + '% so far · ' + Math.round(t.max - t.got) + ' mark' + (Math.round(t.max - t.got) === 1 ? '' : 's') + ' to gain</span><b>' + E(t.name) + '</b>' +
+            '<div style="height:8px;border-radius:99px;background:#fce7f3;overflow:hidden;margin:4px 0"><i style="display:block;height:100%;width:' + t.pct + '%;background:#db2777"></i></div>' +
+            (ws && ws.pct < 80 ? '<span class="small">Focus on <b>' + E(skillName[ws.k] || ws.k) + '</b> questions in this topic.</span>' : '') +
+            '<span class="cta" style="justify-content:flex-start;margin-top:6px">' + (links || '<a class="btn sm" href="/learn/">Open the Learning centre</a>') + '</span></div>'; }).join('') + '</div>';
+      });
+    }, function () { box.remove(); });
+  }
   function learningPlan(me, prog) {
     var box = app.querySelector('#plan'); if (!box) return;
     var ids = (me.classes || []).map(function (c) { return c.id; }); if (!ids.length) { box.remove(); return; }
@@ -179,6 +209,7 @@
       prog.filter(function (p) { return p.status !== 'completed'; }).slice(0, 5).map(function (p) { return '<p>📘 <a href="' + E(p.lessons && p.lessons.url || '/learn/') + '">' + E(p.lessons ? p.lessons.title : 'Lesson') + '</a> <span class="small muted">' + p.percent + '% done</span></p>'; }).join('') + '</section>' +
       '<section class="panel"><h3>My progress</h3>' + (prog.length ? prog.slice(0, 8).map(function (p) { return '<div class="grp" style="gap:4px"><div class="row2"><span class="small">' + E(p.lessons ? p.lessons.title : '') + '</span><span class="small muted">' + p.percent + '%</span></div><div class="bar"><i style="width:' + p.percent + '%"></i></div></div>'; }).join('') : '<p class="muted">Open a lesson from the <a href="/learn/">Learning centre</a> to start.</p>') + '</section></div>';
     h += '<section class="panel" id="mylessons"><h3>📘 My interactive lessons</h3><p class="small muted">Loading…</p></section>';
+    h += '<section class="panel" id="revise" style="border-left:6px solid #db2777"><h3>🎯 Revise next</h3><p class="small muted">Looking at your results…</p></section>';
     h += '<section class="panel" id="plan"><h3>🧭 My learning plan</h3><p class="small muted">Loading…</p></section>';
     h += '<section class="panel" id="anbox"><h3>📊 My learning profile</h3><p class="muted small">Loading…</p></section>';
     h += '<section class="grp"><h3 class="sec-h">My results and feedback</h3>' + (res.length ? res.map(function (r) { var pc = S.pct(+r.score, +r.max_score);
@@ -197,6 +228,7 @@
         tasks.forEach(function (t) { if (t.id === b.getAttribute('data-done')) t.state = 'done'; }); draw(me, res, prog, quizzes, att, tasks); }); }; });
     classesPanel(me, app.querySelector('#mycl'));
     learningPlan(me, prog);
+    reviseNext(me, prog);
     myLessons(me); reviewBox(me);
     app.querySelector('#pf').onsubmit = function (e) { e.preventDefault(); var m = app.querySelector('#pm');
       S.db.from('profiles').update({ full_name: app.querySelector('#pn').value.trim() }).eq('id', me.user.id).then(function (r) { m.className = r.error ? 'msg' : 'msg ok'; m.textContent = r.error ? S.nice(r.error) : 'Saved.'; }); };
