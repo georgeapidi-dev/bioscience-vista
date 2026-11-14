@@ -148,6 +148,18 @@
           PROF = null; myProfile(me); }); };
     }).catch(function (e) { box.innerHTML = '<h3>📊 My learning profile</h3><p class="small muted">' + (/student_profile|schema cache/.test(String(e && e.message)) ? 'Your learning profile will appear here soon.' : E(S.nice(e))) + '</p>'; });
   }
+  // when a teacher is writing on the class whiteboard right now, say so at the top of the dashboard
+  var bwOn = false;
+  function boardWatch(me) {
+    if (bwOn || !S.db.channel || !(me.classes || []).length) return; bwOn = true;
+    me.classes.forEach(function (c) {
+      var ch = S.db.channel('board-class-' + c.id, { config: { broadcast: { self: false } } });
+      ch.on('broadcast', { event: 'page' }, function () { var el = document.getElementById('wblive'); if (!el) return;
+          el.innerHTML = '<a class="panel" href="/board/?class=' + encodeURIComponent(c.id) + '" style="display:flex;gap:12px;align-items:center;text-decoration:none;border:2px solid #0d9488;background:#f0fdfa;margin:10px 0"><span style="font-size:2rem">🟢</span><span><b>Your teacher is writing on the board now</b><br><span class="small">' + E(c.name) + ' · tap to watch live</span></span></a>'; })
+        .on('broadcast', { event: 'end' }, function () { var el = document.getElementById('wblive'); if (el) el.innerHTML = ''; })
+        .subscribe(function (st) { if (st === 'SUBSCRIBED') ch.send({ type: 'broadcast', event: 'hello', payload: {} }); });
+    });
+  }
   function draw(me, res, prog, quizzes, att, tasks) {
     var first = (me.profile.full_name || 'there').split(' ')[0], got = 0, max = 0;
     res.forEach(function (r) { if (r.score != null && r.max_score) { got += +r.score; max += +r.max_score; } });
@@ -157,8 +169,8 @@
     var openTasks = tasks.filter(function (t) { return t.state !== 'done'; }).length;
     var fb = res.filter(function (r) { return r.teacher_feedback || r.ai_feedback; });
     var h = '<div class="row2"><div><p class="label">My dashboard</p><h2>Hello, ' + E(first) + ' 👋</h2><p class="muted small">' + E(me.classes.map(function (c) { return c.name; }).join(', ') || 'No class yet') + ' · ' + E(me.user.email) + '</p></div>' +
-      '<div class="cta"><a class="btn sm" href="/learn/">Learning centre</a><a class="btn sm" href="/quizzes/">Quiz centre</a><a class="btn sm" href="/exams/">Online exams</a><button class="btn sm" type="button" id="so">Log out</button></div></div>';
-    h += '<div id="mycl"></div>';
+      '<div class="cta"><a class="btn main sm" href="/board/" style="background:#0d9488;border-color:#0d9488">🖊 Whiteboard</a><a class="btn sm" href="/learn/">Learning centre</a><a class="btn sm" href="/quizzes/">Quiz centre</a><a class="btn sm" href="/exams/">Online exams</a><button class="btn sm" type="button" id="so">Log out</button></div></div>';
+    h += '<div id="wblive"></div><div id="mycl"></div>';
     h += '<div class="stats"><div class="stat"><span class="small muted">Overall score</span><b>' + (max ? Math.round(100 * got / max) + '%' : '–') + '</b></div>' +
       '<div class="stat"><span class="small muted">Lessons completed</span><b>' + done + ' / ' + prog.length + '</b></div>' +
       '<div class="stat"><span class="small muted">To do</span><b>' + (openTasks + todo.length) + '</b></div>' +
@@ -176,7 +188,7 @@
       '<p class="emptybox">No results yet. Results appear here when you finish lessons and quizzes.</p>') + '</section>';
     h += '<details class="panel"><summary><b>My profile</b></summary><form id="pf" class="grp" style="margin-top:10px"><label class="f">Full name<input id="pn" value="' + E(me.profile.full_name) + '"></label><button class="btn sm" type="submit">Save</button><p class="msg" id="pm"></p></form>' +
       '<p class="small muted">Marks from before accounts were switched on are still on <a href="/progress/">My learning (personal code)</a>.</p></details>';
-    app.innerHTML = h;
+    app.innerHTML = h; boardWatch(me);
     app.querySelector('#so').onclick = S.signOut;
     myProfile(me);
     app.querySelectorAll('[data-done]').forEach(function (b) { b.onclick = function () {

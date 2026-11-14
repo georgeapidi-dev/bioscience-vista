@@ -25,7 +25,7 @@
   var pointers = {}, pinch = null, pan = null, spaceDown = false, penSeen = false;
   var cloud = 'unknown', dirty = {}, metaDirty = false, pagesShrunk = false, saving = false, cloudAgain = false, localT = null, cloudT = null, retryT = null, boards = [];
   var pending = [], recT = null, sugs = [], browserRec = null, browserBad = false, lastEngine = '';
-  var chan = null, room = null, IMG = {}, liveT = null;
+  var chans = {}, room = null, IMG = {}, liveT = null;
   var rep = function (k, v) { return k.charAt(0) === '_' ? undefined : v; };
   var uid = function () { return Math.random().toString(36).slice(2, 10); };
   var r1 = function (v) { return Math.round(v * 10) / 10; };
@@ -117,7 +117,8 @@
     document.addEventListener('keydown', keys); document.addEventListener('keyup', function (e) { if (e.key === ' ') { spaceDown = false; stage.classList.remove('panning'); } });
     window.addEventListener('online', function () { if (cloud === 'off') { cloud = 'unknown'; probeCloud().then(function () { if (cloud === 'ok') saveCloud(); }); } else saveCloud(); });
     window.addEventListener('offline', function () { setStatus('offline'); });
-    window.addEventListener('beforeunload', function () { writeLocal(); });
+    window.addEventListener('beforeunload', function () { writeLocal(); if (chans.class) closeChan('class'); if (chans.code) closeChan('code'); });
+    classLive(!!board.cls);
     if (/^(localhost|127\.)/.test(location.hostname)) window.__wb = function () { return { board: board, sugs: sugs, cloud: cloud, view: view, sel: sel, dirty: dirty, mode: mode, compileFn: compileFn, classify: classify, sciFormat: sciFormat, engine: lastEngine }; };
   }
   function topBar() {
@@ -126,7 +127,7 @@
       '<span class="sep"></span><span id="sws"></span><label class="small" title="Thickness ([ and ])" style="display:inline-flex;align-items:center;gap:4px">●<input type="range" id="sz" min="0" max="4" step="1" value="' + size + '" aria-label="Thickness"></label>' +
       '<span class="sep"></span>' + K('undo', '↶', '', '#334155', 'Undo (Ctrl+Z)') + K('redo', '↷', '', '#334155', 'Redo (Ctrl+Y)') + K('clear', '🗑', 'Clear', '#b91c1c', 'Clear this page') + K('bg', '🎨', 'Background', '#9333ea', 'White, squares, graph paper, lines or chalkboard') +
       '<span class="sep"></span>' + K('zout', '−', '', '#475569', 'Zoom out (-)') + '<button type="button" class="k" data-a="z100" style="--k:#475569" title="Reset zoom (0)" id="zl">100%</button>' + K('zin', '+', '', '#475569', 'Zoom in (+)') +
-      '<span class="sep"></span>' + K('png', '🖼', 'PNG', '#2563eb', 'Download this page as a picture') + K('pdf', '📄', 'PDF', '#2563eb', 'Download all pages as a PDF') + K('full', '⛶', 'Project', '#0d9488', 'Full screen for the projector (F)') + K('live', '📡', 'Live', '#db2777', 'Students follow on their own screens', !!chan) +
+      '<span class="sep"></span>' + K('png', '🖼', 'PNG', '#2563eb', 'Download this page as a picture') + K('pdf', '📄', 'PDF', '#2563eb', 'Download all pages as a PDF') + K('full', '⛶', 'Project', '#0d9488', 'Full screen for the projector (F)') + (board.cls ? K('clive', '🟢', 'Live to class', '#16a34a', 'Students in this class see your board live from their dashboard', true) : '') + K('live', '📡', 'Code', '#db2777', 'Live code: anyone with the code can watch', !!chans.code) +
       '<span class="grow"></span><span class="pill" id="rst" title="Handwriting recognition">✍️ Ready</span><span class="pill" id="sst" title="Saving">💾</span></div>';
   }
   function rail() {
@@ -136,7 +137,7 @@
       '<button type="button" class="k" data-a="graph" style="--k:#16a34a" title="Insert a graph (G)" aria-label="Insert a graph">📈</button><button type="button" class="k" data-a="image" style="--k:#2563eb" title="Insert an image (or paste / drop one)" aria-label="Insert an image">🖼</button></div>';
   }
   function viewBar(kind) {
-    return '<div class="wb-top"><b>' + (kind === 'live' ? '📡 Live board' : '🖊 ' + E(board.title)) + '</b><span class="small muted" id="vst">' + (kind === 'live' ? 'Connecting…' : 'View only') + '</span><span class="grow"></span>' +
+    return '<div class="wb-top"><b>' + (kind === 'live' ? '📡 Live board' + (liveName ? ' · ' + E(liveName) : '') : '🖊 ' + E(board.title)) + '</b><span class="small muted" id="vst">' + (kind === 'live' ? 'Connecting…' : 'View only') + '</span><span class="grow"></span>' +
       K('full', '⛶', 'Full screen', '#0d9488', 'Full screen') + '</div>';
   }
   function helpText() {
@@ -158,7 +159,7 @@
     A('clear', function () { var b = this; if (!b.dataset.sure) { b.dataset.sure = 1; b.innerHTML = 'Clear page?'; setTimeout(function () { delete b.dataset.sure; b.innerHTML = '🗑<span class="lbl"> Clear</span>'; }, 2500); return; } snap(); page().items = []; sel = []; delete b.dataset.sure; b.innerHTML = '🗑<span class="lbl"> Clear</span>'; changed(); });
     A('bg', function () { var i = BGS.map(function (x) { return x[0]; }).indexOf(page().bg); snap(); page().bg = BGS[(i + 1) % BGS.length][0]; note(BGS[(i + 1) % BGS.length][1]); swatches(); changed(); });
     A('zin', function () { zoomBy(1.25); }); A('zout', function () { zoomBy(0.8); }); A('z100', resetZoom);
-    A('png', exportPNG); A('pdf', exportPDF); A('live', shareLive);
+    A('png', exportPNG); A('pdf', exportPDF); A('live', shareLive); A('clive', function () { classLive(!chans.class); note(chans.class ? '🟢 Your class can watch live again' : '⚪ Stopped: students no longer see the board'); });
     A('graph', function () { graphDialog(null); }); A('image', function () { app.querySelector('#imgf').click(); });
     app.querySelector('#imgf').onchange = function () { if (this.files[0]) addImage(this.files[0]); this.value = ''; };
     var t = app.querySelector('#wbt'); t.onchange = function () { board.title = t.value.trim().slice(0, 120) || 'Untitled board'; t.value = board.title; metaDirty = true; scheduleSave(); };
@@ -927,35 +928,73 @@
   function full() { if (document.fullscreenElement) { document.exitFullscreen(); return; } if (wrap.requestFullscreen) wrap.requestFullscreen().catch(function () { wrap.classList.toggle('full'); setTimeout(fit, 80); }); else { wrap.classList.toggle('full'); setTimeout(fit, 80); } }
 
   // ======================= live sharing =======================
+  // Two ways to watch: the whole class (students press 🖊 Whiteboard on their dashboard; no code) and a 6-letter code.
   function livePage() { var total = 0; return { bg: page().bg, items: JSON.parse(JSON.stringify(page().items, rep)).map(function (it) { if (it.t === 'img') { total += it.src.length; if (total > 400000) it.src = null; } if (it.t === 'text') delete it.ink; return it; }) }; }
+  function hasLive() { return Object.keys(chans).length > 0; }
+  function sendAll(ev, payload) { Object.keys(chans).forEach(function (k) { try { chans[k].send({ type: 'broadcast', event: ev, payload: payload }); } catch (e) {} }); }
   function sendLive(kind, d) {
-    if (!chan || readOnly) return;
-    if (kind === 'page') { clearTimeout(liveT); liveT = setTimeout(function () { chan.send({ type: 'broadcast', event: 'page', payload: { page: livePage(), n: board.cur + 1, of: board.pages.length } }); }, 150); return; }
+    if (readOnly || !hasLive()) return;
+    if (kind === 'page') { clearTimeout(liveT); liveT = setTimeout(function () { sendAll('page', { page: livePage(), n: board.cur + 1, of: board.pages.length, title: board.title, cls: CNAME }); }, 150); return; }
     var now = Date.now(); if (now - (sendLive.t || 0) < 60) return; sendLive.t = now;
     var p = kind === 'ghost' ? JSON.parse(JSON.stringify(d, rep)) : d; if (p.pts) p.pts = p.pts.map(function (q) { return [Math.round(q[0]), Math.round(q[1]), q[2]]; });
-    chan.send({ type: 'broadcast', event: kind, payload: p });
+    sendAll(kind, p);
+  }
+  function openChan(key, name) {
+    var c = S.db.channel(name, { config: { broadcast: { self: false } } }); chans[key] = c;
+    c.on('broadcast', { event: 'hello' }, function () { sendLive('page'); }).subscribe(function (st2) { if (st2 === 'SUBSCRIBED') sendLive('page'); });
+  }
+  function closeChan(key) { var c = chans[key]; if (!c) return; delete chans[key]; try { c.send({ type: 'broadcast', event: 'end', payload: {} }); } catch (e) {} setTimeout(function () { try { S.db.removeChannel(c); } catch (e) {} }, 400); }
+  function classLive(on) {
+    var btn = app.querySelector('[data-a=clive]'); if (!board.cls || !S.db.channel) { if (btn) btn.hidden = true; return; }
+    if (on) openChan('class', 'board-class-' + board.cls); else closeChan('class');
+    if (btn) { btn.setAttribute('aria-pressed', !!on); btn.innerHTML = on ? '🟢<span class="lbl"> Live to class</span>' : '⚪<span class="lbl"> Not live</span>'; btn.title = on ? 'Students in this class see your board live from their dashboard (🖊 Whiteboard). Press to stop.' : 'Press to let this class watch your board live again'; }
   }
   function shareLive() {
     var box = app.querySelector('#livebox'), btn = app.querySelector('[data-a=live]');
-    if (chan) { S.db.removeChannel(chan); chan = null; room = null; box.innerHTML = ''; btn.setAttribute('aria-pressed', false); note('Live sharing stopped'); return; }
+    if (chans.code) { closeChan('code'); room = null; box.innerHTML = ''; btn.setAttribute('aria-pressed', false); note('Live code stopped'); return; }
     if (!S.db.channel) { note('Live sharing is not available here'); return; }
     var a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', b = new Uint8Array(6); crypto.getRandomValues(b); room = Array.prototype.map.call(b, function (x) { return a[x % a.length]; }).join('');
-    chan = S.db.channel('board-' + room, { config: { broadcast: { self: false } } });
-    chan.on('broadcast', { event: 'hello' }, function () { sendLive('page'); }).subscribe(function (s2) { if (s2 === 'SUBSCRIBED') sendLive('page'); });
+    openChan('code', 'board-' + room);
     var url = location.origin + '/board/?live=' + room;
     btn.setAttribute('aria-pressed', true);
-    box.innerHTML = '<div class="panel tint wb-live"><b>📡 Live now.</b> Students open <a href="' + E(url) + '" target="_blank" rel="noopener">' + E(url.replace(/^https?:\/\//, '')) + '</a> or type the code <code>' + room + '</code> on <b>' + E(location.host) + '/board/</b>. They see every stroke as you write. Press 📡 again to stop.<button type="button" class="btn sm" id="cpl">Copy link</button></div>';
+    box.innerHTML = '<div class="panel tint wb-live"><b>📡 Live code.</b> Anyone with the code can watch, also people outside this class: open <a href="' + E(url) + '" target="_blank" rel="noopener">' + E(url.replace(/^https?:\/\//, '')) + '</a> or type <code>' + room + '</code> on <b>' + E(location.host) + '/board/</b>. Press 📡 again to stop.<button type="button" class="btn sm" id="cpl">Copy link</button></div>';
     box.querySelector('#cpl').onclick = function () { try { navigator.clipboard.writeText(url); note('Link copied'); } catch (e) {} };
   }
 
   // ======================= students and view-only boards =======================
-  function joinForm() { return '<section class="panel"><h2>📡 Join your teacher\'s live board</h2><p>Type the 6-letter code your teacher shows on the board.</p><form id="jc" class="row2" style="justify-content:flex-start;gap:8px"><input id="jcv" maxlength="6" placeholder="e.g. K7QPZ3" style="text-transform:uppercase;font-size:1.3rem;letter-spacing:.15em;max-width:200px" required aria-label="Board code"><button class="btn main">Join</button></form></section>'; }
-  function studentHome() {
-    css(); app.innerHTML = joinForm() + '<section class="panel"><h2>🔗 Boards shared with your class</h2><div id="shl" class="wb-boards"><p class="small muted">Loading…</p></div></section>';
-    app.querySelector('#jc').onsubmit = function (e) { e.preventDefault(); location.href = '/board/?live=' + encodeURIComponent(app.querySelector('#jcv').value.trim().toUpperCase()); };
+  function joinForm() { return '<section class="panel"><h2>📡 Have a code?</h2><p class="small">If your teacher shows a 6-letter code, type it here.</p><form id="jc" class="row2" style="justify-content:flex-start;gap:8px"><input id="jcv" maxlength="6" placeholder="e.g. K7QPZ3" style="text-transform:uppercase;font-size:1.3rem;letter-spacing:.15em;max-width:200px" required aria-label="Board code"><button class="btn main">Join</button></form></section>'; }
+  function sharedList() { return '<section class="panel"><h2>🔗 Boards shared with your class</h2><div id="shl" class="wb-boards"><p class="small muted">Loading…</p></div></section>'; }
+  function loadShared() {
+    var el = app.querySelector('#shl'); if (!el) return;
     var q = S.db.from('whiteboards').select('id,title,class_id,updated_at').eq('shared', true); if (CLS) q = q.eq('class_id', CLS);
-    Promise.resolve(q.order('updated_at', { ascending: false }).limit(40)).then(function (r) { var rs = (r && !r.error && r.data) || [], el = app.querySelector('#shl');
-      el.innerHTML = rs.length ? rs.map(function (b) { return '<div class="brow"><b>' + E(b.title) + '</b><span class="small muted">' + E(new Date(b.updated_at).toLocaleDateString([], { dateStyle: 'medium' })) + '</span><a class="btn sm" href="/board/?b=' + b.id + '">Open</a></div>'; }).join('') : '<p class="small muted">Your teachers have not shared any boards yet.</p>'; });
+    Promise.resolve(q.order('updated_at', { ascending: false }).limit(40)).then(function (r) { var rs = (r && !r.error && r.data) || [];
+      el.innerHTML = rs.length ? rs.map(function (b) { return '<div class="brow"><b>' + E(b.title) + '</b><span class="small muted">' + E(new Date(b.updated_at).toLocaleDateString([], { dateStyle: 'medium' })) + '</span><a class="btn sm" href="/board/?b=' + b.id + '">Open</a></div>'; }).join('') : '<p class="small muted">Your teachers have not shared any saved boards yet.</p>'; });
+  }
+  function studentHome() {
+    css();
+    var mine = (me.classes || []).filter(function (c) { return c && c.id && (!CLS || c.id === CLS); });
+    app.innerHTML = '<div class="row2 cband" style="--k:#0d9488"><div><p class="label">Class whiteboard</p><h2 style="margin:0">🖊 Your teacher\'s board, live</h2><p class="small" id="wst">' +
+      (mine.length ? '⏳ Waiting for your teacher to start writing' + (mine.length === 1 ? ' in <b>' + E(mine[0].name) + '</b>' : '') + '. Keep this page open: the board appears by itself as soon as they start.' : 'Join a class first; then your teacher\'s board appears here when they write.') +
+      '</p></div><div class="cta"><a class="btn sm" href="/dashboard/">← My dashboard</a></div></div>' + joinForm() + sharedList();
+    app.querySelector('#jc').onsubmit = function (e) { e.preventDefault(); location.href = '/board/?live=' + encodeURIComponent(app.querySelector('#jcv').value.trim().toUpperCase()); };
+    loadShared();
+    if (!S.db.channel) return;
+    var subs = [];
+    mine.forEach(function (c) {
+      var ch = S.db.channel('board-class-' + c.id, { config: { broadcast: { self: false } } }); subs.push(ch);
+      watch(ch, function () { subs.forEach(function (x) { if (x !== ch) try { S.db.removeChannel(x); } catch (e) {} }); liveName = c.name; readOnly = true; board = newBoard(); build('live'); app.insertAdjacentHTML('beforeend', '<p class="small muted" style="margin-top:8px">You are watching live. You can go full screen; you cannot write on your teacher\'s board. <a href="/board/">Saved boards</a></p>'); });
+      ch.subscribe(function (st2) { if (st2 === 'SUBSCRIBED') ch.send({ type: 'broadcast', event: 'hello', payload: {} }); });
+    });
+  }
+  var liveName = '', watching = null;
+  function watch(ch, onStart) {   // show the teacher's page, their pen as it moves, and what they type
+    var vs = function (t) { var el = app.querySelector('#vst'); if (el) el.textContent = t; };
+    var on = function () { if (watching && watching !== ch) return false; if (!watching) { watching = ch; if (onStart) onStart(); } return true; };
+    ch.on('broadcast', { event: 'page' }, function (m) { if (!on()) return; board.pages[0] = m.payload.page; normalise(); ghost = null; vs('🟢 Live' + (m.payload.title ? ' · ' + m.payload.title : '') + ' · page ' + m.payload.n + ' of ' + m.payload.of); render(); })
+      .on('broadcast', { event: 'ghost' }, function (m) { if (watching !== ch) return; ghost = m.payload; render(); })
+      .on('broadcast', { event: 'ink' }, function (m) { if (watching !== ch) return; ghost = m.payload; render(); })
+      .on('broadcast', { event: 'typing' }, function (m) { if (watching !== ch) return; var t = m.payload; ghost = { t: 'text', x: t.x, y: t.y, size: t.size, c: t.c, txt: t.txt || ' ', font: 'type' }; render(); })
+      .on('broadcast', { event: 'end' }, function () { if (watching !== ch) return; ghost = null; render(); vs('⏸ Your teacher stopped sharing. The last page stays here and updates if they start again.'); });
   }
   function openBoardLink(id) {
     css(); app.innerHTML = '<p class="small muted">Opening the board…</p>';
@@ -968,12 +1007,8 @@
     if (!/^[A-Z0-9]{6}$/.test(live)) { app.innerHTML = '<section class="panel"><h2>Live board</h2><p>That board code does not look right. Ask your teacher for the link.</p></section>'; return; }
     readOnly = true; board = newBoard();
     build('live');
-    var vst = app.querySelector('#vst');
-    chan = S.db.channel('board-' + live, { config: { broadcast: { self: false } } });
-    chan.on('broadcast', { event: 'page' }, function (m) { board.pages[0] = m.payload.page; normalise(); ghost = null; vst.textContent = '🟢 Live · page ' + m.payload.n + ' of ' + m.payload.of; render(); })
-      .on('broadcast', { event: 'ghost' }, function (m) { ghost = m.payload; render(); })
-      .on('broadcast', { event: 'ink' }, function (m) { ghost = m.payload; render(); })
-      .on('broadcast', { event: 'typing' }, function (m) { var t = m.payload; ghost = { t: 'text', x: t.x, y: t.y, size: t.size, c: t.c, txt: t.txt || ' ', font: 'type' }; render(); })
-      .subscribe(function (s2) { if (s2 === 'SUBSCRIBED') { vst.textContent = 'Waiting for your teacher…'; chan.send({ type: 'broadcast', event: 'hello', payload: {} }); } });
+    var ch = S.db.channel('board-' + live, { config: { broadcast: { self: false } } });
+    watch(ch, null);
+    ch.subscribe(function (s2) { if (s2 === 'SUBSCRIBED') { var el = app.querySelector('#vst'); if (el && !watching) el.textContent = 'Waiting for your teacher…'; ch.send({ type: 'broadcast', event: 'hello', payload: {} }); } });
   }
 })();
