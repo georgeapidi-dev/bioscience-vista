@@ -4,6 +4,21 @@
   var BV = window.BV || {};
   if (!BV.sbUrl || !BV.sbKey || !window.supabase || !window.fetch) return;
   var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } }), who = null;
+  // "Try again" from the dashboard: clear this lesson's saved answers on this device and start a new attempt.
+  // The first attempt's mark stays on record for class students; independent learners keep their best mark.
+  var QS0 = new URLSearchParams(location.search), LID = QS0.get('lid') || window.LESSON_ID || (window.SPEC && SPEC.id) || '', AK = 'lv-attempt:' + location.pathname;
+  function attemptNo() { try { return Math.max(1, parseInt(localStorage.getItem(AK) || '1', 10) || 1); } catch (e) { return 1; } }
+  try {
+    var qs = new URLSearchParams(location.search);
+    if (qs.get('retry')) {
+      var n = Math.max(attemptNo() + 1, parseInt(qs.get('retry'), 10) || 2);
+      Object.keys(localStorage).forEach(function (k) { if ((LID && k.indexOf(LID + ':') === 0) || k.indexOf('autosave:' + location.pathname) === 0) localStorage.removeItem(k); });
+      qs.delete('lid');
+      localStorage.setItem(AK, String(n));
+      qs.delete('retry'); location.replace(location.pathname + (qs.toString() ? '?' + qs : '') + location.hash);
+      return;
+    }
+  } catch (e) {}
   window.BV_DB = db;   // shared with lesson-feedback.js
   db.auth.getSession().then(function (r) {
     var s = r.data.session, b = document.createElement('div');
@@ -60,7 +75,7 @@
         return orig.call(self, url, o).then(function (res) {
           try {
             var b = JSON.parse(opts.body), m = /TOTAL=([\d.]+)\s*\/\s*([\d.]+)/.exec(b.answers || '');
-            if (s && res.ok && m) db.rpc('record_lesson_result', { lesson_ext_id: b.lesson, got: +m[1], out_of: +m[2], step: b.step || null }).then(function (x) {
+            if (s && res.ok && m) db.rpc('record_lesson_result', { lesson_ext_id: b.lesson, got: +m[1], out_of: +m[2], step: b.step || null, attempt: attemptNo() }).then(function (x) {
               if (x.error) { if (window.console) console.warn('Learnova account:', x.error.message); return; }
               // whole-lesson feedback on the dashboard, updated from the marks on every question so far
               db.functions.invoke('result-feedback', { body: { lesson: b.lesson } }).then(function () {}, function () {});

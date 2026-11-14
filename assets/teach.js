@@ -2,25 +2,53 @@
    A teacher sees only their own classes and students. They add Learnova lessons and published quizzes to their classes;
    they cannot change anything on the main site (enforced by the database, migration 022). */
 (function () {
-  var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, CLASSES = [], CUR = null, CAT = null;
+  var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, CLASSES = [], HELP = [], CUR = null, CAT = null, COURSES = null;
   S.guard(app, { allowPending: true, school: true }).then(function (me) {
     ME = me;
     if (me.staff) { app.innerHTML = '<section class="panel"><h2>You are main-site staff</h2><p>Use the <a href="/staff/">Teacher dashboard</a> and the <a href="/admin/">Admin page</a>.</p></section>'; return; }
     if (!me.school) { app.innerHTML = '<section class="panel"><h2>Teachers only</h2><p>This page is for teacher accounts. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; return; }
     var a = me.access || {}, st = me.profile.teacher_status;
-    var top = '<div class="row2"><div><p class="label">Teacher portal</p><h2>Hello, ' + E((me.profile.full_name || '').split(' ')[0] || 'teacher') + '</h2><p class="muted small">' + E(me.profile.school_name || 'Independent teacher') + ' · ' + E(me.user.email) + '</p></div>' +
+    var top = '<div class="row2"><div><p class="label">Teacher portal</p><h2>Hello, ' + E((me.profile.full_name || '').split(' ')[0] || 'teacher') + '</h2><p class="muted small">🏫 <b id="myschool">' + E(me.profile.school_name || 'No school set') + '</b> <button type="button" class="btn sm" id="chs">Change school</button> · ' + E(me.user.email) + '</p></div>' +
       '<div class="cta"><a class="btn sm" href="/messages/">Messages</a><a class="btn sm" href="/premium/">Premium</a><button class="btn sm" type="button" id="so">Log out</button></div></div>';
     if (st !== 'approved' || me.roles.indexOf('school_teacher') < 0) { app.innerHTML = top + '<section class="panel tint"><h3>' + (st === 'rejected' ? 'Your teacher account was not approved' : '⏳ Waiting for approval') + '</h3><p>' + (st === 'rejected' ? 'Contact the Learnova admin through Messages if you think this is a mistake.' : 'The Learnova admin checks every new teacher account. You can buy premium now; your classes open as soon as you are approved.') + '</p></section>'; app.querySelector('#so').onclick = S.signOut; return; }
     if (!a.premium) { app.innerHTML = top + '<section class="panel tint"><h3>Premium is needed to run classes</h3><p>Your teacher account is approved. Get premium to create classes, add Learnova lessons and quizzes, and see your students\' results.</p><a class="btn main" href="/premium/">Get premium</a></section>'; app.querySelector('#so').onclick = S.signOut; return; }
     app.innerHTML = top + '<div id="tp"></div>'; app.querySelector('#so').onclick = S.signOut;
-    load();
+    app.querySelector('#chs').onclick = changeSchool;
+    load(); review();
   }).catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
+  // one shared list of schools, so every teacher at a school appears under the same name
+  function changeSchool() {
+    S.db.from('schools').select('name').order('name').then(function (r) {
+      var box = document.createElement('div'); box.className = 'panel tint grp';
+      box.innerHTML = '<label class="f">Your school (choose from the list, or type a new one)<input id="scn" list="scl" maxlength="120" value="' + E(ME.profile.school_name || '') + '"><datalist id="scl">' + (r.data || []).map(function (x) { return '<option value="' + E(x.name) + '">'; }).join('') + '</datalist></label>' +
+        '<div class="cta"><button class="btn main sm" id="scs">Save</button><button class="btn sm" id="scx">Cancel</button></div><p class="msg" id="scm"></p>';
+      app.querySelector('#tp').before(box);
+      box.querySelector('#scx').onclick = function () { box.remove(); };
+      box.querySelector('#scs').onclick = function () { S.db.rpc('set_my_school', { nm: box.querySelector('#scn').value }).then(function (x) {
+        if (x.error) { box.querySelector('#scm').textContent = S.nice(x.error); return; } ME.profile.school_name = x.data; app.querySelector('#myschool').textContent = x.data; box.remove(); load(true); }); };
+    });
+  }
+  function review() {
+    var sec = document.createElement('section'); sec.className = 'panel'; app.appendChild(sec);
+    S.db.from('reviews').select('rating,body,status').eq('user_id', ME.user.id).maybeSingle().then(function (r) {
+      var mine = r.data;
+      sec.innerHTML = '<h3>⭐ Review Learnova</h3><p class="small muted">' + (mine ? 'Your review is ' + (mine.status === 'approved' ? 'published' : 'waiting for approval') + '. You can change it.' : 'Tell other teachers how Learnova helps your classes. Reviews appear on the home page after a check.') + '</p>' +
+        '<form id="rvf" class="grp"><select id="rvs">' + [5, 4, 3, 2, 1].map(function (n) { return '<option value="' + n + '"' + (mine && mine.rating === n ? ' selected' : '') + '>' + '★'.repeat(n) + '</option>'; }).join('') + '</select>' +
+        '<textarea id="rvt" maxlength="600" rows="3" placeholder="What works well for you and your students?">' + E(mine ? mine.body : '') + '</textarea><label class="chk"><input type="checkbox" id="rvn" checked> Show my full name</label><button class="btn main sm">Send review</button><p class="msg" id="rvm"></p></form>';
+      sec.querySelector('#rvf').onsubmit = function (e) { e.preventDefault(); var m = sec.querySelector('#rvm');
+        S.db.rpc('submit_review', { stars: +sec.querySelector('#rvs').value, words: sec.querySelector('#rvt').value, show_full_name: sec.querySelector('#rvn').checked }).then(function (x) {
+          if (x.error) { m.textContent = S.nice(x.error); return; } m.className = 'msg ok'; m.textContent = 'Thank you! It will appear after a quick check.'; }); };
+    });
+  }
+  function courses() { return COURSES ? Promise.resolve(COURSES) : S.db.rpc('course_list').then(function (r) { COURSES = r.data || []; return COURSES; }); }
   function load(keep) {
-    S.db.from('classes').select('*').eq('teacher_id', ME.user.id).order('created_at').then(function (r) {
+    Promise.all([S.db.from('classes').select('*').eq('teacher_id', ME.user.id).order('created_at'), S.db.rpc('my_cotaught')]).then(function (x) {
+      var r = x[0]; HELP = (x[1].data || []).map(function (c) { c.ro = true; return c; });
       CLASSES = (r.data || []).filter(function (c) { return !c.archived_at; });
-      if (!keep || !CLASSES.some(function (c) { return c.id === (CUR && CUR.id); })) CUR = CLASSES[0] || null;
-      else CUR = CLASSES.filter(function (c) { return c.id === CUR.id; })[0];
+      var all = CLASSES.concat(HELP);
+      if (!keep || !all.some(function (c) { return c.id === (CUR && CUR.id); })) CUR = all[0] || null;
+      else CUR = all.filter(function (c) { return c.id === CUR.id; })[0];
       draw();
     });
   }
@@ -28,33 +56,48 @@
     var tp = app.querySelector('#tp');
     tp.innerHTML = '<section class="panel grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><button class="btn main sm" type="button" id="newc">＋ New class</button></div>' +
       (CLASSES.length ? '<div class="cta">' + CLASSES.map(function (c) { return '<button type="button" class="btn sm' + (CUR && c.id === CUR.id ? ' main' : '') + '" data-c="' + E(c.id) + '">' + E(c.name) + (c.active ? '' : ' (closed)') + '</button>'; }).join('') + '</div>' : '<p class="small">No classes yet. Create your first class.</p>') +
+      (HELP.length ? '<p class="label" style="margin-top:10px">Classes I help with (view only)</p><div class="cta">' + HELP.map(function (c) { return '<button type="button" class="btn sm' + (CUR && c.id === CUR.id ? ' main' : '') + '" data-c="' + E(c.id) + '">🤝 ' + E(c.name) + '</button>'; }).join('') + '</div>' : '') +
       '<div id="newbox"></div></section><div id="cbox"></div>';
-    tp.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { CUR = CLASSES.filter(function (c) { return c.id === b.getAttribute('data-c'); })[0]; draw(); }; });
+    tp.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { CUR = CLASSES.concat(HELP).filter(function (c) { return c.id === b.getAttribute('data-c'); })[0]; TAB = 'students'; draw(); }; });
     tp.querySelector('#newc').onclick = function () { classForm(tp.querySelector('#newbox'), null); };
     if (CUR) classView(tp.querySelector('#cbox'));
   }
-  function classForm(box, c) {
-    box.innerHTML = '<form class="grp" id="cf" style="margin-top:10px"><label class="f">Class name (students search for it)<input id="cn" required maxlength="80" value="' + E(c ? c.name : '') + '" placeholder="e.g. Hill School DP1 Biology HL"></label>' +
-      '<div class="two"><label class="f">Subject<input id="cs" maxlength="60" value="' + E(c && c.subject || '') + '" placeholder="e.g. IB Biology"></label><label class="f">Level<input id="cl" maxlength="40" value="' + E(c && c.level || '') + '" placeholder="e.g. HL"></label></div>' +
+  function classForm(box, c) { courses().then(function (cs) { classForm2(box, c, cs); }); }
+  function classForm2(box, c, cs) {
+    box.innerHTML = '<form class="grp" id="cf" style="margin-top:10px"><label class="f">What do you teach in this class?<select id="cc" required><option value="">Choose the course…</option>' +
+      cs.map(function (k) { return '<option value="' + E(k.slug) + '"' + (c && c.course === k.slug ? ' selected' : '') + '>' + E(k.name) + ' (' + k.lessons + ' lessons' + (k.quizzes ? ', ' + k.quizzes + ' quizzes' : '') + ')</option>'; }).join('') + '</select></label>' +
+      '<p class="small muted">The course\'s Learnova lessons and quizzes are added to the class automatically. You can untick any you don\'t need on the Lessons and Quizzes tabs.</p>' +
+      '<label class="f">Class name (students search for it)<input id="cn" required maxlength="80" value="' + E(c ? c.name : '') + '" placeholder="e.g. DP1 Biology HL 2026"></label>' +
       '<label class="f">Short description (optional)<input id="cd" maxlength="160" value="' + E(c && c.description || '') + '"></label>' +
       '<label class="chk"><input type="checkbox" id="cli"' + (!c || c.listed ? ' checked' : '') + '> Students can find this class and ask to join</label>' +
       '<div class="cta"><button class="btn main sm" type="submit">' + (c ? 'Save' : 'Create class') + '</button>' + (c ? '<button class="btn sm" type="button" id="carch">' + (c.active ? 'Close class' : 'Reopen class') + '</button>' : '') + '</div><p class="msg" id="cm"></p></form>';
-    box.querySelector('#cf').onsubmit = function (e) { e.preventDefault(); var m = box.querySelector('#cm');
-      var row = { name: box.querySelector('#cn').value.trim(), subject: box.querySelector('#cs').value.trim() || null, level: box.querySelector('#cl').value.trim() || null, description: box.querySelector('#cd').value.trim() || null, listed: box.querySelector('#cli').checked };
+    box.querySelector('#cf').onsubmit = function (e) { e.preventDefault(); var m = box.querySelector('#cm'), course = box.querySelector('#cc').value;
+      var row = { name: box.querySelector('#cn').value.trim(), description: box.querySelector('#cd').value.trim() || null, listed: box.querySelector('#cli').checked };
+      if (!course) { m.textContent = 'Choose the course you teach.'; return; }
       if (row.name.length < 3) { m.textContent = 'Give the class a name.'; return; }
-      var q = c ? S.db.from('classes').update(row).eq('id', c.id) : S.db.from('classes').insert(Object.assign({ teacher_id: ME.user.id, programme: row.subject }, row));
-      q.then(function (r) { if (r.error) { m.textContent = S.nice(r.error); return; } load(true); }); };
+      m.className = 'msg'; m.textContent = 'Saving…';
+      if (!c) return S.db.rpc('create_school_class', { nm: row.name, course_slug: course, descr: row.description, is_listed: row.listed }).then(function (r) {
+        if (r.error) { m.textContent = S.nice(r.error); return; } CUR = { id: r.data }; TAB = 'materials'; load(true); });
+      S.db.from('classes').update(row).eq('id', c.id).then(function (r) { if (r.error) { m.textContent = S.nice(r.error); return; }
+        return S.db.rpc('set_class_course', { cid: c.id, course_slug: course }).then(function (x) { if (x.error) { m.textContent = S.nice(x.error); return; } load(true); }); }); };
     var ar = box.querySelector('#carch'); if (ar) ar.onclick = function () { S.db.from('classes').update({ active: !c.active }).eq('id', c.id).then(function (r) { if (r.error) return alert(S.nice(r.error)); load(true); }); };
   }
   var TAB = 'students';
   function classView(box) {
     var c = CUR;
-    box.innerHTML = '<section class="panel grp"><div class="row2"><div><h3 style="margin:0">' + E(c.name) + '</h3><p class="small muted">' + E([c.subject, c.level].filter(Boolean).join(' · ')) + (c.listed ? ' · students can find it under <b>' + E(c.school_name || ME.profile.school_name || 'your name') + '</b>' : ' · hidden from the join list') + '</p></div>' +
-      '<button class="btn sm" type="button" id="edc">Edit</button></div><div id="edbox"></div>' +
-      '<div class="cta" role="tablist">' + [['students', '👥 Students'], ['materials', '📘 Lessons'], ['quizzes', '📝 Quizzes'], ['results', '📊 Results']].map(function (t) { return '<button type="button" class="btn sm' + (TAB === t[0] ? ' main' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="tab"></div></section>';
-    box.querySelector('#edc').onclick = function () { classForm(box.querySelector('#edbox'), c); };
+    var tabs = [['students', '👥 Students'], ['materials', '📘 Lessons'], ['quizzes', '📝 Quizzes'], ['results', '📊 Results']];
+    if (!c.ro) tabs.push(['team', '🤝 Co-teachers']);
+    box.innerHTML = '<section class="panel grp"><div class="row2"><div><h3 style="margin:0">' + E(c.name) + (c.ro ? ' <span class="pill">view only</span>' : '') + '</h3><p class="small muted">' + E([c.subject, c.level].filter(Boolean).join(' · ')) +
+      (c.ro ? ' · class teacher: ' + E(c.owner || 'another teacher') : c.listed ? ' · students find it under <b>' + E(c.school_name || ME.profile.school_name || 'your name') + '</b>' : ' · hidden from the join list') + '</p></div>' +
+      (c.ro ? '' : '<span class="cta"><button class="btn sm" type="button" id="sync" title="Add any new Learnova lessons and quizzes for this course">⟳ Add new course lessons</button><button class="btn sm" type="button" id="edc">Edit</button></span>') + '</div><div id="edbox"></div>' +
+      '<div class="cta" role="tablist">' + tabs.map(function (t) { return '<button type="button" class="btn sm' + (TAB === t[0] ? ' main' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="tab"></div></section>';
+    if (!c.ro) {
+      box.querySelector('#edc').onclick = function () { classForm(box.querySelector('#edbox'), c); };
+      box.querySelector('#sync').onclick = function () { var b = this; b.disabled = true; S.db.rpc('set_class_course', { cid: c.id, course_slug: null }).then(function (x) { b.disabled = false; if (x.error) return alert(S.nice(x.error));
+        alert(c.course ? 'Added ' + x.data.lessons + ' new lessons and ' + x.data.quizzes + ' new quizzes.' : 'Choose the course first: press Edit.'); CAT = null; classView(box); }); };
+    }
     box.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { TAB = b.getAttribute('data-t'); classView(box); }; });
-    ({ students: students, materials: materials, quizzes: quizzes, results: results })[TAB](box.querySelector('#tab'), c);
+    ({ students: students, materials: materials, quizzes: quizzes, results: results, team: team })[TAB](box.querySelector('#tab'), c);
   }
   function names(ids) {
     if (!ids.length) return Promise.resolve({});
@@ -66,6 +109,7 @@
       var en = r.data || [];
       return names(en.map(function (e) { return e.student_id; })).then(function (nm) {
         var wait = en.filter(function (e) { return e.status === 'pending'; }), ok = en.filter(function (e) { return e.status === 'approved'; }), held = en.filter(function (e) { return e.status === 'teacher_ok'; });
+        if (c.ro) { t.innerHTML = '<h4>Students in this class (' + ok.length + ')</h4>' + (ok.length ? ok.map(function (e) { return '<p>' + E(nm[e.student_id] || 'Student') + '</p>'; }).join('') : '<p class="small muted">None yet.</p>'); return; }
         t.innerHTML = '<h4>Requests to join (' + wait.length + ')</h4>' + (wait.length ? wait.map(function (e) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(nm[e.student_id] || 'Student') + '</b> <span class="small muted">asked ' + E(S.when(e.requested_at)) + '</span></span><span class="cta"><button class="btn main sm" data-ok="' + e.id + '">Approve</button><button class="btn sm" data-no="' + e.id + '">Decline</button></span></div>'; }).join('') : '<p class="small muted">No requests waiting. Tell students to sign up, press <b>Join a class</b>, choose <b>' + E(c.school_name || ME.profile.school_name || ME.profile.full_name) + '</b> and then <b>' + E(c.name) + '</b>.</p>') +
           (held.length ? '<h4>Waiting for Learnova to confirm (' + held.length + ')</h4><p class="small muted">You said yes. Learnova approves every student before they join a class.</p>' + held.map(function (e) { return '<p>' + E(nm[e.student_id] || 'Student') + '</p>'; }).join('') : '') +
           '<h4>Students in this class (' + ok.length + ')</h4>' + (ok.length ? ok.map(function (e) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>' + E(nm[e.student_id] || 'Student') + '</span><span class="cta"><a class="btn sm" href="/messages/">Message</a><button class="btn sm" data-no="' + e.id + '">Remove</button></span></div>'; }).join('') : '<p class="small muted">None yet.</p>') +
@@ -79,6 +123,8 @@
     t.innerHTML = '<p class="small muted">Loading…</p>';
     Promise.all([CAT ? Promise.resolve({ data: CAT }) : S.db.from('materials').select('*').order('sort'), S.db.from('class_materials').select('path,sort').eq('class_id', c.id)]).then(function (x) {
       CAT = x[0].data || []; var have = {}; (x[1].data || []).forEach(function (m) { have[m.path] = 1; });
+      if (c.ro) { var last0 = ''; t.innerHTML = '<p class="small muted">Lessons in this class (view only).</p>' + (CAT.filter(function (m) { return have[m.path]; }).map(function (m) { var u = m.subject + ' · ' + (m.unit || ''), hd = u !== last0 ? '<p class="label" style="margin-top:10px">' + E(u) + '</p>' : ''; last0 = u;
+        return hd + '<p>📘 <a href="' + E(m.path) + '" target="_blank" rel="noopener">' + E(m.title) + '</a></p>'; }).join('') || '<p class="small muted">No lessons yet.</p>'); return; }
       var subjects = []; CAT.forEach(function (m) { if (subjects.indexOf(m.subject) < 0) subjects.push(m.subject); });
       t.innerHTML = '<p class="small">Tick the Learnova lessons your students should see. They appear on your class page; students open them with their own account and their marks come to you under <b>Results</b>.</p>' +
         '<p class="small">Class page for students: <a href="/class/?id=' + E(c.id) + '">/class/?id=…</a> (also on their dashboard).</p>' +
@@ -100,6 +146,7 @@
     t.innerHTML = '<p class="small muted">Loading…</p>';
     Promise.all([S.db.from('quizzes').select('id,title,category,time_limit_minutes,max_attempts').eq('published', true).order('title'), S.db.from('quiz_classes').select('quiz_id').eq('class_id', c.id)]).then(function (x) {
       var all = x[0].data || [], set = {}; (x[1].data || []).forEach(function (q) { set[q.quiz_id] = 1; });
+      if (c.ro) { t.innerHTML = '<p class="small muted">Quizzes set for this class (view only).</p>' + (all.filter(function (z) { return set[z.id]; }).map(function (z) { return '<p>📝 ' + E(z.title) + '</p>'; }).join('') || '<p class="small muted">No quizzes yet.</p>'); return; }
       t.innerHTML = '<p class="small">Tick a quiz to set it for this class. Students find it in the Quiz centre; it is marked automatically.</p><label class="f">Search<input id="qq" placeholder="quiz title"></label><div id="ql"></div>';
       var list = function () { var q = t.querySelector('#qq').value.trim().toLowerCase();
         t.querySelector('#ql').innerHTML = all.filter(function (z) { return !q || z.title.toLowerCase().indexOf(q) >= 0; }).slice(0, 300).map(function (z) {
@@ -109,6 +156,20 @@
             b.disabled = false; if (r.error) { b.checked = !b.checked; return alert(S.nice(r.error)); } if (b.checked) set[id] = 1; else delete set[id]; }); }; });
       };
       t.querySelector('#qq').oninput = list; list();
+    });
+  }
+  // colleagues who can view this class (they cannot change anything)
+  function team(t, c) {
+    t.innerHTML = '<p class="small muted">Loading…</p>';
+    S.db.rpc('class_coteachers', { cid: c.id }).then(function (r) {
+      var rows = r.data || [];
+      t.innerHTML = '<p class="small">Add a colleague who also teaches this class. They can <b>see</b> the class, its students, lessons, quizzes and results, but cannot add or remove anything. They need an approved Learnova teacher account with premium.</p>' +
+        (rows.length ? rows.map(function (x) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>🤝 <b>' + E(x.full_name || 'Teacher') + '</b> <span class="small muted">' + E(x.school || '') + '</span></span><button class="btn sm" data-rm="' + E(x.teacher_id) + '">Remove</button></div>'; }).join('') : '<p class="small muted">No co-teachers yet.</p>') +
+        '<form id="cof" class="row2" style="margin-top:10px"><input id="coe" type="email" required placeholder="Colleague\'s email (their Learnova teacher account)" style="flex:1"><button class="btn main sm" type="submit">Add co-teacher</button></form><p class="msg" id="com"></p>';
+      t.querySelector('#cof').onsubmit = function (e) { e.preventDefault(); var m = t.querySelector('#com');
+        S.db.rpc('add_coteacher', { cid: c.id, teacher_email: t.querySelector('#coe').value }).then(function (x) { if (x.error) { m.textContent = S.nice(x.error); return; } team(t, c); }); };
+      t.querySelectorAll('[data-rm]').forEach(function (b) { b.onclick = function () { if (!confirm('Remove this co-teacher?')) return;
+        S.db.rpc('remove_coteacher', { cid: c.id, tid: b.getAttribute('data-rm') }).then(function (x) { if (x.error) return alert(S.nice(x.error)); team(t, c); }); }; });
     });
   }
   function results(t, c) {

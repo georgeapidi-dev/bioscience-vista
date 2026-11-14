@@ -19,7 +19,7 @@
       ]).then(function (x) {
         if (!x[0].error && !x[0].data) { return S.db.auth.signOut().then(function () { return null; }); }   // account was deleted
         var roles = (x[1].data || []).map(function (r) { return r.role; }), p = x[0].data || {};
-        var me = { user: u, profile: p, roles: roles, admin: roles.indexOf('admin') >= 0, staff: roles.indexOf('teacher') >= 0 || roles.indexOf('admin') >= 0, parent: roles.indexOf('parent') >= 0, cls: null };
+        var me = { user: u, profile: p, roles: roles, admin: roles.indexOf('admin') >= 0, staff: roles.indexOf('admin') >= 0,   /* only admins edit the main site (migration 024) */ parent: roles.indexOf('parent') >= 0, cls: null };
         var a = me.access = x[2].data || { premium: false, classes: [] };   // premium access and the classes this account joined (migration 022)
         me.school = !me.staff && (roles.indexOf('school_teacher') >= 0 || p.account_type === 'teacher');   // a teacher from another school: own classes only
         me.classes = (a.classes || []).filter(function (c) { return c.status === 'approved'; });

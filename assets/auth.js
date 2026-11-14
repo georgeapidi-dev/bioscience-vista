@@ -22,13 +22,14 @@
       '<p class="muted small">' + (T ? 'Your classes, students and materials are private to you and your students. The Learnova admin approves new teachers; a premium subscription is needed to run classes.' :
         'After signing up you choose your school or teacher, then your class. Your teacher approves you, and premium access opens the class materials.') + '</p>' +
       '<label class="f">Full name<input id="rn" autocomplete="name" required placeholder="' + (T ? 'Your name as students know it' : 'As it appears on your school records') + '"></label>' +
-      (T ? '<label class="f">School (or "Private tutor")<input id="rs" autocomplete="organization" required maxlength="120"></label>' : '') +
+      (T ? '<label class="f">School (choose it from the list, or type it if it is new; "Private tutor" if you have none)<input id="rs" list="rsl" autocomplete="organization" required maxlength="120"><datalist id="rsl"></datalist></label>' : '') +
       '<label class="f">Email<input id="re" type="email" autocomplete="email" required></label>' +
       '<label class="f">Password (at least 8 characters)<input id="rp" type="password" autocomplete="new-password" minlength="8" required></label>' +
       '<label class="f">Confirm password<input id="rp2" type="password" autocomplete="new-password" required></label>' +
       '<label class="chk"><input type="checkbox" id="ra" required> I will keep my password private' + (T ? ' and use student data only for teaching my own classes.' : ' and follow my school\'s rules for using this site.') + '</label>' +
       '<button class="btn main" type="submit">Create account</button><p class="msg" id="rm" role="alert"></p>' +
       '<p class="small">Already registered? <a href="/login/">Log in</a> · <a href="/register/">← Other account types</a></p></form>';
+    if (T) S.db.from('schools').select('name').order('name').then(function (r) { var dl = app.querySelector('#rsl'); if (dl) dl.innerHTML = (r.data || []).map(function (x) { return '<option value="' + E(x.name) + '">'; }).join(''); });
     app.querySelector('#rf').addEventListener('submit', function (e) {
       e.preventDefault(); var m = app.querySelector('#rm'); m.className = 'msg';
       var n = app.querySelector('#rn').value.trim(), em = app.querySelector('#re').value.trim(), p = app.querySelector('#rp').value, p2 = app.querySelector('#rp2').value,

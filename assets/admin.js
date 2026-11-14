@@ -2,15 +2,62 @@
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), TAB = (location.hash.slice(1) || 'requests');
   S.guard(app, { staff: true }).then(function (me) {
+    window.BVS_ME = me.user.id;
     if (!me.admin) { app.innerHTML = '<section class="panel"><h2>Admin only</h2><p><a href="/staff/">Back to the teacher dashboard</a></p></section>'; return; }
     draw();
   }).catch(function () {});
-  var TABS = [['requests', '🙋 Join requests'], ['members', '👥 Members & access'], ['teachers', '🧑‍🏫 Teachers'], ['payments', '💳 Payments'], ['settings', '⚙️ Prices & settings']];
+  var TABS = [['requests', '🙋 Join requests'], ['members', '👥 Members & access'], ['teachers', '🧑‍🏫 Teachers'], ['payments', '💳 Payments'], ['settings', '⚙️ Prices & settings'], ['schools', '🏫 Schools'], ['reviews', '⭐ Reviews'], ['admins', '🔑 Admins']];
   function draw() {
     app.innerHTML = '<div class="row2"><div><p class="label">Admin</p><h2>Learnova admin</h2></div><div class="cta"><a class="btn sm" href="/staff/">Teacher dashboard</a></div></div>' +
       '<div class="cta" role="tablist">' + TABS.map(function (t) { return '<button type="button" class="btn sm' + (TAB === t[0] ? ' main' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><section class="panel grp" id="tab"><p class="muted small">Loading…</p></section>';
     app.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { TAB = b.getAttribute('data-t'); history.replaceState(null, '', '#' + TAB); draw(); }; });
-    ({ requests: requests, members: members, teachers: teachers, payments: payments, settings: settings })[TAB](app.querySelector('#tab'));
+    ({ requests: requests, members: members, teachers: teachers, payments: payments, settings: settings, schools: schools, reviews: reviews, admins: admins })[TAB](app.querySelector('#tab'));
+  }
+  // one name per school: merge spellings teachers typed differently
+  function schools(t) {
+    Promise.all([S.db.from('schools').select('id,name').order('name'), S.db.from('classes').select('school_id').eq('owner_kind', 'school'), S.db.from('profiles').select('school_id').not('school_id', 'is', null)]).then(function (x) {
+      if (x[0].error) return fail(t, x[0]);
+      var n = function (rows, id) { return (rows.data || []).filter(function (r) { return r.school_id === id; }).length; }, list = x[0].data || [];
+      t.innerHTML = '<p class="small">Teachers choose their school from this list. If the same school appears twice, merge the extra spelling into the right one: its teachers and classes move across.</p>' +
+        list.map(function (sc) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(sc.name) + '</b> <span class="small muted">' + n(x[2], sc.id) + ' people · ' + n(x[1], sc.id) + ' classes</span></span>' +
+          '<span class="cta"><select data-into="' + E(sc.id) + '"><option value="">Merge into…</option>' + list.filter(function (o) { return o.id !== sc.id; }).map(function (o) { return '<option value="' + E(o.id) + '">' + E(o.name) + '</option>'; }).join('') + '</select>' +
+          '<button class="btn sm" data-ren="' + E(sc.id) + '">Rename</button></span></div>'; }).join('') || '<p class="small muted">No schools yet.</p>';
+      t.querySelectorAll('[data-into]').forEach(function (sel) { sel.onchange = function () { if (!sel.value) return; var a = sel.getAttribute('data-into');
+        if (!confirm('Move every teacher and class from "' + list.filter(function (o) { return o.id === a; })[0].name + '" into "' + sel.options[sel.selectedIndex].text + '"?')) { sel.value = ''; return; }
+        S.db.rpc('merge_schools', { src: a, dst: sel.value }).then(function (r) { if (r.error) return alert(S.nice(r.error)); schools(t); }); }; });
+      t.querySelectorAll('[data-ren]').forEach(function (b) { b.onclick = function () { var id = b.getAttribute('data-ren'), nm = prompt('New name for this school:', list.filter(function (o) { return o.id === id; })[0].name); if (!nm) return;
+        S.db.from('schools').update({ name: nm.trim() }).eq('id', id).then(function (r) { if (r.error) return alert(S.nice(r.error)); schools(t); }); }; });
+    });
+  }
+  // reviews from real students, parents and teachers: publish or hide
+  function reviews(t) {
+    S.db.from('reviews').select('*').order('status').order('created_at', { ascending: false }).then(function (r) {
+      if (r.error) return fail(t, r);
+      var rows = r.data || [];
+      t.innerHTML = '<p class="small">Students, parents and teachers write reviews from their dashboards. Only reviews you publish appear on the home page.</p>' +
+        (rows.map(function (v) { return '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="row2"><span><b>' + '★'.repeat(v.rating) + '</b> ' + E(v.display_name) + ' <span class="small muted">' + E(v.who) + (v.school ? ' · ' + E(v.school) : '') + ' · ' + E(v.status) + '</span></span>' +
+          '<span class="cta">' + (v.status !== 'approved' ? '<button class="btn main sm" data-pub="' + v.id + '">Publish</button>' : '') + (v.status !== 'hidden' ? '<button class="btn sm" data-hide="' + v.id + '">Hide</button>' : '') + '</span></div><p class="small">' + E(v.body) + '</p></div>'; }).join('') || '<p class="small muted">No reviews yet.</p>');
+      t.querySelectorAll('[data-pub],[data-hide]').forEach(function (b) { b.onclick = function () { var pub = b.hasAttribute('data-pub');
+        S.db.from('reviews').update({ status: pub ? 'approved' : 'hidden' }).eq('id', b.getAttribute(pub ? 'data-pub' : 'data-hide')).then(function (x) { if (x.error) return alert(S.nice(x.error)); reviews(t); }); }; });
+    });
+  }
+  // only admins can change the main site; an admin can make another account an admin
+  function admins(t) {
+    S.db.rpc('admin_members').then(function (r) {
+      if (r.error) return fail(t, r);
+      var all = r.data || [], ad = all.filter(function (m) { return m.account_type === 'admin'; });
+      t.innerHTML = '<p class="small">Admins can change everything on the main site: lessons, quizzes, classes, prices, payments and members. Teachers and students cannot. Give admin rights only to people you trust.</p>' +
+        '<h4>Admins (' + ad.length + ')</h4>' + ad.map(function (m) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>🔑 <b>' + E(m.full_name) + '</b> <span class="small muted">' + E(m.email) + '</span></span>' +
+          (m.id === (window.BVS_ME || '') ? '<span class="pill">you</span>' : '<button class="btn sm" data-rm="' + E(m.id) + '">Remove admin</button>') + '</div>'; }).join('') +
+        '<h4>Add an admin</h4><label class="f">Their email (they must already have a Learnova account)<input id="ae" type="email" list="ael"><datalist id="ael">' + all.filter(function (m) { return m.account_type !== 'admin'; }).map(function (m) { return '<option value="' + E(m.email) + '">' + E(m.full_name) + '</option>'; }).join('') + '</datalist></label>' +
+        '<button class="btn main sm" id="aadd">Make admin</button><p class="msg" id="am"></p>';
+      t.querySelector('#aadd').onclick = function () { var em = t.querySelector('#ae').value.trim().toLowerCase(), u = all.filter(function (m) { return (m.email || '').toLowerCase() === em; })[0], m = t.querySelector('#am');
+        if (!u) { m.textContent = 'No account uses that email.'; return; }
+        if (!confirm('Give ' + u.full_name + ' full admin rights over the whole site?')) return;
+        S.db.rpc('set_admin', { uid: u.id, make: true }).then(function (x) { if (x.error) { m.textContent = S.nice(x.error); return; } MEM = null; admins(t); }); };
+      t.querySelectorAll('[data-rm]').forEach(function (b) { b.onclick = function () { if (!confirm('Remove this person\'s admin rights?')) return;
+        S.db.rpc('set_admin', { uid: b.getAttribute('data-rm'), make: false }).then(function (x) { if (x.error) return alert(S.nice(x.error)); MEM = null; admins(t); }); }; });
+    });
   }
   function fail(t, r) { t.innerHTML = '<p class="msg">' + E(S.nice(r.error)) + '</p>'; }
   function requests(t) {

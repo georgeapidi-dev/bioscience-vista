@@ -12,7 +12,7 @@
   function list() {
     app.innerHTML = '<p class="muted">Loading quizzes…</p>';
     Promise.all([
-      S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results, topics(name)').eq('published', true).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false }),
+      S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results, topics(name), quiz_classes(class_id, classes(id,name,archived_at))').eq('published', true).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false }),
       S.db.from('quiz_attempts').select('id,quiz_id,status,score,max_score,submitted_at,released').eq('student_id', ME.user.id)
     ]).then(function (x) {
       if (x[0].error) return fail(x[0]);
@@ -27,12 +27,26 @@
           '<span class="small muted">' + [q.topics && q.topics.name, q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : 'No time limit', q.due_at ? 'Due ' + S.when(q.due_at) : '', q.max_attempts + ' attempt' + (q.max_attempts > 1 ? 's' : '')].filter(Boolean).map(E).join(' · ') + '</span>' +
           (q.instructions ? '<p class="small">' + E(q.instructions) + '</p>' : '') + '<div class="acts">' + btn + '</div></article>';
       }
-      var todo = qs.filter(function (q) { return !at.some(function (a) { return a.quiz_id === q.id && a.status !== 'in_progress'; }); }), past = qs.filter(function (q) { return todo.indexOf(q) < 0; });
+      // each quiz sits under the class it is set for (a student sees only their own classes)
+      var mine = {}; (ME.classes || []).forEach(function (c) { mine[c.id] = c.name; });
+      var groups = {}, order = [];
+      qs.forEach(function (q) {
+        var cls = (q.quiz_classes || []).map(function (x) { return x.classes; }).filter(function (c) { return c && !c.archived_at && (ME.staff || mine[c.id]); });
+        if (!cls.length) cls = [{ id: '_', name: ME.staff ? 'Not set for a class' : 'Set for you' }];
+        cls.forEach(function (c) { if (!groups[c.id]) { groups[c.id] = { name: c.name, qs: [] }; order.push(c.id); } groups[c.id].qs.push(q); });
+      });
+      order.sort(function (a, b) { return groups[a].name.localeCompare(groups[b].name); });
+      var isDone = function (q) { return at.some(function (a) { return a.quiz_id === q.id && a.status !== 'in_progress'; }); };
+      var pick = new URLSearchParams(location.search).get('class') || (order.length === 1 ? order[0] : '');
       app.innerHTML = '<div class="row2"><div><p class="label">' + (EXAM ? 'Online exams' : 'Quiz centre') + '</p><h2>Your ' + NOUN + 's</h2></div><a class="btn sm" href="/dashboard/">My dashboard</a></div>' +
-        (ME.staff ? '<p class="panel tint small">You are signed in as a teacher. Students only see ' + NOUN + 's set for their class. Build and set them in the <a href="/staff/#quizzes">Teacher dashboard</a>.</p>' : '') +
-        (!ME.cls && !ME.staff ? '<p class="panel tint">Join a class on <a href="/dashboard/">your dashboard</a> to see your ' + NOUN + 's.</p>' : '') +
-        '<section class="grp"><h3 class="sec-h">To do</h3>' + (todo.length ? todo.map(card).join('') : '<p class="emptybox">Nothing to do right now.</p>') + '</section>' +
-        (past.length ? '<section class="grp"><h3 class="sec-h">Completed</h3>' + past.map(card).join('') + '</section>' : '');
+        (ME.staff ? '<p class="panel tint small">You are signed in as an admin. Students only see ' + NOUN + 's set for their own classes. Build and set them in the <a href="/staff/#quizzes">Teacher dashboard</a>.</p>' : '') +
+        (!order.length && !ME.staff ? '<p class="panel tint">Join a class on <a href="/dashboard/">your dashboard</a> to see your ' + NOUN + 's.</p>' : '') +
+        (order.length > 1 ? '<div class="cta" role="tablist"><button type="button" class="btn sm' + (pick ? '' : ' main') + '" data-g="">All classes</button>' + order.map(function (g) { return '<button type="button" class="btn sm' + (pick === g ? ' main' : '') + '" data-g="' + E(g) + '">' + E(groups[g].name) + ' (' + groups[g].qs.length + ')</button>'; }).join('') + '</div>' : '') +
+        order.filter(function (g) { return !pick || g === pick; }).map(function (g) { var gq = groups[g].qs, todo = gq.filter(function (q) { return !isDone(q); }), past = gq.filter(isDone);
+          return '<section class="grp panel"><h3 class="sec-h">🏫 ' + E(groups[g].name) + '</h3>' +
+            '<h4>To do</h4>' + (todo.length ? todo.map(card).join('') : '<p class="emptybox">Nothing to do right now.</p>') +
+            (past.length ? '<h4>Completed</h4>' + past.map(card).join('') : '') + '</section>'; }).join('');
+      app.querySelectorAll('[data-g]').forEach(function (b) { b.onclick = function () { var u = new URL(location.href); if (b.getAttribute('data-g')) u.searchParams.set('class', b.getAttribute('data-g')); else u.searchParams.delete('class'); history.replaceState(null, '', u); list(); }; });
     });
   }
 

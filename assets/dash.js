@@ -50,6 +50,50 @@
     };
   }
   // Personalised next steps: lessons started but not finished, then the next lessons in each of my classes, in course order
+  // every lesson the student has worked on: mark, answers and Try again
+  function myLessons(me) {
+    var box = app.querySelector('#mylessons'); if (!box) return;
+    S.db.rpc('my_lessons').then(function (r) {
+      var rows = r.data || [];
+      if (!rows.length) { box.innerHTML = '<h3>📘 My interactive lessons</h3><p class="small muted">Lessons you work on appear here with your marks and answers.</p>'; return; }
+      var ind = rows[0].independent;
+      box.innerHTML = '<h3>📘 My interactive lessons</h3><p class="small muted">' + (ind ? 'As an independent learner, your best mark counts each time you try again.' : 'Your first attempt is the mark your teacher records. You can try again to practise; your new marks show as practice marks.') + '</p>' +
+        rows.map(function (l, i) {
+          var mark = l.score != null ? E(+l.score) + ' / ' + E(+l.max_score) : '–', more = l.attempts > 1 ? ' · ' + (ind ? 'best' : 'practice') + ': ' + E(+(ind ? l.best_score : l.last_score)) + ' · attempt ' + l.attempts : '';
+          return '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="row2"><span><a href="' + E(l.url) + '"><b>' + E(l.title) + '</b></a><br><span class="small">' + (l.status === 'completed' ? '✓ Finished' : '◐ ' + l.percent + '% done') + ' · <b>Mark: ' + mark + '</b>' + more + '</span></span>' +
+            '<span class="cta"><button type="button" class="btn sm" data-ans="' + i + '">My answers</button>' + (l.status === 'completed' ? '<button type="button" class="btn main sm" data-retry="' + i + '">↻ Try again</button>' : '<a class="btn main sm" href="' + E(l.url) + '">Continue</a>') + '</span></div><div id="ans' + i + '" hidden></div></div>';
+        }).join('');
+      box.querySelectorAll('[data-ans]').forEach(function (b) { b.onclick = function () { var l = rows[+b.getAttribute('data-ans')], el = box.querySelector('#ans' + b.getAttribute('data-ans'));
+        if (!el.hidden) { el.hidden = true; return; } el.hidden = false; el.innerHTML = '<p class="small muted">Loading…</p>';
+        S.db.from('lesson_work').select('step,answers,saved_at').eq('lesson', l.external_id).eq('student_id', me.user.id).order('saved_at').then(function (x) {
+          var last = {}; (x.data || []).forEach(function (w) { last[w.step] = w; });
+          el.innerHTML = Object.keys(last).sort(function (a, b) { return a - b; }).map(function (n) {
+            var parts = String(last[n].answers || '').replace(/^\[AUTO[^\]]*\]\s*/, '').split(/\s*‖\s*/).filter(function (p) { return p.indexOf(':') > 0 && !/^(Feedback|Table|Format|Confidence|TOTAL|THIS)/i.test(p); });
+            var m = /THIS=([\d.]+)\s*\/\s*([\d.]+)/.exec(last[n].answers || '');
+            return '<details class="grp"><summary><b>Step ' + E(n) + '</b>' + (m ? ' · ' + E(m[1]) + ' / ' + E(m[2]) : '') + '</summary>' + parts.map(function (p) { var k = p.indexOf(':'); return '<p class="small"><b>' + E(p.slice(0, k)) + ':</b> ' + E(p.slice(k + 1)) + '</p>'; }).join('') + '</details>';
+          }).join('') || '<p class="small muted">No saved answers on record.</p>';
+        }); }; });
+      box.querySelectorAll('[data-retry]').forEach(function (b) { b.onclick = function () { var l = rows[+b.getAttribute('data-retry')];
+        if (!confirm(ind ? 'Start this lesson again? Your best mark will count.' : 'Start this lesson again for practice? Your first mark stays on your record.')) return;
+        b.disabled = true; S.db.rpc('begin_retry', { lesson_ext_id: l.external_id }).then(function () { location.href = l.url + (l.url.indexOf('?') < 0 ? '?' : '&') + 'retry=1&lid=' + encodeURIComponent(l.external_id); }); }; });
+    });
+  }
+  // a review of Learnova, shown on the home page once the admin approves it
+  function reviewBox(me) {
+    var sec = document.createElement('section'); sec.className = 'panel'; sec.id = 'review';
+    var plan = app.querySelector('#plan'); if (!plan) return; plan.after(sec);
+    S.db.from('reviews').select('rating,body,status').eq('user_id', me.user.id).maybeSingle().then(function (r) {
+      var mine = r.data;
+      sec.innerHTML = '<h3>⭐ Review Learnova</h3>' + (mine ? '<p class="small">Your review is <b>' + E(mine.status === 'approved' ? 'published' : mine.status === 'hidden' ? 'not shown' : 'waiting for approval') + '</b>. You can change it below.</p>' : '<p class="small muted">Tell other students and teachers what helps you most. Reviews appear on the home page after a check.</p>') +
+        '<form id="rvf" class="grp"><div class="cta" role="radiogroup" aria-label="Stars">' + [1, 2, 3, 4, 5].map(function (n) { return '<label class="chk"><input type="radio" name="st" value="' + n + '"' + ((mine ? mine.rating : 5) === n ? ' checked' : '') + '> ' + '★'.repeat(n) + '</label>'; }).join('') + '</div>' +
+        '<textarea id="rvt" maxlength="600" rows="3" placeholder="What do you like about the lessons, quizzes or labs?">' + E(mine ? mine.body : '') + '</textarea>' +
+        '<label class="chk"><input type="checkbox" id="rvn"> Show my full name (otherwise only my first name)</label><button class="btn main sm" type="submit">Send review</button><p class="msg" id="rvm"></p></form>';
+      sec.querySelector('#rvf').onsubmit = function (e) { e.preventDefault(); var m = sec.querySelector('#rvm'), st = sec.querySelector('input[name=st]:checked');
+        S.db.rpc('submit_review', { stars: st ? +st.value : 5, words: sec.querySelector('#rvt').value, show_full_name: sec.querySelector('#rvn').checked }).then(function (x) {
+          if (x.error) { m.className = 'msg'; m.textContent = /check/.test(x.error.message) ? 'Please write at least a sentence (10 characters).' : S.nice(x.error); return; }
+          m.className = 'msg ok'; m.textContent = 'Thank you! Your review will appear after a quick check.'; }); };
+    });
+  }
   function learningPlan(me, prog) {
     var box = app.querySelector('#plan'); if (!box) return;
     var ids = (me.classes || []).map(function (c) { return c.id; }); if (!ids.length) { box.remove(); return; }
@@ -122,6 +166,7 @@
     h += '<div class="two"><section class="panel"><h3>📌 To do</h3>' + todoHtml(tasks) + (todo.length || !tasks.length ? (tasks.length ? '<p class="small muted" style="margin:10px 0 2px">Also open for your class:</p>' : '') : '') + (todo.length ? todo.map(function (q) { return '<p>' + ({ exam: '🧪', lesson: '📘' }[q.category] || '📝') + ' <a href="' + ({ exam: '/exams/', lesson: '/lesson/' }[q.category] || '/quizzes/') + '#' + q.id + '">' + E(q.title) + '</a>' + (q.due_at ? ' <span class="small muted">due ' + E(S.when(q.due_at)) + '</span>' : '') + '</p>'; }).join('') : (tasks.length ? '' : '<p class="muted">Nothing to do right now. Well done!</p>')) +
       prog.filter(function (p) { return p.status !== 'completed'; }).slice(0, 5).map(function (p) { return '<p>📘 <a href="' + E(p.lessons && p.lessons.url || '/learn/') + '">' + E(p.lessons ? p.lessons.title : 'Lesson') + '</a> <span class="small muted">' + p.percent + '% done</span></p>'; }).join('') + '</section>' +
       '<section class="panel"><h3>My progress</h3>' + (prog.length ? prog.slice(0, 8).map(function (p) { return '<div class="grp" style="gap:4px"><div class="row2"><span class="small">' + E(p.lessons ? p.lessons.title : '') + '</span><span class="small muted">' + p.percent + '%</span></div><div class="bar"><i style="width:' + p.percent + '%"></i></div></div>'; }).join('') : '<p class="muted">Open a lesson from the <a href="/learn/">Learning centre</a> to start.</p>') + '</section></div>';
+    h += '<section class="panel" id="mylessons"><h3>📘 My interactive lessons</h3><p class="small muted">Loading…</p></section>';
     h += '<section class="panel" id="plan"><h3>🧭 My learning plan</h3><p class="small muted">Loading…</p></section>';
     h += '<section class="panel" id="anbox"><h3>📊 My learning profile</h3><p class="muted small">Loading…</p></section>';
     h += '<section class="grp"><h3 class="sec-h">My results and feedback</h3>' + (res.length ? res.map(function (r) { var pc = S.pct(+r.score, +r.max_score);
@@ -140,6 +185,7 @@
         tasks.forEach(function (t) { if (t.id === b.getAttribute('data-done')) t.state = 'done'; }); draw(me, res, prog, quizzes, att, tasks); }); }; });
     classesPanel(me, app.querySelector('#mycl'));
     learningPlan(me, prog);
+    myLessons(me); reviewBox(me);
     app.querySelector('#pf').onsubmit = function (e) { e.preventDefault(); var m = app.querySelector('#pm');
       S.db.from('profiles').update({ full_name: app.querySelector('#pn').value.trim() }).eq('id', me.user.id).then(function (r) { m.className = r.error ? 'msg' : 'msg ok'; m.textContent = r.error ? S.nice(r.error) : 'Saved.'; }); };
   }
