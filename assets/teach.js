@@ -144,20 +144,32 @@
   }
   function quizzes(t, c) {
     t.innerHTML = '<p class="small muted">Loading…</p>';
-    Promise.all([S.db.from('quizzes').select('id,title,category,time_limit_minutes,max_attempts').eq('published', true).order('title'), S.db.from('quiz_classes').select('quiz_id').eq('class_id', c.id)]).then(function (x) {
-      var all = x[0].data || [], set = {}; (x[1].data || []).forEach(function (q) { set[q.quiz_id] = 1; });
-      if (c.ro) { t.innerHTML = '<p class="small muted">Quizzes set for this class (view only).</p>' + (all.filter(function (z) { return set[z.id]; }).map(function (z) { return '<p>📝 ' + E(z.title) + '</p>'; }).join('') || '<p class="small muted">No quizzes yet.</p>'); return; }
-      t.innerHTML = '<p class="small">Tick a quiz to set it for this class. Students find it in the Quiz centre; it is marked automatically.</p><label class="f">Search<input id="qq" placeholder="quiz title"></label><div id="ql"></div>';
+    Promise.all([S.db.from('quizzes').select('id,title,category,time_limit_minutes,max_attempts').eq('published', true).order('title'),
+      S.db.from('quiz_classes').select('quiz_id,published, quizzes(id,title,category,time_limit_minutes,max_attempts)').eq('class_id', c.id)]).then(function (x) {
+      var cat = x[0].data || [], links = x[1].data || [], set = {}, byId = {};
+      links.forEach(function (r) { set[r.quiz_id] = r.published ? 'live' : 'wait'; if (r.quizzes) byId[r.quiz_id] = r.quizzes; });
+      cat.forEach(function (z) { byId[z.id] = byId[z.id] || z; });
+      var all = Object.keys(byId).map(function (k) { return byId[k]; }).sort(function (a, b) { return (set[b.id] ? 1 : 0) - (set[a.id] ? 1 : 0) || a.title.localeCompare(b.title); });
+      if (c.ro) { t.innerHTML = '<p class="small muted">Quizzes for this class (view only).</p>' + (all.filter(function (z) { return set[z.id]; }).map(function (z) { return '<p>📝 ' + E(z.title) + ' <span class="small muted">' + (set[z.id] === 'live' ? 'published' : 'not published yet') + '</span></p>'; }).join('') || '<p class="small muted">No quizzes yet.</p>'); return; }
+      var nWait = all.filter(function (z) { return set[z.id] === 'wait'; }).length;
+      t.innerHTML = '<p class="small">Quizzes for your course are already linked to this class. Students see a quiz only after you press <b>Publish</b>. ' +
+        (nWait ? '<b>' + nWait + ' quiz' + (nWait === 1 ? '' : 'zes') + ' waiting for you to publish.</b>' : '') + '</p><label class="f">Search<input id="qq" placeholder="quiz title"></label><div id="ql"></div>';
       var list = function () { var q = t.querySelector('#qq').value.trim().toLowerCase();
         t.querySelector('#ql').innerHTML = all.filter(function (z) { return !q || z.title.toLowerCase().indexOf(q) >= 0; }).slice(0, 300).map(function (z) {
-          return '<label class="chk" style="display:flex;gap:8px"><input type="checkbox" data-q="' + E(z.id) + '"' + (set[z.id] ? ' checked' : '') + '><span>' + E(z.title) + ' <span class="small muted">' + E(z.category || 'quiz') + (z.time_limit_minutes ? ' · ' + z.time_limit_minutes + ' min' : '') + '</span></span></label>'; }).join('') || '<p class="small muted">No quizzes found.</p>';
-        t.querySelectorAll('[data-q]').forEach(function (b) { b.onchange = function () { var id = b.getAttribute('data-q'); b.disabled = true;
-          (b.checked ? S.db.from('quiz_classes').insert({ quiz_id: id, class_id: c.id }) : S.db.from('quiz_classes').delete().eq('quiz_id', id).eq('class_id', c.id)).then(function (r) {
-            b.disabled = false; if (r.error) { b.checked = !b.checked; return alert(S.nice(r.error)); } if (b.checked) set[id] = 1; else delete set[id]; }); }; });
+          var st = set[z.id];
+          return '<div class="row2" style="justify-content:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)"><span style="flex:1">📝 ' + E(z.title) + ' <span class="small muted">' + E(z.category || 'quiz') + (z.time_limit_minutes ? ' · ' + z.time_limit_minutes + ' min' : '') + '</span>' +
+            (st === 'live' ? ' <span class="pill ok">Published</span>' : st === 'wait' ? ' <span class="pill">Not published</span>' : '') + '</span>' +
+            (st === 'live' ? '<button type="button" class="btn sm" data-p="' + E(z.id) + '" data-on="0">⏸ Unpublish</button>' : '<button type="button" class="btn sm main" data-p="' + E(z.id) + '" data-on="1">📢 Publish</button>') +
+            (st ? '<button type="button" class="btn sm" data-rm="' + E(z.id) + '" title="Remove from this class">✕</button>' : '') + '</div>'; }).join('') || '<p class="small muted">No quizzes found.</p>';
+        t.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { var id = b.getAttribute('data-p'), on = b.getAttribute('data-on') === '1'; b.disabled = true;
+          S.db.rpc('set_quiz_published', { qid: id, cid: c.id, on_off: on }).then(function (r) { b.disabled = false; if (r.error) return alert(S.nice(r.error)); set[id] = on ? 'live' : 'wait'; list(); }); }; });
+        t.querySelectorAll('[data-rm]').forEach(function (b) { b.onclick = function () { var id = b.getAttribute('data-rm'); b.disabled = true;
+          S.db.from('quiz_classes').delete().eq('quiz_id', id).eq('class_id', c.id).then(function (r) { b.disabled = false; if (r.error) return alert(S.nice(r.error)); delete set[id]; list(); }); }; });
       };
       t.querySelector('#qq').oninput = list; list();
     });
   }
+
   // colleagues who can view this class (they cannot change anything)
   function team(t, c) {
     t.innerHTML = '<p class="small muted">Loading…</p>';

@@ -12,7 +12,7 @@
   function list() {
     app.innerHTML = '<p class="muted">Loading quizzes…</p>';
     Promise.all([
-      S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results, topics(name), quiz_classes(class_id, classes(id,name,archived_at))').eq('published', true).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false }),
+      S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results, topics(name), quiz_classes(class_id, classes(id,name,archived_at))').in('published', (ME.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false }),
       S.db.from('quiz_attempts').select('id,quiz_id,status,score,max_score,submitted_at,released').eq('student_id', ME.user.id)
     ]).then(function (x) {
       if (x[0].error) return fail(x[0]);

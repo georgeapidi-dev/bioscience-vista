@@ -13,7 +13,7 @@
       S.db.from('lessons').select('id,topic_id,title,summary,url,minutes,max_marks,sort_order,published,external_id').order('sort_order'),
       S.db.from('resources').select('id,topic_id,title,kind,url,download_url,sort_order,published').order('sort_order'),
       S.db.from('learning_progress').select('lesson_id,status,percent').eq('student_id', me.user.id),
-      S.db.from('quizzes').select('id,title,instructions,due_at').eq('category', 'lesson').eq('published', true).order('created_at', { ascending: false }),
+      S.db.from('quizzes').select('id,title,instructions,due_at').eq('category', 'lesson').in('published', (me.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).order('created_at', { ascending: false }),
       S.db.from('simulations').select('id,topic_id,title,url,is_internal').eq('published', true)
     ]).then(function (x) {
       var subjects = x[0].data || [], topics = (x[1].data || []).filter(function (t) { return t.published; }), prog = {}, mineIL = {};

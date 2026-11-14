@@ -8,7 +8,7 @@
     return Promise.all([
       S.db.from('student_results').select('*').eq('student_id', me.user.id).order('recorded_at', { ascending: false }),
       S.db.from('learning_progress').select('*, lessons(title,url)').eq('student_id', me.user.id).order('updated_at', { ascending: false }),
-      S.db.from('quizzes').select('id,title,due_at,opens_at,time_limit_minutes,max_attempts,category').eq('published', true),
+      (function (q) { return (me.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? q.eq('published', true) : q; })(S.db.from('quizzes').select('id,title,due_at,opens_at,time_limit_minutes,max_attempts,category')),   // students: quizzes published for their classes (per class, migration 025)
       S.db.from('quiz_attempts').select('quiz_id,status,score,max_score,submitted_at').eq('student_id', me.user.id),
       S.db.rpc('my_todo').then(function (r) { return r; }, function () { return { data: [] }; })
     ]).then(function (x) { draw(me, x[0].data || [], x[1].data || [], x[2].data || [], x[3].data || [], x[4].data || []); });

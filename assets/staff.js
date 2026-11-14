@@ -268,7 +268,7 @@
   function pickLists() {
     if (PICK) return Promise.resolve(PICK);
     return Promise.all([S.db.from('lessons').select('id,title,url,external_id,topic_id').eq('published', true).order('sort_order'),
-      S.db.from('quizzes').select('id,title,category,published, quiz_classes(class_id)').order('created_at', { ascending: false }),
+      S.db.from('quizzes').select('id,title,category,published, quiz_classes(class_id,published)').order('created_at', { ascending: false }),
       S.db.from('resources').select('id,title,url,topic_id').eq('published', true).order('sort_order'),
       S.db.from('simulations').select('id,title,url,topic_id').eq('published', true).order('sort_order')]).then(function (x) {
       PICK = { lesson: x[0].data || [], quiz: x[1].data || [], resource: x[2].data || [], sim: x[3].data || [] }; return PICK; });
@@ -334,7 +334,7 @@
         var match = function (t) { return !q || (t || '').toLowerCase().indexOf(q) >= 0; };
         if (kind === 'quiz') {
           var qs = L.quiz.filter(function (x) { return match(x.title) && (x.quiz_classes || []).some(function (r) { return r.class_id === c.id; }); });
-          return qs.map(function (x) { return '<option value="' + x.id + '">' + (x.category === 'exam' ? '🧪 Exam · ' : x.category === 'lesson' ? '📘 ' : '📝 ') + E(x.title) + (x.published ? '' : ' (draft)') + '</option>'; }).join('');
+          return qs.map(function (x) { return '<option value="' + x.id + '">' + (x.category === 'exam' ? '🧪 Exam · ' : x.category === 'lesson' ? '📘 ' : '📝 ') + E(x.title) + ((x.quiz_classes || []).some(function (r) { return r.class_id === c.id && r.published; }) ? '' : ' (not published yet: setting it for the whole class publishes it)') + '</option>'; }).join('');
         }
         var list = (L[kind] || []).filter(function (it) {
           if (!match(it.title)) return false;
@@ -384,7 +384,7 @@
         S.db.rpc('assign_work', { cls: c.id, title: title, kind: k, ref: ref, url: url, instructions: $('#ain').value.trim(), due: iso($('#ad').value), students: some ? who : null }).then(function (r) {
           $('#ago').disabled = false;
           if (r.error) { m.textContent = S.nice(r.error); return; }
-          toast('Added to the to-do list of ' + (some ? who.length + ' student' + (who.length === 1 ? '' : 's') : 'everyone in ' + c.name) + (k === 'quiz' && it && !it.published ? '. This quiz is still a draft: publish it so students can open it.' : ''));
+          toast('Added to the to-do list of ' + (some ? who.length + ' student' + (who.length === 1 ? '' : 's') : 'everyone in ' + c.name) + (false ? '. This quiz is still a draft: publish it so students can open it.' : ''));
           host.innerHTML = ''; if (done) done();
         });
       };
@@ -528,13 +528,13 @@
   }
   function quizBoard(body, c, state) {
     return Promise.all([roster(c.id),
-      S.db.from('quiz_classes').select('quizzes(id,title,category,published,due_at,opens_at,time_limit_minutes,show_results,created_at, quiz_questions(question_id))').eq('class_id', c.id),
+      S.db.from('quiz_classes').select('published, quizzes(id,title,category,published,due_at,opens_at,time_limit_minutes,show_results,created_at, quiz_questions(question_id))').eq('class_id', c.id),
       S.db.rpc('class_quiz_board', { cls: c.id })]).then(function (x) {
       if (x[1].error) throw x[1].error; if (x[2].error) throw x[2].error;
-      var kids = x[0], qs = (x[1].data || []).map(function (r) { return r.quizzes; }).filter(Boolean), by = {}, extra = {};
-      qs.sort(function (a, b) { return (b.published - a.published) || (new Date(b.created_at) - new Date(a.created_at)); });
+      var kids = x[0], qs = (x[1].data || []).filter(function (r) { return r.quizzes; }).map(function (r) { return Object.assign({}, r.quizzes, { live: !!r.published }); }), by = {}, extra = {};
+      qs.sort(function (a, b) { return (b.live - a.live) || (new Date(b.created_at) - new Date(a.created_at)); });
       (x[2].data || []).forEach(function (r) { (by[r.quiz_id] = by[r.quiz_id] || {})[r.student_id] = r; });
-      if (!qs.length) { body.innerHTML = '<p class="emptybox">No quizzes or exams are set for ' + E(c.name) + ' yet. In <a href="#quizzes">Quizzes and exams</a>, open a quiz, tick this class and publish it.</p>'; return; }
+      if (!qs.length) { body.innerHTML = '<p class="emptybox">No quizzes or exams are linked to ' + E(c.name) + ' yet. In <a href="#quizzes">Quizzes and exams</a>, open a quiz and tick this class; then publish it here.</p>'; return; }
       if (!kids.length) { body.innerHTML = '<p class="emptybox">No students have joined ' + E(c.name) + ' yet. Give them the join code <b class="code">' + E(c.join_code) + '</b> to type on the registration page.</p>'; return; }
       var html = filters(state) + qs.map(function (q, qi) {
         var nq = (q.quiz_questions || []).length, rows = kids.map(function (k) {
@@ -546,12 +546,12 @@
         var show = rows.filter(function (r) { return state.filter === 'all' || (state.filter === 'done' ? r.st === 'done' : r.st !== 'done'); });
         var order = { prog: 0, none: 1, done: 2 }; show.sort(function (a, b) { return order[a.st] - order[b.st] || (a.k.full_name || '').localeCompare(b.k.full_name || ''); });
         var key = 'q' + q.id, open = state.open[key] != null ? state.open[key] : qi === 0;
-        return '<details class="panel" data-k="' + key + '"' + (open ? ' open' : '') + '><summary><b>' + (q.category === 'exam' ? '🧪 ' : '📝 ') + E(q.title) + '</b> ' + (q.published ? '' : '<span class="pill">Draft: students cannot see it</span>') +
+        return '<details class="panel" data-k="' + key + '"' + (open ? ' open' : '') + '><summary><b>' + (q.category === 'exam' ? '🧪 ' : '📝 ') + E(q.title) + '</b> ' + (q.live ? '<span class="pill ok">Published for ' + E(c.name) + '</span>' : '<span class="pill">Not published: students in ' + E(c.name) + ' cannot see it</span>') +
           '<div class="small muted">' + [nq + ' questions', q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : '', q.due_at ? 'Due ' + S.when(q.due_at) : ''].filter(Boolean).join(' · ') + '</div>' +
           '<div class="small"><b style="color:var(--ok)">✓ ' + nDone + ' submitted</b> · <b style="color:#b45309">✎ ' + nProg + ' working now</b> · <b style="color:#b91c1c">○ ' + nNone + ' not started</b> · of ' + rows.length + '</div>' +
           bar([[nDone, 'var(--ok)', 'submitted'], [nProg, '#f59e0b', 'working'], [nNone, '#fca5a5', 'not started']], rows.length) + '</summary>' +
           (notList.length ? '<p class="small"><b>Not submitted (' + notList.length + '):</b> ' + notList.join(', ') + '</p>' : '<p class="small"><b>Everyone has submitted.</b></p>') +
-          '<div class="acts"><button type="button" class="btn sm" data-rep="' + q.id + '">⬇ Report (marks and feedback)</button><button type="button" class="btn sm" data-ms="' + q.id + '">📄 Mark scheme</button>' +
+          '<div class="acts"><button type="button" class="btn sm' + (q.live ? '' : ' main') + '" data-pub="' + q.id + '" data-on="' + (q.live ? '0' : '1') + '">' + (q.live ? '⏸ Unpublish for this class' : '📢 Publish for ' + E(c.name)) + '</button><button type="button" class="btn sm" data-rep="' + q.id + '">⬇ Report (marks and feedback)</button><button type="button" class="btn sm" data-ms="' + q.id + '">📄 Mark scheme</button>' +
             (nDone ? '<button type="button" class="btn sm" data-remark="' + q.id + '" title="Re-mark every handed-in attempt with the current rules and refresh the feedback. Marks you confirmed are kept.">🔁 Re-mark and refresh feedback</button>' : '') + '</div>' +
           '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Status</th><th>Progress</th><th>Last active</th><th>Result</th></tr>' + show.map(function (r) {
             var a = r.a, idle = a && r.st === 'prog' && (Date.now() - new Date(a.last_seen)) > 180000, gone = a && r.st === 'prog' && a.away_now;
@@ -577,6 +577,11 @@
           var n = 0; ai.reduce(function (pr, aid) { return pr.then(function () { return S.db.functions.invoke('ai-mark', { body: { attempt: aid } }).then(function () { n++; }, function () {}); }); }, Promise.resolve()).then(function () { done(n); });
         });
       }; });
+      body.querySelectorAll('[data-pub]').forEach(function (b) { b.onclick = function () {
+        var on = b.getAttribute('data-on') === '1'; b.disabled = true;
+        S.db.rpc('set_quiz_published', { qid: b.getAttribute('data-pub'), cid: c.id, on_off: on }).then(function (r) {
+          b.disabled = false; if (r.error) return toast(S.nice(r.error));
+          toast(on ? 'Published for ' + c.name + ': its students can open it now.' : 'Unpublished for ' + c.name + '.'); state.reload(); }); }; });
       body.querySelectorAll('[data-rep]').forEach(function (b) { b.onclick = function () { var qz = qs.filter(function (z) { return z.id === b.getAttribute('data-rep'); })[0];
         b.disabled = true; b.textContent = 'Making the report…';
         quizReport(qz, c, kids, by[qz.id] || {}).then(function () { b.disabled = false; b.textContent = '⬇ Report (marks and feedback)'; }, function (e) { b.disabled = false; b.textContent = '⬇ Report (marks and feedback)'; toast(S.nice(e), true); }); }; });
