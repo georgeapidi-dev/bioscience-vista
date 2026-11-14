@@ -42,7 +42,7 @@
       var m = h.match(/(?:watch\?v=|youtu\.be\/|embed\/)([\w-]{6,})/), b = a.querySelector('b'), sm = a.querySelector('small');
       var t = b ? txt(b) : txt(a); if (!t || /^https?:/i.test(t)) t = 'Video for this lesson';
       out.push('<a class="sd-vid" href="' + E(h) + '" target="_blank" rel="noopener">' + (m ? '<img src="https://i.ytimg.com/vi/' + E(m[1]) + '/mqdefault.jpg" alt="">' : '<span class="sd-play">▶</span>') +
-        '<span><b>' + E(t.slice(0, 90)) + '</b><small>' + E(sm ? txt(sm) : (m ? 'Opens on YouTube' : 'Opens a YouTube search')) + '</small></span></a>');
+        '<span><b>' + E(t.slice(0, 90)) + '</b><small>' + E(sm ? txt(sm) : (m ? 'Plays here in the lesson' : 'Opens a YouTube search')) + '</small></span></a>');
     });
     return out;
   }
