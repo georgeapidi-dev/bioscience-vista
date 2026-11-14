@@ -8,6 +8,29 @@
   // /teach/ is "My classes": the same dashboard, limited to the classes this teacher owns (any teacher, and the admin's own classes)
   var TEACH = location.pathname.indexOf('/teach/') === 0, MINE = {}, CLASS_OF = {};
   function mine(sid) { return !TEACH || !!MINE[sid]; }
+  // My classes is colourful: every class has its own colour, used on its buttons, cards and page banner
+  var HUES = ['#7c3aed', '#2563eb', '#0891b2', '#059669', '#ea580c', '#db2777', '#ca8a04', '#dc2626', '#4f46e5', '#0d9488'];
+  function hue(id) { var i = CLASSES.map(function (c) { return c.id; }).indexOf(id); if (i < 0) { i = 0; for (var k = 0; k < String(id).length; k++) i = (i * 31 + String(id).charCodeAt(k)) >>> 0; } return HUES[i % HUES.length]; }
+  (function () { if (!TEACH || document.getElementById('teach-css')) return; var st = document.createElement('style'); st.id = 'teach-css'; st.textContent = [
+    '.teach-ui nav.tabs{gap:8px;border:0}',
+    '.teach-ui nav.tabs a{--k:#2563eb;border:2px solid color-mix(in srgb,var(--k) 35%,transparent);background:color-mix(in srgb,var(--k) 10%,transparent);color:var(--k);font-weight:700;border-radius:999px;transition:transform .15s,box-shadow .15s}',
+    '.teach-ui nav.tabs a:hover{transform:translateY(-2px);box-shadow:0 6px 16px color-mix(in srgb,var(--k) 30%,transparent)}',
+    '.teach-ui nav.tabs a[aria-selected=true]{background:linear-gradient(135deg,var(--k),color-mix(in srgb,var(--k) 72%,#fff))!important;color:#fff!important;border-color:transparent!important;box-shadow:0 6px 18px color-mix(in srgb,var(--k) 40%,transparent)}',
+    '.teach-ui .stats .stat{color:#fff;border:0;background:linear-gradient(135deg,var(--k,#7c3aed),color-mix(in srgb,var(--k,#7c3aed) 70%,#fff));box-shadow:0 8px 20px color-mix(in srgb,var(--k,#7c3aed) 30%,transparent)}',
+    '.teach-ui .stats .stat .muted,.teach-ui .stats .stat a,.teach-ui .stats .stat b{color:#fff!important;opacity:.97}',
+    '.cband .btn{color:#fff!important;border-color:rgba(255,255,255,.75)!important;background:rgba(255,255,255,.16)!important}',
+    '.regb{--k:#16a34a;border:2px solid color-mix(in srgb,var(--k) 45%,transparent)!important;background:color-mix(in srgb,var(--k) 10%,transparent)!important;color:var(--k)!important;font-weight:700}',
+    '.regb[aria-pressed=true]{background:var(--k)!important;color:#fff!important;border-color:var(--k)!important}',
+    '.teach-ui .stats .stat:nth-child(1){--k:#7c3aed}.teach-ui .stats .stat:nth-child(2){--k:#2563eb}.teach-ui .stats .stat:nth-child(3){--k:#ea580c}.teach-ui .stats .stat:nth-child(4){--k:#059669}',
+    '.cband{border-radius:18px;padding:18px 20px;color:#fff;background:linear-gradient(120deg,var(--k),color-mix(in srgb,var(--k) 75%,#fff));box-shadow:0 10px 26px color-mix(in srgb,var(--k) 35%,transparent);margin:0 0 14px}',
+    '.cband h2,.cband h3,.cband .label,.cband .muted,.cband a,.cband .small{color:#fff!important}.cband .code{background:rgba(255,255,255,.2);color:#fff}',
+    '.cchips{display:flex;flex-wrap:wrap;gap:8px}.cchip{--k:#2563eb;border:2px solid var(--k);background:color-mix(in srgb,var(--k) 12%,transparent);color:var(--k);font-weight:800;border-radius:14px;padding:8px 14px;cursor:pointer;font:inherit;font-weight:800}',
+    '.cchip.on{background:linear-gradient(135deg,var(--k),color-mix(in srgb,var(--k) 72%,#fff));color:#fff;border-color:transparent;box-shadow:0 6px 16px color-mix(in srgb,var(--k) 35%,transparent)}',
+    '.qlinks{display:flex;flex-wrap:wrap;gap:8px}.qlinks a{--k:#2563eb;text-decoration:none;font-weight:700;border-radius:12px;padding:8px 12px;color:#fff;background:linear-gradient(135deg,var(--k),color-mix(in srgb,var(--k) 60%,#000 0%));box-shadow:0 4px 12px color-mix(in srgb,var(--k) 30%,transparent)}.qlinks a:hover{filter:brightness(1.1)}',
+    '.ccards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.ccard2{--k:#2563eb;border-radius:16px;padding:14px;color:#fff;text-decoration:none;background:linear-gradient(135deg,var(--k),color-mix(in srgb,var(--k) 72%,#fff));box-shadow:0 8px 20px color-mix(in srgb,var(--k) 30%,transparent);display:flex;flex-direction:column;gap:6px}',
+    '.ccard2 b{font-size:1.1rem}.ccard2 a{color:#fff;font-weight:700}.ccard2 .small{opacity:.95}.ccard2:hover{transform:translateY(-2px)}'
+  ].join('\n'); document.head.appendChild(st); })();
+  var TABHUE = { overview: '#7c3aed', work: '#2563eb', questions: '#db2777', labs: '#0891b2', approvals: '#ea580c', classes: '#059669', students: '#4f46e5', quizzes: '#ca8a04', lessons: '#0d9488', marking: '#dc2626', content: '#9333ea' };
 
   S.guard(app, TEACH ? { school: true, allowPending: true } : { staff: true }).then(function (me) { ME = me; if (TEACH && !teachGate(me)) throw 'gate'; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(function () { window.addEventListener('hashchange', route); route(); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
@@ -60,6 +83,8 @@
     var head = '<div class="row2"><div><p class="label">' + (TEACH ? 'My classes' + (ME.profile.school_name ? ' · ' + E(ME.profile.school_name) : '') : 'Main site · courses and their classes') + '</p><h2>' + E(ME.profile.full_name || ME.user.email) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><div class="cta">' + (TEACH ? '<a class="btn sm" href="/messages/">Messages</a>' + (ME.admin ? '' : '<a class="btn sm" href="/premium/">Premium</a>') : ME.admin ? '<a class="btn main sm" href="/admin/">Admin: join requests, members, payments</a>' : '') + '<button class="btn sm" type="button" id="so">Log out</button></div></div>' +
       '<nav class="tabs" aria-label="Teacher sections">' + TABS.filter(function (t) { return ADMIN_TABS.indexOf(t[0]) < 0 || (ME.admin && !TEACH); }).map(function (t) { return '<a href="#' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</a>'; }).join('') + '</nav><div id="pane"><p class="muted">Loading…</p></div>';
     app.innerHTML = head; app.querySelector('#so').onclick = S.signOut;
+    app.classList.toggle('teach-ui', TEACH);
+    if (TEACH) app.querySelectorAll('nav.tabs a').forEach(function (a) { var k = TABHUE[a.getAttribute('href').slice(1)]; if (k) a.style.setProperty('--k', k); });
     var pane = app.querySelector('#pane');
     ({ overview: TEACH ? teachOverview : overview, work: lessonWork, questions: helpDesk, labs: labWork, approvals: TEACH ? teachApprovals : approvals, activity: activity, lessons: lessons, classes: TEACH ? teachClasses : classes, students: students, quizzes: quizzes, marking: marking, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
   }
@@ -304,11 +329,13 @@
     sub = ['lessons', 'todo', 'analysis', 'register', 'activity'].indexOf(sub) >= 0 ? sub : 'quizzes';
     var state = { filter: 'all', open: {}, lesson: null, live: true };
     try { state.lesson = sessionStorage.getItem('bv-cl-' + cid) || null; } catch (e) {}
-    p.innerHTML = '<p class="small"><a href="#classes">← All classes</a></p><div class="row2"><div><p class="label">' + E(c.programme || 'Class') + '</p><h2 style="margin:0">' + E(c.name) + '</h2></div>' +
-      '<div class="small muted" style="text-align:right">Join code <b class="code">' + E(c.join_code) + '</b><br><label class="chk" style="display:inline-flex"><input type="checkbox" id="lv" checked> Live: update every 15 seconds</label> <span id="stamp"></span></div></div>' +
-      '<nav class="tabs" aria-label="Class sections"><a href="#classes/' + cid + '/quizzes" aria-selected="' + (sub === 'quizzes') + '">📝 Quizzes and exams</a><a href="#classes/' + cid + '/lessons" aria-selected="' + (sub === 'lessons') + '">🧪 Interactive lessons</a><a href="#classes/' + cid + '/todo" aria-selected="' + (sub === 'todo') + '">📌 To-do list</a><a href="#classes/' + cid + '/register" aria-selected="' + (sub === 'register') + '">🗒 Register</a><a href="#classes/' + cid + '/activity" aria-selected="' + (sub === 'activity') + '">👀 Activity</a><a href="#classes/' + cid + '/analysis" aria-selected="' + (sub === 'analysis') + '">📊 Analysis</a></nav>' +
+    p.innerHTML = '<p class="small"><a href="#classes">← All classes</a></p><div class="row2' + (TEACH ? ' cband" style="--k:' + hue(c.id) : '') + '"><div><p class="label">' + E(c.programme || 'Class') + '</p><h2 style="margin:0">' + E(c.name) + '</h2></div>' +
+      '<div class="small muted" style="text-align:right">' + (TEACH ? '' : 'Join code <b class="code">' + E(c.join_code) + '</b><br>') + '<label class="chk" style="display:inline-flex"><input type="checkbox" id="lv" checked> Live: update every 15 seconds</label> <span id="stamp"></span></div></div>' +
+      '<nav class="tabs" aria-label="Class sections"' + (TEACH ? ' data-cnav' : '') + '><a href="#classes/' + cid + '/quizzes" aria-selected="' + (sub === 'quizzes') + '">📝 Quizzes and exams</a><a href="#classes/' + cid + '/lessons" aria-selected="' + (sub === 'lessons') + '">🧪 Interactive lessons</a><a href="#classes/' + cid + '/todo" aria-selected="' + (sub === 'todo') + '">📌 To-do list</a><a href="#classes/' + cid + '/register" aria-selected="' + (sub === 'register') + '">🗒 Register</a><a href="#classes/' + cid + '/activity" aria-selected="' + (sub === 'activity') + '">👀 Activity</a><a href="#classes/' + cid + '/analysis" aria-selected="' + (sub === 'analysis') + '">📊 Analysis</a></nav>' +
       '<div id="cbody"><p class="muted">Loading…</p></div>';
     var body = p.querySelector('#cbody'), busy = false;
+    if (TEACH) { var CH = { quizzes: '#ca8a04', lessons: '#0d9488', todo: '#7c3aed', register: '#059669', activity: '#db2777', analysis: '#2563eb' };
+      p.querySelectorAll('[data-cnav] a').forEach(function (a) { var k = CH[a.getAttribute('href').split('/')[2]]; if (k) a.style.setProperty('--k', k); }); }
     function load() {
       if (busy) return; busy = true;
       (sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'register' ? registerBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
@@ -1632,8 +1659,9 @@
           '<div class="stat"><span class="small muted">Asking to join</span><b><a href="#approvals">' + nWait + '</a></b></div><div class="stat"><span class="small muted">Answers to mark</span><b><a href="#marking">' + toMark + '</a></b></div></div>' +
           (!CLASSES.length ? '<p class="panel tint">Start by <a href="#classes">creating a class</a>: choose the course you teach and its Learnova lessons and quizzes are added for you.</p>' : '') +
           (nWait ? '<p class="panel tint"><b>' + nWait + ' student' + (nWait > 1 ? 's are' : ' is') + ' asking to join your classes.</b> <a class="btn main sm" href="#approvals">Review requests</a></p>' : '') +
-          '<div class="two"><section class="panel"><h3>My classes</h3>' + (CLASSES.length ? CLASSES.map(function (c) { var k = per[c.id] || { ok: 0, wait: 0 };
-            return '<p><a href="#classes/' + c.id + '"><b>' + E(c.name) + '</b></a> <span class="small muted">' + k.ok + ' student' + (k.ok === 1 ? '' : 's') + (k.wait ? ' · ' + k.wait + ' waiting' : '') + '</span><br><span class="small"><a href="#classes/' + c.id + '/todo">📌 To-do</a> · <a href="#classes/' + c.id + '/register">🗒 Register</a> · <a href="#classes/' + c.id + '/activity">👀 Activity</a> · <a href="#classes/' + c.id + '/lessons">🧪 Lessons</a> · <a href="#classes/' + c.id + '/quizzes">📝 Quizzes</a></span></p>'; }).join('') : '<p class="small muted">No classes yet.</p>') + '</section>' +
+          (CLASSES.length ? '<h3>🏫 My classes</h3><div class="ccards">' + CLASSES.map(function (c) { var k = per[c.id] || { ok: 0, wait: 0 };
+            return '<div class="ccard2" style="--k:' + hue(c.id) + '"><a href="#classes/' + c.id + '"><b>' + E(c.name) + '</b></a><span class="small">👥 ' + k.ok + ' student' + (k.ok === 1 ? '' : 's') + (k.wait ? ' · 🙋 ' + k.wait + ' waiting' : '') + '</span><span class="small"><a href="#classes/' + c.id + '/todo">📌 To-do</a> · <a href="#classes/' + c.id + '/register">🗒 Register</a> · <a href="#classes/' + c.id + '/activity">👀 Activity</a><br><a href="#classes/' + c.id + '/lessons">🧪 Lessons</a> · <a href="#classes/' + c.id + '/quizzes">📝 Quizzes</a></span></div>'; }).join('') + '</div>' : '') +
+          '<div class="two"><section class="panel"><h3>Quick start</h3><p class="qlinks"><a style="--k:#059669" href="#classes">＋ New class</a><a style="--k:#ea580c" href="#approvals">🙋 Join requests</a><a style="--k:#dc2626" href="#marking">✍️ Marking</a><a style="--k:#ca8a04" href="#quizzes/new">📝 New quiz</a><a style="--k:#0d9488" href="#lessons/new">✨ Build a lesson</a></p></section>' +
           '<section class="panel"><h3>Latest results</h3>' + (res.length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Task</th><th>Score</th></tr>' + res.map(function (r) { return '<tr><td>' + E(nm[r.student_id] || '–') + '</td><td>' + E(r.title) + '</td><td>' + E(r.score) + '/' + E(r.max_score) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="small muted">No results yet.</p>') + '</section></div>' + (ME.admin ? '' : '<section class="panel" id="rvbox"></section>');
         if (!ME.admin) reviewBox(p.querySelector('#rvbox'));
       });
@@ -1673,7 +1701,7 @@
       if (!TC.cur || !CLASSES.some(function (c) { return c.id === TC.cur; })) TC.cur = CLASSES[0] ? CLASSES[0].id : null;
       var c = CLASSES.filter(function (x) { return x.id === TC.cur; })[0];
       p.innerHTML = '<section class="panel grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><span class="cta"><button class="btn sm" type="button" id="chs">🏫 ' + E(ME.profile.school_name || 'Set your school') + '</button><button class="btn main sm" type="button" id="newc">＋ New class</button></span></div>' +
-        (CLASSES.length ? '<div class="cta">' + CLASSES.map(function (x) { return '<button type="button" class="btn sm' + (x.id === TC.cur ? ' main' : '') + '" data-c="' + x.id + '">' + E(x.name) + (x.active ? '' : ' (closed)') + '</button>'; }).join('') + '</div>' : '<p class="small muted">No classes yet. Press ＋ New class and choose the course you teach.</p>') +
+        (CLASSES.length ? '<div class="cchips">' + CLASSES.map(function (x) { return '<button type="button" class="cchip' + (x.id === TC.cur ? ' on' : '') + '" style="--k:' + hue(x.id) + '" data-c="' + x.id + '">' + E(x.name) + (x.active ? '' : ' (closed)') + '</button>'; }).join('') + '</div>' : '<p class="small muted">No classes yet. Press ＋ New class and choose the course you teach.</p>') +
         '<div id="newbox"></div></section><div id="cbox"></div>';
       p.querySelector('#newc').onclick = function () { classForm(p.querySelector('#newbox'), null, p); };
       p.querySelector('#chs').onclick = function () { changeSchool(p); };
@@ -1711,11 +1739,11 @@
   }
   function classBox(box, c, p) {
     var tabs = [['students', '👥 Students'], ['materials', '📘 Lessons'], ['qz', '📝 Quizzes'], ['team', '🤝 Co-teachers']];
-    box.innerHTML = '<section class="panel grp"><div class="row2"><div><h3 style="margin:0">' + E(c.name) + '</h3><p class="small muted">' + E([c.subject, c.level].filter(Boolean).join(' · ')) +
+    box.innerHTML = '<section class="panel grp"><div class="row2 cband" style="--k:' + hue(c.id) + '"><div><h3 style="margin:0">' + E(c.name) + '</h3><p class="small muted">' + E([c.subject, c.level].filter(Boolean).join(' · ')) +
       (c.listed ? ' · students find it under <b>' + E(c.school_name || ME.profile.school_name || 'your name') + '</b>' : ' · hidden from the join list') + '</p></div>' +
       '<span class="cta"><button class="btn sm" type="button" id="sync" title="Add any new Learnova lessons and quizzes for this course">⟳ Add new course lessons</button><button class="btn sm" type="button" id="edc">Edit</button></span></div><div id="edbox"></div>' +
-      '<p class="cta"><a class="btn main sm" href="#classes/' + c.id + '/todo">📌 To-do list: set lessons and quizzes</a><a class="btn sm" href="#classes/' + c.id + '/register">🗒 Register</a><a class="btn sm" href="#classes/' + c.id + '/activity">👀 Activity</a><a class="btn sm" href="#classes/' + c.id + '/lessons">🧪 Lesson progress</a><a class="btn sm" href="#classes/' + c.id + '/quizzes">📝 Quiz results</a><a class="btn sm" href="#classes/' + c.id + '/analysis">📊 Analysis</a></p>' +
-      '<div class="cta" role="tablist">' + tabs.map(function (t) { return '<button type="button" class="btn sm' + (TC.tab === t[0] ? ' main' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="tab"></div></section>';
+      '<p class="qlinks"><a style="--k:#7c3aed" href="#classes/' + c.id + '/todo">📌 To-do list: set lessons and quizzes</a><a style="--k:#059669" href="#classes/' + c.id + '/register">🗒 Register</a><a style="--k:#db2777" href="#classes/' + c.id + '/activity">👀 Activity</a><a style="--k:#0d9488" href="#classes/' + c.id + '/lessons">🧪 Lesson progress</a><a style="--k:#ca8a04" href="#classes/' + c.id + '/quizzes">📝 Quiz results</a><a style="--k:#2563eb" href="#classes/' + c.id + '/analysis">📊 Analysis</a></p>' +
+      '<div class="cchips" role="tablist">' + tabs.map(function (t, i) { return '<button type="button" class="cchip' + (TC.tab === t[0] ? ' on' : '') + '" style="--k:' + ['#4f46e5', '#0d9488', '#ca8a04', '#ea580c'][i] + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="tab"></div></section>';
     box.querySelector('#edc').onclick = function () { classForm(box.querySelector('#edbox'), c, p); };
     box.querySelector('#sync').onclick = function () { var b = this; b.disabled = true; S.db.rpc('set_class_course', { cid: c.id, course_slug: null }).then(function (x) { b.disabled = false; if (!ok(x)) return;
       toast(c.course ? 'Added ' + x.data.lessons + ' new lessons and ' + x.data.quizzes + ' new quizzes.' : 'Choose the course first: press Edit.'); MATS = {}; classBox(box, c, p); }); };
@@ -1813,7 +1841,7 @@
             '<button class="btn sm" type="button" id="rall">✓ Mark everyone not yet marked present</button><button class="btn sm" type="button" id="rdel">Delete this register</button></div>' : '<p class="emptybox">No registers yet. Create one above for today\'s lesson.</p>') +
           (S0 ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Today</th><th>Note</th><th>Attendance (all registers)</th></tr>' + kids.map(function (k) { var m = (marks[S0.id] || {})[k.id], st = m ? m.status : '';
               return '<tr data-s="' + k.id + '"><td><b>' + E(k.full_name || 'Student') + '</b></td><td><span class="cta" style="flex-wrap:wrap">' + Object.keys(REG).map(function (key) { var R = REG[key], on = st === R[0];
-                return '<button type="button" class="btn sm" data-st="' + R[0] + '" aria-pressed="' + on + '" style="' + (on ? 'background:' + R[2] + ';color:#fff;border-color:' + R[2] : '') + '">' + R[1] + '</button>'; }).join('') + '</span></td>' +
+                return '<button type="button" class="btn sm regb" data-st="' + R[0] + '" aria-pressed="' + on + '" style="--k:' + R[2] + '">' + R[1] + '</button>'; }).join('') + '</span></td>' +
                 '<td><input data-note value="' + E(m && m.note || '') + '" maxlength="200" placeholder="optional"></td><td>' + (pct[k.id] == null ? '–' : pct[k.id] + '%') + '</td></tr>'; }).join('') + '</table></div>' +
             (S0.lesson_path ? '<p class="small">Lesson: <a href="' + E(S0.lesson_path) + '" target="_blank" rel="noopener">' + E(mt[S0.lesson_path] || S0.lesson_path) + '</a></p>' : '') : '');
         body.querySelector('#rl').onchange = function () { var ti = body.querySelector('#rt'); if (!ti.value && this.value) ti.value = mt[this.value] || ''; };
@@ -1831,7 +1859,7 @@
           var save = function (patch) { var m = (marks[S0.id] || {})[sid] || {}, row = { session_id: S0.id, student_id: sid, status: patch.status || m.status || 'present', note: patch.note !== undefined ? (patch.note || null) : (m.note || null), marked_at: new Date().toISOString() };
             return S.db.from('attendance').upsert(row, { onConflict: 'session_id,student_id' }).then(function (r) { if (ok(r)) { (marks[S0.id] = marks[S0.id] || {})[sid] = row; } return r; }); };
           tr.querySelectorAll('[data-st]').forEach(function (b) { b.onclick = function () { var st = b.getAttribute('data-st'); save({ status: st }).then(function (r) { if (r.error) return;
-            tr.querySelectorAll('[data-st]').forEach(function (o) { var R = REG[Object.keys(REG).filter(function (k2) { return REG[k2][0] === o.getAttribute('data-st'); })[0]], on = o === b; o.setAttribute('aria-pressed', on); o.style.cssText = on ? 'background:' + R[2] + ';color:#fff;border-color:' + R[2] : ''; }); }); }; });
+            tr.querySelectorAll('[data-st]').forEach(function (o) { o.setAttribute('aria-pressed', o === b); }); }); }; });
           var ni = tr.querySelector('[data-note]'); ni.onchange = function () { save({ note: ni.value.trim() }).then(function (r) { if (!r.error) toast('Note saved'); }); };
         });
       });
