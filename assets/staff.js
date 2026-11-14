@@ -290,6 +290,16 @@
       S.db.from('profiles').select('class_id').in('class_id', CLASSES.map(function (c) { return c.id; })).then(function (r) {
         var n = {}; (r.data || []).forEach(function (x) { n[x.class_id] = (n[x.class_id] || 0) + 1; });
         p.querySelectorAll('[data-n]').forEach(function (el) { var k = n[el.getAttribute('data-n')] || 0; el.textContent = k + ' student' + (k === 1 ? '' : 's'); });
+        // a long list of empty classes hides the ones in use: classes with students stay on top, the rest fold away
+        var grid = p.querySelector('.cgrid'), empty = [];
+        if (grid) { grid.querySelectorAll('.ccard').forEach(function (card) { var el = card.querySelector('[data-n]'); if (el && !(n[el.getAttribute('data-n')] || 0)) empty.push(card); });
+          if (empty.length > 6 && !p.querySelector('#emptycls')) {
+            var d = document.createElement('details'); d.id = 'emptycls'; d.style.marginTop = '12px';
+            d.innerHTML = '<summary style="cursor:pointer;font-weight:700;padding:10px 0">Classes with no students yet (' + empty.length + ')</summary><p class="small muted">These classes are ready for students to join: one teacher-led class and one Independent learners class for each course. They stay out of the way until someone joins.</p><div class="cgrid"></div>';
+            var g2 = d.querySelector('.cgrid'); empty.forEach(function (card) { g2.appendChild(card); });
+            if (!grid.children.length) grid.insertAdjacentHTML('beforeend', '<p class="emptybox" style="grid-column:1/-1">No class has students yet. Share a join code, or approve students as they register.</p>');
+            grid.parentNode.insertBefore(d, grid.nextSibling);
+          } }
       });
       p.querySelector('#nc').onsubmit = function (e) { e.preventDefault();
         S.db.from('classes').insert({ name: p.querySelector('#cn').value.trim(), programme: p.querySelector('#cp').value.trim() || null, teacher_id: ME.user.id, join_code: code6() }).then(function (r) { if (ok(r, 'Class created')) classes(p); }); };
