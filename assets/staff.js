@@ -13,7 +13,7 @@
   var ARCHIVED = [];
   function refs() {
     return Promise.all([S.db.from('topics').select('id,name,code,programme,parent_id,sort_order, subjects(name,sort_order)').order('sort_order'), S.db.from('classes').select('*').order('name')])
-      .then(function (x) { TOPICS = x[0].data || []; var all = (x[1].data || []).filter(function (c) { return ME.admin || c.teacher_id === ME.user.id; }); CLASSES = all.filter(function (c) { return !c.archived_at; }); ARCHIVED = all.filter(function (c) { return c.archived_at; }); });
+      .then(function (x) { TOPICS = x[0].data || []; var all = (x[1].data || []).filter(function (c) { return c.owner_kind === 'main' && (ME.admin || c.teacher_id === ME.user.id); });   /* main-site classes only; your own classes are in My classes (/teach/) */ CLASSES = all.filter(function (c) { return !c.archived_at; }); ARCHIVED = all.filter(function (c) { return c.archived_at; }); });
   }
   function topicOpts(sel) {   // grouped by subject; subtopics indented under their main topic
     var subj = {}, order = [];
@@ -36,7 +36,7 @@
     clearInterval(LIVE);
     var h = location.hash.slice(1).split('/'), tab = h[0] || 'overview';
     if (ADMIN_TABS.indexOf(tab) >= 0 && !ME.admin) tab = 'overview';
-    var head = '<div class="row2"><div><p class="label">Teacher dashboard</p><h2>' + E(ME.profile.full_name || ME.user.email) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><div class="cta">' + (ME.admin ? '<a class="btn main sm" href="/admin/">Admin: join requests, members, payments</a>' : '') + '<button class="btn sm" type="button" id="so">Log out</button></div></div>' +
+    var head = '<div class="row2"><div><p class="label">Main site · courses and their classes</p><h2>' + E(ME.profile.full_name || ME.user.email) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><div class="cta">' + (ME.admin ? '<a class="btn main sm" href="/admin/">Admin: join requests, members, payments</a>' : '') + '<button class="btn sm" type="button" id="so">Log out</button></div></div>' +
       '<nav class="tabs" aria-label="Teacher sections">' + TABS.filter(function (t) { return ADMIN_TABS.indexOf(t[0]) < 0 || ME.admin; }).map(function (t) { return '<a href="#' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</a>'; }).join('') + '</nav><div id="pane"><p class="muted">Loading…</p></div>';
     app.innerHTML = head; app.querySelector('#so').onclick = S.signOut;
     var pane = app.querySelector('#pane');

@@ -41,8 +41,19 @@
       if (me.school && !opts.school && !opts.anyone) { location.href = '/teach/'; throw 'school'; }   // teachers from other schools have their own portal
       if (opts.parent && !me.parent && !me.staff) { el.innerHTML = '<section class="panel"><h2>Parents only</h2><p>This page is for parents. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; throw 'not-parent'; }
       if (!opts.allowPending && !me.ok) { S.updateNav(me); el.innerHTML = S.pendingBox(me); throw 'pending'; }
-      S.updateNav(me); return me;
+      S.updateNav(me); if (me.admin) S.areaBar(el); return me;
     });
+  };
+  /* the admin works in three separate places: running the site, the main-site courses, and their own classes */
+  S.AREAS = [['/admin/', '🛠 Admin', 'Approvals, members, payments, settings'], ['/staff/', '🌐 Main site', 'Main-site courses, lessons, quizzes and their classes'], ['/teach/', '🏫 My classes', 'Classes you teach, like any teacher']];
+  S.areaBar = function (el) {
+    var here = location.pathname; if (!S.AREAS.some(function (a) { return here.indexOf(a[0]) === 0; }) || document.getElementById('areabar')) return;
+    var bar = document.createElement('nav'); bar.id = 'areabar'; bar.setAttribute('aria-label', 'Admin areas');
+    bar.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px';
+    bar.innerHTML = S.AREAS.map(function (a) { var on = here.indexOf(a[0]) === 0;
+      return '<a href="' + a[0] + '" title="' + S.E(a[2]) + '" style="flex:1;min-width:150px;text-align:center;padding:10px 14px;border-radius:12px;font-weight:700;text-decoration:none;border:1px solid var(--line,#dde3ea);' +
+        (on ? 'background:linear-gradient(120deg,#7c3aed,#2563eb);color:#fff;border-color:transparent' : 'background:var(--card,#fff);color:inherit') + '"' + (on ? ' aria-current="page"' : '') + '>' + a[1] + '</a>'; }).join('');
+    el.parentNode.insertBefore(bar, el);
   };
   S.pendingBox = function (me) {
     var a = me.access || {}, waiting = (a.classes || []).filter(function (c) { return c.status === 'pending'; });
@@ -66,7 +77,7 @@
   S.nice = function (e) { var m = (e && (e.message || e.error_description || e)) || 'Something went wrong.'; return String(m).replace(/^.*?ERROR:\s*/, ''); };
   S.updateNav = function (me) {
     var a = document.querySelector('.cta-nav'); if (!a || !me) return;
-    a.textContent = me.staff || me.school ? 'Teacher dashboard' : me.parent ? "My child's progress" : 'My dashboard'; a.href = me.staff ? '/staff/' : me.school ? '/teach/' : me.parent ? '/parent/' : '/dashboard/';
+    a.textContent = me.admin ? 'My dashboards' : me.staff || me.school ? 'Teacher dashboard' : me.parent ? "My child's progress" : 'My dashboard'; a.href = me.admin ? '/teach/' : me.staff ? '/staff/' : me.school ? '/teach/' : me.parent ? '/parent/' : '/dashboard/';
   };
   S.pct = function (s, m) { return m ? Math.round(100 * s / m) : null; };
   S.when = function (t) { return t ? new Date(t).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : ''; };

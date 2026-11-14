@@ -5,16 +5,16 @@
   var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, CLASSES = [], HELP = [], CUR = null, CAT = null, COURSES = null;
   S.guard(app, { allowPending: true, school: true }).then(function (me) {
     ME = me;
-    if (me.staff) { app.innerHTML = '<section class="panel"><h2>You are main-site staff</h2><p>Use the <a href="/staff/">Teacher dashboard</a> and the <a href="/admin/">Admin page</a>.</p></section>'; return; }
-    if (!me.school) { app.innerHTML = '<section class="panel"><h2>Teachers only</h2><p>This page is for teacher accounts. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; return; }
+    var boss = !!me.admin;   // the site admin teaches here like any teacher (own classes, separate from the main site)
+    if (!me.school && !boss) { app.innerHTML = '<section class="panel"><h2>Teachers only</h2><p>This page is for teacher accounts. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; return; }
     var a = me.access || {}, st = me.profile.teacher_status;
-    var top = '<div class="row2"><div><p class="label">Teacher portal</p><h2>Hello, ' + E((me.profile.full_name || '').split(' ')[0] || 'teacher') + '</h2><p class="muted small">🏫 <b id="myschool">' + E(me.profile.school_name || 'No school set') + '</b> <button type="button" class="btn sm" id="chs">Change school</button> · ' + E(me.user.email) + '</p></div>' +
+    var top = '<div class="row2"><div><p class="label">' + (boss ? 'My classes' : 'Teacher portal') + '</p><h2>Hello, ' + E((me.profile.full_name || '').split(' ')[0] || 'teacher') + '</h2><p class="muted small">🏫 <b id="myschool">' + E(me.profile.school_name || 'No school set') + '</b> <button type="button" class="btn sm" id="chs">Change school</button> · ' + E(me.user.email) + '</p></div>' +
       '<div class="cta"><a class="btn sm" href="/messages/">Messages</a><a class="btn sm" href="/premium/">Premium</a><button class="btn sm" type="button" id="so">Log out</button></div></div>';
-    if (st !== 'approved' || me.roles.indexOf('school_teacher') < 0) { app.innerHTML = top + '<section class="panel tint"><h3>' + (st === 'rejected' ? 'Your teacher account was not approved' : '⏳ Waiting for approval') + '</h3><p>' + (st === 'rejected' ? 'Contact the Learnova admin through Messages if you think this is a mistake.' : 'The Learnova admin checks every new teacher account. You can buy premium now; your classes open as soon as you are approved.') + '</p></section>'; app.querySelector('#so').onclick = S.signOut; return; }
-    if (!a.premium) { app.innerHTML = top + '<section class="panel tint"><h3>Premium is needed to run classes</h3><p>Your teacher account is approved. Get premium to create classes, add Learnova lessons and quizzes, and see your students\' results.</p><a class="btn main" href="/premium/">Get premium</a></section>'; app.querySelector('#so').onclick = S.signOut; return; }
+    if (!boss && (st !== 'approved' || me.roles.indexOf('school_teacher') < 0)) { app.innerHTML = top + '<section class="panel tint"><h3>' + (st === 'rejected' ? 'Your teacher account was not approved' : '⏳ Waiting for approval') + '</h3><p>' + (st === 'rejected' ? 'Contact the Learnova admin through Messages if you think this is a mistake.' : 'The Learnova admin checks every new teacher account. You can buy premium now; your classes open as soon as you are approved.') + '</p></section>'; app.querySelector('#so').onclick = S.signOut; return; }
+    if (!boss && !a.premium) { app.innerHTML = top + '<section class="panel tint"><h3>Premium is needed to run classes</h3><p>Your teacher account is approved. Get premium to create classes, add Learnova lessons and quizzes, and see your students\' results.</p><a class="btn main" href="/premium/">Get premium</a></section>'; app.querySelector('#so').onclick = S.signOut; return; }
     app.innerHTML = top + '<div id="tp"></div>'; app.querySelector('#so').onclick = S.signOut;
     app.querySelector('#chs').onclick = changeSchool;
-    load(); review();
+    load(); if (!boss) review();
   }).catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
   // one shared list of schools, so every teacher at a school appears under the same name
@@ -43,7 +43,7 @@
   }
   function courses() { return COURSES ? Promise.resolve(COURSES) : S.db.rpc('course_list').then(function (r) { COURSES = r.data || []; return COURSES; }); }
   function load(keep) {
-    Promise.all([S.db.from('classes').select('*').eq('teacher_id', ME.user.id).order('created_at'), S.db.rpc('my_cotaught')]).then(function (x) {
+    Promise.all([S.db.from('classes').select('*').eq('teacher_id', ME.user.id).neq('owner_kind', 'main').order('created_at'), S.db.rpc('my_cotaught')]).then(function (x) {
       var r = x[0]; HELP = (x[1].data || []).map(function (c) { c.ro = true; return c; });
       CLASSES = (r.data || []).filter(function (c) { return !c.archived_at; });
       var all = CLASSES.concat(HELP);
