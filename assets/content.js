@@ -9,9 +9,13 @@
     return '';
   }
   BV.autoDl = autoDl;
+  function inSite(u) {   // Drive and Google Docs files open in the site's viewer (view only)
+    var m = u.match(/drive\.google\.com\/(?:file\/d\/|open\?(?:.*&)?id=)([\w-]+)/) || u.match(/docs\.google\.com\/(?:document|presentation|spreadsheets)\/d\/([\w-]+)/);
+    return m ? '/view/?f=' + m[1] + '&b=' + encodeURIComponent(location.pathname) : u;
+  }
   BV.card = function (it) {
-    var u = it.link || '', local = u.charAt(0) === '/', folder = /\/folders\//.test(u);
-    var dl = it.dl || (it.locked ? '' : autoDl(u)), tgt = it.locked || local ? '' : ' target="_blank" rel="noopener"';
+    var u = inSite(it.link || ''), local = u.charAt(0) === '/', folder = /\/folders\//.test(u);
+    var dl = '', tgt = it.locked || local ? '' : ' target="_blank" rel="noopener"';   // no downloads of materials
     var acts = (u ? '<a class="go" href="' + E(u) + '"' + tgt + '>' + (it.locked ? 'Open · class password' : folder ? 'Open folder' : 'Open') + '</a>' : '') +
       (dl ? '<a href="' + E(dl) + '" target="_blank" rel="noopener">Download</a>' : '');
     return '<div class="card"><b>' + E(it.title) + '</b><span>' + E(it.desc) + '</span>' + (acts ? '<div class="acts">' + acts + '</div>' : '') + '</div>';
