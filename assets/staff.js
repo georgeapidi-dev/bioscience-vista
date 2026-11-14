@@ -61,13 +61,38 @@
     var all = [], page = function (from) { return S.db.from('lesson_work').select('*').order('saved_at', { ascending: false }).range(from, from + 999).then(function (r) { if (r.error) throw r.error; all = all.concat(r.data || []); return (r.data || []).length === 1000 && from < 4000 ? page(from + 1000) : all; }); };
     return Promise.all([page(0), fetch('/assets/lesson-steps.json').then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }),
       S.db.from('lesson_specs').select('lesson,title,spec').then(function (r) { var o = {}; (r.data || []).forEach(function (x) { o[x.lesson] = x; }); return o; }, function () { return {}; })])
-      .then(function (x) { LW = { rows: x[0], steps: x[1], specs: x[2] }; return LW; });
+      .then(function (x) { LW = { rows: x[0], steps: x[1], specs: x[2] }; return lwPlaces(); });
+  }
+  // Which class each piece of work belongs to: the student's real classes (enrolments, or their profile class),
+  // preferring the class whose lesson list contains that lesson. Typed class names are not trusted.
+  function lwPlaces() {
+    var ids = CLASSES.map(function (c) { return c.id; });
+    if (!ids.length) { LW.places = {}; return LW; }
+    return Promise.all([
+      S.db.from('enrolments').select('student_id,class_id').eq('status', 'approved').in('class_id', ids),
+      S.db.from('profiles').select('id,class_id').in('class_id', ids),
+      S.db.from('class_materials').select('class_id,path').in('class_id', ids),
+      S.db.from('lessons').select('url,external_id')]).then(function (x) {
+      var mem = {}, has = {}, url = {};
+      (x[0].data || []).concat((x[1].data || []).map(function (r) { return { student_id: r.id, class_id: r.class_id }; })).forEach(function (r) {
+        (mem[r.student_id] = mem[r.student_id] || []); if (mem[r.student_id].indexOf(r.class_id) < 0) mem[r.student_id].push(r.class_id); });
+      (x[3].data || []).forEach(function (l) { if (l.external_id) url[l.external_id] = l.url; });
+      (x[2].data || []).forEach(function (r) { has[r.class_id + '|' + r.path] = 1; });
+      LW.places = { mem: mem, has: has, url: url };
+      return LW;
+    });
+  }
+  function lwClassesOf(g) {
+    var P = LW.places || {}, mine = (P.mem || {})[g.sid] || [];
+    if (!mine.length) return [];
+    var u = (P.url || {})[g.lesson], fit = u ? mine.filter(function (cid) { return (P.has || {})[cid + '|' + u]; }) : [];
+    return fit.length ? fit : mine;
   }
   function lwGroups(rows) {   // one group per student + class + lesson, keeping the latest save of each step
     var g = {}, order = [];
     rows.forEach(function (r) {
-      var k = (r.student_name || '').trim().toLowerCase() + '|' + (r.class_name || '').trim().toLowerCase() + '|' + r.lesson;
-      if (!g[k]) { g[k] = { key: k, student: r.student_name, cls: r.class_name || '', lesson: r.lesson, steps: {}, last: r.saved_at, latest: r }; order.push(k); }
+      var k = (r.student_id || ((r.student_name || '').trim().toLowerCase() + '|' + (r.class_name || '').trim().toLowerCase())) + '|' + r.lesson;
+      if (!g[k]) { g[k] = { key: k, sid: r.student_id, student: r.student_name, cls: r.class_name || '', lesson: r.lesson, steps: {}, last: r.saved_at, latest: r }; order.push(k); }
       if (!g[k].steps[r.step]) g[k].steps[r.step] = r;
     });
     return order.map(function (k) { var x = g[k], p = lwParse(x.latest.answers); x.total = p.total; x.max = p.max; x.fb = p.fb; return x; });
@@ -108,20 +133,31 @@
   function lessonWork(p, args) {
     p.innerHTML = '<p class="muted">Loading students\' lessons…</p>';
     lwLoad(args && args[0] === 'refresh').then(function () {
-      var groups = lwGroups(LW.rows), classes = [], lessons = [];
-      groups.forEach(function (g) { if (g.cls && classes.indexOf(g.cls) < 0) classes.push(g.cls); if (lessons.indexOf(g.lesson) < 0) lessons.push(g.lesson); });
-      classes.sort(); lessons.sort(function (a, b) { return ((LW.steps[a] || {}).title || a).localeCompare((LW.steps[b] || {}).title || b); });
+      var groups = lwGroups(LW.rows), cname = {}, count = {}, NONE = '_none';
+      CLASSES.forEach(function (c) { cname[c.id] = c.name; });
+      groups.forEach(function (g) { g.cids = lwClassesOf(g); if (!g.cids.length) g.cids = [NONE]; g.cids.forEach(function (cid) { count[cid] = (count[cid] || 0) + 1; }); if (g.cids[0] !== NONE) g.cls = g.cids.map(function (cid) { return cname[cid]; }).join(', '); });
+      var classes = CLASSES.filter(function (c) { return count[c.id]; }).map(function (c) { return [c.id, c.name + ' (' + count[c.id] + ')']; });
+      if (count[NONE] && ME.admin) classes.push([NONE, 'Not in any of your classes (' + count[NONE] + ')']);
+      var pick = (args && args[0] && args[0] !== 'refresh' && count[args[0]]) ? args[0] : (classes[0] || [''])[0];
       p.innerHTML = '<section class="panel"><div class="row2"><div><h3 style="margin:0">Lesson work</h3><p class="small muted" style="margin:.3em 0 0">Each card is one student\'s interactive lesson, put together from every step they saved.</p></div><a class="btn sm" href="#work/refresh">↻ Refresh</a></div>' +
-        '<div class="row2" style="justify-content:flex-start;flex-wrap:wrap;margin-top:10px"><label class="f">Class<select id="lwc"><option value="">All classes</option>' + classes.map(function (c) { return '<option>' + E(c) + '</option>'; }).join('') + '</select></label>' +
-        '<label class="f" style="min-width:240px">Lesson<select id="lwl"><option value="">All lessons</option>' + lessons.map(function (l) { return '<option value="' + E(l) + '">' + E((LW.steps[l] || {}).title || l) + '</option>'; }).join('') + '</select></label>' +
+        '<div class="row2" style="justify-content:flex-start;flex-wrap:wrap;margin-top:10px"><label class="f">Class<select id="lwc">' + (classes.length ? classes.map(function (c) { return '<option value="' + E(c[0]) + '"' + (c[0] === pick ? ' selected' : '') + '>' + E(c[1]) + '</option>'; }).join('') : '<option value="">No lesson work in your classes yet</option>') + '</select></label>' +
+        '<label class="f" style="min-width:240px">Lesson<select id="lwl"></select></label>' +
         '<label class="f">Student<input id="lws" type="search" placeholder="Name"></label><span class="small muted" id="lwn"></span></div></section>' +
         '<div id="lwgrid" class="lwgrid"></div><div id="lwdoc"></div>' +
         '<style>.lwgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;margin:12px 0}.lwc{border:1px solid var(--line,#dde3ea);border-radius:14px;padding:12px 14px;background:var(--card,#fff);display:grid;gap:6px}' +
         '.lwc .t{font-weight:700}.lwc .s{font-size:.85rem;color:var(--muted,#64748b)}.lwc .bar{height:8px;border-radius:99px;background:#e2e8f0;overflow:hidden}.lwc .bar i{display:block;height:100%;background:#0f766e}.lwframe{width:100%;height:80vh;border:1px solid var(--line,#dde3ea);border-radius:14px;background:#fff}</style>';
+      function lessonsFor(c) {   // the lesson list follows the chosen class
+        var ls = []; groups.forEach(function (g) { if (g.cids.indexOf(c) >= 0 && ls.indexOf(g.lesson) < 0) ls.push(g.lesson); });
+        ls.sort(function (a, b) { return ((LW.steps[a] || {}).title || a).localeCompare((LW.steps[b] || {}).title || b); });
+        p.querySelector('#lwl').innerHTML = '<option value="">All lessons in this class</option>' + ls.map(function (l) { return '<option value="' + E(l) + '">' + E((LW.steps[l] || {}).title || l) + '</option>'; }).join('');
+      }
+      p.querySelector('#lwc').addEventListener('change', function () { lessonsFor(this.value); draw(); });
+      lessonsFor(pick);
       function draw() {
         var c = p.querySelector('#lwc').value, l = p.querySelector('#lwl').value, q = p.querySelector('#lws').value.trim().toLowerCase();
-        var list = groups.filter(function (g) { return (!c || g.cls === c) && (!l || g.lesson === l) && (!q || (g.student || '').toLowerCase().indexOf(q) >= 0); });
-        p.querySelector('#lwn').textContent = list.length + ' lesson' + (list.length === 1 ? '' : 's');
+        var list = c ? groups.filter(function (g) { return g.cids.indexOf(c) >= 0 && (!l || g.lesson === l) && (!q || (g.student || '').toLowerCase().indexOf(q) >= 0); }) : [];
+        list.sort(function (a, b) { return ((LW.steps[a.lesson] || {}).title || a.lesson).localeCompare((LW.steps[b.lesson] || {}).title || b.lesson) || (a.student || '').localeCompare(b.student || ''); });
+        p.querySelector('#lwn').textContent = list.length + ' lesson' + (list.length === 1 ? '' : 's') + (c ? ' in ' + (c === NONE ? 'no class' : cname[c]) : '');
         p.querySelector('#lwgrid').innerHTML = list.length ? list.slice(0, 300).map(function (g, i) {
           var info = LW.steps[g.lesson] || {}, nSteps = Object.keys(info.steps || {}).length || Object.keys(g.steps).length, done = Object.keys(g.steps).length, pc = g.max ? Math.round(100 * g.total / g.max) : null;
           return '<div class="lwc"><div class="t">' + E(g.student) + '</div><div class="s">' + E(g.cls) + '</div><div>' + E(info.title || g.lesson) + '</div>' +
@@ -139,7 +175,7 @@
           d.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
         p.querySelectorAll('[data-d]').forEach(function (b) { b.onclick = function () { var g = byKey[b.getAttribute('data-d')]; lwSave(g, lwDoc(g)); }; });
       }
-      ['#lwc', '#lwl', '#lws'].forEach(function (s) { p.querySelector(s).addEventListener('input', draw); });
+      ['#lwl', '#lws'].forEach(function (s) { p.querySelector(s).addEventListener('input', draw); });
       draw();
     }).catch(function (e) { p.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
   }
