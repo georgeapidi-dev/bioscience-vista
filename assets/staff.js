@@ -8,6 +8,12 @@
   // /teach/ is "My classes": the same dashboard, limited to the classes this teacher owns (any teacher, and the admin's own classes)
   var TEACH = location.pathname.indexOf('/teach/') === 0, MINE = {}, CLASS_OF = {};
   function mine(sid) { return !TEACH || !!MINE[sid]; }
+  /* Admin only, on My classes (/teach/): look into another teacher's classroom. The database already lets the admin read and edit every class
+     (policy classes_admin); this only chooses whose classes the page lists. Nothing changes for teachers. */
+  var AS = null, TEACHERS = [], TNAME = {};
+  try { AS = new URLSearchParams(location.search).get('as') || sessionStorage.getItem('bv-as-teacher') || null; } catch (e) {}
+  function OWNER() { return TEACH && ME && ME.admin && AS ? AS : ME.user.id; }
+  function dashLink(id) { return ME && ME.admin ? ' <a class="small" href="/dashboard/?as=' + id + '" target="_blank" rel="noopener" title="Open this student\'s dashboard as they see it (view only)">📊 dashboard</a>' : ''; }
   // My classes is colourful: every class has its own colour, used on its buttons, cards and page banner
   var HUES = ['#7c3aed', '#2563eb', '#0891b2', '#059669', '#ea580c', '#db2777', '#ca8a04', '#dc2626', '#4f46e5', '#0d9488'];
   function hue(id) { var i = CLASSES.map(function (c) { return c.id; }).indexOf(id); if (i < 0) { i = 0; for (var k = 0; k < String(id).length; k++) i = (i * 31 + String(id).charCodeAt(k)) >>> 0; } return HUES[i % HUES.length]; }
@@ -49,11 +55,15 @@
   function refs() {
     return Promise.all([S.db.from('topics').select('id,name,code,programme,parent_id,sort_order, subjects(name,sort_order)').order('sort_order'), S.db.from('classes').select('*').order('name')])
       .then(function (x) { TOPICS = x[0].data || [];
-        var all = (x[1].data || []).filter(function (c) { return TEACH ? c.owner_kind !== 'main' && c.teacher_id === ME.user.id : c.owner_kind === 'main' && (ME.admin || c.teacher_id === ME.user.id); });   /* main site (/staff/) and My classes (/teach/) are kept apart */
+        var all = (x[1].data || []).filter(function (c) { return TEACH ? c.owner_kind !== 'main' && c.teacher_id === OWNER() : c.owner_kind === 'main' && (ME.admin || c.teacher_id === ME.user.id); });   /* main site (/staff/) and My classes (/teach/) are kept apart */
         CLASSES = all.filter(function (c) { return !c.archived_at; }); ARCHIVED = all.filter(function (c) { return c.archived_at; });
+        var others = {}; if (TEACH && ME.admin) (x[1].data || []).forEach(function (c) { if (c.owner_kind !== 'main' && c.teacher_id && c.teacher_id !== ME.user.id) others[c.teacher_id] = (others[c.teacher_id] || 0) + 1; });
+        TEACHERS = Object.keys(others).map(function (id) { return { id: id, n: others[id] }; });
+        var want = TEACHERS.map(function (t) { return t.id; }).concat(TEACH && ME.admin && AS ? [AS] : []);
+        var names = want.length ? S.db.from('profiles').select('id,full_name,school_name').in('id', want).then(function (r) { (r.data || []).forEach(function (q) { TNAME[q.id] = (q.full_name || 'Teacher') + (q.school_name ? ' · ' + q.school_name : ''); }); TEACHERS.sort(function (a, b) { return (TNAME[a.id] || '').localeCompare(TNAME[b.id] || ''); }); }) : Promise.resolve();
         var ids = CLASSES.map(function (c) { return c.id; }); MINE = {}; CLASS_OF = {};
-        if (!ids.length) return;
-        return Promise.all([S.db.from('enrolments').select('student_id,class_id,status').in('class_id', ids), S.db.from('profiles').select('id,class_id').in('class_id', ids)]).then(function (y) {
+        if (!ids.length) return names;
+        return Promise.all([S.db.from('enrolments').select('student_id,class_id,status').in('class_id', ids), S.db.from('profiles').select('id,class_id').in('class_id', ids), names]).then(function (y) {
           (y[0].data || []).forEach(function (e) { if (e.status === 'approved') { MINE[e.student_id] = 1; CLASS_OF[e.student_id] = CLASS_OF[e.student_id] || e.class_id; } });
           (y[1].data || []).forEach(function (r) { MINE[r.id] = 1; CLASS_OF[r.id] = CLASS_OF[r.id] || r.class_id; });
         });
@@ -80,9 +90,14 @@
     clearInterval(LIVE);
     var h = location.hash.slice(1).split('/'), tab = h[0] || 'overview';
     if (ADMIN_TABS.indexOf(tab) >= 0 && (!ME.admin || TEACH)) tab = 'overview';
-    var head = '<div class="row2 cband" style="--k:' + (TEACH ? '#059669' : '#2563eb') + '"><div><p class="label">' + (TEACH ? 'My classes' + (ME.profile.school_name ? ' · ' + E(ME.profile.school_name) : '') : 'Main site · courses and their classes') + '</p><h2>' + E(ME.profile.full_name || ME.user.email) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><div class="cta">' + '<a class="btn sm" href="/board/">🖊 Whiteboard</a><a class="btn sm" href="/live/">🎥 Live Classroom</a>' + (TEACH ? '<a class="btn sm" href="/messages/">Messages</a>' + (ME.admin ? '' : '<a class="btn sm" href="/premium/">Premium</a>') : ME.admin ? '<a class="btn main sm" href="/admin/">Admin: join requests, members, payments</a>' : '') + '<button class="btn sm" type="button" id="so">Log out</button></div></div>' +
+    var head = '<div class="row2 cband" style="--k:' + (TEACH ? '#059669' : '#2563eb') + '"><div><p class="label">' + (TEACH ? 'My classes' + (ME.profile.school_name ? ' · ' + E(ME.profile.school_name) : '') : 'Main site · courses and their classes') + '</p><h2>' + (TEACH && ME.admin && AS ? 'Classroom of ' + E(TNAME[AS] || 'this teacher') : E(ME.profile.full_name || ME.user.email)) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><div class="cta">' + '<a class="btn sm" href="/board/">🖊 Whiteboard</a><a class="btn sm" href="/live/">🎥 Live Classroom</a>' + (TEACH ? '<a class="btn sm" href="/messages/">Messages</a>' + (ME.admin ? '' : '<a class="btn sm" href="/premium/">Premium</a>') : ME.admin ? '<a class="btn main sm" href="/admin/">Admin: join requests, members, payments</a>' : '') + '<button class="btn sm" type="button" id="so">Log out</button></div></div>' +
+      (TEACH && ME.admin ? '<div class="panel tint row2" id="asbar" style="align-items:center">' + (AS ? '<span>👁 <b>Admin view.</b> You are in <b>' + E(TNAME[AS] || 'this teacher') + '</b>\'s classroom: their dashboard, classes and students. Changes you make here are saved to their classes.</span>'
+        : '<span>👁 <b>Admin:</b> open another teacher\'s classroom to see and edit their classes, their dashboard and their students.</span>') +
+        '<label class="f" style="margin:0;min-width:240px">Whose classroom<select id="aspick"><option value="">My own classes</option>' + TEACHERS.map(function (t) { return '<option value="' + t.id + '"' + (t.id === AS ? ' selected' : '') + '>' + E(TNAME[t.id] || 'Teacher') + ' (' + t.n + ' class' + (t.n === 1 ? '' : 'es') + ')</option>'; }).join('') + '</select></label></div>' : '') +
       '<nav class="tabs" aria-label="Teacher sections">' + TABS.filter(function (t) { return ADMIN_TABS.indexOf(t[0]) < 0 || (ME.admin && !TEACH); }).map(function (t) { return '<a href="#' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</a>'; }).join('') + '</nav><div id="pane"><p class="muted">Loading…</p></div>';
     app.innerHTML = head; app.querySelector('#so').onclick = S.signOut;
+    var pk = app.querySelector('#aspick'); if (pk) pk.onchange = function () { AS = pk.value || null; try { if (AS) sessionStorage.setItem('bv-as-teacher', AS); else sessionStorage.removeItem('bv-as-teacher'); } catch (e) {}
+      TC.cur = null; if (history.replaceState) history.replaceState(null, '', location.pathname + '#overview'); refs().then(route); };
     app.classList.add('teach-ui');
     app.querySelectorAll('nav.tabs a').forEach(function (a) { var k = TABHUE[a.getAttribute('href').slice(1)]; if (k) a.style.setProperty('--k', k); });
     var pane = app.querySelector('#pane');
@@ -653,7 +668,7 @@
             var flag = a && a.away_count ? ' <span class="pill" style="background:#fee2e2;color:#b91c1c" title="Times the student left the page, and total time away">🚩 Left ' + a.away_count + '× · ' + mmss(a.away_seconds || 0) + '</span>' : '';
             var prog = !a ? '' : r.st === 'prog' ? a.answered + ' of ' + nq + ' answered' + (a.seconds_left != null ? ' · ⏱ ' + mmss(a.seconds_left) + ' left' : '') : 'Handed in ' + S.when(a.submitted_at);
             var res = !a || r.st !== 'done' ? '' : a.status === 'needs_marking' ? '<a class="btn sm" href="#marking/' + a.attempt_id + '">Mark</a>' : (a.score != null ? a.score + ' / ' + a.max_score : '') + (a.released || q.show_results ? '' : ' <span class="small muted">(not released)</span>');
-            return '<tr><td><a href="#students/' + r.k.id + '">' + E(r.k.full_name || '(no name)') + '</a>' + (r.k.approved ? '' : ' <span class="pill new">not approved</span>') + '</td><td>' + stat + '</td><td class="small">' + prog + (a && a.attempts > 1 ? ' · attempt ' + a.attempts : '') + flag + '</td><td class="small">' + (a ? ago(r.st === 'done' ? a.submitted_at : a.last_seen) : '–') + '</td><td>' + res + '</td></tr>';
+            return '<tr><td><a href="#students/' + r.k.id + '">' + E(r.k.full_name || '(no name)') + '</a>' + dashLink(r.k.id) + (r.k.approved ? '' : ' <span class="pill new">not approved</span>') + '</td><td>' + stat + '</td><td class="small">' + prog + (a && a.attempts > 1 ? ' · attempt ' + a.attempts : '') + flag + '</td><td class="small">' + (a ? ago(r.st === 'done' ? a.submitted_at : a.last_seen) : '–') + '</td><td>' + res + '</td></tr>';
           }).join('') + '</table></div></details>';
       }).join('');
       body.innerHTML = html; wireFilters(body, state);
@@ -847,7 +862,7 @@
         var list = all.filter(function (s) { return !cls || s.class_id === cls || (cls === 'none' && !s.class_id); });
         p.innerHTML = '<div class="row2"><select id="cf" aria-label="Class">' + classOpts(cls, 'All my students') + '<option value="none"' + (cls === 'none' ? ' selected' : '') + '>Not in a class</option></select><button class="btn sm" type="button" id="csv">Download CSV</button></div>' +
           (list.length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Class</th><th>Results</th><th>Average</th><th>Last activity</th><th>Access</th><th>Remove</th></tr>' + list.map(function (s) {
-            return '<tr><td><a href="#students/' + s.student_id + '">' + E(s.full_name || '(no name)') + '</a></td><td>' + E(s.class_name || '–') + '</td><td>' + s.results + '</td><td>' + (s.percent == null ? '–' : s.percent + '%') + '</td><td class="small">' + E(S.when(s.last_result)) + '</td>' +
+            return '<tr><td><a href="#students/' + s.student_id + '">' + E(s.full_name || '(no name)') + '</a>' + dashLink(s.student_id) + '</td><td>' + E(s.class_name || '–') + '</td><td>' + s.results + '</td><td>' + (s.percent == null ? '–' : s.percent + '%') + '</td><td class="small">' + E(S.when(s.last_result)) + '</td>' +
               '<td><button class="btn sm' + (s.approved ? '' : ' main') + '" type="button" data-ap="' + s.student_id + '" data-v="' + (!s.approved) + '">' + (s.approved ? 'Block' : '✓ Approve') + '</button></td>' +
               '<td>' + removeButtons(s.student_id, !!s.class_id) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No students here yet.</p>');
         p.querySelector('#cf').onchange = function () { cls = this.value; try { sessionStorage.setItem('bv-cls', cls); } catch (e) {} draw(); };
@@ -1377,7 +1392,7 @@
     (SUBJ ? Promise.resolve() : S.db.from('subjects').select('id,name').order('sort_order').then(function (r) { SUBJ = r.data || []; })).then(function () {
       return S.db.from(t).select(c.sel).order(c.order);
     }).then(function (r) {
-      var rows = (r.data || []).filter(function (x) { return !TEACH || x.owner_id === ME.user.id; }), q = '';
+      var rows = (r.data || []).filter(function (x) { return !TEACH || x.owner_id === OWNER(); }), q = '';
       function field(f, v) { var k = f[0], ty = f[2], lab = '<label class="f">' + E(f[1]);
         if (ty === 'bool') return '<label class="chk"><input type="checkbox" data-k="' + k + '"' + (v || v == null && k === 'published' ? ' checked' : '') + '> ' + E(f[1]) + '</label>';
         if (ty === 'area') return lab + '<textarea data-k="' + k + '" rows="2">' + E(v || '') + '</textarea></label>';
@@ -1710,10 +1725,10 @@
     refs().then(function () {
       if (!TC.cur || !CLASSES.some(function (c) { return c.id === TC.cur; })) TC.cur = CLASSES[0] ? CLASSES[0].id : null;
       var c = CLASSES.filter(function (x) { return x.id === TC.cur; })[0];
-      p.innerHTML = '<section class="panel grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><span class="cta"><button class="btn sm" type="button" id="chs">🏫 ' + E(ME.profile.school_name || 'Set your school') + '</button><button class="btn main sm" type="button" id="newc">＋ New class</button></span></div>' +
+      p.innerHTML = '<section class="panel grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><span class="cta"><button class="btn sm" type="button" id="chs">🏫 ' + E(ME.profile.school_name || 'Set your school') + '</button>' + (ME.admin && AS ? '' : '<button class="btn main sm" type="button" id="newc">＋ New class</button>') + '</span></div>' +
         (CLASSES.length ? '<div class="cchips">' + CLASSES.map(function (x) { return '<button type="button" class="cchip' + (x.id === TC.cur ? ' on' : '') + '" style="--k:' + hue(x.id) + '" data-c="' + x.id + '">' + E(x.name) + (x.active ? '' : ' (closed)') + '</button>'; }).join('') + '</div>' : '<p class="small muted">No classes yet. Press ＋ New class and choose the course you teach.</p>') +
         '<div id="newbox"></div></section><div id="cbox"></div>';
-      p.querySelector('#newc').onclick = function () { classForm(p.querySelector('#newbox'), null, p); };
+      if (p.querySelector('#newc')) p.querySelector('#newc').onclick = function () { classForm(p.querySelector('#newbox'), null, p); };
       p.querySelector('#chs').onclick = function () { changeSchool(p); };
       p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { TC.cur = b.getAttribute('data-c'); TC.tab = 'students'; teachClasses(p); }; });
       if (c) classBox(p.querySelector('#cbox'), c, p);

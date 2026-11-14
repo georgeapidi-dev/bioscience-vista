@@ -1,16 +1,40 @@
 /* Student dashboard · Learnova */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app');
-  S.guard(app, { allowPending: true }).then(function (me) {
+  /* Admin only: /dashboard/?as=<student id> shows that student's dashboard as they see it, view only.
+     The database already lets the admin read a student's results (can_view_student); buttons that would act for the student are switched off. */
+  var VIEW = null;
+  S.guard(app, { allowPending: true }).then(function (me0) {
+    var asId = new URLSearchParams(location.search).get('as');
+    if (!asId || !me0.admin) return me0;
+    return Promise.all([S.db.from('profiles').select('*').eq('id', asId).maybeSingle(),
+      S.db.from('enrolments').select('class_id,status,classes(id,name,programme)').eq('student_id', asId)]).then(function (x) {
+      var p = x[0].data; if (!p) throw new Error('This student was not found.');
+      var cls = (x[1].data || []).filter(function (e) { return e.classes; }).map(function (e) { return { id: e.classes.id, name: e.classes.name, programme: e.classes.programme, status: e.status }; });
+      var more = p.class_id && !cls.some(function (c) { return c.id === p.class_id; }) ? S.db.from('classes').select('id,name,programme').eq('id', p.class_id).maybeSingle() : Promise.resolve({});
+      return more.then(function (m) {
+        if (m && m.data) cls.push({ id: m.data.id, name: m.data.name, programme: m.data.programme, status: 'approved' });
+        VIEW = { id: asId, name: p.full_name || 'Student' };
+        var bar = document.createElement('div'); bar.className = 'panel tint row2'; bar.id = 'viewbar'; bar.setAttribute('role', 'status');
+        bar.innerHTML = '<span>👁 <b>Admin view.</b> This is <b>' + E(VIEW.name) + '</b>\'s dashboard as they see it. It is view only: nothing here changes their work. Their to-do list is not shown in this view.</span><span class="cta"><span class="small" id="viewmsg"></span><a class="btn sm" href="/admin/#members">← Back to Admin</a></span>';
+        app.before(bar);
+        var block = '[data-done],[data-join],[data-leave],[data-retry],#addc,#joinbox,#pf,#rvf,#aip,#so';
+        ['click', 'submit'].forEach(function (ev) { app.addEventListener(ev, function (e) { var t = e.target && e.target.closest ? e.target.closest(block) : null; if (!t) return; e.preventDefault(); e.stopPropagation(); bar.querySelector('#viewmsg').textContent = 'View only: that button works for the student, not here.'; }, true); });
+        return { user: { id: asId, email: p.email || '' }, profile: p, roles: ['student'], staff: false, admin: false, ok: true, view: true, access: { premium: true, classes: cls }, classes: cls.filter(function (c) { return c.status === 'approved'; }) };
+      });
+    });
+  }).then(function (me) {
     if (me.staff && !new URLSearchParams(location.search).get('student')) { location.href = '/staff/'; return; }
     if (!me.ok) { app.innerHTML = '<div class="row2"><div><p class="label">My dashboard</p><h2>Hello, ' + E((me.profile.full_name || 'there').split(' ')[0]) + ' 👋</h2><p class="muted small">' + E(me.user.email) + '</p></div><div class="cta"><button class="btn sm" type="button" id="so">Log out</button></div></div><div id="mycl"></div>';
       app.querySelector('#so').onclick = S.signOut; classesPanel(me, app.querySelector('#mycl')); return; }
     return Promise.all([
       S.db.from('student_results').select('*').eq('student_id', me.user.id).order('recorded_at', { ascending: false }),
       S.db.from('learning_progress').select('*, lessons(title,url)').eq('student_id', me.user.id).order('updated_at', { ascending: false }),
-      (function (q) { return (me.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? q.eq('published', true) : q; })(S.db.from('quizzes').select('id,title,due_at,opens_at,time_limit_minutes,max_attempts,category')),   // students: quizzes published for their classes (per class, migration 025)
+      me.view ? S.db.from('quizzes').select('id,title,due_at,opens_at,time_limit_minutes,max_attempts,category,quiz_classes(class_id)').eq('published', true).then(function (r) { var ids = me.classes.map(function (c) { return c.id; });
+          return { data: (r.data || []).filter(function (q) { return (q.quiz_classes || []).some(function (k) { return ids.indexOf(k.class_id) >= 0; }); }) }; })   // the admin can read every quiz, so keep only those set for this student's classes
+        : (function (q) { return (me.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? q.eq('published', true) : q; })(S.db.from('quizzes').select('id,title,due_at,opens_at,time_limit_minutes,max_attempts,category')),   // students: quizzes published for their classes (per class, migration 025)
       S.db.from('quiz_attempts').select('quiz_id,status,score,max_score,submitted_at').eq('student_id', me.user.id),
-      S.db.rpc('my_todo').then(function (r) { return r; }, function () { return { data: [] }; })
+      me.view ? Promise.resolve({ data: [] }) : S.db.rpc('my_todo').then(function (r) { return r; }, function () { return { data: [] }; })
     ]).then(function (x) { draw(me, x[0].data || [], x[1].data || [], x[2].data || [], x[3].data || [], x[4].data || []); });
   }).catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
@@ -163,7 +187,7 @@
   var PROF = null;
   function myProfile(me) {
     var box = app.querySelector('#anbox'), A = window.BVA; if (!box || !A) return;
-    var go = PROF ? Promise.resolve(PROF) : Promise.all([S.db.rpc('student_profile'), S.db.from('submission_analysis').select('*').eq('student_id', me.user.id).order('at', { ascending: false })]).then(function (x) { if (x[0].error) throw x[0].error; PROF = [x[0].data, x[1].data || []]; return PROF; });
+    var go = PROF ? Promise.resolve(PROF) : Promise.all([VIEW ? S.db.rpc('student_profile', { sid: VIEW.id }) : S.db.rpc('student_profile'), S.db.from('submission_analysis').select('*').eq('student_id', me.user.id).order('at', { ascending: false })]).then(function (x) { if (x[0].error) throw x[0].error; PROF = [x[0].data, x[1].data || []]; return PROF; });
     go.then(function (z) {
       var prof = z[0], subs = z[1];
       box.innerHTML = '<div class="row2"><h3 style="margin:0">📊 My learning profile</h3>' + (prof.overall && prof.overall.items ? '<button type="button" class="btn sm" id="aip">📝 Summarise my learning</button>' : '') + '</div>' +
