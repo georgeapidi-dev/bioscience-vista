@@ -183,6 +183,8 @@
       if (mine) people(box.querySelector('#sppl'), s);
       attendance(box.querySelector('#satt'), s, mine);
       recordings(box.querySelector('#srec'), s, mine);
+      if (mine && s.daily_room && (st === 'active' || st === 'completed') && Date.now() - new Date(s.starts_at).getTime() < 14 * 86400000)   // exact times from the video service's own records
+        fn('live-session', { action: 'sync', session: s.id }).then(function (d) { if (d && d.ok && location.hash === '#s/' + s.id) { attendance(box.querySelector('#satt'), s, mine); recordings(box.querySelector('#srec'), s, mine); } });
       if (mine) auditLog(box.querySelector('#saud'), s.id);
     });
   }
@@ -342,9 +344,12 @@
     var box = shell('<div class="lv-grid"><div class="lv-sec" id="anow"><h3>🔴 Live now</h3><p class="small muted">Loading…</p></div><div class="lv-sec" id="atch"><h3>👩‍🏫 Who may run live lessons</h3><p class="small muted">Loading…</p></div><div class="lv-sec" id="aset"><h3>🛠 Video set-up</h3><p class="small muted">Checking…</p></div><div class="lv-sec" id="apol"></div><div class="lv-sec" id="aall"><h3>📋 All sessions</h3><p class="small muted">Loading…</p></div><div class="lv-sec" id="aaud"></div></div>', '#admin');
     fn('live-session', { action: 'status' }).then(function (d) { var el = box.querySelector('#aset'), ok = function (b) { return b ? '✅' : '❌'; };
       if (!d.ok) { el.innerHTML = '<h3>🛠 Video set-up</h3><p class="msg">' + E(d.error || 'The live-session function is not reachable.') + '</p>'; return; }
-      var hookOk = (d.hooks || []).some(function (h) { return /daily-webhook/.test(h.url || '') && h.state === 'ACTIVE'; });
-      el.innerHTML = '<h3>🛠 Video set-up</h3><table class="tbl"><tbody><tr><td>' + ok(d.daily) + '</td><td>Daily API key and domain' + (d.domain ? ' (' + E(d.domain) + '.daily.co)' : '') + '</td></tr><tr><td>' + ok(d.pepper) + '</td><td>Guest invitation secret</td></tr><tr><td>' + ok(d.webhookSecret) + '</td><td>Webhook signing secret</td></tr><tr><td>' + ok(hookOk) + '</td><td>Daily sends signed events (attendance, recordings)</td></tr></tbody></table>' +
-        (d.daily && d.webhookSecret && !hookOk ? '<button class="btn main sm" type="button" id="hk">Connect Daily events now</button>' : '') + '<p class="msg" id="hkm"></p>';
+      var hookOk = (d.hooks || []).some(function (h) { return /daily-webhook/.test(h.url || '') && h.state === 'ACTIVE'; }), paid = d.hooksNote === 'paid';
+      el.innerHTML = '<h3>🛠 Video set-up</h3><table class="tbl"><tbody><tr><td>' + ok(d.daily && d.keyOk !== false) + '</td><td>Daily API key' + (d.keyOk ? ' accepted by Daily' : d.daily ? ': Daily refused it. Check the DAILY_API_KEY secret.' : ' and domain') + (d.domain ? ' (' + E(d.domain) + '.daily.co)' : '') + '</td></tr>' +
+        (d.keyOk && d.domainMatches === false ? '<tr><td>❌</td><td>The DAILY_DOMAIN secret says <b>' + E(d.domain) + '</b>, but this key belongs to <b>' + E(d.account) + '</b>. Change the secret to ' + E(d.account) + '.</td></tr>' : '') +
+        '<tr><td>' + ok(d.pepper) + '</td><td>Guest invitation secret</td></tr><tr><td>' + ok(d.webhookSecret) + '</td><td>Webhook signing secret</td></tr>' +
+        '<tr><td>' + (hookOk ? '✅' : paid ? 'ℹ️' : '❌') + '</td><td>' + (hookOk ? 'Daily sends signed events (attendance, recordings)' : paid ? 'Daily\'s instant event feed needs a paid Daily account (add a card in the Daily dashboard). <b>Live lessons work without it</b>: attendance is read from Daily\'s own meeting records when a lesson ends and when you open the lesson page.' : 'Daily sends signed events (attendance, recordings)') + '</td></tr></tbody></table>' +
+        (d.keyOk && d.webhookSecret && !hookOk && !paid ? '<button class="btn main sm" type="button" id="hk">Connect Daily events now</button>' : '') + (paid ? '<button class="btn sm" type="button" id="hk">I added a card: connect Daily events</button>' : '') + '<p class="msg" id="hkm"></p>';
       var hk = el.querySelector('#hk'); if (hk) hk.onclick = function () { hk.disabled = true; fn('live-session', { action: 'setup-webhook' }).then(function (x) { var m = el.querySelector('#hkm'); if (!x.ok) { m.textContent = x.error; hk.disabled = false; } else { m.className = 'msg ok'; m.textContent = 'Connected.'; } }); };
     });
     var pol = box.querySelector('#apol');
