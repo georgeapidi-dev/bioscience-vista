@@ -1,4 +1,6 @@
-/* Learnova · lesson slides, built from the lesson itself: notes, diagrams, images and videos only (no questions or tasks).
+/* Learnova · lesson slides: a detailed explanation of the lesson's concepts, set out by concept and objective, not by the six lesson steps.
+   Where a lesson carries its own slide notes (#lv-slidenotes, written for the slides), those are used; otherwise every explanatory part of the lesson is used.
+   Built from the lesson itself: notes, diagrams, images and videos only (no questions or tasks).
    Every interactive lesson gets a slide deck inside the page: arrows, keyboard, swipe, and an Expand button
    for full screen. Nothing to download: slides are drawn live from the lesson's own content. */
 (function () {
@@ -10,6 +12,7 @@
     c.querySelectorAll('button,textarea,input,select,details,.say,.lv-qr,script,.savecard,.feedback').forEach(function (x) { x.remove(); });
     c.querySelectorAll('[id]').forEach(function (x) { if (x.tagName.toLowerCase() !== 'svg' && !x.closest('svg')) x.removeAttribute('id'); });
     c.removeAttribute && c.removeAttribute('id');
+    [].forEach.call((c.tagName === 'IMG' ? [c] : []).concat([].slice.call(c.querySelectorAll('img'))), function (im) { im.style.maxHeight = ''; im.style.height = ''; im.removeAttribute('loading'); });   // the slide sets the size of its pictures, so each one can shrink to fit
     return c;
   }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
@@ -23,7 +26,8 @@
     (big ? '<p class="sd-q">' + E(txt(big)) + '</p>' : '') + (hook ? '<p class="sd-hook">🎯 ' + E(txt(hook)) + '</p>' : '') });
   var firstStep = document.querySelector('section.step');
   var pre = [].slice.call(document.querySelectorAll('.card.notes')).filter(function (n) { return !n.closest('section.step') && firstStep && (n.compareDocumentPosition(firstStep) & 4); });
-  pre.forEach(function (n) { if (/able to|objective|learning|success/i.test(txt(n).slice(0, 120))) slides.push({ kind: 'notes', head: 'Learning objectives', nodes: [clean(n)] }); });
+  var OBJ = null;
+  pre.forEach(function (n) { if (/able to|objective|learning|success/i.test(txt(n).slice(0, 120))) { OBJ = OBJ || clean(n); slides.push({ kind: 'notes', head: 'Learning objectives', nodes: [clean(n)] }); } });
   var kt = [].slice.call(document.querySelectorAll('b,strong,h3')).filter(function (b) { return /^key terms/i.test(txt(b)) && !b.closest('section.step'); })[0];
   if (kt) {
     var words = txt(kt.parentNode).replace(/^.*?key terms[^:]*:\s*/i, '').split(/\s*[·,;]\s*/).filter(Boolean);
@@ -42,7 +46,7 @@
     });
     return out;
   }
-  function vidSlides(cards, step) { for (var k = 0; k < cards.length; k += 4) slides.push({ kind: 'html', head: 'Watch', step: step, html: '<div class="sd-vids">' + cards.slice(k, k + 4).join('') + '</div>' }); }
+  function vidSlides(cards, step) { for (var k = 0; k < cards.length; k += 4) slides.push({ kind: 'html', head: 'Watch', html: '<div class="sd-vids">' + cards.slice(k, k + 4).join('') + '</div>' }); }
   vidSlides(vids([].filter.call(document.querySelectorAll('a[href*="youtu"]'), function (a) { return !a.closest('section.step') && !a.closest('#lv-deck') && !a.closest('header nav, footer'); })), '');
   function blocks(card) {   // split a notes card into slide-sized blocks
     var out = [];
@@ -56,16 +60,30 @@
     return out;
   }
   function pack(head, bl, step) {   // group blocks into slides; a figure takes a slide, or shares one with a short text
-    var cur = [], w = 0;
-    function flush() { if (cur.length) slides.push({ kind: 'notes', head: head, step: step, nodes: cur }); cur = []; w = 0; }
-    bl.forEach(function (b) {
-      if (b.fig) { if (w > 320) flush(); cur.push(b.n); flush(); return; }
-      if (w + b.w > MAX && cur.length) flush();
+    var cur = [], w = 0, run = null, acc = 0, g = 0;
+    function flush() { if (cur.length) slides.push({ kind: 'notes', head: head, nodes: cur }); cur = []; w = 0; }
+    function runOf(k) {   // the text up to the next picture is shared evenly between its slides, so no slide is left with one stray line
+      var t = 0; for (; k < bl.length && !bl[k].fig; k++) t += bl[k].w;
+      return { t: t, n: t <= MAX * 1.25 ? 1 : Math.ceil(t / MAX) };
+    }
+    bl.forEach(function (b, k) {
+      if (b.fig) { if (w > 320) flush(); cur.push(b.n); flush(); run = null; return; }
+      if (!run) { run = runOf(k); acc = 0; g = 0; }
+      var gi = Math.min(run.n - 1, Math.floor((acc + b.w / 2) / (run.t / run.n))); acc += b.w;
+      if (gi !== g && cur.length) flush();
+      g = gi;
       if (b.li && cur.length && cur[cur.length - 1].tagName === b.n.tagName && cur[cur.length - 1].dataset.merge) cur[cur.length - 1].appendChild(b.n.firstChild);
       else { if (b.li) b.n.dataset.merge = 1; cur.push(b.n); }
       w += b.w;
     });
     flush();
+  }
+  /* slide notes written for the slides: one block per concept or objective, each with a heading */
+  var OWN = document.getElementById('lv-slidenotes'), usedPic = {};
+  function srcOf(n) { var im = n.tagName === 'IMG' ? n : n.querySelector && n.querySelector('img'); return im ? im.getAttribute('src') : ''; }
+  if (OWN) {
+    [].forEach.call(OWN.querySelectorAll('img'), function (im) { usedPic[im.getAttribute('src')] = 1; });
+    [].forEach.call(OWN.children, function (sec) { var c = clean(sec); c.hidden = false; c.removeAttribute('hidden'); pack(sec.getAttribute('data-h') || 'Notes', blocks(c), ''); });
   }
   [].forEach.call(document.querySelectorAll('section.step'), function (st) {
     var chip = st.querySelector('.chip'), h2 = st.querySelector('h2'), head = (h2 ? txt(h2) : '');
@@ -76,13 +94,16 @@
     var bl = [], sub = head;
     items.forEach(function (n) {
       if (n.classList.contains('nh') || /^h3$/i.test(n.tagName)) { pack(sub, bl, kind); bl = []; sub = /^(notes|read this)/i.test(txt(n)) ? head : (txt(n) || head); return; }
+      if (OWN && (!(isFig(n) && !n.classList.contains('notes')) || usedPic[srcOf(n)])) return;   // the lesson's own slide notes carry the explanation; a step then adds only the pictures those notes have not already shown
       if (n.classList.contains('notes') || n.classList.contains('banner')) bl = bl.concat(blocks(n));
+      else if (n.classList.contains('card') && !n.querySelector('textarea,select,input,button,canvas') && txt(n).length > 40) bl = bl.concat(blocks(n));   // worked examples, background and other explanation cards
       else if (n.querySelectorAll('input,select,button,canvas').length > 2) return;   // a live simulator: it stays in the lesson
       else if (isFig(n) || n.querySelector('img,svg,table')) bl.push({ n: clean(n), w: MAX, fig: true });
     });
     pack(sub, bl, kind);
     vidSlides(vids(st.querySelectorAll('a[href*="youtu"]')), kind);   // the step's videos follow its notes
   });
+  if (OBJ) slides.push({ kind: 'notes', head: 'Check: can you now explain each of these?', nodes: [OBJ] });
   if (slides.length < 3) { host.remove(); return; }
 
   // ---------- the viewer ----------
