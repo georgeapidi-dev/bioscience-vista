@@ -9,9 +9,31 @@
   var TABS = [['requests', '🙋 Join requests'], ['members', '👥 Members & access'], ['teachers', '🧑‍🏫 Teachers'], ['payments', '💳 Payments'], ['settings', '⚙️ Prices & settings'], ['schools', '🏫 Schools'], ['reviews', '⭐ Reviews'], ['admins', '🔑 Admins']];
   function draw() {
     app.innerHTML = '<div class="row2 cband" style="--k:#7c3aed"><div><p class="label">Admin</p><h2 style="margin:0">Learnova admin</h2><p class="small">Approvals, members, teachers, payments and settings</p></div><div class="cta"><a class="btn sm" href="/staff/">🌐 Main site</a><a class="btn sm" href="/teach/">🏫 My classes</a></div></div>' +
-      '<div class="cta" role="tablist">' + TABS.map(function (t) { return '<button type="button" class="btn sm' + (TAB === t[0] ? ' main' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><section class="panel grp" id="tab"><p class="muted small">Loading…</p></section>';
+      '<div class="cta" role="tablist">' + TABS.map(function (t) { return '<button type="button" class="btn sm' + (TAB === t[0] ? ' main' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="ais" class="small" style="margin:10px 0;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:#f8fafc"></div><section class="panel grp" id="tab"><p class="muted small">Loading…</p></section>';
+    aiStatus(false);
     app.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { TAB = b.getAttribute('data-t'); history.replaceState(null, '', '#' + TAB); draw(); }; });
     ({ requests: requests, members: members, teachers: teachers, payments: payments, settings: settings, schools: schools, reviews: reviews, admins: admins })[TAB](app.querySelector('#tab'));
+  }
+  // AI helper status: one tiny server-side check, remembered for this visit; "Check again" repeats it
+  var AIS = null;
+  function aiStatus(force) {
+    var box = app.querySelector('#ais'); if (!box) return;
+    var show = function (d) {
+      var ok = d && d.ok, col = ok ? '#15803d' : (d && d.state === 'busy' ? '#b45309' : '#b91c1c'), bg = ok ? '#f0fdf4' : (d && d.state === 'busy' ? '#fffbeb' : '#fef2f2');
+      box.style.background = bg; box.style.borderColor = col;
+      box.innerHTML = '<b style="color:' + col + '">' + (ok ? '🟢 AI helper: working' : (d && d.state === 'busy' ? '🟠 AI helper: busy' : '🔴 AI helper: off')) + '</b> · ' + E(d && d.message || 'Could not check.') +
+        (d && d.model ? ' <span class="muted">Model: ' + E(d.model) + '.</span>' : '') +
+        (ok ? '' : ' <span class="muted">Marking by rules and by teachers still works.</span>') +
+        (d && d.state === 'no_credit' ? ' <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener">Open billing</a>' : '') +
+        ' <button type="button" class="btn sm" id="aisb" style="margin-left:6px">Check again</button>';
+      box.querySelector('#aisb').onclick = function () { aiStatus(true); };
+    };
+    if (AIS && !force) return show(AIS);
+    box.style.background = '#f8fafc'; box.style.borderColor = 'var(--line)'; box.innerHTML = '<span class="muted">Checking the AI helper…</span>';
+    if (!S.db.functions) return show({ ok: false, state: 'error', message: 'Could not check.' });
+    S.db.functions.invoke('ai-status', { body: {} }).then(function (res) { var d = res.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } }
+      AIS = d && d.state ? d : { ok: false, state: 'error', message: 'Could not check the AI helper just now.' }; show(AIS);
+    }, function () { show({ ok: false, state: 'error', message: 'Could not check the AI helper just now.' }); });
   }
   // one name per school: merge spellings teachers typed differently
   function schools(t) {
