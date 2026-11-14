@@ -40,6 +40,23 @@
           (R[t.id] || []).map(function (r) { return '<a class="lcard" href="' + E(r.url) + '" target="_blank" rel="noopener"><span class="ic">' + (r.kind === 'video' ? '🎬' : '📄') + '</span><span><b>' + E(r.title) + '</b><span class="small muted">' + E(r.kind === 'video' ? 'Videos' : 'Notes') + '</span></span><span class="go">Open ↗</span></a>'; }).join('');
       }
       function match(t) { if (!q) return true; var txt = (t.name + ' ' + (t.code || '') + ' ' + (L[t.id] || []).map(function (l) { return l.title; }).join(' ')).toLowerCase(); return txt.indexOf(q) >= 0 || (KIDS[t.id] || []).some(match); }
+      /* In a teacher's class you see the lessons your teacher added. The rest of the course can be asked for here; your teacher decides.
+         (Needs migration 031; before that, and for independent learners, there is nothing to show.) */
+      var rq = document.createElement('section'); rq.id = 'lcreq'; app.before(rq);
+      function requests() {
+        S.db.rpc('class_catalogue').then(function (r) {
+          var rows = r.data || []; if (r.error || !rows.length) { rq.innerHTML = ''; return; }
+          var by = {}, order = []; rows.forEach(function (x) { var k = x.class_name + ' · ' + x.topic; if (!by[k]) { by[k] = []; order.push(k); } by[k].push(x); });
+          var waiting = rows.filter(function (x) { return x.status === 'pending'; }).length, was = rq.querySelector('details'), open = was && was.open;
+          rq.innerHTML = '<details class="panel tint"' + (open ? ' open' : '') + '><summary style="cursor:pointer;font-weight:700">➕ Ask your teacher for more lessons <span class="small muted">' + rows.length + ' more in your course' + (waiting ? ' · ' + waiting + ' waiting for your teacher' : '') + '</span></summary>' +
+            '<p class="small muted">You see the lessons your teacher added to your class. Ask for any of these and your teacher will decide.</p>' + order.map(function (k) {
+              return '<h4 style="margin:12px 0 4px">' + E(k) + '</h4>' + by[k].map(function (x) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>' + E(x.title) + '</span>' +
+                (x.status === 'pending' ? '<span class="pill">Requested · waiting</span>' : '<button type="button" class="btn sm" data-ask="' + x.lesson_id + '" data-cls="' + x.class_id + '">' + (x.status === 'declined' ? 'Ask again' : 'Request') + '</button>') + '</div>'; }).join(''); }).join('') + '</details>';
+          rq.querySelectorAll('[data-ask]').forEach(function (b) { b.onclick = function () { b.disabled = true;
+            S.db.rpc('request_material', { lid: b.getAttribute('data-ask'), cid: b.getAttribute('data-cls') }).then(function (x) { if (x.error) { b.disabled = false; alert(S.nice(x.error)); return; } requests(); }); }; });
+        }, function () {});
+      }
+      if (!me.staff) requests();
       var grade = null; try { grade = localStorage.getItem('bv-grade'); } catch (e) {}
       var MORE = { 'myp-science': '/myp/', 'ib-biology': '/ib/', 'a-level-biology': '/a-level/', 'igcse-biology': '/igcse/', 'ib-maths-aa': '/maths/', 'ib-maths-ai': '/maths/', 'ib-chemistry': '/chemistry/', 'igcse-chemistry': '/chemistry/', 'a-level-chemistry': '/chemistry/' };
       app.addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('[data-grade]') : null; if (!b) return; grade = b.getAttribute('data-grade'); try { localStorage.setItem('bv-grade', grade); } catch (x) {} draw(); });

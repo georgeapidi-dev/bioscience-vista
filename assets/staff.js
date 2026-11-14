@@ -1739,7 +1739,7 @@
       if (p.querySelector('#newc')) p.querySelector('#newc').onclick = function () { classForm(p.querySelector('#newbox'), null, p); };
       p.querySelector('#chs').onclick = function () { changeSchool(p); };
       p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { TC.cur = b.getAttribute('data-c'); TC.tab = 'students'; teachClasses(p); }; });
-      if (c) classBox(p.querySelector('#cbox'), c, p);
+      if (c) { classBox(p.querySelector('#cbox'), c, p); lessonRequests(c, p); }
     });
   }
   function changeSchool(p) {
@@ -1769,6 +1769,21 @@
           (course !== c.course ? S.db.rpc('set_class_course', { cid: c.id, course_slug: course }) : Promise.resolve({})).then(function (x) { if (ok(x, 'Saved')) teachClasses(p); }); }); };
       var ar = box.querySelector('#carch'); if (ar) ar.onclick = function () { S.db.from('classes').update({ active: !c.active }).eq('id', c.id).then(function (r) { if (ok(r, c.active ? 'Class closed' : 'Class reopened')) teachClasses(p); }); };
     });
+  }
+  /* Students in a teacher's class see only the lessons added to the class. They can ask for another Learnova lesson; the teacher decides here.
+     Approving adds the lesson to the class for everyone in it. (Needs migration 031; before that the list is simply empty.) */
+  function lessonRequests(c, p) {
+    var old = p.querySelector('#lreq'); if (old) old.remove();
+    S.db.from('material_requests').select('id,note,created_at,student_id,lessons(title),profiles(full_name)').eq('class_id', c.id).eq('status', 'pending').order('created_at').then(function (r) {
+      var rows = r.data || []; if (r.error || !rows.length) return;
+      var d = document.createElement('section'); d.id = 'lreq'; d.className = 'panel tint grp';
+      d.innerHTML = '<h3 style="margin:0">🙋 Lesson requests for ' + E(c.name) + ' (' + rows.length + ')</h3><p class="small muted">Approving adds the lesson to this class for all its students.</p>' + rows.map(function (x) {
+        return '<div class="row2" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><b>' + E((x.profiles || {}).full_name || 'A student') + '</b> asks for <b>' + E((x.lessons || {}).title || 'a lesson') + '</b>' + (x.note ? '<br><span class="small muted">“' + E(x.note) + '”</span>' : '') + '</span>' +
+          '<span class="cta"><button type="button" class="btn main sm" data-yes="' + x.id + '">Approve</button><button type="button" class="btn sm" data-no="' + x.id + '">Decline</button></span></div>'; }).join('');
+      var cb = p.querySelector('#cbox'); if (!cb) return; cb.parentNode.insertBefore(d, cb);
+      d.querySelectorAll('[data-yes],[data-no]').forEach(function (b) { b.onclick = function () { var yes = b.hasAttribute('data-yes'); b.disabled = true;
+        S.db.rpc('decide_material_request', { rid: b.getAttribute(yes ? 'data-yes' : 'data-no'), yes: yes }).then(function (x) { if (ok(x, yes ? 'Lesson added to the class' : 'Request declined')) { MATS = {}; classBox(p.querySelector('#cbox'), c, p); lessonRequests(c, p); } else b.disabled = false; }); }; });
+    }, function () {});
   }
   function classBox(box, c, p) {
     var tabs = [['students', '👥 Students'], ['materials', '📘 Lessons'], ['qz', '📝 Quizzes'], ['team', '🤝 Co-teachers']];
