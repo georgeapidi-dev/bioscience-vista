@@ -6,20 +6,25 @@
   function go(me) { location.href = next && next.charAt(0) === '/' && next.charAt(1) !== '/' ? next : (me && me.staff ? '/staff/' : me && me.school ? '/teach/' : me && me.parent ? '/parent/' : '/dashboard/'); }
 
   if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'parent') return parentRegister();
-  /* The eleven courses. Each choice is the address of a course on the site (a grade or level where the course has them).
-     soon = the course has no lessons yet, so it cannot be chosen for now. */
-  var CAT = [['MYP Science', [['grade-6', 'Grade 6'], ['grade-7', 'Grade 7'], ['grade-8', 'Grade 8'], ['grade-9', 'Grade 9'], ['grade-10', 'Grade 10']]],
-    ['IB Diploma Biology', [['bio-sl', 'Standard level'], ['bio-hl', 'Higher level']]], ['IB Diploma Chemistry', [['chem-sl', 'Standard level'], ['chem-hl', 'Higher level']]],
-    ['IB Diploma Physics', [['phys-sl', 'Standard level'], ['phys-hl', 'Higher level']]], ['IB Environmental Systems & Societies', [['ess-sl', 'Standard level'], ['ess-hl', 'Higher level']]],
-    ['IB Mathematics: Analysis and Approaches', [['maths-aa-sl', 'Standard level'], ['maths-aa-hl', 'Higher level']]], ['IB Mathematics: Applications and Interpretation', [['maths-ai-sl', 'Standard level'], ['maths-ai-hl', 'Higher level']]],
-    ['IGCSE Biology', [['igcse-bio-core', 'Core'], ['igcse-bio-ext', 'Extended']], 1], ['IGCSE Chemistry', [['igcse-chem-core', 'Core'], ['igcse-chem-ext', 'Extended']], 1],
-    ['AS & A Level Biology', [['alevel-bio-as', 'AS Level'], ['alevel-bio-a2', 'A2 Level']], 1], ['AS & A Level Chemistry', [['alevel-chem-as', 'AS Level'], ['alevel-chem-a2', 'A2 Level (lessons coming soon)', 1]]]];
-  function coursePicker(label) {
-    return '<fieldset class="grp" id="rcs" style="border:1px solid var(--line);border-radius:12px;padding:12px"><legend><b>' + label + '</b></legend>' + CAT.map(function (c, i) {
-      return '<div class="row2" style="justify-content:flex-start;gap:10px;padding:4px 0"><label class="chk" style="flex:1;min-width:200px"><input type="checkbox" data-course="' + i + '"' + (c[2] ? ' disabled' : '') + '> ' + E(c[0]) + (c[2] ? ' <span class="small muted">(lessons coming soon)</span>' : '') + '</label>' +
-        (c[1].length > 1 ? '<select data-level="' + i + '" aria-label="Grade or level for ' + E(c[0]) + '" style="max-width:190px">' + c[1].map(function (l) { return '<option value="' + l[0] + '"' + (l[2] ? ' disabled' : '') + '>' + E(l[1]) + '</option>'; }).join('') + '</select>' : '') + '</div>'; }).join('') + '</fieldset>';
+  /* The course list (the admin's list): [address of the course, name, group, soon]. soon = no Learnova lessons yet.
+     The same list is kept in the database (course_catalog, migration 034). It changes only what people choose from. */
+  var CAT = [['grade-6', 'Grade 6 Science', 'MYP Science'], ['grade-8', 'Grade 8 Science', 'MYP Science'], ['grade-9', 'Grade 9 Science', 'MYP Science'], ['grade-10', 'Grade 10 Science', 'MYP Science'],
+    ['bio-sl', 'IB Diploma Biology SL', 'IB Diploma'], ['bio-hl', 'IB Diploma Biology HL', 'IB Diploma'], ['chem-sl', 'IB Diploma Chemistry SL', 'IB Diploma'], ['chem-hl', 'IB Diploma Chemistry HL', 'IB Diploma'],
+    ['phys-sl', 'IB Diploma Physics SL', 'IB Diploma'], ['phys-hl', 'IB Diploma Physics HL', 'IB Diploma'], ['ess-sl', 'IB ESS SL', 'IB Diploma'], ['ess-hl', 'IB ESS HL', 'IB Diploma'],
+    ['maths-aa-sl', 'IB Mathematics AA SL', 'IB Diploma'], ['maths-aa-hl', 'IB Mathematics AA HL', 'IB Diploma'], ['maths-ai-hl', 'IB Mathematics AI', 'IB Diploma'],
+    ['igcse-bio', 'IGCSE Biology', 'Cambridge IGCSE', 1], ['igcse-chem-core', 'IGCSE Chemistry Core', 'Cambridge IGCSE', 1], ['igcse-chem-ext', 'IGCSE Chemistry Extended', 'Cambridge IGCSE', 1],
+    ['igcse-phys-core', 'IGCSE Physics Core', 'Cambridge IGCSE', 1], ['igcse-phys-ext', 'IGCSE Physics Extended', 'Cambridge IGCSE', 1],
+    ['alevel-bio-as', 'AS Level Biology', 'Cambridge AS & A Level', 1], ['alevel-bio', 'A Level Biology', 'Cambridge AS & A Level', 1],
+    ['alevel-chem-as', 'AS Level Chemistry', 'Cambridge AS & A Level'], ['alevel-chem', 'A Level Chemistry', 'Cambridge AS & A Level']];
+  function coursePicker(label, teacher) {   // tick as many as you like; a learner cannot tick a course that has no lessons yet
+    var g = '', h = '';
+    CAT.forEach(function (c) {
+      if (c[2] !== g) { g = c[2]; h += '<p class="small" style="margin:10px 0 2px"><b>' + E(g) + '</b></p>'; }
+      h += '<div style="padding:3px 0"><label class="chk"><input type="checkbox" data-course="' + c[0] + '"' + (c[3] && !teacher ? ' disabled' : '') + '> ' + E(c[1]) +
+        (c[3] ? ' <span class="small muted">(' + (teacher ? 'no Learnova lessons yet: you add your own' : 'lessons coming soon') + ')</span>' : '') + '</label></div>'; });
+    return '<fieldset class="grp" id="rcs" style="border:1px solid var(--line);border-radius:12px;padding:12px"><legend><b>' + label + '</b></legend>' + h + '</fieldset>';
   }
-  function chosen() { var out = []; app.querySelectorAll('[data-course]:checked').forEach(function (b) { var i = +b.getAttribute('data-course'), s = app.querySelector('[data-level="' + i + '"]'); out.push(s ? s.value : CAT[i][1][0][0]); }); return out; }
+  function chosen() { var out = []; app.querySelectorAll('[data-course]:checked').forEach(function (b) { out.push(b.getAttribute('data-course')); }); return out; }
   if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'student') return accountForm('student');
   if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'learner') return accountForm('learner');
   if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'teacher') return accountForm('teacher');
@@ -35,12 +40,12 @@
   function accountForm(kind) {
     var T = kind === 'teacher', L = kind === 'learner';
     app.innerHTML = '<form class="form narrow" id="rf" novalidate><h2>' + (T ? 'Teacher account' : L ? 'Independent learner account' : 'Student account') + '</h2>' +
-      (L ? '<p class="muted small">Choose your courses below. You are in straight away, with no teacher to wait for, and you see everything in the courses you choose. You can add or drop courses later on your dashboard. Premium access opens the lessons.</p>' : !T ? '<p class="muted small">After signing up, press <b>Join a class</b> on your dashboard, choose your teacher, then your class. You see the lessons your teacher adds to the class.</p>' : '') +
-      '<p class="muted small">' + (T ? 'Your classes, students and materials are private to you and your students. The Learnova admin approves new teachers; a premium subscription is needed to run classes.' :
-        'After signing up you choose your school or teacher, then your class. Your teacher approves you, and premium access opens the class materials.') + '</p>' +
+      (L ? '<p class="muted small">Choose your courses below: one or as many as you like. You are in straight away, with no teacher to wait for, and you see everything in the courses you choose. You can add or drop courses later on your dashboard. Premium access opens the lessons.</p>' : !T ? '<p class="muted small">After signing up, press <b>Join a class</b> on your dashboard, choose your teacher, then choose your course from the courses your teacher offers. You see the lessons your teacher adds to the class.</p>' : '') +
+      '<p class="muted small">' + (T ? 'Your classes, students and materials are private to you and your students. The Learnova admin approves new teachers and each course they teach; a premium subscription is needed to run classes.' :
+        L ? 'Independent learners can choose more than one course.' : 'After signing up you choose your teacher, then your course. Your teacher approves you, and premium access opens the class materials.') + '</p>' +
       '<label class="f">Full name<input id="rn" autocomplete="name" required placeholder="' + (T ? 'Your name as students know it' : 'As it appears on your school records') + '"></label>' +
       (T ? '<label class="f">School (choose it from the list, or type it if it is new; "Private tutor" if you have none)<input id="rs" list="rsl" autocomplete="organization" required maxlength="120"><datalist id="rsl"></datalist></label>' : '') +
-      (T ? coursePicker('Courses you teach (one class is made for each, ready for your students, once your account is approved)') : L ? coursePicker('Courses you want to learn, with your level (HL includes the SL lessons; Extended includes Core)') : '') +
+      (T ? coursePicker('Courses you teach: tick one or more. The Learnova admin approves each course, and your class for a course is made when it is approved', true) : L ? coursePicker('Courses you want to learn: tick one or more (HL includes the SL lessons; A Level includes AS)') : '') +
       '<label class="f">Email<input id="re" type="email" autocomplete="email" required></label>' +
       '<label class="f">Password (at least 8 characters)<input id="rp" type="password" autocomplete="new-password" minlength="8" required></label>' +
       '<label class="f">Confirm password<input id="rp2" type="password" autocomplete="new-password" required></label>' +
@@ -66,7 +71,7 @@
         if (res.error) { m.textContent = S.nice(res.error); return; }
         if (res.data.session) { location.href = T ? '/teach/' : '/dashboard/'; return; }
         app.innerHTML = '<section class="panel tint"><p class="label">Almost there</p><h2>Check your email</h2><p>We sent a confirmation link to <b>' + E(em) + '</b>. Open it to activate your account, then <a href="/login/">log in</a>' +
-          (T ? '. The admin will then approve your teacher account, and your classes are made for the courses you ticked.' : L ? '. Your courses will be waiting on your dashboard.' : ', press Join a class and choose your teacher.') + '</p><p class="small muted">No email after a few minutes? Check your spam folder.</p></section>';
+          (T ? '. The Learnova admin then approves your teacher account and each course you ticked. Your class for a course is made when that course is approved.' : L ? '. Your courses will be waiting on your dashboard.' : ', press Join a class and choose your teacher.') + '</p><p class="small muted">No email after a few minutes? Check your spam folder.</p></section>';
       });
     });
   }

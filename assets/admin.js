@@ -165,15 +165,34 @@
     });
   }
   function teachers(t) {
-    S.db.rpc('admin_members').then(function (r) {
-      if (r.error) return fail(t, r);
+    var none = function () { return { error: true }; };
+    Promise.all([S.db.rpc('admin_members'), S.db.from('teacher_courses').select('teacher_id,course,status,requested_at').then(null, none), S.db.rpc('course_list').then(null, none)]).then(function (z) {
+      var r = z[0]; if (r.error) return fail(t, r);
+      var TC = z[1] && !z[1].error ? (z[1].data || []) : null, nm = {};   // TC is null until migration 034 (courses approved one by one)
+      ((z[2] && z[2].data) || []).forEach(function (k) { nm[k.slug] = k.name; });
+      var by = {}; (TC || []).forEach(function (c) { (by[c.teacher_id] = by[c.teacher_id] || []).push(c); });
       var rows = (r.data || []).filter(function (m) { return m.account_type === 'teacher' && m.teacher_status; });
+      var wait = (TC || []).filter(function (c) { return c.status === 'pending' && rows.some(function (m) { return m.id === c.teacher_id; }); }).length;
+      rows.sort(function (a, b) { var pa = (by[a.id] || []).some(function (c) { return c.status === 'pending'; }) || a.teacher_status === 'pending', pb = (by[b.id] || []).some(function (c) { return c.status === 'pending'; }) || b.teacher_status === 'pending'; return (pb - pa) || (a.full_name || '').localeCompare(b.full_name || ''); });
+      var courses = function (m) {
+        if (!TC) return '';
+        var cs = (by[m.id] || []).slice().sort(function (a, b) { return (nm[a.course] || a.course).localeCompare(nm[b.course] || b.course); });
+        return '<div style="margin:6px 0 0 4px">' + (cs.length ? cs.map(function (c) {
+          return '<div class="row2" style="padding:3px 0"><span class="small">📚 <b>' + E(nm[c.course] || c.course) + '</b> ' + (c.status === 'approved' ? '<span class="pill ok">approved</span>' : c.status === 'pending' ? '<span class="pill t">⏳ waiting for you</span>' : '<span class="pill">declined</span>') + '</span><span class="cta">' +
+            (c.status !== 'approved' ? '<button class="btn main sm" data-cyes="' + m.id + '" data-course="' + E(c.course) + '">Approve course</button>' : '') +
+            (c.status !== 'declined' ? '<button class="btn sm" data-cno="' + m.id + '" data-course="' + E(c.course) + '">' + (c.status === 'approved' ? 'Remove course' : 'Decline') + '</button>' : '') + '</span></div>'; }).join('') : '<p class="small muted" style="margin:0">No course chosen yet.</p>') + '</div>';
+      };
       t.innerHTML = '<p class="small">Teachers from other schools and private tutors. An approved teacher with premium can create their own classes, add Learnova lessons and published quizzes to them, and see only their own students. They cannot change anything on the main site.</p>' +
-        (rows.length ? rows.map(function (m) { return '<div class="row2" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><b>' + E(m.full_name) + '</b> <span class="small muted">' + E(m.email) + ' · signed up ' + E(new Date(m.created_at).toLocaleDateString()) + '</span><br>' +
+        (TC ? '<p class="small"><b>Each teacher selects courses and you approve each course.</b> Approving a course makes that teacher\'s class for it (and approves a teacher who is still waiting). A teacher can make classes only for approved courses.' + (wait ? ' <span class="pill t">' + wait + ' course' + (wait === 1 ? '' : 's') + ' waiting</span>' : '') + '</p>' : '') +
+        (rows.length ? rows.map(function (m) { return '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="row2"><span><b>' + E(m.full_name) + '</b> <span class="small muted">' + E(m.email) + ' · signed up ' + E(new Date(m.created_at).toLocaleDateString()) + '</span><br>' +
           '<span class="pill' + (m.teacher_status === 'approved' ? ' ok' : '') + '">' + E(m.teacher_status) + '</span></span><span class="cta"><a class="btn sm" href="/teach/?as=' + m.id + '#overview" title="See and edit this teacher\'s classes, their dashboard and their students">👁 Open classroom</a>' + (m.teacher_status !== 'approved' ? '<button class="btn main sm" data-ok="' + m.id + '">Approve</button>' : '') +
-          (m.teacher_status !== 'rejected' ? '<button class="btn sm" data-no="' + m.id + '">' + (m.teacher_status === 'approved' ? 'Remove teacher access' : 'Decline') + '</button>' : '') + '</span></div>'; }).join('') : '<p class="small muted">No teacher sign-ups yet.</p>');
+          (m.teacher_status !== 'rejected' ? '<button class="btn sm" data-no="' + m.id + '">' + (m.teacher_status === 'approved' ? 'Remove teacher access' : 'Decline') + '</button>' : '') + '</span></div>' + courses(m) + '</div>'; }).join('') : '<p class="small muted">No teacher sign-ups yet.</p>');
       t.querySelectorAll('[data-ok],[data-no]').forEach(function (b) { b.onclick = function () { var ok = b.hasAttribute('data-ok'); if (!ok && !confirm('Remove this teacher\'s access? Their classes stay but they cannot manage them.')) return;
         S.db.rpc('decide_teacher', { uid: b.getAttribute(ok ? 'data-ok' : 'data-no'), approve: ok }).then(function (x) { if (x.error) return alert(S.nice(x.error)); MEM = null; teachers(t); }); }; });
+      t.querySelectorAll('[data-cyes],[data-cno]').forEach(function (b) { b.onclick = function () { var yes = b.hasAttribute('data-cyes');
+        if (!yes && b.textContent === 'Remove course' && !confirm('Remove this course from the teacher? Classes already made stay, but the teacher cannot make new classes for it.')) return;
+        b.disabled = true;
+        S.db.rpc('decide_teacher_course', { uid: b.getAttribute(yes ? 'data-cyes' : 'data-cno'), course_slug: b.getAttribute('data-course'), yes: yes }).then(function (x) { if (x.error) { b.disabled = false; return alert(S.nice(x.error)); } MEM = null; teachers(t); }); }; });
     });
   }
   function payments(t) {

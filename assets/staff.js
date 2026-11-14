@@ -38,7 +38,7 @@
   ].join('\n'); document.head.appendChild(st); })();
   var TABHUE = { overview: '#7c3aed', work: '#2563eb', questions: '#db2777', labs: '#0891b2', approvals: '#ea580c', classes: '#059669', students: '#4f46e5', quizzes: '#ca8a04', lessons: '#0d9488', marking: '#dc2626', content: '#9333ea' };
 
-  S.guard(app, TEACH ? { school: true, allowPending: true } : { staff: true }).then(function (me) { ME = me; if (TEACH && !teachGate(me)) throw 'gate'; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(firstClasses).then(function () { window.addEventListener('hashchange', route); route(); })
+  S.guard(app, TEACH ? { school: true, allowPending: true } : { staff: true }).then(function (me) { ME = me; return TEACH ? courseRequests() : null; }).then(function () { if (TEACH && !teachGate(ME)) throw 'gate'; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(firstClasses).then(function () { window.addEventListener('hashchange', route); route(); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
   function teachGate(me) {   // teachers from other schools: approved account + premium; the admin and main-site teachers always
@@ -46,7 +46,7 @@
     var st = me.profile.teacher_status, a = me.access || {};
     var top = '<p class="label">My classes</p><h2>Hello, ' + E((me.profile.full_name || '').split(' ')[0] || 'teacher') + '</h2>';
     if (!me.school) { app.innerHTML = '<section class="panel"><h2>Teachers only</h2><p>This page is for teacher accounts. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; return false; }
-    if (st !== 'approved' || me.roles.indexOf('school_teacher') < 0) { app.innerHTML = top + '<section class="panel tint"><h3>' + (st === 'rejected' ? 'Your teacher account was not approved' : '⏳ Waiting for approval') + '</h3><p>' + (st === 'rejected' ? 'Contact the Learnova admin through Messages if you think this is a mistake.' : 'The Learnova admin checks every new teacher account. You can buy premium now; your classes open as soon as you are approved.') + '</p><p><a class="btn sm" href="/messages/">Messages</a> <a class="btn sm" href="/premium/">Premium</a></p></section>'; return false; }
+    if (st !== 'approved' || me.roles.indexOf('school_teacher') < 0) { app.innerHTML = top + '<section class="panel tint"><h3>' + (st === 'rejected' ? 'Your teacher account was not approved' : '⏳ Waiting for approval') + '</h3><p>' + (st === 'rejected' ? 'Contact the Learnova admin through Messages if you think this is a mistake.' : 'The Learnova admin checks every new teacher account. You can buy premium now; your classes open as soon as you are approved.') + '</p><p><a class="btn sm" href="/messages/">Messages</a> <a class="btn sm" href="/premium/">Premium</a></p></section><div id="mycbox"></div>'; coursePanel(app.querySelector('#mycbox')); return false; }
     if (!a.premium) { app.innerHTML = top + '<section class="panel tint"><h3>Premium is needed to run classes</h3><p>Your teacher account is approved. Get premium to create classes, add Learnova lessons and quizzes, and see your students\' results.</p><a class="btn main" href="/premium/">Get premium</a></section>'; return false; }
     return true;
   }
@@ -1719,9 +1719,46 @@
     });
   }
   var COURSES = null, TC = { cur: null, tab: 'students' };
+  /* A teacher's courses. The Learnova admin approves each one (migration 034); approving a course makes the teacher's class for it.
+     MYC is null while the database has no course table yet: then everything works as before. */
+  var MYC = null;
+  function myCourses() {
+    if (!TEACH) return Promise.resolve();
+    return S.db.from('teacher_courses').select('course,status').eq('teacher_id', OWNER()).then(function (r) { MYC = r.error ? null : (r.data || []); }, function () { MYC = null; });
+  }
+  function courseRequests() {   // the courses ticked at sign-up are sent to the admin (once), in case the sign-up itself could not record them
+    var none = function () {};
+    return myCourses().then(function () {
+      var md = (ME.user && ME.user.user_metadata) || {};
+      if (MYC === null || ME.admin || !md.courses || !md.courses.length || md.courses_applied) return;
+      var have = MYC.map(function (c) { return c.course; });
+      return md.courses.filter(function (c) { return have.indexOf(c) < 0; }).reduce(function (p, c) { return p.then(function () { return S.db.rpc('request_course', { course_slug: c }).then(none, none); }); }, Promise.resolve())
+        .then(function () { return S.db.auth.updateUser({ data: { courses_applied: true } }).then(none, none); }).then(myCourses);
+    }).then(none, none);
+  }
+  function coursePanel(el) {
+    if (!el) return;
+    if (MYC === null || (ME.admin && !AS)) { el.innerHTML = ''; return; }
+    var viewing = ME.admin;   // the admin looking at a teacher's classroom: decisions are made in Admin → Teachers
+    courseList().then(function (cs) {
+      var nm = {}; cs.forEach(function (k) { nm[k.slug] = k.name; });
+      var lab = { approved: '<span class="pill ok">✓ Approved</span>', pending: '<span class="pill t">⏳ Waiting for the admin</span>', declined: '<span class="pill">Not approved</span>' };
+      var have = MYC.map(function (c) { return c.course; }), rest = cs.filter(function (k) { return have.indexOf(k.slug) < 0; });
+      el.innerHTML = '<section class="panel grp"><h3 style="margin:0 0 6px">📚 My courses</h3><p class="small muted">The Learnova admin approves each course you teach. When a course is approved, your class for it is made, and you can add more classes for that course.</p>' +
+        (MYC.length ? MYC.slice().sort(function (a, b) { return (nm[a.course] || a.course).localeCompare(nm[b.course] || b.course); }).map(function (c) {
+          return '<div class="row2" style="padding:5px 0;border-bottom:1px solid var(--line)"><span><b>' + E(nm[c.course] || c.course) + '</b></span><span class="cta">' + (lab[c.status] || '') +
+            (c.status === 'declined' && !viewing ? '<button class="btn sm" type="button" data-again="' + E(c.course) + '">Ask again</button>' : '') + '</span></div>'; }).join('') : '<p class="small">No course chosen yet. Choose the course you teach below.</p>') +
+        (!viewing && rest.length ? '<div class="row2" style="margin-top:10px;justify-content:flex-start;gap:8px"><select id="mcs" aria-label="Ask for another course" style="max-width:320px"><option value="">Ask for another course…</option>' +
+          rest.map(function (k) { return '<option value="' + E(k.slug) + '">' + E(k.name) + '</option>'; }).join('') + '</select><button class="btn main sm" type="button" id="mca">Send to the admin</button></div>' : '') + '</section>';
+      var ask = function (slug) { if (!slug) return toast('Choose a course first.', true);
+        S.db.rpc('request_course', { course_slug: slug }).then(function (r) { if (!ok(r, 'Sent. The Learnova admin will approve or decline it.')) return; myCourses().then(function () { coursePanel(el); }); }); };
+      var b = el.querySelector('#mca'); if (b) b.onclick = function () { ask(el.querySelector('#mcs').value); };
+      el.querySelectorAll('[data-again]').forEach(function (x) { x.onclick = function () { ask(x.getAttribute('data-again')); }; });
+    });
+  }
   function firstClasses() {
     var md = (ME.user && ME.user.user_metadata) || {}, tried = false; try { tried = sessionStorage.getItem('bv-classes-tried') === '1'; } catch (e) {}
-    if (!TEACH || ME.admin || CLASSES.length || ARCHIVED.length || !md.courses || !md.courses.length || md.courses_applied || tried) return;
+    if (MYC !== null || !TEACH || ME.admin || CLASSES.length || ARCHIVED.length || !md.courses || !md.courses.length || md.courses_applied || tried) return;   // since migration 034 the admin approves each course, and approval makes the class
     try { sessionStorage.setItem('bv-classes-tried', '1'); } catch (e) {}
     return courseList().then(function (cs) { var name = {}; cs.forEach(function (k) { name[k.slug] = k.name; });
       return md.courses.filter(function (c) { return name[c]; }).reduce(function (p, c) { return p.then(function () { return S.db.rpc('create_school_class', { nm: name[c], course_slug: c, descr: null, is_listed: true }).then(function () {}, function () {}); }); }, Promise.resolve());
@@ -1734,8 +1771,9 @@
       if (!TC.cur || !CLASSES.some(function (c) { return c.id === TC.cur; })) TC.cur = CLASSES[0] ? CLASSES[0].id : null;
       var c = CLASSES.filter(function (x) { return x.id === TC.cur; })[0];
       p.innerHTML = '<section class="panel grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><span class="cta"><button class="btn sm" type="button" id="chs">🏫 ' + E(ME.profile.school_name || 'Set your school') + '</button>' + (ME.admin && AS ? '' : '<button class="btn main sm" type="button" id="newc">＋ New class</button>') + '</span></div>' +
-        (CLASSES.length ? '<div class="cchips">' + CLASSES.map(function (x) { return '<button type="button" class="cchip' + (x.id === TC.cur ? ' on' : '') + '" style="--k:' + hue(x.id) + '" data-c="' + x.id + '">' + E(x.name) + (x.active ? '' : ' (closed)') + '</button>'; }).join('') + '</div>' : '<p class="small muted">No classes yet. Press ＋ New class and choose the course you teach.</p>') +
-        '<div id="newbox"></div></section><div id="cbox"></div>';
+        (CLASSES.length ? '<div class="cchips">' + CLASSES.map(function (x) { return '<button type="button" class="cchip' + (x.id === TC.cur ? ' on' : '') + '" style="--k:' + hue(x.id) + '" data-c="' + x.id + '">' + E(x.name) + (x.active ? '' : ' (closed)') + '</button>'; }).join('') + '</div>' : '<p class="small muted">' + (MYC !== null && !ME.admin ? 'No classes yet. Your class for a course is made when the Learnova admin approves the course (see My courses below).' : 'No classes yet. Press ＋ New class and choose the course you teach.') + '</p>') +
+        '<div id="newbox"></div></section><div id="mycbox"></div><div id="cbox"></div>';
+      myCourses().then(function () { coursePanel(p.querySelector('#mycbox')); });
       if (p.querySelector('#newc')) p.querySelector('#newc').onclick = function () { classForm(p.querySelector('#newbox'), null, p); };
       p.querySelector('#chs').onclick = function () { changeSchool(p); };
       p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { TC.cur = b.getAttribute('data-c'); TC.tab = 'students'; teachClasses(p); }; });
@@ -1753,6 +1791,11 @@
   }
   function classForm(box, c, p) {
     courseList().then(function (cs) {
+      if (MYC !== null && !ME.admin) {   // only the courses the admin has approved for this teacher
+        var yes = MYC.filter(function (x) { return x.status === 'approved'; }).map(function (x) { return x.course; });
+        cs = cs.filter(function (k) { return yes.indexOf(k.slug) >= 0 || (c && c.course === k.slug); });
+        if (!cs.length) { box.innerHTML = '<p class="msg" style="margin-top:10px">None of your courses is approved yet. Choose a course under <b>My courses</b>; you can make its classes as soon as the Learnova admin approves it.</p>'; return; }
+      }
       box.innerHTML = '<form class="grp" id="cf" style="margin-top:10px"><label class="f">What do you teach in this class?<select id="cc" required><option value="">Choose the course…</option>' +
         cs.map(function (k) { return '<option value="' + E(k.slug) + '"' + (c && c.course === k.slug ? ' selected' : '') + '>' + E(k.name) + ' (' + k.lessons + ' lessons' + (k.quizzes ? ', ' + k.quizzes + ' quizzes' : '') + ')</option>'; }).join('') + '</select></label>' +
         '<p class="small muted">Only that course\'s Learnova lessons and quizzes are added to the class. You can untick any you don\'t need under 📘 Lessons, and add your own in Lesson builder and Content.</p>' +

@@ -31,11 +31,12 @@
         'ess-sl': '0d843ca5-1e56-4b69-8c6e-493a60460f28', 'ess-hl': '8e664688-9126-436e-9a3d-76ce1591b904', 'maths-aa-sl': '65e0e834-5b20-47da-a599-2c55fdc9ecb1', 'maths-aa-hl': '95523f71-74cd-44fb-a91c-631622f5baa8', 'maths-ai-sl': '0db2a462-8905-4fbe-b88c-b46c66adf9b6', 'maths-ai-hl': '47038381-beac-45de-964c-12f7ef764d08',
         'igcse-bio': '2374096e-b1db-4d43-bf80-312ad2975e00', 'igcse-chem': 'ae72a63f-16ab-4d7a-b508-5a832f5a0f13', 'alevel-bio': '22a62d37-9d0d-48ae-b7fa-e51fcc99a49b', 'alevel-chem': '13524323-f56c-499d-972c-8f9bc07cc4b1',
         'alevel-chem-as': 'aa2a9b6f-86a1-5fef-b41e-371a38acef7e', 'alevel-chem-a2': '3d0c6bd5-8c86-51eb-94d1-2f7da875f738', 'alevel-bio-as': 'e7e33efc-aa0d-5519-b6f0-377eac0cce72', 'alevel-bio-a2': '6cfe1147-4e25-5140-8e86-2ccf5a0dc64d',
-        'igcse-bio-core': 'b4412ae4-623a-5b9a-b674-32f76f0dd6de', 'igcse-bio-ext': 'a3cd0f9d-9bad-53ec-810f-020824fa6223', 'igcse-chem-core': '6f614fa4-f4aa-5761-9d01-ac8826f8cf6d', 'igcse-chem-ext': '7e4e0f52-a837-54da-b5de-2a176f39fdb7' };   // Independent learners class of each course
+        'igcse-bio-core': 'b4412ae4-623a-5b9a-b674-32f76f0dd6de', 'igcse-bio-ext': 'a3cd0f9d-9bad-53ec-810f-020824fa6223', 'igcse-chem-core': '6f614fa4-f4aa-5761-9d01-ac8826f8cf6d', 'igcse-chem-ext': '7e4e0f52-a837-54da-b5de-2a176f39fdb7',
+        'igcse-phys-core': '8a64f0db-8603-5b2a-bd21-eff2a432859c', 'igcse-phys-ext': 'f8485b9d-0142-590f-a1fd-09b4529f107a' };   // Independent learners class of each course
       try { sessionStorage.setItem('bv-courses-tried', '1'); } catch (e) {}
       app.innerHTML = '<p class="muted">Setting up your courses…</p>';
       return md.courses.filter(function (c) { return SELF[c]; }).reduce(function (p, c) { return p.then(function () { return S.db.rpc('request_join', { cid: SELF[c] }).then(function (x) {
-          var base = c.replace(/-(as|a2|core|ext)$/, ''); if (x && x.error && base !== c && SELF[base]) return S.db.rpc('request_join', { cid: SELF[base] }).then(function () {}, function () {});   // the level class is made by migration 032; until then the whole-course class
+          var base = c === 'alevel-chem' ? 'alevel-chem-as' : c.replace(/-(as|a2|core|ext)$/, ''); if (x && x.error && base !== c && SELF[base]) return S.db.rpc('request_join', { cid: SELF[base] }).then(function () {}, function () {});   // a course whose own class is not open yet: the nearest class that is (A Level Chemistry opens with migration 034; until then its AS class)
         }, function () {}); }); }, Promise.resolve())
         .then(function () { return S.db.auth.updateUser({ data: { courses_applied: true } }); }).then(function () { location.reload(); }, function () { location.reload(); });
     }
@@ -70,19 +71,28 @@
       var jb = box.querySelector('#joinbox'); jb.innerHTML = '<p class="small muted">Loading classes…</p>';
       S.db.rpc('class_directory').then(function (r) {
         if (r.error) { jb.innerHTML = '<p class="msg">' + E(S.nice(r.error)) + '</p>'; return; }
-        var list = r.data || [], schools = [];
+        var list = r.data || [], schools = [], joined = false;
         list.forEach(function (c) { if (schools.indexOf(c.school) < 0) schools.push(c.school); });
-        jb.innerHTML = '<p class="small" style="margin-top:10px">No school or teacher? Choose <b>Learnova · Independent learners</b>: you are in straight away and learn at your own pace with instant feedback.</p><div class="grp"><label class="f">1. Your school or teacher<select id="jsch"><option value="">Choose…</option>' + schools.map(function (s) { return '<option>' + E(s) + '</option>'; }).join('') + '</select></label>' +
-          '<label class="f">Or search by class name<input id="jq" placeholder="e.g. Biology HL"></label><div id="jlist"></div><p class="msg" id="jm" role="alert"></p></div>';
+        var IND = function (n) { return /Independent learners/.test(n); };
+        schools.sort(function (x, y) { return (IND(y) - IND(x)) || x.localeCompare(y); });   // Independent learners first, then the teachers by school
+        /* the course of a class, by the name on the course list (class_directory gives it after migration 034; before that subject and level) */
+        var course = function (c) { var sj = c.subject || '', lv = c.level || ''; return sj ? (lv && sj.indexOf(lv) < 0 ? sj + ' ' + lv : sj) : c.name; };
+        jb.innerHTML = '<p class="small" style="margin-top:10px">Learning on your own? Choose <b>Learnova · Independent learners</b>: you are in straight away and can join <b>more than one course</b>. In a teacher\'s class? Choose your teacher, then your course.</p>' +
+          '<div class="grp"><label class="f">1. Your teacher<select id="jsch"><option value="">Choose…</option>' + schools.map(function (s) { return '<option>' + E(s) + '</option>'; }).join('') + '</select></label>' +
+          '<label class="f">Or search by course, teacher or class name<input id="jq" placeholder="e.g. Biology HL"></label><div id="jlist"></div><p class="msg" id="jm" role="alert"></p></div>';
         var draw = function () {
           var sch = jb.querySelector('#jsch').value, q = jb.querySelector('#jq').value.trim().toLowerCase();
-          var show = list.filter(function (c) { return (!sch || c.school === sch) && (!q || (c.name + ' ' + (c.subject || '') + ' ' + c.school).toLowerCase().indexOf(q) >= 0); });
-          jb.querySelector('#jlist').innerHTML = (sch || q) ? (show.length ? '<p class="small"><b>2. Choose your class</b></p>' + show.map(function (c) {
-            return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(c.name) + '</b> <span class="small muted">' + E(c.school) + (c.description ? ' · ' + E(c.description) : '') + '</span></span>' +
-              (c.my_status ? (st[c.my_status] || '') : '<button type="button" class="btn main sm" data-join="' + E(c.id) + '">Ask to join</button>') + '</div>'; }).join('') : '<p class="small muted">No class matches. Check the name with your teacher.</p>') : '';
-          jb.querySelectorAll('[data-join]').forEach(function (b) { b.onclick = function () { b.disabled = true; var m = jb.querySelector('#jm');
-            S.db.rpc('request_join', { cid: b.getAttribute('data-join') }).then(function (x) { if (x.error) { b.disabled = false; m.textContent = S.nice(x.error); return; }
-              m.className = 'msg ok'; m.textContent = x.data === 'approved' ? 'You are in. Your lessons are ready.' : 'Request sent. Your teacher will approve it soon.'; setTimeout(function () { location.reload(); }, 1200); }); }; });
+          var show = list.filter(function (c) { return (!sch || c.school === sch) && (!q || (c.name + ' ' + course(c) + ' ' + c.school).toLowerCase().indexOf(q) >= 0); });
+          jb.querySelector('#jlist').innerHTML = (sch || q) ? (show.length ? '<p class="small"><b>2. Choose your course</b> ' + (sch && IND(sch) ? '(you can join more than one)' : sch ? 'from the courses this teacher offers' : '') + '</p>' + show.map(function (c) {
+            var k = course(c), same = k === c.name || c.name.indexOf(k + ' · Independent') === 0;
+            return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(k) + '</b> <span class="small muted">' + (same ? '' : E(c.name) + ' · ') + E(c.school) + (c.description && !IND(c.school) ? ' · ' + E(c.description) : '') + '</span></span>' +
+              (c.my_status ? (st[c.my_status] || '') : '<button type="button" class="btn main sm" data-join="' + E(c.id) + '">' + (IND(c.school) ? 'Join' : 'Ask to join') + '</button>') + '</div>'; }).join('') +
+              (joined ? '<p style="margin-top:10px"><button type="button" class="btn main sm" id="jdone">Done</button></p>' : '') : '<p class="small muted">Nothing matches. Check the name with your teacher.</p>') : '';
+          var dn = jb.querySelector('#jdone'); if (dn) dn.onclick = function () { location.reload(); };
+          jb.querySelectorAll('[data-join]').forEach(function (b) { b.onclick = function () { b.disabled = true; var m = jb.querySelector('#jm'), id = b.getAttribute('data-join');
+            S.db.rpc('request_join', { cid: id }).then(function (x) { if (x.error) { b.disabled = false; m.className = 'msg'; m.textContent = S.nice(x.error); return; }
+              list.forEach(function (c) { if (c.id === id) c.my_status = x.data === 'approved' ? 'approved' : (x.data || 'pending'); }); joined = true;
+              m.className = 'msg ok'; m.textContent = x.data === 'approved' ? 'You are in. Choose another course if you wish, then press Done.' : 'Request sent. Your teacher will approve it soon. Press Done when you have finished.'; draw(); }); }; });
         };
         jb.querySelector('#jsch').onchange = draw; jb.querySelector('#jq').oninput = draw;
       });
