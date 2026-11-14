@@ -268,26 +268,66 @@
   function pickLists() {
     if (PICK) return Promise.resolve(PICK);
     return Promise.all([S.db.from('lessons').select('id,title,url,external_id,topic_id').eq('published', true).order('sort_order'),
-      S.db.from('quizzes').select('id,title,category,published').order('created_at', { ascending: false }),
+      S.db.from('quizzes').select('id,title,category,published, quiz_classes(class_id)').order('created_at', { ascending: false }),
       S.db.from('resources').select('id,title,url,topic_id').eq('published', true).order('sort_order'),
       S.db.from('simulations').select('id,title,url,topic_id').eq('published', true).order('sort_order')]).then(function (x) {
       PICK = { lesson: x[0].data || [], quiz: x[1].data || [], resource: x[2].data || [], sim: x[3].data || [] }; return PICK; });
   }
   function progOf(tid) { var tp = {}; TOPICS.forEach(function (t) { tp[t.id] = t; }); var t = tp[tid]; return t ? (t.programme || (tp[t.parent_id] || {}).programme || '') : ''; }
+  // What a class teaches: programme (IB DP, MYP 1-5, IGCSE…) and subject, read from its course, programme and name.
+  function classKey(c) {
+    var t = ((c.course || '') + ' ' + (c.programme || '') + ' ' + (c.name || '')).toLowerCase(), k = { prog: '', subj: '' };
+    var g = t.match(/\bgrade[- ]?(6|7|8|9|10)\b/), m = t.match(/\bmyp ?([1-5])\b/);
+    if (m) k.prog = 'MYP ' + m[1]; else if (g) k.prog = 'MYP ' + (+g[1] - 5);
+    else if (/\bigcse\b/.test(t)) k.prog = 'IGCSE'; else if (/\ba[ -]?level|\bas level/.test(t)) k.prog = 'A Level';
+    else if (/\bib\b|\bdp ?\d?\b|diploma|\b(bio|chem|phys|ess)-(hl|sl)\b/.test(t)) k.prog = 'IB DP';
+    k.subj = /\bess\b|environmental/.test(t) ? 'environmental' : /chem/.test(t) ? 'chemistry' : /phys/.test(t) ? 'physics' : /\bbio/.test(t) ? 'biology' : '';
+    if (!k.prog && k.subj) k.prog = 'IB DP';   // "Chemistry", "PHYSICS": the site's subject classes are IB DP
+    k.any = !k.prog;
+    k.label = k.any ? '' : (k.prog === 'IB DP' && k.subj ? 'IB DP ' + k.subj.replace('environmental', 'ESS').replace(/^./, function (x) { return x.toUpperCase(); }) : k.prog);
+    return k;
+  }
+  function topicKey(tid) {
+    var tp = {}; TOPICS.forEach(function (t) { tp[t.id] = t; }); var t = tp[tid] || {}, p = tp[t.parent_id] || {};
+    var subj = ((t.subjects || p.subjects || {}).name || '').toLowerCase();
+    return { prog: t.programme || p.programme || '', subj: subj, sname: (t.subjects || p.subjects || {}).name || '' };
+  }
+  function keyFits(k, want) {
+    if (want.any) return true;
+    if (!sameProg(k.prog, want.prog)) return false;
+    return !want.subj || !k.subj || k.subj.indexOf(want.subj) >= 0 || (k.subj.indexOf('science') >= 0 && want.prog.indexOf('MYP') === 0);
+  }
+  function topicLabel(tid, foreign) {
+    var tp = {}; TOPICS.forEach(function (t) { tp[t.id] = t; }); var t = tp[tid], p = t && tp[t.parent_id], k = topicKey(tid);
+    var name = t ? (p ? p.name + ' › ' : '') + t.name : 'Other';
+    return foreign ? ((k.sname || k.prog || 'Other') + ' · ' + name) : name;
+  }
   function urlFor(kind, it) { return kind === 'quiz' ? ({ exam: '/exams/', lesson: '/lesson/' }[it.category] || '/quizzes/') + '#' + it.id : it.url || ''; }
   // The "Set work" form. kids: the class roster; pre: students ticked to start with (empty = whole class).
   function assignForm(host, c, kids, pre, done) {
     pickLists().then(function (L) {
-      var mineFirst = function (list) { return list.slice().sort(function (a, b) { return (sameProg(progOf(b.topic_id), c.programme) ? 1 : 0) - (sameProg(progOf(a.topic_id), c.programme) ? 1 : 0); }); };
+      // Only this class's lessons by default (its programme and subject), grouped by topic; "other classes" is opt-in.
+      var want = classKey(c), others = false, q = '';
+      var fits = function (it) { var k = topicKey(it.topic_id); return keyFits(k, want); };
       var opts = function (kind) {
-        if (kind === 'quiz') return L.quiz.map(function (q) { return '<option value="' + q.id + '">' + (q.category === 'exam' ? '🧪 ' : q.category === 'lesson' ? '📘 ' : '📝 ') + E(q.title) + (q.published ? '' : ' (draft)') + '</option>'; }).join('');
-        var list = mineFirst(L[kind] || []), cut = list.filter(function (it) { return sameProg(progOf(it.topic_id), c.programme); }).length;
-        return list.map(function (it, i) { return (i === cut && cut ? '<option disabled>── other classes ──</option>' : '') + '<option value="' + it.id + '">' + E(it.title) + (progOf(it.topic_id) && !sameProg(progOf(it.topic_id), c.programme) ? ' · ' + E(progOf(it.topic_id)) : '') + '</option>'; }).join('');
+        var match = function (t) { return !q || t.toLowerCase().indexOf(q) >= 0; };
+        if (kind === 'quiz') {
+          var mine = function (x) { return (x.quiz_classes || []).some(function (r) { return r.class_id === c.id; }); };
+          var qs = L.quiz.filter(function (x) { return match(x.title) && (others || mine(x) || !L.quiz.some(mine)); });
+          return qs.map(function (x) { return '<option value="' + x.id + '">' + (x.category === 'exam' ? '🧪 ' : x.category === 'lesson' ? '📘 ' : '📝 ') + E(x.title) + (x.published ? '' : ' (draft)') + '</option>'; }).join('');
+        }
+        var all = (L[kind] || []).filter(function (it) { return match(it.title); });
+        var list = want.any || others ? all : all.filter(fits);
+        if (!list.length && !others && !q) list = all;   // nothing tagged for this class yet: show everything rather than an empty list
+        var groups = [], by = {};
+        list.forEach(function (it) { var g = topicLabel(it.topic_id, !fits(it)); if (!by[g]) { by[g] = []; groups.push(g); } by[g].push(it); });
+        if (others && !want.any) groups.sort(function (a, b) { return (a.indexOf(' · ') > 0) - (b.indexOf(' · ') > 0); });   // this class's topics first
+        return groups.map(function (g) { return '<optgroup label="' + E(g) + '">' + by[g].map(function (it) { return '<option value="' + it.id + '">' + E(it.title) + '</option>'; }).join('') + '</optgroup>'; }).join('');
       };
       host.innerHTML = '<section class="panel tint"><h3 style="margin-top:0">📌 Set work' + (pre.length === 1 ? ' for ' + E((kids.filter(function (k) { return k.id === pre[0]; })[0] || {}).full_name || 'this student') : ' for ' + E(c.name)) + '</h3>' +
         '<div class="row2" style="flex-wrap:wrap;justify-content:flex-start;align-items:flex-end">' +
         '<label class="f">What<select id="ak"><option value="lesson">🧪 Lesson (interactive or Learning centre)</option><option value="quiz">📝 Quiz or exam</option><option value="resource">📄 Notes or file</option><option value="sim">🔬 Simulation</option><option value="link">🔗 Web link</option><option value="task">✏️ Other task (book, homework…)</option></select></label>' +
-        '<label class="f" id="aiw" style="min-width:280px;flex:1">Which<select id="ai"></select></label><label class="f" id="auw" hidden style="flex:1">Link<input id="au" type="url" placeholder="https://"></label></div>' +
+        '<label class="f" id="aiw" style="min-width:280px;flex:1">Which <span class="small muted" id="aif"></span><input id="aq" type="search" placeholder="Search…" style="margin-bottom:6px"><select id="ai"></select><span class="small"><label class="chk"><input type="checkbox" id="aoth"> Show items from other classes too</label></span></label><label class="f" id="auw" hidden style="flex:1">Link<input id="au" type="url" placeholder="https://"></label></div>' +
         '<div class="row2" style="flex-wrap:wrap;justify-content:flex-start"><label class="f" style="flex:1;min-width:240px">Title<input id="at" maxlength="160"></label><label class="f">Due<input id="ad" type="datetime-local"></label></div>' +
         '<label class="f">Instructions for students (optional)<textarea id="ain" rows="2" placeholder="e.g. Finish steps 1–3 and correct your answers in your book."></textarea></label>' +
         '<fieldset style="border:1px solid var(--line);border-radius:10px;padding:8px 12px"><legend class="small"><b>Who</b></legend>' +
@@ -297,7 +337,11 @@
         '<div class="acts"><button type="button" class="btn main sm" id="ago">📌 Add to the to-do list</button><button type="button" class="btn sm" id="ax">Cancel</button><span class="small" id="am"></span></div></section>';
       var $ = function (q) { return host.querySelector(q); };
       function fill() { var k = $('#ak').value, picks = ['lesson', 'quiz', 'resource', 'sim'].indexOf(k) >= 0;
-        $('#aiw').hidden = !picks; $('#auw').hidden = k !== 'link'; if (picks) { $('#ai').innerHTML = '<option value="">Choose…</option>' + opts(k); } }
+        $('#aiw').hidden = !picks; $('#auw').hidden = k !== 'link';
+        if (picks) { var o = opts(k), n = (o.match(/<option /g) || []).length; $('#ai').innerHTML = '<option value="">Choose… (' + n + ')</option>' + o;
+          $('#aif').textContent = others || want.any ? '' : k === 'quiz' ? '· quizzes for ' + c.name : '· ' + want.label; } }
+      $('#aq').oninput = function () { q = this.value.trim().toLowerCase(); fill(); };
+      $('#aoth').onchange = function () { others = this.checked; fill(); };
       $('#ak').onchange = function () { fill(); $('#at').value = ''; };
       $('#ai').onchange = function () { var k = $('#ak').value, it = (L[k] || []).filter(function (x) { return x.id === $('#ai').value; })[0]; if (it) $('#at').value = it.title; };
       host.querySelectorAll('[name=aw]').forEach(function (r) { r.onchange = function () { $('#asl').hidden = host.querySelector('[name=aw]:checked').value !== 'some'; }; });
