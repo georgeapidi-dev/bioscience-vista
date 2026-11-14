@@ -392,3 +392,6 @@ details.panel>summary::-webkit-details-marker{display:none}
 .lc-grades{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 .lc-grades button{font:inherit;font-weight:700;min-height:44px;padding:8px 16px;border-radius:999px;border:2px solid var(--coral);background:var(--raised);color:var(--ink);cursor:pointer}
 .lc-grades button[aria-pressed="true"]{background:var(--coral);color:#fff}
+
+/* marking: a question that still has no mark stands out in red */
+.q.unmarked{border:2px solid #dc2626!important;background:#fef2f2;border-radius:12px;padding:10px}.unmarked-pill{background:#dc2626!important;color:#fff!important;font-weight:700}

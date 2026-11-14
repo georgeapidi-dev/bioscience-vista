@@ -108,7 +108,7 @@
       var ind = rows[0].independent;
       box.innerHTML = '<h3>📘 My interactive lessons</h3><p class="small muted">' + (ind ? 'As an independent learner, your best mark counts each time you try again.' : 'Your first attempt is the mark your teacher records. You can try again to practise; your new marks show as practice marks.') + '</p>' +
         rows.map(function (l, i) {
-          var mark = l.score != null ? E(+l.score) + ' / ' + E(+l.max_score) : '–', more = l.attempts > 1 ? ' · ' + (ind ? 'best' : 'practice') + ': ' + E(+(ind ? l.best_score : l.last_score)) + ' · attempt ' + l.attempts : '';
+          var mark = l.score != null ? E(+l.score) + ' / ' + E(+l.max_score) + (window.BVT && BVT.levelPill ? BVT.levelPill(l.score, l.max_score, (l.url || '').replace(/^\//, '/') ) : '') : '–', more = l.attempts > 1 ? ' · ' + (ind ? 'best' : 'practice') + ': ' + E(+(ind ? l.best_score : l.last_score)) + ' · attempt ' + l.attempts : '';
           return '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="row2"><span><a href="' + E(l.url) + '"><b>' + E(l.title) + '</b></a><br><span class="small">' + (l.status === 'completed' ? '✓ Finished' : '◐ ' + l.percent + '% done') + ' · <b>Mark: ' + mark + '</b>' + more + '</span></span>' +
             '<span class="cta"><button type="button" class="btn sm" data-ans="' + i + '">My answers</button>' + (l.status === 'completed' ? '<button type="button" class="btn main sm" data-retry="' + i + '">↻ Try again</button>' : '<a class="btn main sm" href="' + E(l.url) + '">Continue</a>') + '</span></div><div id="ans' + i + '" hidden></div></div>';
         }).join('');

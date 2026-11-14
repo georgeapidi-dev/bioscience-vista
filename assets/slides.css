@@ -5,9 +5,9 @@
 .sd-slide{position:absolute;inset:0;padding:4cqw 5cqw 5cqw;overflow:hidden;font-size:calc(var(--fs) * var(--k,1));line-height:1.45;display:flex;flex-direction:column;text-align:left}
 .sd-slide p,.sd-slide ul,.sd-slide ol{margin:0 0 .6em}.sd-slide li{margin:.2em 0}.sd-slide b,.sd-slide strong{color:#1e3a8a}
 .sd-h{margin:0 0 .8em;font-size:1.5em;line-height:1.2;color:#1e3a8a;border-bottom:.15em solid #93c5fd;padding-bottom:.3em}.sd-h small{float:right;font-size:.45em;color:#64748b;font-weight:700;letter-spacing:.04em;margin-top:.5em}
-.sd-body{flex:1;min-height:0;overflow:hidden}.sd-body figure{margin:.4em 0;text-align:center}.sd-body img,.sd-body svg{display:block;margin:0 auto;max-width:100%;height:auto;max-height:26cqw;object-fit:contain}
-.sd-figonly .sd-body img,.sd-figonly .sd-body svg{max-height:min(38cqw,100%)}.sd-body figcaption,.sd-body .credit{font-size:.72em;color:#475569;margin-top:.3em}
-.sd-body table{border-collapse:collapse;font-size:.82em;margin:0 auto}.sd-body th,.sd-body td{border:1px solid #cbd5e1;padding:.25em .5em;vertical-align:top}.sd-body th{background:#eff6ff}
+.sd-body{flex:1;min-height:0;overflow:hidden}.sd-body figure{margin:.4em 0;text-align:center}.sd-body img,.sd-body svg{display:block;margin:0 auto;max-width:100%;height:auto;max-height:var(--ih,26cqw);object-fit:contain}
+.sd-figonly .sd-body img,.sd-figonly .sd-body svg{max-height:var(--ih,38cqw)}.sd-body figcaption,.sd-body .credit{font-size:.72em;color:#475569;margin-top:.3em}
+.sd-body table{border-collapse:collapse;font-size:.82em;margin:0 auto;display:block;max-width:100%;overflow-x:auto;width:max-content}.sd-body th,.sd-body td{border:1px solid #cbd5e1;padding:.25em .5em;vertical-align:top}.sd-body th{background:#eff6ff}
 .sd-title,.sd-step{justify-content:center;background:linear-gradient(135deg,#1e3a8a,#2563eb 60%,#7c3aed);color:#fff}.sd-step{background:linear-gradient(135deg,#0f766e,#0891b2)}
 .sd-title h1{font-size:2.3em;line-height:1.15;margin:.2em 0 .5em;color:#fff}.sd-step h2{font-size:2.4em;margin:.2em 0;color:#fff}.sd-k{text-transform:uppercase;letter-spacing:.08em;font-size:.8em;opacity:.85;margin:0}
 .sd-q{font-size:1.15em;font-style:italic;max-width:85%}.sd-hook{background:rgba(255,255,255,.14);border-radius:.6em;padding:.6em .9em;max-width:90%;font-size:.95em}
@@ -18,3 +18,14 @@
 .sd:fullscreen,.sd.sd-full{position:fixed;inset:0;z-index:9999;margin:0;border-radius:0;display:flex;flex-direction:column;justify-content:center;background:#0f172a;color:#fff;padding:12px;max-width:none;width:100%}
 .sd:fullscreen .sd-stage,.sd.sd-full .sd-stage{width:min(100%,calc((100vh - 110px) * 16 / 9));aspect-ratio:16/9;--fs:2.15cqw;margin:0 auto}
 .sd:fullscreen .sd-btns button,.sd.sd-full .sd-btns button{background:#1e293b;color:#fff;border-color:#334155}
+/* a slide that is still too tall after shrinking scrolls inside its frame: nothing is cut off */
+.sd-scroll .sd-body{overflow-y:auto;overscroll-behavior:contain;padding:0 .5em 2.2em 0;scrollbar-width:thin}
+.sd-scroll.sd-title{overflow-y:auto;justify-content:flex-start}
+.sd-scroll:after{content:"▼ Scroll to see the rest of this slide";position:absolute;left:5cqw;bottom:1.1cqw;font-size:max(10px,1.15cqw);background:#1e3a8a;color:#fff;border-radius:99px;padding:.25em .9em;pointer-events:none;opacity:.92}
+/* videos of the lesson */
+.sd-vids{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1em}
+.sd-vid{display:flex;gap:.7em;align-items:center;text-decoration:none;color:inherit;border:.12em solid #dbe3ee;border-radius:.7em;padding:.5em;background:#f8fafc}
+.sd-vid:hover,.sd-vid:focus{border-color:#2563eb}.sd-vid img{width:38%;aspect-ratio:16/9;object-fit:cover;border-radius:.45em;flex:none;max-height:none;margin:0}
+.sd-vid b{display:block;color:#0f172a;line-height:1.25}.sd-vid small{color:#64748b;font-size:.75em}
+.sd-play{flex:none;width:2.6em;height:2.6em;border-radius:50%;background:#dc2626;color:#fff;display:grid;place-items:center;font-size:1.1em}
+@media (max-width:640px){.sd-vids{grid-template-columns:1fr}}

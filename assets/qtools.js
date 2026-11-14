@@ -203,3 +203,149 @@
     document.head.appendChild(st);
   }
 })();
+
+/* Tools inside the question (admin's rule, Nov 2026): a question that asks for a graph, a drawing or a table carries the tool for it.
+   - BVT.needs(text)   which tools a question asks for: graph, draw, table
+   - BVT.detect(text)  a question that asks ONLY for a graph or a drawing: in the Assessment centre its answer is the drawing itself
+   - BVT.tableTool(ta) a table builder under an answer box; the finished table is written into the answer, so it is saved and marked with it
+   - lessons: every question that needs one gets the tool under its answer box; MYP lessons show the criterion (A to D) of every step */
+(function () {
+  var T = window.BVT; if (!T) return;
+  var RX = {
+    graph: /\b(plot|sketch|draw|construct|present)\b[^.?!]{0,70}\b(graph|line of best fit|best[- ]fit line|bar chart|histogram|curve)\b|\bgraph (the|your|these|this) (data|results)\b/i,
+    table: /\b(construct|draw|design|make|create|prepare|copy and complete)\b[^.?!]{0,60}\btable\b|\b(record|present|organi[sz]e|put)\b[^.?!]{0,70}\bin a (suitable |results |data |neat )?table\b|\b(results|data) table\b/i,
+    draw: /\b(draw|sketch)\b(?![^.?!]{0,70}\b(graph|table|conclusion|line of best fit|chart|curve|histogram)\b)[^.?!]{0,90}\b(diagram|labell?ed|label|cell|circuit|apparatus|structure|particles?|arrangement|ray|wave|molecule|atom|food (chain|web)|flower|picture|model|set-?up|punnett|cross)\b|\blabell?ed diagram\b|\bdraw and label\b/i
+  };
+  T.needs = function (text) { var t = String(text || ''), out = []; ['graph', 'table', 'draw'].forEach(function (k) { if (RX[k].test(t)) out.push(k); }); return out; };
+  T.detect = function (text) {   // only a drawing is asked for: nothing to explain, describe, state or calculate in words
+    var t = String(text || ''), n = T.needs(t);
+    if (/\b(explain|describe|state|suggest|calculate|evaluate|discuss|outline|compare|identify|justify|why|what|which|how)\b/i.test(t)) return '';
+    return n.indexOf('graph') >= 0 ? 'graph' : n.indexOf('draw') >= 0 ? 'draw' : '';
+  };
+  function el(tag, css, html) { var e = document.createElement(tag); if (css) e.style.cssText = css; if (html != null) e.innerHTML = html; return e; }
+  function fire(ta) { try { ta.dispatchEvent(new Event('input', { bubbles: true })); ta.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {} }
+  var OPEN = '[Table]', CLOSE = '[End of table]';
+  function readTable(v) {   // the table already in the answer, if there is one
+    var a = v.indexOf(OPEN), b = v.indexOf(CLOSE); if (a < 0 || b < a) return null;
+    return v.slice(a + OPEN.length, b).split('\n').map(function (l) { return l.trim(); }).filter(Boolean).map(function (l) { return l.split('|').map(function (c) { return c.trim(); }); });
+  }
+  T.tableTool = function (ta) {
+    var box = el('div', 'border:1px solid var(--line,#cbd5e1);border-radius:10px;padding:10px;margin:8px 0;background:var(--card,#fff)');
+    var data = readTable(ta.value) || [['', '', ''], ['', '', ''], ['', '', ''], ['', '', '']];
+    function draw() {
+      var cols = Math.max.apply(null, data.map(function (r) { return r.length; }));
+      data.forEach(function (r) { while (r.length < cols) r.push(''); });
+      box.innerHTML = '<p class="small" style="margin:0 0 6px"><b>▦ Table tool</b> · The first row is for your headings: write the quantity and its unit, for example "Time / s".</p>' +
+        '<div style="overflow-x:auto"><table style="border-collapse:collapse">' + data.map(function (r, i) { return '<tr>' + r.map(function (c, j) {
+          return '<td style="border:1px solid #94a3b8;padding:0"><input data-r="' + i + '" data-c="' + j + '" value="' + String(c).replace(/"/g, '&quot;') + '" aria-label="Row ' + (i + 1) + ', column ' + (j + 1) + '" style="border:0;padding:6px 8px;width:9.5em;font:inherit;' + (i ? '' : 'font-weight:700;background:#eff6ff') + '"></td>'; }).join('') + '</tr>'; }).join('') + '</table></div>' +
+        '<p style="margin:8px 0 0;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn sm" data-a="row">＋ Row</button><button type="button" class="btn sm" data-a="col">＋ Column</button><button type="button" class="btn sm" data-a="rrow">− Row</button><button type="button" class="btn sm" data-a="rcol">− Column</button><button type="button" class="btn main sm" data-a="put">Add the table to my answer</button></p><p class="small muted" data-m style="margin:4px 0 0"></p>';
+      box.querySelectorAll('input').forEach(function (i) { i.oninput = function () { data[+i.getAttribute('data-r')][+i.getAttribute('data-c')] = i.value.replace(/[|\n]/g, ' '); }; });
+      box.querySelectorAll('[data-a]').forEach(function (b) { b.onclick = function () { var a = b.getAttribute('data-a');
+        if (a === 'row' && data.length < 30) data.push(data[0].map(function () { return ''; }));
+        if (a === 'col' && data[0].length < 8) data.forEach(function (r) { r.push(''); });
+        if (a === 'rrow' && data.length > 2) data.pop();
+        if (a === 'rcol' && data[0].length > 1) data.forEach(function (r) { r.pop(); });
+        if (a === 'put') {
+          var rows = data.filter(function (r) { return r.some(function (c) { return c.trim(); }); });
+          if (rows.length < 2) { box.querySelector('[data-m]').textContent = 'Fill in the headings and at least one row first.'; return; }
+          var block = OPEN + '\n' + rows.map(function (r) { return r.join(' | '); }).join('\n') + '\n' + CLOSE, v = ta.value, i0 = v.indexOf(OPEN), i1 = v.indexOf(CLOSE);
+          ta.value = i0 >= 0 && i1 > i0 ? v.slice(0, i0) + block + v.slice(i1 + CLOSE.length) : (v.replace(/\s+$/, '') + (v.trim() ? '\n' : '') + block);
+          fire(ta); draw(); box.querySelector('[data-m]').textContent = 'Your table is in your answer. Change the table here and press the button again to update it.'; return;
+        }
+        draw(); }; });
+    }
+    draw(); return box;
+  };
+  /* one row of tool buttons under an answer box; each opens its tool inside the question */
+  T.attachTools = function (ta, text, key) {
+    if (!ta || ta.getAttribute('data-tools')) return; var need = T.needs(text); if (!need.length) return;
+    ta.setAttribute('data-tools', need.join(' '));
+    var bar = el('div', 'margin:6px 0 2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center', '<span class="small"><b>Tools for this question:</b></span>'), host = el('div');
+    var NAME = { graph: '📈 Graph tool', draw: '✏️ Drawing tool', table: '▦ Table tool' }, open = {};
+    need.forEach(function (k) {
+      var b = el('button', '', NAME[k]); b.type = 'button'; b.className = 'btn sm'; b.setAttribute('aria-expanded', 'false');
+      b.onclick = function () {
+        if (open[k]) { open[k].hidden = !open[k].hidden; b.setAttribute('aria-expanded', String(!open[k].hidden)); return; }
+        var w = el('div', 'margin:8px 0'); host.appendChild(w); open[k] = w; b.setAttribute('aria-expanded', 'true');
+        if (k === 'table') { w.appendChild(T.tableTool(ta)); return; }
+        var sk = 'bv-pad:' + location.pathname + ':' + key + ':' + k, saved = ''; try { saved = localStorage.getItem(sk) || ''; } catch (e) {}
+        var note = k === 'graph' ? '[My graph is drawn in the graph tool.]' : '[My diagram is drawn in the drawing tool.]';
+        w.innerHTML = '<div data-padhost></div><p class="small muted" style="margin:4px 0 0">Your ' + (k === 'graph' ? 'graph' : 'drawing') + ' is kept on this device with the lesson. Describe it in your written answer too.</p>';
+        var pad = T.pad(w.querySelector('[data-padhost]'), { mode: k === 'graph' ? 'graph' : 'draw', value: saved, onchange: function () {
+          try { var d = pad && pad.get && pad.get(); if (d) localStorage.setItem(sk, d); } catch (e) {}
+          if (ta.value.indexOf(note) < 0) { ta.value = ta.value.replace(/\s+$/, '') + (ta.value.trim() ? '\n' : '') + note; fire(ta); } } });
+      };
+      bar.appendChild(b);
+    });
+    ta.parentNode.insertBefore(bar, ta.nextSibling); bar.parentNode.insertBefore(host, bar.nextSibling);
+  };
+
+  /* Grading scales (admin's rule): MYP work is reported as a level 1 to 8, IB Diploma work as a grade 1 to 7.
+     MYP: eight equal bands of the marks (0 marks = level 0). Diploma: the school's boundaries 20, 30, 44, 54, 64 and 77 %. */
+  T.scaleOf = function (label) {
+    var t = String(label || '');
+    if (t === 'MYP' || t === 'DP') return t;
+    if (/\bMYP\b|\bGrade\s*(6|7|8|9|10)\b|^\/?g(6|7|8|9|10)-|^G(6|7|8|9|10)-|^\/?(leafdisc|review|classification|separating-mixtures-2)\b/i.test(t)) return 'MYP';
+    if (/\bIB\b|\bDP\s?[12]?\b|Diploma|\b(SL|HL)\b|^\s*(Theme\s+)?[A-D][1-4]\.[1-4]\b|\b(Structure|Reactivity)\s+\d|^\/?[abcd]\d\d-lesson|^\/?(chem|phys|ess|maths)-/i.test(t)) return 'DP';
+    return '';
+  };
+  T.level = function (score, max, scale) {
+    scale = T.scaleOf(scale); if (!scale || !(max > 0) || score == null || isNaN(score)) return null;
+    var p = 100 * score / max;
+    if (scale === 'MYP') return { n: p <= 0 ? 0 : Math.min(8, Math.ceil(p / 12.5 - 1e-9)), of: 8, name: 'MYP level' };
+    var n = 1; [20, 30, 44, 54, 64, 77].forEach(function (b) { if (p >= b) n++; }); return { n: n, of: 7, name: 'IB grade' };
+  };
+  T.levelPill = function (score, max, label) { var l = T.level(+score, +max, label); return l ? ' <span class="pill" style="background:#ede9fe;color:#5b21b6;font-weight:700">' + l.name + ' ' + l.n + ' of ' + l.of + '</span>' : ''; };
+
+  /* ---- lesson pages ---- */
+  if (!document.querySelector('section.step, [data-save]') || document.getElementById('qf')) return;
+  function qText(ta) { var q = ta.closest('.q, .question, li, fieldset'), l = q && q.querySelector('.ql, legend, label, p'); return l ? l.textContent : (q ? q.textContent.slice(0, 400) : ''); }
+  function scan() {
+    document.querySelectorAll('textarea[data-save]').forEach(function (ta) { if (!ta.closest('.bv-rep, .bv-tans') && !ta.disabled) T.attachTools(ta, qText(ta), ta.getAttribute('data-save')); });
+    if (window.BV_MYP) criteria();
+  }
+  /* MYP: every step shows the criterion it works on. A lesson that already names its criteria keeps its own labels. */
+  var CRIT = { A: 'Knowing and understanding', B: 'Inquiring and designing', C: 'Processing and evaluating', D: 'Reflecting on the impacts of science' };
+  function infer(t) {
+    var c = [];
+    if (/\b(hypothes|variable|plan (a|an|your)|design (a|an|your)|method|research question|fair test|predict|independent|dependent|control)/i.test(t)) c.push('B');
+    if (/\b(table|graph|plot|calculate|data|results|conclusion|pattern|trend|anomal|reliab|valid|improve|evaluate the (method|hypothesis|experiment))/i.test(t)) c.push('C');
+    if (/\b(impact|implication|society|social|ethic|moral|environment|econom|advantage|disadvantage|benefit|risk|should (we|people|scientists|governments))/i.test(t)) c.push('D');
+    return c.length > 2 ? c.slice(0, 2) : c.length ? c : ['A'];
+  }
+  var STEPCRIT = {};
+  function criteria() {
+    var all = {};
+    document.querySelectorAll('section.step').forEach(function (st) {
+      var head = st.querySelector('.stephead'); if (!head || head.querySelector('.bv-crit')) return;
+      var own = st.textContent.match(/Criteri(?:on|a)\s+[A-D](?:(?:\s*,\s*(?:and\s+)?|\s+and\s+)[A-D])*/gi), cs;
+      if (own) { cs = []; own.join(' ').replace(/Criteri(?:on|a)/gi, '').replace(/[A-D]\b/g, function (c) { if (cs.indexOf(c) < 0) cs.push(c); return c; }); cs.sort(); }
+      else { var qs = [].map.call(st.querySelectorAll('.ql'), function (q) { return q.textContent; }).join(' '); if (!qs.trim()) return; cs = infer(qs); }
+      cs.forEach(function (c) { all[c] = 1; }); STEPCRIT[(st.id || '').replace(/\D/g, '')] = cs;
+      if (own) return;
+      var chip = el('span', 'display:inline-block;margin:4px 6px 0 0;padding:2px 10px;border-radius:99px;background:#ede9fe;color:#5b21b6;font-size:.82rem;font-weight:700', cs.map(function (c) { return 'Criterion ' + c + ' · ' + CRIT[c]; }).join(' &nbsp;|&nbsp; '));
+      chip.className = 'bv-crit'; head.appendChild(chip);
+    });
+    var keys = Object.keys(all).sort(), first = document.querySelector('section.step');
+    if (keys.length && first && !document.getElementById('bv-critbar')) {
+      var bar = el('div', 'margin:10px 0;padding:10px 14px;border-radius:12px;background:#f5f3ff;border:1px solid #ddd6fe;color:#3b0764', '<b>MYP criteria in this lesson:</b> ' + keys.map(function (c) { return '<b>' + c + '</b> ' + CRIT[c]; }).join(' · '));
+      bar.id = 'bv-critbar'; bar.className = 'card'; first.parentNode.insertBefore(bar, first);
+    }
+  }
+  /* the lesson's mark as a level: MYP 1 to 8 (for each criterion the lesson assesses), IB Diploma 1 to 7 */
+  function levels() {
+    var tb = document.getElementById('totalbar'), sc = window.BV_SCALE; if (!tb || !sc) return;
+    var m = (tb.textContent || '').match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+)/); if (!m) return;
+    if (!(+m[1] > 0) && !(window.marks && Object.keys(window.marks).length)) return;   // nothing marked yet: no level to show
+    var box = document.getElementById('bv-level'); if (!box) { box = el('div', 'margin:6px 0;font-size:.92rem'); box.id = 'bv-level'; tb.parentNode.insertBefore(box, tb.nextSibling); }
+    var html = T.levelPill(+m[1], +m[2], sc) + ' <span class="small muted">for the marks so far</span>', mk = window.marks, by = {};
+    if (sc === 'MYP' && mk && typeof mk === 'object') {
+      Object.keys(mk).forEach(function (n) { (STEPCRIT[n] || []).forEach(function (c) { by[c] = by[c] || [0, 0]; by[c][0] += +mk[n].score || 0; by[c][1] += +mk[n].max || 0; }); });
+      var parts = Object.keys(by).sort().filter(function (c) { return by[c][1] > 0; }).map(function (c) { return '<b>Criterion ' + c + '</b>: level ' + T.level(by[c][0], by[c][1], 'MYP').n + ' of 8'; });
+      if (parts.length) html += '<br><span class="small">' + parts.join(' · ') + '</span>';
+    }
+    if (box.innerHTML !== html) box.innerHTML = html;
+  }
+  function go() { scan(); setTimeout(scan, 1200); setTimeout(scan, 3500); levels(); setInterval(levels, 1500); }   // lessons that draw their questions with a script are scanned again
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+})();

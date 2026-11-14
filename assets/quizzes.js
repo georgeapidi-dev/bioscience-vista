@@ -198,10 +198,11 @@
       // carry on from this device's copy, or else from answers saved on the server (e.g. a different device)
       S.db.from('quiz_attempts').select('*').eq('id', attempt).maybeSingle().then(function (a) { var row = a.data || {}; build(Object.keys(local).length ? local : (row.answers || {}), row); }, function () { build(local, {}); });
       function build(saved, row) {
-      var secs = qs.length ? qs[0].seconds_left : null;
+      var secs = qs.length ? qs[0].seconds_left : null, MODE = {};
       app.innerHTML = '<form id="qf" class="grp"><div class="row2 sticky-top"><div><p class="label">' + E(q.title) + '</p><b id="cnt"></b></div>' + (secs != null ? '<span class="timer" id="tm" aria-live="off"></span>' : '') + '</div>' +
         qs.map(function (x, i) {
-          var name = 'q-' + x.question_id, opts = x.options || [], v = saved[x.question_id], md = T.parse(x.prompt).mode, drawn = x.kind === 'short' && /^(graph|draw|annotate)$/.test(md);
+          var name = 'q-' + x.question_id, opts = x.options || [], v = saved[x.question_id], md = T.parse(x.prompt).mode || (x.kind === 'short' && T.detect ? T.detect(T.text(x.prompt)) : ''), drawn = x.kind === 'short' && /^(graph|draw|annotate)$/.test(md);   /* a question that asks only for a graph or a drawing gets the tool as its answer, even when no answer style was set */
+          MODE[x.question_id] = md;
           return '<fieldset class="q" data-id="' + x.question_id + '"><legend>' + (/^\d+\s*(\([a-z]\)|\.\s)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + T.rich(x.prompt, true) + ' <span class="pill">' + x.marks + ' mark' + (x.marks > 1 ? 's' : '') + '</span></legend>' +
             (x.image_url && md !== 'annotate' ? '<img src="' + E(x.image_url) + '" alt="Diagram for question ' + (i + 1) + '" style="max-width:100%;max-height:420px;border-radius:8px">' : '') +
             (drawn ? '<div data-pad="' + x.question_id + '"></div>' :
@@ -210,7 +211,12 @@
               opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"' + (String(v) === String(j) ? ' checked' : '') + '> <b>' + 'ABCDEFGH'.charAt(j) + '.</b> ' + E(o) + '</label>'; }).join('')) + '</fieldset>';
         }).join('') + '<div class="acts"><button class="btn main" type="submit">Submit answers</button><a class="btn" href="#">Save and leave</a></div><p class="msg" id="m" role="alert"></p></form>';
       var f = app.querySelector('#qf'), pads = {};
-      qs.forEach(function (x) { var h = f.querySelector('[data-pad="' + x.question_id + '"]'); if (h) pads[x.question_id] = T.pad(h, { mode: T.parse(x.prompt).mode, x: T.parse(x.prompt).x, y: T.parse(x.prompt).y, image: x.image_url, value: saved[x.question_id], onchange: function () { keep(); push(); } }); });
+      qs.forEach(function (x) {   // a table tool under any written answer that asks for a table: the table goes into the answer
+        var ta = f.querySelector('textarea[name="q-' + x.question_id + '"]'); if (!ta || !T.tableTool || T.needs(T.text(x.prompt)).indexOf('table') < 0) return;
+        var b = document.createElement('button'), w = null; b.type = 'button'; b.className = 'btn sm'; b.textContent = '▦ Table tool'; b.style.margin = '6px 0';
+        b.onclick = function () { if (w) { w.hidden = !w.hidden; return; } w = T.tableTool(ta); ta.parentNode.insertBefore(w, b.nextSibling); };
+        ta.parentNode.insertBefore(b, ta.nextSibling); });
+      qs.forEach(function (x) { var h = f.querySelector('[data-pad="' + x.question_id + '"]'); if (h) pads[x.question_id] = T.pad(h, { mode: MODE[x.question_id] || T.parse(x.prompt).mode, x: T.parse(x.prompt).x, y: T.parse(x.prompt).y, image: x.image_url, value: saved[x.question_id], onchange: function () { keep(); push(); } }); });
       function collect() { var g = {}; qs.forEach(function (x) {
         if (pads[x.question_id]) { var d = pads[x.question_id].get(); if (d) g[x.question_id] = d; return; }
         var el = f.querySelector('select[name="q-' + x.question_id + '"]') || f.querySelector('[name="q-' + x.question_id + '"]' + (x.kind === 'short' ? '' : ':checked')); if (el && el.value !== '') g[x.question_id] = x.kind === 'short' ? el.value : +el.value; }); return g; }
@@ -259,7 +265,7 @@
       var r = rr[0], fb = {}; ((rr[1] && rr[1].data) || []).forEach(function (f) { fb[f.question_id] = f; });
       var qs = r.data || [], by = {}; det.forEach(function (d) { by[d.question_id] = d; });
       var pc = S.pct(+a.score, +a.max_score);
-      app.innerHTML = '<section class="panel tint"><p class="label">' + E(q.title) + '</p><h2>' + (hide ? 'Submitted ✓' : a.status === 'needs_marking' ? 'Submitted: ' + E(a.score) + ' / ' + E(a.max_score) + ' so far' : 'Your score: ' + E(a.score) + ' / ' + E(a.max_score) + (pc != null ? ' (' + pc + '%)' : '')) + '</h2>' +
+      app.innerHTML = '<section class="panel tint"><p class="label">' + E(q.title) + '</p><h2>' + (hide ? 'Submitted ✓' : a.status === 'needs_marking' ? 'Submitted: ' + E(a.score) + ' / ' + E(a.max_score) + ' so far' : 'Your score: ' + E(a.score) + ' / ' + E(a.max_score) + (pc != null ? ' (' + pc + '%)' : '') + (T.levelPill ? T.levelPill(a.score, a.max_score, [q.title, q.topics && q.topics.name].concat((q.quiz_classes || []).map(function (c) { return c.classes ? c.classes.name + ' ' + (c.classes.programme || '') : ''; })).join(' | ')) : '')) + '</h2>' +
         (hide ? '<p>Your answers are saved. Your teacher will check them and release your mark; it will appear here and on your dashboard.</p>' : a.status === 'needs_marking' ? '<p>Your written answers will be marked by your teacher. Your total will update on your dashboard.</p>' : '') +
         '<div class="acts"><a class="btn sm" href="#">All ' + NOUN + 's</a><a class="btn sm" href="/dashboard/">My dashboard</a>' + (canRetry ? '<a class="btn main sm" href="?again=1#' + q.id + '">Try again</a>' : '') + (inSEB() ? '<a class="btn main sm" href="/?seb=quit">Close Safe Exam Browser</a>' : '') + '</div></section>' +
         (hide ? '' : qs.map(function (x, i) { var d = by[x.question_id] || {}, given = (a.answers || {})[x.question_id];
