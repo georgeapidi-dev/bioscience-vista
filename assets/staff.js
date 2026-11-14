@@ -1743,17 +1743,10 @@
     courseList().then(function (cs) {
       var nm = {}; cs.forEach(function (k) { nm[k.slug] = k.name; });
       var lab = { approved: '<span class="pill ok">✓ Approved</span>', pending: '<span class="pill t">⏳ Waiting for the admin</span>', declined: '<span class="pill">Not approved</span>' };
-      var have = MYC.map(function (c) { return c.course; }), rest = cs.filter(function (k) { return have.indexOf(k.slug) < 0; });
-      el.innerHTML = '<section class="panel grp"><h3 style="margin:0 0 6px">📚 My courses</h3><p class="small muted">The Learnova admin approves each course you teach. When a course is approved, your class for it is made, and you can add more classes for that course.</p>' +
+      el.innerHTML = '<section class="panel grp"><h3 style="margin:0 0 6px">📚 My courses</h3><p class="small muted">These are the courses you chose when you signed up. The Learnova admin approves each one; when a course is approved, your class for it is made and you can add more classes for that course. ' +
+        (viewing ? '' : 'Only the admin can add a course for you: <a href="/messages/">send a message</a> to ask.') + '</p>' +
         (MYC.length ? MYC.slice().sort(function (a, b) { return (nm[a.course] || a.course).localeCompare(nm[b.course] || b.course); }).map(function (c) {
-          return '<div class="row2" style="padding:5px 0;border-bottom:1px solid var(--line)"><span><b>' + E(nm[c.course] || c.course) + '</b></span><span class="cta">' + (lab[c.status] || '') +
-            (c.status === 'declined' && !viewing ? '<button class="btn sm" type="button" data-again="' + E(c.course) + '">Ask again</button>' : '') + '</span></div>'; }).join('') : '<p class="small">No course chosen yet. Choose the course you teach below.</p>') +
-        (!viewing && rest.length ? '<div class="row2" style="margin-top:10px;justify-content:flex-start;gap:8px"><select id="mcs" aria-label="Ask for another course" style="max-width:320px"><option value="">Ask for another course…</option>' +
-          rest.map(function (k) { return '<option value="' + E(k.slug) + '">' + E(k.name) + '</option>'; }).join('') + '</select><button class="btn main sm" type="button" id="mca">Send to the admin</button></div>' : '') + '</section>';
-      var ask = function (slug) { if (!slug) return toast('Choose a course first.', true);
-        S.db.rpc('request_course', { course_slug: slug }).then(function (r) { if (!ok(r, 'Sent. The Learnova admin will approve or decline it.')) return; myCourses().then(function () { coursePanel(el); }); }); };
-      var b = el.querySelector('#mca'); if (b) b.onclick = function () { ask(el.querySelector('#mcs').value); };
-      el.querySelectorAll('[data-again]').forEach(function (x) { x.onclick = function () { ask(x.getAttribute('data-again')); }; });
+          return '<div class="row2" style="padding:5px 0;border-bottom:1px solid var(--line)"><span><b>' + E(nm[c.course] || c.course) + '</b></span><span class="cta">' + (lab[c.status] || '') + '</span></div>'; }).join('') : '<p class="small">No course yet.</p>') + '</section>';
     });
   }
   function firstClasses() {
@@ -1794,7 +1787,7 @@
       if (MYC !== null && !ME.admin) {   // only the courses the admin has approved for this teacher
         var yes = MYC.filter(function (x) { return x.status === 'approved'; }).map(function (x) { return x.course; });
         cs = cs.filter(function (k) { return yes.indexOf(k.slug) >= 0 || (c && c.course === k.slug); });
-        if (!cs.length) { box.innerHTML = '<p class="msg" style="margin-top:10px">None of your courses is approved yet. Choose a course under <b>My courses</b>; you can make its classes as soon as the Learnova admin approves it.</p>'; return; }
+        if (!cs.length) { box.innerHTML = '<p class="msg" style="margin-top:10px">None of your courses is approved yet. You can make classes as soon as the Learnova admin approves a course (see <b>My courses</b>).</p>'; return; }
       }
       box.innerHTML = '<form class="grp" id="cf" style="margin-top:10px"><label class="f">What do you teach in this class?<select id="cc" required><option value="">Choose the course…</option>' +
         cs.map(function (k) { return '<option value="' + E(k.slug) + '"' + (c && c.course === k.slug ? ' selected' : '') + '>' + E(k.name) + ' (' + k.lessons + ' lessons' + (k.quizzes ? ', ' + k.quizzes + ' quizzes' : '') + ')</option>'; }).join('') + '</select></label>' +

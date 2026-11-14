@@ -8,20 +8,20 @@
   if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'parent') return parentRegister();
   /* The course list (the admin's list): [address of the course, name, group, soon]. soon = no Learnova lessons yet.
      The same list is kept in the database (course_catalog, migration 034). It changes only what people choose from. */
-  var CAT = [['grade-6', 'Grade 6 Science', 'MYP Science'], ['grade-8', 'Grade 8 Science', 'MYP Science'], ['grade-9', 'Grade 9 Science', 'MYP Science'], ['grade-10', 'Grade 10 Science', 'MYP Science'],
+  var CAT = [['grade-6', 'Grade 6 Science', 'MYP Science'], ['grade-7', 'Grade 7 Science', 'MYP Science'], ['grade-8', 'Grade 8 Science', 'MYP Science'], ['grade-9', 'Grade 9 Science', 'MYP Science'], ['grade-10', 'Grade 10 Science', 'MYP Science'],
     ['bio-sl', 'IB Diploma Biology SL', 'IB Diploma'], ['bio-hl', 'IB Diploma Biology HL', 'IB Diploma'], ['chem-sl', 'IB Diploma Chemistry SL', 'IB Diploma'], ['chem-hl', 'IB Diploma Chemistry HL', 'IB Diploma'],
     ['phys-sl', 'IB Diploma Physics SL', 'IB Diploma'], ['phys-hl', 'IB Diploma Physics HL', 'IB Diploma'], ['ess-sl', 'IB ESS SL', 'IB Diploma'], ['ess-hl', 'IB ESS HL', 'IB Diploma'],
-    ['maths-aa-sl', 'IB Mathematics AA SL', 'IB Diploma'], ['maths-aa-hl', 'IB Mathematics AA HL', 'IB Diploma'], ['maths-ai-hl', 'IB Mathematics AI', 'IB Diploma'],
-    ['igcse-bio', 'IGCSE Biology', 'Cambridge IGCSE', 1], ['igcse-chem-core', 'IGCSE Chemistry Core', 'Cambridge IGCSE', 1], ['igcse-chem-ext', 'IGCSE Chemistry Extended', 'Cambridge IGCSE', 1],
+    ['maths-aa-sl', 'IB Mathematics AA SL', 'IB Diploma'], ['maths-aa-hl', 'IB Mathematics AA HL', 'IB Diploma'], ['maths-ai-sl', 'IB Mathematics AI SL', 'IB Diploma'], ['maths-ai-hl', 'IB Mathematics AI HL', 'IB Diploma'],
+    ['igcse-bio-core', 'IGCSE Biology Core', 'Cambridge IGCSE', 1], ['igcse-bio-ext', 'IGCSE Biology Extended', 'Cambridge IGCSE', 1], ['igcse-chem-core', 'IGCSE Chemistry Core', 'Cambridge IGCSE', 1], ['igcse-chem-ext', 'IGCSE Chemistry Extended', 'Cambridge IGCSE', 1],
     ['igcse-phys-core', 'IGCSE Physics Core', 'Cambridge IGCSE', 1], ['igcse-phys-ext', 'IGCSE Physics Extended', 'Cambridge IGCSE', 1],
-    ['alevel-bio-as', 'AS Level Biology', 'Cambridge AS & A Level', 1], ['alevel-bio', 'A Level Biology', 'Cambridge AS & A Level', 1],
-    ['alevel-chem-as', 'AS Level Chemistry', 'Cambridge AS & A Level'], ['alevel-chem', 'A Level Chemistry', 'Cambridge AS & A Level']];
+    ['alevel-bio-as', 'AS Level Biology', 'Cambridge AS & A Level', 1], ['alevel-bio-a2', 'A Level Biology', 'Cambridge AS & A Level', 1],
+    ['alevel-chem-as', 'AS Level Chemistry', 'Cambridge AS & A Level'], ['alevel-chem-a2', 'A Level Chemistry', 'Cambridge AS & A Level', 1]];
   function coursePicker(label, teacher) {   // tick as many as you like; a learner cannot tick a course that has no lessons yet
     var g = '', h = '';
     CAT.forEach(function (c) {
       if (c[2] !== g) { g = c[2]; h += '<p class="small" style="margin:10px 0 2px"><b>' + E(g) + '</b></p>'; }
       h += '<div style="padding:3px 0"><label class="chk"><input type="checkbox" data-course="' + c[0] + '"' + (c[3] && !teacher ? ' disabled' : '') + '> ' + E(c[1]) +
-        (c[3] ? ' <span class="small muted">(' + (teacher ? 'no Learnova lessons yet: you add your own' : 'lessons coming soon') + ')</span>' : '') + '</label></div>'; });
+        (c[3] ? ' <span class="small muted">(' + (teacher ? 'no Learnova lessons yet' : 'lessons coming soon') + ')</span>' : '') + '</label></div>'; });
     return '<fieldset class="grp" id="rcs" style="border:1px solid var(--line);border-radius:12px;padding:12px"><legend><b>' + label + '</b></legend>' + h + '</fieldset>';
   }
   function chosen() { var out = []; app.querySelectorAll('[data-course]:checked').forEach(function (b) { out.push(b.getAttribute('data-course')); }); return out; }
@@ -45,7 +45,7 @@
         L ? 'Independent learners can choose more than one course.' : 'After signing up you choose your teacher, then your course. Your teacher approves you, and premium access opens the class materials.') + '</p>' +
       '<label class="f">Full name<input id="rn" autocomplete="name" required placeholder="' + (T ? 'Your name as students know it' : 'As it appears on your school records') + '"></label>' +
       (T ? '<label class="f">School (choose it from the list, or type it if it is new; "Private tutor" if you have none)<input id="rs" list="rsl" autocomplete="organization" required maxlength="120"><datalist id="rsl"></datalist></label>' : '') +
-      (T ? coursePicker('Courses you teach: tick one or more. The Learnova admin approves each course, and your class for a course is made when it is approved', true) : L ? coursePicker('Courses you want to learn: tick one or more (HL includes the SL lessons; A Level includes AS)') : '') +
+      (T ? coursePicker('Courses you teach: tick one or more. The Learnova admin approves each course, and your class for a course is made when it is approved. After signing up, only the admin can add a course for you', true) : L ? coursePicker('Courses you want to learn: tick one or more (HL includes the SL lessons; AS Level and A Level are separate courses)') : '') +
       '<label class="f">Email<input id="re" type="email" autocomplete="email" required></label>' +
       '<label class="f">Password (at least 8 characters)<input id="rp" type="password" autocomplete="new-password" minlength="8" required></label>' +
       '<label class="f">Confirm password<input id="rp2" type="password" autocomplete="new-password" required></label>' +

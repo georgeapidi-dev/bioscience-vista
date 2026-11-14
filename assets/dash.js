@@ -36,7 +36,7 @@
       try { sessionStorage.setItem('bv-courses-tried', '1'); } catch (e) {}
       app.innerHTML = '<p class="muted">Setting up your courses…</p>';
       return md.courses.filter(function (c) { return SELF[c]; }).reduce(function (p, c) { return p.then(function () { return S.db.rpc('request_join', { cid: SELF[c] }).then(function (x) {
-          var base = c === 'alevel-chem' ? 'alevel-chem-as' : c.replace(/-(as|a2|core|ext)$/, ''); if (x && x.error && base !== c && SELF[base]) return S.db.rpc('request_join', { cid: SELF[base] }).then(function () {}, function () {});   // a course whose own class is not open yet: the nearest class that is (A Level Chemistry opens with migration 034; until then its AS class)
+          var base = c.replace(/-(as|a2|core|ext)$/, ''); if (x && x.error && base !== c && SELF[base]) return S.db.rpc('request_join', { cid: SELF[base] }).then(function () {}, function () {});   // a level class that is not open yet: the whole-course class
         }, function () {}); }); }, Promise.resolve())
         .then(function () { return S.db.auth.updateUser({ data: { courses_applied: true } }); }).then(function () { location.reload(); }, function () { location.reload(); });
     }
