@@ -5,7 +5,7 @@
 (function () {
   if (window.top !== window || document.getElementById('bvhelp-stack')) return;
   var me = document.currentScript && document.currentScript.src || '', path = location.pathname;
-  if (/^\/(tutor|messages|login|register)\//.test(path)) return;
+  if (/^\/(tutor|messages|login|register|live)\//.test(path)) return;   // not over a live lesson
   var HELP = /[?&]help=1/.test(me) || /^\/(simulations|library|lesson|learn)\//.test(path) || !!window.SPEC || !!document.querySelector('[data-sim]');
   var cfg = window.BV || {}, URL_ = cfg.sbUrl || window.SB_URL, KEY = cfg.sbKey || window.SB_KEY;
   function token() {

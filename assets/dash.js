@@ -169,7 +169,7 @@
     var openTasks = tasks.filter(function (t) { return t.state !== 'done'; }).length;
     var fb = res.filter(function (r) { return r.teacher_feedback || r.ai_feedback; });
     var h = '<div class="row2"><div><p class="label">My dashboard</p><h2>Hello, ' + E(first) + ' 👋</h2><p class="muted small">' + E(me.classes.map(function (c) { return c.name; }).join(', ') || 'No class yet') + ' · ' + E(me.user.email) + '</p></div>' +
-      '<div class="cta"><a class="btn main sm" href="/board/" style="background:#0d9488;border-color:#0d9488">🖊 Whiteboard</a><a class="btn sm" href="/learn/">Learning centre</a><a class="btn sm" href="/quizzes/">Quiz centre</a><a class="btn sm" href="/exams/">Online exams</a><button class="btn sm" type="button" id="so">Log out</button></div></div>';
+      '<div class="cta"><a class="btn main sm" href="/live/" style="background:#7c3aed;border-color:#7c3aed">🎥 Live lessons</a><a class="btn main sm" href="/board/" style="background:#0d9488;border-color:#0d9488">🖊 Whiteboard</a><a class="btn sm" href="/learn/">Learning centre</a><a class="btn sm" href="/quizzes/">Quiz centre</a><a class="btn sm" href="/exams/">Online exams</a><button class="btn sm" type="button" id="so">Log out</button></div></div>';
     h += '<div id="wblive"></div><div id="mycl"></div>';
     h += '<div class="stats"><div class="stat"><span class="small muted">Overall score</span><b>' + (max ? Math.round(100 * got / max) + '%' : '–') + '</b></div>' +
       '<div class="stat"><span class="small muted">Lessons completed</span><b>' + done + ' / ' + prog.length + '</b></div>' +

@@ -18,7 +18,7 @@
   var SIZES = { pen: [2, 3.5, 5, 8, 12], pencil: [1.2, 2, 3, 4.5, 6], hl: [12, 18, 26, 34, 44], text: [24, 32, 44, 60, 80], shape: [2, 3, 5, 7, 10] };
   var SHAPES = { line: 1, arrow: 1, darrow: 1, rect: 1, ellipse: 1 };
   var QS = new URLSearchParams(location.search), UUID = /^[0-9a-f-]{36}$/;
-  var live = QS.get('live'), CLS = UUID.test(QS.get('class') || '') ? QS.get('class') : null, BID = UUID.test(QS.get('b') || '') ? QS.get('b') : null, CNAME = (QS.get('n') || '').slice(0, 80);
+  var live = QS.get('live'), LS = UUID.test(QS.get('ls') || '') ? QS.get('ls') : null, WATCH = UUID.test(QS.get('watch') || '') ? QS.get('watch') : null, EMBED = QS.get('embed') === '1', CLS = UUID.test(QS.get('class') || '') ? QS.get('class') : null, BID = UUID.test(QS.get('b') || '') ? QS.get('b') : null, CNAME = (QS.get('n') || '').slice(0, 80);
 
   var me = null, board = null, tool = 'pen', col = 0, size = 1, mode = 'smart', tidy = true, showInk = false, readOnly = false;
   var undo = [], redo = [], view = { z: 1, x: 0, y: 0 }, base = 1, cv, cx, wrap, stage, layer = null, drawing = null, sel = [], ghost = null;
@@ -39,6 +39,7 @@
   function chk(r) { if (r && r.error) throw r.error; return r; }
   function fnData(r) { var d = r && r.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } } return d; }
 
+  if (WATCH) { me = { user: { id: 'viewer' }, roles: [], classes: [] }; board = newBoard(); watchLesson(); return; }   // a live lesson's board: also for invited guests, who have no account
   S.guard(app, { school: true, allowPending: true, anyone: true }).then(function (m) {
     me = m; board = newBoard();
     if (live) return viewer();
@@ -77,6 +78,7 @@
     '.wb-live{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.wb-live code{font-size:1.2rem;font-weight:800;letter-spacing:.1em;background:#eef2ff;color:#3730a3;border-radius:8px;padding:4px 10px}' +
     '.wb-boards{display:grid;gap:6px}.wb-boards .brow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:8px 10px;background:var(--raised,#fff)}.wb-boards .brow b{flex:1;min-width:160px}' +
     '.wb-title{font:800 1.2rem var(--head,inherit);border:2px solid transparent;border-radius:10px;padding:4px 8px;background:transparent;color:inherit;min-width:220px;max-width:100%}.wb-title:hover,.wb-title:focus{border-color:#99f6e4;background:rgba(255,255,255,.6)}' +
+    'html.wb-embed body>header,html.wb-embed body>footer,html.wb-embed .site-nav,html.wb-embed #donate{display:none!important}html.wb-embed main,html.wb-embed #app{padding:0!important;margin:0!important;max-width:none!important}html.wb-embed .wb{padding:6px}' +
     '@media (max-width:1150px){.wb .lbl{display:none}}@media (max-width:760px){.wb-main{grid-template-columns:1fr}.wb-rail{display:flex;flex-direction:row;flex-wrap:wrap}.wb-rail hr{display:none}.wb-sugs{width:calc(100% - 20px)}.wb-sug .cols{grid-template-columns:1fr}}';
 
   function css() { if (!document.getElementById('wb-css')) { var s = document.createElement('style'); s.id = 'wb-css'; s.textContent = CSS; document.head.appendChild(s); } }
@@ -88,7 +90,8 @@
     css();
     var T = kind === 'teacher';
     var back = board.cls ? '/teach/#classes/' + board.cls : '/teach/';
-    app.innerHTML = (T ? '<div class="row2 cband" style="--k:#0d9488"><div style="flex:1;min-width:240px"><p class="label">Smart Whiteboard' + (CNAME ? ' · ' + E(CNAME) : '') + '</p>' +
+    if (EMBED) document.documentElement.classList.add('wb-embed');
+    app.innerHTML = (T && !EMBED ? '<div class="row2 cband" style="--k:#0d9488"><div style="flex:1;min-width:240px"><p class="label">Smart Whiteboard' + (CNAME ? ' · ' + E(CNAME) : '') + '</p>' +
         '<input class="wb-title" id="wbt" maxlength="120" value="' + E(board.title) + '" aria-label="Board title"><p class="small" style="margin:2px 0 0">Write, draw, graph and type; switch on ✨ Smart Notes to turn handwriting into neat, checked text.</p></div>' +
         '<div class="cta"><button class="btn sm" id="bdl" type="button">📂 My boards</button>' + (board.cls ? '<label class="btn sm" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="shr"' + (board.shared ? ' checked' : '') + '> Share with class</label>' : '') +
         '<a class="btn sm" href="' + back + '">' + (board.cls ? '← Back to the class' : '🏫 My classes') + '</a></div></div><div id="bdbox"></div>'
@@ -97,7 +100,7 @@
       '<div class="wb-main' + (T ? '' : '" style="grid-template-columns:1fr') + '">' + (T ? rail() : '') +
       '<div class="wb-stage" id="stage" data-tool="' + tool + '"><canvas id="cv"></canvas><div class="wb-selbar" id="selbar"></div><div class="wb-sugs" id="sugs"></div><div class="wb-note" id="note" role="status" aria-live="polite"></div><div class="wb-modal" id="modal" hidden></div></div></div>' +
       (T || kind === 'view' ? '<div class="wb-top" id="pgbar"></div>' : '') + '</div>' +
-      (T ? '<div id="livebox"></div><input type="file" id="imgf" accept="image/*" hidden>' + helpText() : '');
+      (T ? '<div id="livebox"></div><input type="file" id="imgf" accept="image/*" hidden>' + (EMBED ? '' : helpText()) : '');
     wrap = app.querySelector('#wb'); stage = app.querySelector('#stage'); cv = app.querySelector('#cv'); cx = cv.getContext('2d');
     window.addEventListener('resize', fit); document.addEventListener('fullscreenchange', function () { setTimeout(fit, 80); });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { render(); });
@@ -118,7 +121,7 @@
     window.addEventListener('online', function () { if (cloud === 'off') { cloud = 'unknown'; probeCloud().then(function () { if (cloud === 'ok') saveCloud(); }); } else saveCloud(); });
     window.addEventListener('offline', function () { setStatus('offline'); });
     window.addEventListener('beforeunload', function () { writeLocal(); if (chans.class) closeChan('class'); if (chans.code) closeChan('code'); });
-    classLive(!!board.cls);
+    classLive(!!board.cls); if (LS && S.db.channel) openChan('lesson', 'board-live-' + LS);
     if (/^(localhost|127\.)/.test(location.hostname)) window.__wb = function () { return { board: board, sugs: sugs, cloud: cloud, view: view, sel: sel, dirty: dirty, mode: mode, compileFn: compileFn, classify: classify, sciFormat: sciFormat, engine: lastEngine }; };
   }
   function topBar() {
@@ -162,12 +165,12 @@
     A('png', exportPNG); A('pdf', exportPDF); A('live', shareLive); A('clive', function () { classLive(!chans.class); note(chans.class ? '🟢 Your class can watch live again' : '⚪ Stopped: students no longer see the board'); });
     A('graph', function () { graphDialog(null); }); A('image', function () { app.querySelector('#imgf').click(); });
     app.querySelector('#imgf').onchange = function () { if (this.files[0]) addImage(this.files[0]); this.value = ''; };
-    var t = app.querySelector('#wbt'); t.onchange = function () { board.title = t.value.trim().slice(0, 120) || 'Untitled board'; t.value = board.title; metaDirty = true; scheduleSave(); };
-    t.onkeydown = function (e) { if (e.key === 'Enter') t.blur(); };
+    var t = app.querySelector('#wbt'); if (t) t.onchange = function () { board.title = t.value.trim().slice(0, 120) || 'Untitled board'; t.value = board.title; metaDirty = true; scheduleSave(); };
+    if (t) t.onkeydown = function (e) { if (e.key === 'Enter') t.blur(); };
     var sh = app.querySelector('#shr'); if (sh) sh.onchange = function () {
       if (cloud !== 'ok') { sh.checked = false; note(cloud === 'setup' ? 'Sharing starts once boards can be saved to your account' : 'Sharing needs a connection'); return; }
       board.shared = sh.checked; metaDirty = true; note(board.shared ? '🔗 Students in this class can now open this board' : 'This board is private again'); scheduleSave(200); };
-    app.querySelector('#bdl').onclick = boardsPanel;
+    var bdl = app.querySelector('#bdl'); if (bdl) bdl.onclick = boardsPanel;
   }
   function swatches() { var pal = page().bg === 'dark' ? CHALK : COLS, el = app.querySelector('#sws'); if (!el) return;
     el.innerHTML = pal.map(function (c, i) { return '<button type="button" class="sw" data-c="' + i + '" style="background:' + c + '" aria-label="Colour ' + (i + 1) + '" aria-pressed="' + (i === col) + '"></button>'; }).join(' ');
@@ -1002,6 +1005,12 @@
       if (b.owner === me.user.id && isTeacher(me)) { delete b.owner; board = b; normalise(); build('teacher'); probeCloud(); writeLocal(); return; }
       readOnly = true; delete b.owner; board = b; normalise(); build('view'); render();
     }).catch(function (e) { app.innerHTML = '<section class="panel"><h2>Whiteboard</h2><p>' + E(S.nice(e)) + '</p><a class="btn sm" href="/board/">← Back</a></section>'; });
+  }
+  function watchLesson() {   // the whiteboard inside a live lesson room, for students and guests
+    css(); readOnly = true; liveName = ''; build('live');
+    var ch = S.db.channel('board-live-' + WATCH, { config: { broadcast: { self: false } } });
+    watch(ch, null);
+    ch.subscribe(function (s2) { if (s2 === 'SUBSCRIBED') { var el = app.querySelector('#vst'); if (el && !watching) el.textContent = 'Waiting for your teacher to write…'; ch.send({ type: 'broadcast', event: 'hello', payload: {} }); } });
   }
   function viewer() {
     if (!/^[A-Z0-9]{6}$/.test(live)) { app.innerHTML = '<section class="panel"><h2>Live board</h2><p>That board code does not look right. Ask your teacher for the link.</p></section>'; return; }
