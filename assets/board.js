@@ -8,7 +8,8 @@
   var COLS = ['#111827', '#1d4ed8', '#dc2626', '#059669', '#7c3aed', '#ea580c'], CHALK = ['#f9fafb', '#93c5fd', '#fca5a5', '#86efac', '#fde68a', '#f9a8d4'];
   var BGS = [['white', 'White'], ['grid', 'Squares'], ['lined', 'Lines'], ['dark', 'Chalkboard']];
   var NEAT_FONT = "'Patrick Hand', 'Comic Neue', 'Segoe Print', cursive", TYPE_FONT = "'Atkinson Hyperlegible', system-ui, sans-serif";
-  var live = new URLSearchParams(location.search).get('live');
+  var QS = new URLSearchParams(location.search), live = QS.get('live'), CLS = /^[0-9a-f-]{36}$/.test(QS.get('class') || '') ? QS.get('class') : null, CNAME = (QS.get('n') || '').slice(0, 80);
+  var KEY = function (me) { return 'bv-board-' + me.user.id + (CLS ? '-' + CLS : ''); };
   var st = { pages: [{ bg: 'white', items: [] }], cur: 0 }, tool = 'pen', col = 0, size = 1, neat = true, tidy = true;
   var undo = [], redo = [], pending = [], neatTimer = null, chan = null, room = null, cv, cx, wrap, scale = 1, drawing = null;
   (function () { var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap'; document.head.appendChild(l); })();
@@ -18,7 +19,7 @@
     if (!(me.admin || me.staff || me.roles.indexOf('teacher') >= 0 || me.roles.indexOf('school_teacher') >= 0)) {
       app.innerHTML = '<section class="panel"><h2>📡 Join your teacher\'s live board</h2><p>Type the 6-letter code your teacher shows on the board.</p><form id="jc" class="row2" style="justify-content:flex-start;gap:8px"><input id="jcv" maxlength="6" placeholder="e.g. K7QPZ3" style="text-transform:uppercase;font-size:1.3rem;letter-spacing:.15em;max-width:200px" required><button class="btn main">Join</button></form></section>';
       app.querySelector('#jc').onsubmit = function (e) { e.preventDefault(); location.href = '/board/?live=' + encodeURIComponent(app.querySelector('#jcv').value.trim().toUpperCase()); }; return; }
-    try { var saved = JSON.parse(localStorage.getItem('bv-board-' + me.user.id) || 'null'); if (saved && saved.pages && saved.pages.length) st = saved; } catch (e) {}
+    try { var saved = JSON.parse(localStorage.getItem(KEY(me)) || 'null'); if (saved && saved.pages && saved.pages.length) st = saved; } catch (e) {}
     st.cur = Math.min(st.cur || 0, st.pages.length - 1);
     build(me, true);
   }).catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
@@ -34,7 +35,7 @@
 
   function build(me, teacher) {
     if (!document.getElementById('wb-css')) { var s = document.createElement('style'); s.id = 'wb-css'; s.textContent = CSS; document.head.appendChild(s); }
-    app.innerHTML = (teacher ? '<div class="row2 cband" style="--k:#0d9488"><div><p class="label">Classroom</p><h2 style="margin:0">🖊 Whiteboard</h2><p class="small">Write or type, project it full screen, and share it live with your class.</p></div><div class="cta"><a class="btn sm" href="/teach/">🏫 My classes</a></div></div>' : '') +
+    app.innerHTML = (teacher ? '<div class="row2 cband" style="--k:#0d9488"><div><p class="label">Classroom</p><h2 style="margin:0">🖊 Whiteboard' + (CNAME ? ' · ' + E(CNAME) : '') + '</h2><p class="small">' + (CNAME ? 'This class keeps its own pages. ' : '') + 'Write or type, project it full screen, and share it live with your class.</p></div><div class="cta"><a class="btn sm" href="' + (CLS ? '/teach/#classes/' + CLS : '/teach/') + '">' + (CLS ? '← Back to the class' : '🏫 My classes') + '</a></div></div>' : '') +
       '<div class="wb" id="wb">' + (teacher ? bar() : '<div class="wb-bar"><b>📡 Live board</b><span class="small muted" id="vst">Connecting…</span><span style="flex:1"></span><button type="button" data-a="full" style="--k:#0d9488">⛶ Full screen</button></div>') +
       '<div class="wb-stage" id="stage"><canvas id="cv"></canvas><div class="wb-note" id="note"></div></div>' +
       (teacher ? '<div class="wb-bar" id="pgbar"></div>' : '') + '</div>' +
@@ -230,7 +231,7 @@
   function doRedo() { if (!redo.length) return; undo.push(JSON.stringify(page())); st.pages[st.cur] = JSON.parse(redo.pop()); changed(); swatches(); }
   var saveT = null;
   function changed() { render(); clearTimeout(saveT); saveT = setTimeout(function () {
-    try { S.me().then(function (me) { localStorage.setItem('bv-board-' + me.user.id, JSON.stringify(st, function (k, v) { return k === 'raw' || k === 'ink' ? undefined : v; })); }); } catch (e) {} }, 600);
+    try { S.me().then(function (me) { localStorage.setItem(KEY(me), JSON.stringify(st, function (k, v) { return k === 'raw' || k === 'ink' ? undefined : v; })); }); } catch (e) {} }, 600);
     sendLive('page'); }
   function full() { if (document.fullscreenElement) { document.exitFullscreen(); return; } if (wrap.requestFullscreen) wrap.requestFullscreen().catch(function () { wrap.classList.toggle('full'); setTimeout(fit, 60); }); else { wrap.classList.toggle('full'); setTimeout(fit, 60); } }
   function clean(pg) { return JSON.parse(JSON.stringify(pg, function (k, v) { return k === 'raw' || k === 'ink' ? undefined : v; })); }
