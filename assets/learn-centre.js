@@ -40,17 +40,27 @@
           (R[t.id] || []).map(function (r) { return '<a class="lcard" href="' + E(r.url) + '" target="_blank" rel="noopener"><span class="ic">' + (r.kind === 'video' ? '🎬' : '📄') + '</span><span><b>' + E(r.title) + '</b><span class="small muted">' + E(r.kind === 'video' ? 'Videos' : 'Notes') + '</span></span><span class="go">Open ↗</span></a>'; }).join('');
       }
       function match(t) { if (!q) return true; var txt = (t.name + ' ' + (t.code || '') + ' ' + (L[t.id] || []).map(function (l) { return l.title; }).join(' ')).toLowerCase(); return txt.indexOf(q) >= 0 || (KIDS[t.id] || []).some(match); }
+      var grade = null; try { grade = localStorage.getItem('bv-grade'); } catch (e) {}
+      var MORE = { 'myp-science': '/myp/', 'ib-biology': '/ib/', 'a-level-biology': '/a-level/', 'igcse-biology': '/igcse/', 'ib-maths-aa': '/maths/', 'ib-maths-ai': '/maths/', 'ib-chemistry': '/chemistry/', 'igcse-chemistry': '/chemistry/', 'a-level-chemistry': '/chemistry/' };
+      app.addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('[data-grade]') : null; if (!b) return; grade = b.getAttribute('data-grade'); try { localStorage.setItem('bv-grade', grade); } catch (x) {} draw(); });
+      window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (h && subjects.some(function (z) { return z.slug === h; })) { cur = h; q = ''; draw(); } });
       function draw() {
         var s = subjects.filter(function (z) { return z.slug === cur; })[0] || subjects[0];
         var il = orphanIL.length ? '<section class="grp"><h3 class="sec-h">📘 Interactive lessons for your class</h3><div class="lgrid">' + orphanIL.map(function (q2) {
           var row = lessons.filter(function (l) { return l.external_id === 'IL-' + q2.id; })[0] || { id: null, title: q2.title, url: '/lesson/#' + q2.id, external_id: 'IL-' + q2.id, summary: (q2.instructions || '').split('\n')[0] };
           return lessonCard(row); }).join('') + '</div></section>' : '';
         if (!s) { app.innerHTML = il || '<p class="emptybox">No learning content has been published yet.</p>'; return; }
-        var tops = topics.filter(function (t) { return t.subject_id === s.id && !t.parent_id; }).filter(match).filter(function (t) { return !onlyLessons || count(t); });
+        var all0 = topics.filter(function (t) { return t.subject_id === s.id && !t.parent_id; });
+        // MYP Science: one grade at a time (Grade 6 = MYP 1 … Grade 10 = MYP 5), not every grade on one page
+        var grades = s.slug === 'myp-science' ? all0.map(function (t) { return t.programme; }).filter(function (g, i, a) { return g && a.indexOf(g) === i; }).sort() : [];
+        if (grades.length > 1 && grades.indexOf(grade) < 0) grade = grades[0];
+        var tops = all0.filter(function (t) { return grades.length < 2 || q || t.programme === grade; }).filter(match).filter(function (t) { return !onlyLessons || count(t); });
+        var bar = '<div class="lc-bar"><b>' + E(s.name) + '</b><a class="btn sm" href="/quizzes/">📝 Exam-style questions</a><a class="btn sm" href="/exams/">🧪 Examinations</a><a class="btn sm" href="/simulations/">🔬 Virtual labs</a>' + (MORE[s.slug] ? '<a class="btn sm" href="' + MORE[s.slug] + '">📂 Slides, videos and other resources</a>' : '') + '</div>' +
+          (grades.length > 1 ? '<div class="lc-grades" role="group" aria-label="Grade">' + grades.map(function (g) { var n = +String(g).replace(/\D/g, ''); return '<button type="button" data-grade="' + E(g) + '" aria-pressed="' + (g === grade) + '">Grade ' + (n + 5) + ' <span class="small">· ' + E(g) + '</span></button>'; }).join('') + '</div>' : '');
         var make = me.staff ? '<div class="panel tint row2 lmake"><span><b>Teachers:</b> turn any file (PDF, Word, PowerPoint, Excel, web page, text or pictures) into an interactive six-step lesson. Use <b>＋ Add lesson</b> in a subtopic to file it there.</span><a class="btn main sm" href="/staff/#lessons/new">✨ Create an interactive lesson from a file</a></div>' : '';
         var addHere = function (t) { return me.staff ? '<a class="addles small" href="/staff/#lessons/new/' + t.id + '">＋ Add lesson</a>' : ''; };
         app.innerHTML = make + il + '<div class="tabs" role="tablist">' + subjects.map(function (z) { return '<button role="tab" aria-selected="' + (z === s) + '" data-s="' + E(z.slug) + '" style="' + (z === s ? 'background:' + E(z.colour) + ';color:#fff' : '') + '">' + E(z.name) + '</button>'; }).join('') + '</div>' +
-          '<div class="row2"><input id="q" type="search" placeholder="Search topics and lessons" value="' + E(q) + '" style="max-width:340px" aria-label="Search topics and lessons">' +
+          bar + '<div class="row2"><input id="q" type="search" placeholder="Search topics and lessons" value="' + E(q) + '" style="max-width:340px" aria-label="Search topics and lessons">' +
           '<label class="chk small"><input type="checkbox" id="only"' + (onlyLessons ? ' checked' : '') + '> Only show topics with lessons</label></div>' +
           (tops.length ? tops.map(function (t) {
             var kids = (KIDS[t.id] || []).filter(function (k) { return k.published && (!q || match(k) || match(t)) && (!onlyLessons || count(k)); }), n = count(t);
