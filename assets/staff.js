@@ -317,7 +317,7 @@
     if (m) k.prog = 'MYP ' + m[1]; else if (g) k.prog = 'MYP ' + (+g[1] - 5);
     else if (/\bigcse\b/.test(t)) k.prog = 'IGCSE'; else if (/\ba[ -]?level|\bas level/.test(t)) k.prog = 'A Level';
     else if (/\bib\b|\bdp ?\d?\b|diploma|\b(bio|chem|phys|ess)-(hl|sl)\b/.test(t)) k.prog = 'IB DP';
-    k.subj = /\bess\b|environmental/.test(t) ? 'environmental' : /chem/.test(t) ? 'chemistry' : /phys/.test(t) ? 'physics' : /\bbio/.test(t) ? 'biology' : '';
+    k.subj = /math/.test(t) ? 'mathematics' : /\bess\b|environmental/.test(t) ? 'environmental' : /chem/.test(t) ? 'chemistry' : /phys/.test(t) ? 'physics' : /\bbio/.test(t) ? 'biology' : '';
     if (!k.prog && k.subj) k.prog = 'IB DP';   // "Chemistry", "PHYSICS": the site's subject classes are IB DP
     k.level = /\bhl\b|-hl\b|higher/.test(t) ? 'HL' : /\bsl\b|-sl\b|standard/.test(t) ? 'SL' : '';
     k.any = !k.prog;
@@ -336,7 +336,7 @@
     return { prog: 'IB DP', subj: 'biology', loose: true };
   }
   function keyFits(k, want) {
-    if (k.loose && want.subj !== 'chemistry' && want.subj !== 'physics') return true;   // biology labs suit any biology or science class
+    if (k.loose && want.subj !== 'chemistry' && want.subj !== 'physics' && want.subj !== 'mathematics') return true;   // biology labs suit any biology or science class
     if (want.any) return true;
     if (!sameProg(k.prog, want.prog)) return false;
     return !want.subj || !k.subj || k.subj.indexOf(want.subj) >= 0 || (k.subj.indexOf('science') >= 0 && want.prog.indexOf('MYP') === 0);
