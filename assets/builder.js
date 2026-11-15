@@ -85,7 +85,7 @@
   }
   function start(cat) {
     ST = { id: null, cat: cat, title: '', instructions: '', subject: '', time: '', attempts: cat === 'lesson' ? 3 : cat === 'exam' ? 1 : 2, show: cat !== 'exam', main: false, classes: [], questions: [newQ(cat === 'lesson' ? 'info' : 'mcq', cat === 'lesson' ? 'Question' : 'Section A')], changed: false };
-    SEL = 0; draw();
+    SEL = 0; draw(); genDialog();   // a new item starts with "Build it for me" (or a blank page)
   }
   function load(id) {
     app.innerHTML = '<p class="muted">Opening…</p>';
@@ -114,13 +114,14 @@
   function draw() {
     var K = CAT[ST.cat];
     app.innerHTML = '<div class="bd-top"><div><p class="label"><a href="#">← My assessments and lessons</a></p><h2>' + K[0] + ' ' + (ST.id ? 'Edit' : 'New') + ' ' + K[1].toLowerCase() + '</h2></div>' +
-      '<div class="acts"><button class="btn" type="button" id="pvall">👁 Preview as a student</button><button class="btn main" type="button" id="save">💾 Preview and save</button></div></div>' +
+      '<div class="acts"><button class="btn" type="button" id="gen" style="background:linear-gradient(120deg,#7c3aed,#db2777);color:#fff;border-color:transparent">✨ Build it for me</button><button class="btn" type="button" id="pvall">👁 Preview as a student</button><button class="btn main" type="button" id="save">💾 Preview and save</button></div></div>' +
       '<div class="bd"><aside class="bd-col" aria-label="Questions"><h3>Items <span class="small muted" id="tot"></span></h3><div class="bd-list" id="list"></div>' +
       '<h3 style="margin-top:14px">＋ Add</h3><div class="bd-pal">' + KINDS.map(function (g, gi) { return '<details' + (gi === 0 ? ' open' : '') + '><summary>' + g[0] + '</summary>' + g[1].map(function (k) { return '<button type="button" data-add="' + k[0] + '">' + k[1] + ' ' + k[2] + '</button>'; }).join('') + '</details>'; }).join('') + '</div></aside>' +
       '<section class="bd-col" aria-label="Edit the item" id="ed"></section>' +
       '<aside class="bd-col" aria-label="Settings and preview"><h3>⚙️ Settings</h3><div id="set"></div><h3 style="margin-top:14px">👁 What the student sees</h3><div class="bd-pv" id="pv"></div></aside></div>';
     app.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = function () { var cur = ST.questions[SEL] || {}; ST.questions.splice(SEL + 1, 0, newQ(b.getAttribute('data-add'), cur.section || (ST.cat === 'lesson' ? 'Explore' : ''))); SEL++; ST.changed = true; list(); editor(); preview(); }; });
     app.querySelector('#pvall').onclick = function () { overlay(false); };
+    app.querySelector('#gen').onclick = genDialog;
     app.querySelector('#save').onclick = function () { overlay(true); };
     settings(); list(); editor(); preview();
   }
@@ -130,11 +131,11 @@
     ST.questions.forEach(function (q, i) {
       if (ST.cat === 'lesson' && q.section !== last) { last = q.section; h += '<p class="bd-step">' + E(q.section || 'Explore') + '</p>'; }
       if (q.kind !== 'info') n++;
-      h += '<button type="button" class="bd-it" data-i="' + i + '" aria-current="' + (i === SEL) + '"><span class="n">' + (q.kind === 'info' ? 'i' : n) + '</span><span><span class="t">' + KN[q.kind][1] + ' ' + E(label(q)) + '</span><br><span class="m">' + KN[q.kind][2] + (q.marks ? ' · ' + q.marks + ' mark' + (q.marks > 1 ? 's' : '') : '') + '</span></span><span aria-hidden="true">›</span></button>';
+      h += '<button type="button" class="bd-it" data-i="' + i + '" aria-current="' + (i === SEL) + '"><span class="n">' + (q.kind === 'info' ? 'i' : n) + '</span><span><span class="t">' + KN[q.kind][1] + ' ' + E(label(q)) + '</span><br><span class="m">' + (q.ai ? '<b style="color:#b45309">🔎 check me</b> · ' : '') + KN[q.kind][2] + (q.marks ? ' · ' + q.marks + ' mark' + (q.marks > 1 ? 's' : '') : '') + '</span></span><span aria-hidden="true">›</span></button>';
     });
     box.innerHTML = h;
     var total = ST.questions.reduce(function (a, q) { return a + (+q.marks || 0); }, 0); app.querySelector('#tot').textContent = '(' + ST.questions.length + ', ' + total + ' marks)';
-    box.querySelectorAll('[data-i]').forEach(function (b) { b.onclick = function () { SEL = +b.getAttribute('data-i'); list(); editor(); preview(); }; });
+    box.querySelectorAll('[data-i]').forEach(function (b) { b.onclick = function () { SEL = +b.getAttribute('data-i'); if (ST.questions[SEL]) ST.questions[SEL].ai = false; list(); editor(); preview(); }; });
   }
   function touch() { ST.changed = true; clearTimeout(touch.t); touch.t = setTimeout(function () { list(); preview(); }, 250); }
 
@@ -222,7 +223,7 @@
     var ov = document.createElement('div'); ov.className = 'bd-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Preview');
     var inner = document.createElement('div'), K = CAT[ST.cat], answers = {}, probs = check(); ov.appendChild(inner);
     inner.innerHTML = '<div class="bd-top"><div><p class="label">Preview: this is what a student sees</p><h2>' + K[0] + ' ' + E(ST.title || '(no title yet)') + '</h2></div><button class="btn" type="button" data-close>✕ Close</button></div>' + (ST.instructions ? '<p>' + E(ST.instructions) + '</p>' : '') +
-      (probs.length ? '<div class="bd-warn"><b>Fix these before saving:</b><ul>' + probs.map(function (p) { return '<li>' + E(p) + '</li>'; }).join('') + '</ul></div>' : '') + '<div id="ovq"></div>' +
+      (ST.questions.some(function (q) { return q.ai; }) ? '<div class="bd-warn">🔎 ' + ST.questions.filter(function (q) { return q.ai; }).length + ' automatically built items have not been opened yet. You can save, but please check them first.</div>' : '') + (probs.length ? '<div class="bd-warn"><b>Fix these before saving:</b><ul>' + probs.map(function (p) { return '<li>' + E(p) + '</li>'; }).join('') + '</ul></div>' : '') + '<div id="ovq"></div>' +
       '<div class="acts" style="position:sticky;bottom:0;background:inherit;padding:10px 0"><button class="btn" type="button" id="ovchk">✔ Check my answers</button>' + (saving ? '<button class="btn main" type="button" id="ovsave"' + (probs.length ? ' disabled' : '') + '>💾 Looks right: save</button>' : '') + '<button class="btn" type="button" data-close>Back to editing</button><span class="msg" id="ovm" role="status"></span></div>';
     var qbox = inner.querySelector('#ovq'), n = 0, last = null;
     ST.questions.forEach(function (q, i) {
@@ -250,6 +251,177 @@
       if (QT && QT.has(q.kind)) QT.problems(q.kind, q.draft).forEach(function (p) { out.push(n + p); });
       if (q.kind !== 'info' && !(+q.marks > 0)) out.push(n + 'give it at least 1 mark.'); });
     return out;
+  }
+
+  /* ================================================================ ✨ Build it for me
+     The teacher uploads files and/or types objectives; the files are read in the browser (site_assets/quiz-import.js);
+     the server function build-draft asks the AI in small steps (plan, then a few items at a time, then pictures);
+     every item lands here marked "check me" for the teacher to read, edit, preview and save.
+     If the AI cannot help, the lesson is laid out from the files by fixed rules instead (the old lesson maker). */
+  var LEVELS = ['Grade 6 (MYP 1)', 'Grade 7 (MYP 2)', 'Grade 8 (MYP 3)', 'Grade 9 (MYP 4)', 'Grade 10 (MYP 5)', 'IGCSE Core', 'IGCSE Extended', 'AS Level', 'A Level', 'IB Diploma SL', 'IB Diploma HL'];
+  var GEN_TYPES = [['mcq', 'Multiple choice'], ['tf', 'True or false'], ['multi', 'Several correct'], ['match', 'Match'], ['order', 'Put in order'], ['classify', 'Sort into groups'], ['gaps', 'Fill in the gaps'], ['cloze', 'Drop-down sentence'], ['number', 'Calculation'], ['table', 'Complete a table'], ['short', 'Written answer'], ['essay', 'Extended answer'], ['graph', 'Draw a graph'], ['draw', 'Draw a diagram']];
+  var GEN = { level: '', files: [], objectives: '', count: 0, types: null, criteria: ['A', 'C', 'D'], pics: true, mode: 'replace' };
+  try { GEN.level = localStorage.getItem('bv-gen-level') || ''; } catch (e) {}
+  function blankItems() { return ST.questions.every(function (q) { return !String(q.prompt || '').trim() && !(q.draft && JSON.stringify(q.draft).replace(/["\[\]{}:,]|choices|ok|true|false|t|pairs|l|r|items|groups|g|text|value|tol|unit|cols|rows|image|spots|extra|x|y|ratio/g, '').trim()); }); }
+  function genDialog() {
+    var ov = document.createElement('div'); ov.className = 'bd-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Build it for me');
+    var K = CAT[ST.cat], lesson = ST.cat === 'lesson', myp = function () { return /MYP/.test(GEN.level); };
+    if (!GEN.count) GEN.count = lesson ? 16 : ST.cat === 'exam' ? 20 : 10;
+    var inner = document.createElement('div'); ov.appendChild(inner);
+    inner.innerHTML = '<div class="bd-top"><div><p class="label">' + K[0] + ' ' + K[1] + '</p><h2>✨ Build it for me</h2></div><button class="btn" type="button" data-close>✕</button></div>' +
+      '<p>Upload your notes, slides, worksheet or past paper, or type the objectives, or both. ' + (lesson ? 'You get a complete six-step inquiry lesson (question, explore, test, explain, challenge, reflect) with reading text, real pictures and a mix of question types.' : 'You get a complete set of questions with answer keys, marking points and model answers.') + ' Every item is marked <b>check me</b> until you have opened it. Nothing is saved until you preview and save.</p>' +
+      '<div class="bd-row">' + field('Title or topic', '<input id="g-t" value="' + E(ST.title) + '" placeholder="e.g. Photosynthesis">') + field('Level', '<select id="g-l"><option value="">Choose…</option>' + LEVELS.map(function (l) { return '<option' + (GEN.level === l ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '</select>') + '</div>' +
+      field('Objectives or what to cover (optional)', '<textarea id="g-o" rows="3" placeholder="One per line, e.g.\nDescribe how plants make glucose\nExplain how light intensity affects the rate of photosynthesis">' + E(GEN.objectives) + '</textarea>') +
+      field('Files (optional): PDF, Word, PowerPoint, Excel, web page, text or pictures', '<input id="g-f" type="file" multiple accept=".pdf,.docx,.dotx,.pptx,.potx,.ppsx,.xlsx,.xlsm,.odt,.odp,.ods,.csv,.tsv,.html,.htm,.rtf,.txt,.md,image/*">', 'Pictures in your files are used in the lesson. The files stay on your device: only their text is sent to the AI.') +
+      '<div class="bd-row">' + field(lesson ? 'Length' : 'Number of questions', lesson ? '<select id="g-n"><option value="12">Short (about 12 items, 40 min)</option><option value="16">Standard (about 16 items, 60 min)</option><option value="22">Long (about 22 items, 80 min)</option></select>' : '<input id="g-n" type="number" min="3" max="40" value="' + GEN.count + '">') +
+        field('If the builder already has items', '<select id="g-m"><option value="replace">Replace them</option><option value="add">Add after them</option></select>') + '</div>' +
+      '<details' + (lesson ? '' : ' open') + '><summary><b>Question types</b> <span class="small muted">(all ticked = a good mix)</span></summary><div class="bd-row" style="gap:4px 14px;margin:8px 0">' + GEN_TYPES.map(function (t) { return '<label class="chk"><input type="checkbox" name="g-ty" value="' + t[0] + '"' + (!GEN.types || GEN.types.indexOf(t[0]) >= 0 ? ' checked' : '') + '> ' + KN[t[0]][1] + ' ' + t[1] + '</label>'; }).join('') + '</div><p class="small muted">Labelling and click-the-picture questions need a picture you choose, so add those by hand.</p></details>' +
+      '<div id="g-crit" style="margin:8px 0"><b>MYP criteria</b> ' + ['A', 'B', 'C', 'D'].map(function (c) { return '<label class="chk" style="display:inline-flex;margin-right:10px"><input type="checkbox" name="g-cr" value="' + c + '"' + (GEN.criteria.indexOf(c) >= 0 ? ' checked' : '') + '> ' + c + '</label>'; }).join('') + '</div>' +
+      (lesson ? '<label class="chk"><input type="checkbox" id="g-p"' + (GEN.pics ? ' checked' : '') + '> Find real pictures (diagrams and photos from Wikimedia Commons, with their credits) where my files have none</label>' : '') +
+      '<div id="g-run" hidden><h3>Building…</h3><ol id="g-steps" class="small" style="line-height:1.9"></ol><div style="height:10px;border-radius:6px;background:#e2e8f0;overflow:hidden"><i id="g-bar" style="display:block;height:100%;width:0;background:linear-gradient(90deg,#4f46e5,#0ea5e9);transition:width .4s"></i></div><p class="small muted">The free AI service answers a few requests a minute, so a full ' + (lesson ? 'lesson' : 'set') + ' takes a few minutes. You can leave this page open and do something else.</p></div>' +
+      '<p class="msg" id="g-msg" role="status"></p>' +
+      '<div class="acts"><button class="btn main" type="button" id="g-go">✨ Build</button><button class="btn" type="button" data-close>' + (ST.id || !blankItems() ? 'Cancel' : 'Start with a blank page') + '</button></div>';
+    var $ = function (s) { return inner.querySelector(s); };
+    if (lesson) $('#g-n').value = String(GEN.count);
+    if (blankItems()) $('#g-m').closest('.bd-f').hidden = true;
+    var showCrit = function () { $('#g-crit').hidden = !myp(); }; showCrit();
+    $('#g-l').onchange = function () { GEN.level = this.value; try { localStorage.setItem('bv-gen-level', GEN.level); } catch (e) {} showCrit(); };
+    var stop = false;
+    inner.querySelectorAll('[data-close]').forEach(function (b) { b.onclick = function () { stop = true; ov.remove(); }; });
+    ov.addEventListener('keydown', function (e) { if (e.key === 'Escape' && $('#g-run').hidden) ov.remove(); });
+    $('#g-go').onclick = function () {
+      GEN.objectives = $('#g-o').value; GEN.count = +$('#g-n').value || GEN.count; GEN.mode = $('#g-m').value; GEN.level = $('#g-l').value;
+      GEN.types = [].map.call(inner.querySelectorAll('[name=g-ty]:checked'), function (c) { return c.value; }); if (GEN.types.length === GEN_TYPES.length) GEN.types = null;
+      GEN.criteria = [].map.call(inner.querySelectorAll('[name=g-cr]:checked'), function (c) { return c.value; }); GEN.pics = lesson && $('#g-p').checked;
+      var title = $('#g-t').value.trim(), files = [].slice.call($('#g-f').files || []);
+      if (!title && !GEN.objectives.trim() && !files.length) { $('#g-msg').textContent = 'Give a title, some objectives or a file to build from.'; return; }
+      if (!GEN.level) { $('#g-msg').textContent = 'Choose the level, so the language and questions suit your students.'; $('#g-l').focus(); return; }
+      if (GEN.types && !GEN.types.length) { $('#g-msg').textContent = 'Tick at least one question type.'; return; }
+      inner.querySelectorAll('input,select,textarea,#g-go').forEach(function (x) { x.disabled = true; }); $('#g-run').hidden = false; $('#g-msg').textContent = '';
+      runBuild({ title: title, files: files, ui: { step: stepUI, bar: function (f) { $('#g-bar').style.width = Math.round(f * 100) + '%'; }, stopped: function () { return stop; } } }).then(function (res) {
+        if (stop) return; ov.remove(); toastDone(res);
+      }, function (e) {
+        if (stop) return;
+        $('#g-msg').innerHTML = '⚠ ' + E(e.message || e) + (e.fallback ? ' <button class="btn sm" type="button" id="g-rule">Lay it out from my files without AI</button>' : '');
+        inner.querySelectorAll('input,select,textarea,#g-go').forEach(function (x) { x.disabled = false; });
+        var rb = $('#g-rule'); if (rb) rb.onclick = function () { ruleBuild(title, e.lines || []); ov.remove(); };
+      });
+    };
+    function stepUI(text, state) {   // state: '' running, 'ok', 'warn'
+      var ol = $('#g-steps'), li = ol.lastElementChild; if (!li || li.dataset.done) { li = document.createElement('li'); ol.appendChild(li); }
+      li.textContent = (state === 'ok' ? '✅ ' : state === 'warn' ? '⚠️ ' : '⏳ ') + text; if (state) li.dataset.done = 1;
+    }
+    document.body.appendChild(ov); $('#g-t').focus();
+  }
+  function call(body) {
+    return S.db.functions.invoke('build-draft', { body: body }).then(function (res) {
+      var d = res.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } }
+      if ((!d || !d.ok) && res.error && res.error.context && res.error.context.json) return res.error.context.json().then(function (j) { throw Object.assign(new Error((j && j.error) || 'The AI could not be reached.'), { code: j && j.code }); }, function () { throw new Error('The AI could not be reached.'); });
+      if (!d || !d.ok) throw Object.assign(new Error((d && d.error) || 'The AI could not be reached.'), { code: d && d.code });
+      return d;
+    });
+  }
+  function patient(body, ui, label) {   // the free AI allowance is per minute: wait and try again a few times
+    var tries = 0;
+    function go() { return call(body).catch(function (e) { if (ui.stopped()) throw e; if ((e.code === 'busy' || e.code === 'down' || !e.code) && tries++ < 3) { ui.step(label + ' (the AI is busy: waiting ' + (20 * tries) + ' seconds)', ''); return new Promise(function (r) { setTimeout(r, 20000 * tries); }).then(go); } throw e; }); }
+    return go();
+  }
+  function readAll(files, ui) {
+    var Q = window.BVQ; if (!files.length) return Promise.resolve({ text: '', lines: [], images: [] });
+    if (!Q || !Q.readFile) return Promise.reject(new Error('The file reader did not load. Refresh the page and try again.'));
+    Q.IMGS.length = 0; var lines = [], chain = Promise.resolve();
+    files.forEach(function (f) { chain = chain.then(function () { ui.step('Reading ' + f.name, ''); return Q.readFile(f).then(function (ls) { lines = lines.concat(ls); ui.step('Read ' + f.name, 'ok'); }, function (e) { ui.step(f.name + ': ' + (e.message || e), 'warn'); }); }); });
+    return chain.then(function () {
+      var imgs = [], text = lines.map(function (l) { var m = /^\[\[img:(\d+)\]\]$/.exec(l); if (m) { if (Q.IMGS[+m[1]] && Q.IMGS[+m[1]].length > 9000) imgs.push(Q.IMGS[+m[1]]); /* tiny pictures are logos and icons */ return ''; } return l; }).filter(Boolean).join('\n');
+      return { text: text, lines: lines, images: imgs };
+    });
+  }
+  function fromAI(it) {   // an item written by the AI -> a builder item
+    var q = newQ(it.kind, it.section || ''); q.ai = true; q.section = ST.cat === 'lesson' ? (STEPS.indexOf(it.section) >= 0 ? it.section : 'Explore') : it.section || '';
+    var pts = function (p) { return (p || []).map(function (x) { return x.text + (x.keywords && x.keywords.length ? ': ' + x.keywords.join(' / ') : ''); }).join('\n'); };
+    var noComma = function (t) { return String(t || '').replace(/,/g, ' /'); };
+    q.prompt = it.kind === 'info' ? it.text : it.prompt || ''; q.explanation = it.explanation || ''; q.marks = it.kind === 'info' ? 0 : it.marks || 1; q.imageQuery = it.image_query || '';
+    if (it.kind === 'mcq') { var ord = it.options.map(function (_, i) { return i; }).sort(function () { return Math.random() - 0.5; }); q.options = ord.map(function (i) { return it.options[i]; }); q.correct = ord.indexOf(it.correct); }   /* the AI tends to put the answer first */
+    else if (it.kind === 'tf') { q.options = ['True', 'False']; q.correct = it.answer ? 0 : 1; }
+    else if (it.kind === 'multi') q.draft = { choices: it.choices.map(function (c) { return { t: c.text, ok: !!c.correct }; }) };
+    else if (it.kind === 'match') q.draft = { pairs: it.pairs.map(function (p) { return { l: p[0], r: p[1] }; }) };
+    else if (it.kind === 'order') q.draft = { items: it.items.slice() };
+    else if (it.kind === 'classify') q.draft = { groups: it.groups.slice(), items: it.items.map(function (x) { return { t: x[0], g: +x[1] || 0 }; }) };
+    else if (it.kind === 'gaps' || it.kind === 'cloze') q.draft = { text: it.text };
+    else if (it.kind === 'number') { q.draft = { value: String(it.value), tol: it.tolerance ? String(it.tolerance) : '', unit: it.unit || '' }; q.model = it.model_answer || ''; }
+    else if (it.kind === 'table') q.draft = { cols: it.columns.map(noComma).join(', '), rows: it.rows.map(function (r) { return r.map(function (c) { return /^\[[^\[\]]+\]$/.test(c) ? c : String(c).replace(/\|/g, '/'); }).join(' | '); }).join('\n') };
+    else { q.model = it.model_answer || ''; q.points = pts(it.points); q.rubric = it.rubric || ''; if (it.kind === 'graph') q.axes = noComma(it.x || 'x') + ',' + noComma(it.y || 'y'); }
+    if (QT && QT.has(q.kind) && QT.problems(q.kind, q.draft).length) return null;
+    return q;
+  }
+  function runBuild(o) {
+    var ui = o.ui, lesson = ST.cat === 'lesson', src, plan, made = [], total = 1;
+    ui.step('Reading your files', '');
+    return readAll(o.files, ui).then(function (r) {
+      src = r; ui.step(o.files.length ? 'Files read: ' + Math.round(r.text.length / 1000) + ' thousand characters, ' + r.images.length + ' picture' + (r.images.length === 1 ? '' : 's') : 'No files: building from your title and objectives', 'ok');
+      if (ui.stopped()) throw new Error('Stopped.');
+      ui.step('Planning the ' + (lesson ? 'six steps' : 'sections'), ''); ui.bar(0.05);
+      return patient({ mode: 'plan', kind: ST.cat, title: o.title, level: GEN.level, objectives: GEN.objectives, source: src.text, count: GEN.count, types: GEN.types || [], criteria: /MYP/.test(GEN.level) ? GEN.criteria : [] }, ui, 'Planning');
+    }).then(function (d) {
+      plan = d.plan; var n = 0; plan.sections.forEach(function (s) { n += s.items.length; }); total = n;
+      ui.step('Plan ready: ' + plan.sections.length + (lesson ? ' steps, ' : ' sections, ') + n + ' items', 'ok');
+      var batches = []; plan.sections.forEach(function (sec) { for (var i = 0; i < sec.items.length; i += 4) batches.push(sec.items.slice(i, i + 4).map(function (it) { return Object.assign({ section: sec.name }, it); })); });
+      var chain = Promise.resolve(), k = 0;
+      batches.forEach(function (b) { chain = chain.then(function () {
+        if (ui.stopped()) throw new Error('Stopped.');
+        k++; ui.step('Writing ' + (lesson ? b[0].section.toLowerCase() + ' items' : b[0].section) + ' (' + k + ' of ' + batches.length + ')', '');
+        return patient({ mode: 'items', kind: ST.cat, title: plan.title || o.title, level: GEN.level, objectives: (plan.objectives || []).join('\n') || GEN.objectives, source: src.text, items: b, done: made.map(function (q) { return String(q.prompt).slice(0, 120); }) }, ui, 'Writing').then(function (r) {
+          var good = 0; r.items.forEach(function (it, i) { var q = it && fromAI(Object.assign({ section: b[i].section }, it)); if (q) { made.push(q); good++; } });
+          ui.step('Wrote ' + good + ' of ' + b.length + ' ' + (lesson ? b[0].section.toLowerCase() + ' items' : 'items in ' + b[0].section) + (good < b.length ? ' (the rest did not pass the quality checks and were left out)' : ''), good < b.length ? 'warn' : 'ok');
+          ui.bar(0.1 + 0.7 * k / batches.length);
+        }, function (e) { if (ui.stopped()) throw e; ui.step('A batch could not be written: ' + (e.message || e), 'warn'); });
+      }); });
+      return chain;
+    }).then(function () {
+      if (!made.some(function (q) { return q.kind !== 'info'; })) throw Object.assign(new Error('The AI could not build usable questions this time.'), { fallback: lesson, lines: src.lines });
+      // lessons: the objectives open the lesson, pictures from the files go into the reading cards, then real pictures where none
+      if (lesson) {
+        var objs = plan.objectives || [], first = made.filter(function (q) { return q.kind === 'info' && q.section === 'Question'; })[0];
+        if (objs.length) { var txt = 'By the end of this lesson you will be able to:\n' + objs.map(function (x) { return '• ' + x; }).join('\n'); if (first) first.prompt = first.prompt + '\n\n' + txt; else made.unshift(Object.assign(newQ('info', 'Question'), { prompt: '**' + (plan.title || o.title) + '**\n\n' + txt, ai: true })); }
+        if (!made.some(function (q) { return q.section === 'Reflect'; })) { var rq = newQ('short', 'Reflect'); rq.prompt = 'Reflect: what is the most important idea you learned today, and what are you still unsure about? You can type, write by hand or draw.'; rq.marks = 1; rq.ai = true; made.push(rq); }
+        var cards = made.filter(function (q) { return q.kind === 'info' && !q.image; }), order = ['Explore', 'Explain', 'Question', 'Challenge', 'Test', 'Reflect'];
+        cards.sort(function (a, b) { return order.indexOf(a.section) - order.indexOf(b.section); });
+        src.images.slice(0, 6).forEach(function (img, i) { if (cards[i]) cards[i].image = img; });
+        var need = cards.filter(function (q) { return !q.image && q.imageQuery; }).slice(0, GEN.pics ? 3 : 0), chain = Promise.resolve(), j = 0;
+        need.forEach(function (q) { chain = chain.then(function () {
+          if (ui.stopped()) return; j++; ui.step('Finding a real picture (' + j + ' of ' + need.length + '): ' + q.imageQuery, '');
+          return call({ mode: 'image', query: q.imageQuery, level: GEN.level, context: String(q.prompt).slice(0, 300) }).then(function (r) {
+            if (r.image) { q.image = r.image.src; q.prompt += '\n\nPicture: ' + (r.image.caption || r.image.title) + ' Credit: ' + (r.image.artist || 'Wikimedia Commons') + ', ' + r.image.license + ', via Wikimedia Commons (' + r.image.page + ').'; ui.step('Picture found: ' + r.image.title, 'ok'); }
+            else ui.step('No suitable picture found for "' + q.imageQuery + '"', 'warn');
+            ui.bar(0.8 + 0.18 * j / need.length);
+          }, function () { ui.step('No picture this time for "' + q.imageQuery + '"', 'warn'); });
+        }); });
+        return chain;
+      }
+    }).then(function () {
+      if (ui.stopped()) throw new Error('Stopped.');
+      lesson && made.sort(function (a, b) { return STEPS.indexOf(a.section) - STEPS.indexOf(b.section); });
+      if (GEN.mode === 'add' && !blankItems()) ST.questions = ST.questions.concat(made); else { (ST.removed = ST.removed || []).push.apply(ST.removed, ST.questions.filter(function (q) { return q.id; }).map(function (q) { return q.id; })); ST.questions = made; }
+      if (!ST.title.trim()) ST.title = plan.title || o.title;
+      if (!ST.instructions.trim() && !lesson) ST.instructions = 'Answer every question. The marks for each question are shown in brackets.';
+      if (/MYP|Grade/.test(GEN.level) && !ST.subject) { var t = (ST.title + ' ' + GEN.objectives).toLowerCase(); ST.subject = /cell|organ|plant|animal|gene|dna|ecolog|evolution|enzyme|photosynth|respirat|digest|blood|disease|species/.test(t) ? 'Biology' : /atom|bond|reaction|acid|salt|element|compound|mole|metal|organic|equilibri|electroly|periodic/.test(t) ? 'Chemistry' : /force|motion|energy|wave|electric|magnet|light|sound|pressure|heat|radioact|star|planet|circuit/.test(t) ? 'Physics' : ''; }
+      ST.changed = true; SEL = 0; ui.bar(1); draw();
+      return { n: made.length, ai: made.filter(function (q) { return q.ai; }).length, pics: made.filter(function (q) { return q.image; }).length, marks: made.reduce(function (a, q) { return a + (+q.marks || 0); }, 0) };
+    }).catch(function (e) { if (!e.fallback && lesson && !made.length && src) { e.fallback = true; e.lines = src.lines; } throw e; });
+  }
+  function ruleBuild(title, lines) {   // no AI: lay the lesson out from the files by fixed rules (as the old lesson maker did)
+    var Q = window.BVQ; if (!Q || !Q.buildLesson) return;
+    var items = Q.buildLesson(title || ST.title || 'This lesson', GEN.objectives, lines.length ? lines : null, null);
+    ST.questions = items.map(function (x) { var k = x.kind === 'mcq' || x.kind === 'tf' || x.kind === 'info' ? x.kind : 'short', q = newQ(k, x.section || 'Explore');
+      q.prompt = x.prompt || ''; q.marks = k === 'info' ? 0 : x.marks || 1; q.image = x.image || ''; q.model = x.scheme || ''; q.explanation = x.explanation || ''; q.rubric = x.rubric || ''; q.ai = true;
+      if (k === 'mcq' || k === 'tf') { q.options = (x.options || []).slice(); q.correct = x.correct == null ? -1 : x.correct; } return q; });
+    if (!ST.title.trim()) ST.title = title; ST.changed = true; SEL = 0; draw();
+    toastDone({ n: ST.questions.length, rule: true });
+  }
+  function toastDone(r) {
+    var n = document.createElement('div'); n.className = 'bd-ov'; n.innerHTML = '<div role="status"><h2>✨ ' + (r.rule ? 'Laid out from your files' : 'Built') + '</h2><p>' + r.n + ' items' + (r.marks ? ', ' + r.marks + ' marks' : '') + (r.pics ? ', ' + r.pics + ' with pictures' : '') + '.</p>' +
+      '<p>Each item is marked <b>🔎 check me</b> until you open it. Read every question, answer key and picture: ' + (r.rule ? 'the questions are general prompts and need your own wording and marking points.' : 'AI drafts can contain mistakes.') + ' Then press <b>Preview and save</b>.</p><div class="acts"><button class="btn main" type="button">Start checking</button></div></div>';
+    n.querySelector('button').onclick = function () { n.remove(); }; document.body.appendChild(n); n.querySelector('button').focus();
   }
 
   /* ================================================================ saving */
@@ -282,7 +454,11 @@
             add = ST.classes.filter(function (c) { return have.indexOf(c) < 0; }), drop = have.filter(function (c) { return mine.indexOf(c) >= 0 && ST.classes.indexOf(c) < 0; });
           return Promise.all([add.length ? S.db.from('quiz_classes').insert(add.map(function (c) { return { quiz_id: qid, class_id: c, published: true, published_at: new Date().toISOString(), published_by: ME.user.id }; })).then(must) : null,
             drop.length ? S.db.from('quiz_classes').delete().eq('quiz_id', qid).in('class_id', drop).then(must) : null]); })
-        .then(function () { return qid; });
+        .then(function () {   // admin lessons on the main site also get an entry in the Learning centre (as the old lesson maker did)
+          if (!(IS_ADMIN && ST.cat === 'lesson')) return qid;
+          var marks = ST.questions.reduce(function (a, q) { return a + (q.kind === 'info' ? 0 : +q.marks || 0); }, 0);
+          return S.db.from('lessons').upsert({ external_id: 'IL-' + qid, title: row.title, summary: (row.instructions || '').split('\n')[0] || 'Interactive lesson', url: '/lesson/#' + qid, max_marks: marks, published: HAS_MAIN ? !!ST.main : false }, { onConflict: 'external_id' }).then(function () { return qid; }, function () { return qid; });
+        });
     });
   }
   function done(id) {
