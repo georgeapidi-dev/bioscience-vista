@@ -976,6 +976,7 @@
     if (args[0]) return quizEdit(p, args[0]);
     S.db.from('quizzes').select('id,title,published,due_at,show_results,category,created_by,topic_id' + (QSUBJ ? ',subject' : '') + ', quiz_classes(class_id), quiz_questions(question_id)').neq('category', 'lesson').order('created_at', { ascending: false }).then(function (r) {
       if (TEACH) r.data = (r.data || []).filter(function (q) { return (!ME.admin && q.created_by === ME.user.id) || q.quiz_classes.some(function (x) { return CLASSES.some(function (c) { return c.id === x.class_id; }); }); });
+      r.data = (r.data || []).filter(function (q) { return !(/^Practice: /.test(q.title || '') && !(q.quiz_classes || []).length && q.created_by !== ME.user.id); });   // students' own practice sets (migration 039) stay out of this list
       var cn = {}; CLASSES.forEach(function (c) { cn[c.id] = c.name; });
       // Grades 6 to 10: every quiz and exam belongs to Biology, Chemistry or Physics; the buttons show one subject at a time
       var rows = r.data || [], sOf = function (q) { return mypQuiz(q) ? quizSubj(q) : ''; }, any = rows.some(mypQuiz), pick = any ? (quizzes.pick || '') : '';

@@ -39,7 +39,11 @@
   function isPic(v) { return /^data:image\//.test(v || ''); }
 
   /* text with **bold**, bullet lines, links; YouTube links become a video */
-  function rich(t) {
+  function rich(t) {   // + pictures, video, audio and graphs added in the builder
+    var md = window.BVT && BVT.media ? BVT.media(t) : [];
+    return richText(t) + (md.length ? BVT.mediaHtml(md) : '');
+  }
+  function richText(t) {
     if (window.BVT) t = BVT.text(t);
     return String(t || '').split(/\n{2,}/).map(function (para) {
       var lines = para.split('\n');

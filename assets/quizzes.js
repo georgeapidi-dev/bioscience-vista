@@ -7,7 +7,8 @@
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
   function route() { clearInterval(timer); clearInterval(beat); if (TM) { TM.stop(); TM = null; } if (GUARD) GUARD.off(); var id = location.hash.slice(1); return id ? open(id) : list(); }
-  function fail(r) { app.innerHTML = '<section class="panel"><p class="msg">' + E(S.nice(r.error || r)) + '</p><p><a href="#">← All ' + NOUN + 's</a></p></section>'; }
+  var BACK = '#';   // practice sets (migration 039) lead back to Practice and revision
+  function fail(r) { app.innerHTML = '<section class="panel"><p class="msg">' + E(S.nice(r.error || r)) + '</p><p><a href="' + BACK + '">← All ' + NOUN + 's</a></p></section>'; }
 
   // the sets for my classes; each says its subject (Biology, Chemistry or Physics) from migration 036 on, before it the subject is read from the topic and title
   function quizRows(withSubject) {
@@ -81,6 +82,7 @@
       S.db.from('quiz_attempts').select('*').eq('quiz_id', qid).eq('student_id', ME.user.id).order('started_at', { ascending: false })
     ]).then(function (x) {
       var q = x[0].data, at = x[1].data || [];
+      BACK = q && q.practice ? '/practice/#results' : '#';
       if (!q) {   // a quiz set for another class or level (e.g. the HL version for an SL student): go to the version set for this student
         if (ME.staff) return fail((EXAM ? 'Exam' : 'Quiz') + ' not found.');
         return S.db.from('quiz_attempts').select('quiz_id, quizzes!inner(id,category,published)').eq('student_id', ME.user.id).eq('status', 'in_progress').then(function (r) {
@@ -99,11 +101,11 @@
       }
       go();
       function go() {
-      if (live) { if (rules(q).seb && !inSEB()) { app.innerHTML = '<section class="panel"><h2>' + E(q.title) + '</h2><p>This ' + NOUN + ' can only be continued in Safe Exam Browser.</p><div class="acts"><a class="btn main" href="' + E(sebLink()) + '">Open in Safe Exam Browser</a><a class="btn" href="#">Back</a></div></section>'; return; } return paper(q, live.id); }
+      if (live) { if (rules(q).seb && !inSEB()) { app.innerHTML = '<section class="panel"><h2>' + E(q.title) + '</h2><p>This ' + NOUN + ' can only be continued in Safe Exam Browser.</p><div class="acts"><a class="btn main" href="' + E(sebLink()) + '">Open in Safe Exam Browser</a><a class="btn" href="' + BACK + '">Back</a></div></section>'; return; } return paper(q, live.id); }
       if (done.length && !(canStart && new URLSearchParams(location.search).get('again'))) return review(q, done[0], canStart);
       app.innerHTML = '<section class="panel"><p class="label">' + (EXAM ? 'Exam' : 'Quiz') + '</p><h2>' + E(q.title) + '</h2>' + (q.instructions ? '<p>' + E(q.instructions) + '</p>' : '') +
         (EXAM ? '<p class="panel tint small"><b>Exam conditions.</b> Work on your own. Once you start, the timer keeps running even if you close the page, and the exam is handed in automatically when time runs out.</p>' : '') + '<ul class="small"><li>' + (q.time_limit_minutes ? 'You have <b>' + q.time_limit_minutes + ' minutes</b>. The timer keeps running if you close the page.' : 'There is no time limit.') + '</li><li>Attempts allowed: ' + q.max_attempts + ' (used ' + at.length + ')</li><li>Your answers are saved as you go, so you can carry on if your device switches off. Press <b>Submit</b> when you finish.</li></ul>' +
-        '<div class="acts"><button class="btn main" id="go" type="button">' + (EXAM ? 'Start exam' : 'Start quiz') + '</button><a class="btn" href="#">Back</a></div><p class="msg" id="m"></p></section>';
+        '<div class="acts"><button class="btn main" id="go" type="button">' + (EXAM ? 'Start exam' : 'Start quiz') + '</button><a class="btn" href="' + BACK + '">Back</a></div><p class="msg" id="m"></p></section>';
       if (window.BVTimer) BVTimer.peek(S.db, 'quiz', q.id).then(function (t) {   // the time allowance (the teacher can change it for a class)
         var li = app.querySelector('ul.small li'); if (!t || !li) return;
         li.innerHTML = '⏱ You have <b>' + t.minutes + ' minute' + (t.minutes === 1 ? '' : 's') + '</b>. The timer starts when you press Start. ' +
@@ -112,7 +114,7 @@
       if (ul) ul.insertAdjacentHTML('beforeend', '<li><b>Stay on this page.</b> ' + (R.fullscreen && fsOK() ? 'The ' + NOUN + ' opens in full screen. ' : '') + 'Leaving the page, another tab or another window is recorded and your teacher can see it.' +
         (R.mode === 'autosubmit' ? ' If you leave ' + R.max + ' time' + (R.max > 1 ? 's' : '') + ', it is handed in automatically.' : '') + ' Copying and pasting are switched off.</li>');
       if (R.seb && !inSEB()) {
-        app.querySelector('.acts').innerHTML = '<a class="btn main" href="' + E(sebLink()) + '">Open in Safe Exam Browser</a><a class="btn" href="https://safeexambrowser.org/download_en.html" target="_blank" rel="noopener">Download Safe Exam Browser</a><a class="btn" href="#">Back</a>';
+        app.querySelector('.acts').innerHTML = '<a class="btn main" href="' + E(sebLink()) + '">Open in Safe Exam Browser</a><a class="btn" href="https://safeexambrowser.org/download_en.html" target="_blank" rel="noopener">Download Safe Exam Browser</a><a class="btn" href="' + BACK + '">Back</a>';
         app.querySelector('#m').textContent = 'This ' + NOUN + ' can only be done in Safe Exam Browser. Install it (free), then press Open in Safe Exam Browser and sign in there.';
         return;
       }
@@ -220,7 +222,7 @@
              x.kind !== 'short' && md === 'dropdown' ? '<select class="qdrop" name="' + name + '"><option value="">Choose an answer…</option>' + opts.map(function (o, j) { return '<option value="' + j + '"' + (String(v) === String(j) ? ' selected' : '') + '>' + 'ABCDEFGH'.charAt(j) + '. ' + E(o) + '</option>'; }).join('') + '</select>' :
              x.kind === 'short' ? '<textarea name="' + name + '" rows="' + (x.marks >= 6 ? 12 : x.marks >= 3 ? 7 : 3) + '" placeholder="Type your answer' + (x.marks >= 3 ? ' (worth ' + x.marks + ' marks: give ' + x.marks + ' clear points)' : '') + '">' + E(v || '') + '</textarea>' :
               opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"' + (String(v) === String(j) ? ' checked' : '') + '> <b>' + 'ABCDEFGH'.charAt(j) + '.</b> ' + E(o) + '</label>'; }).join('')) + '</fieldset>';
-        }).join('') + '<div class="acts"><button class="btn main" type="submit">Submit answers</button><a class="btn" href="#">Save and leave</a></div><p class="msg" id="m" role="alert"></p></form>';
+        }).join('') + '<div class="acts"><button class="btn main" type="submit">Submit answers</button><a class="btn" href="' + BACK + '">Save and leave</a></div><p class="msg" id="m" role="alert"></p></form>';
       var f = app.querySelector('#qf'), pads = {}, QT = {};
       qs.forEach(function (x) {   // the ten automatically marked kinds (site_assets/qtypes.js): the answer is kept as a JSON string
         var hq = f.querySelector('[data-qt="' + x.question_id + '"]'); if (!hq) return; var sv = saved[x.question_id];
@@ -288,7 +290,7 @@
       var pc = S.pct(+a.score, +a.max_score);
       app.innerHTML = '<section class="panel tint"><p class="label">' + E(q.title) + '</p><h2>' + (hide ? 'Submitted ✓' : a.status === 'needs_marking' ? 'Submitted: ' + E(a.score) + ' / ' + E(a.max_score) + ' so far' : 'Your score: ' + E(a.score) + ' / ' + E(a.max_score) + (pc != null ? ' (' + pc + '%)' : '') + (T.levelPill ? T.levelPill(a.score, a.max_score, [q.title, q.topics && q.topics.name].concat((q.quiz_classes || []).map(function (c) { return c.classes ? c.classes.name + ' ' + (c.classes.programme || '') : ''; })).join(' | ')) : '')) + '</h2>' +
         (hide ? '<p>Your answers are saved. Your teacher will check them and release your mark; it will appear here and on your dashboard.</p>' : a.status === 'needs_marking' ? '<p>Your written answers will be marked by your teacher. Your total will update on your dashboard.</p>' : '') +
-        '<div class="acts"><a class="btn sm" href="#">All ' + NOUN + 's</a><a class="btn sm" href="/dashboard/">My dashboard</a>' + (canRetry ? '<a class="btn main sm" href="?again=1#' + q.id + '">Try again</a>' : '') + (inSEB() ? '<a class="btn main sm" href="/?seb=quit">Close Safe Exam Browser</a>' : '') + '</div></section>' +
+        '<div class="acts"><a class="btn sm" href="' + BACK + '">All ' + NOUN + 's</a><a class="btn sm" href="/dashboard/">My dashboard</a>' + (canRetry ? '<a class="btn main sm" href="?again=1#' + q.id + '">Try again</a>' : '') + (inSEB() ? '<a class="btn main sm" href="/?seb=quit">Close Safe Exam Browser</a>' : '') + '</div></section>' +
         (hide ? '' : qs.map(function (x, i) { var d = by[x.question_id] || {}, given = (a.answers || {})[x.question_id];
           var ok = d.got != null && +d.got === +d.max, part = d.got != null && +d.got > 0 && !ok;
           return '<article class="q ' + (d.got == null ? '' : ok ? 'good' : part ? 'part' : 'bad') + '"><div>' + (/^\d+\s*(\([a-z]\)|\.\s)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + T.rich(x.prompt, true) + ' <span class="pill">' + (d.got == null ? 'to be marked' : E(d.got) + ' / ' + E(d.max)) + '</span></div>' +

@@ -6,14 +6,19 @@
   /* answer style is kept with the question text as a last line such as [[answer:graph|Temperature / °C|Rate / s⁻¹]] */
   var MARK = /\n?\[\[answer:(dropdown|graph|draw|annotate)((?:\|[^\]|]*)*)\]\]\s*$/;
   T.MODES = { dropdown: 'Drop-down list', graph: 'Draw a graph', draw: 'Draw a diagram', annotate: 'Label / annotate the picture' };
+  /* pictures, video, audio, graphs and drawings are kept with the question text as lines such as [[media:%7B%22t%22...%7D]] */
+  var MEDIA = /^\[\[media:([^\]]+)\]\]$/;
+  function pullMedia(text) { var media = [], keep = String(text).split('\n').filter(function (l) { var m = MEDIA.exec(l.trim()); if (!m) return true; try { media.push(JSON.parse(decodeURIComponent(m[1]))); } catch (e) {} return false; }); return { text: keep.join('\n').replace(/\s+$/, ''), media: media }; }
   T.parse = function (prompt) {
-    var p = String(prompt || ''), m = MARK.exec(p);
-    if (!m) return { text: p, mode: '', x: '', y: '' };
-    var bits = m[2].split('|').slice(1);
-    return { text: p.slice(0, m.index).replace(/\s+$/, ''), mode: m[1], x: bits[0] || '', y: bits[1] || '' };
+    var p = String(prompt || ''), m = MARK.exec(p), out;
+    if (!m) { out = pullMedia(p); return { text: out.text, media: out.media, mode: '', x: '', y: '' }; }
+    var bits = m[2].split('|').slice(1); out = pullMedia(p.slice(0, m.index));
+    return { text: out.text, media: out.media, mode: m[1], x: bits[0] || '', y: bits[1] || '' };
   };
-  T.join = function (text, mode, x, y) {
-    text = T.parse(text).text;   // never stack two markers
+  T.mediaLines = function (media) { return (media || []).filter(Boolean).map(function (x) { return '[[media:' + encodeURIComponent(JSON.stringify(x)) + ']]'; }).join('\n'); };
+  T.join = function (text, mode, x, y, media) {
+    var pr = T.parse(text); text = pr.text;   // never stack two markers; media kept unless new media are given
+    var ml = T.mediaLines(media || pr.media); if (ml) text += '\n' + ml;
     if (!mode) return text;
     return text + '\n[[answer:' + mode + (mode === 'graph' ? '|' + String(x || '').replace(/[|\]]/g, '') + '|' + String(y || '').replace(/[|\]]/g, '') : '') + ']]';
   };
@@ -38,7 +43,59 @@
       para.push(l);
     });
     flushP(); if (buf.length) out.push(T.table(buf));
+    var md = T.parse(prompt).media; if (md.length) out.push(T.mediaHtml(md));
     return out.join('');
+  };
+  T.media = function (prompt) { return T.parse(prompt).media; };
+
+  /* ---------- media in questions: picture, video (YouTube or a file), audio, graph from data, drawing ---------- */
+  var YT = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([\w-]{11})/;
+  T.ytId = function (u) { var m = YT.exec(String(u || '')); return m ? m[1] : ''; };
+  var safe = function (u) { u = String(u || ''); return /^(https?:\/\/|data:image\/)/.test(u) ? u : ''; };
+  T.mediaHtml = function (list) {
+    return '<div class="qmedia">' + (list || []).map(function (m) {
+      var cap = m.cap ? '<figcaption>' + fmt(m.cap) + '</figcaption>' : '', src = safe(m.src);
+      if (m.t === 'image' || m.t === 'drawing') return src ? '<figure class="qm qm-img"><img src="' + E(src) + '" alt="' + E(m.alt || m.cap || 'Picture for this question') + '" loading="lazy">' + cap + '</figure>' : '';
+      if (m.t === 'video') { var y = T.ytId(src); return y ? '<figure class="qm qm-vid"><div class="qm-frame"><iframe src="https://www.youtube-nocookie.com/embed/' + y + '?rel=0' + (m.start ? '&start=' + (+m.start | 0) : '') + '" title="' + E(m.cap || 'Video for this question') + '" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>' + cap + '</figure>'
+        : src ? '<figure class="qm qm-vid"><video controls preload="metadata" playsinline src="' + E(src) + '"></video>' + cap + '</figure>' : ''; }
+      if (m.t === 'audio') return src ? '<figure class="qm qm-aud"><span aria-hidden="true">🔊</span><audio controls preload="metadata" src="' + E(src) + '"></audio>' + cap + '</figure>' : '';
+      if (m.t === 'graph') return '<figure class="qm qm-graph">' + T.graphSvg(m) + cap + '</figure>';
+      return '';
+    }).join('') + '</div>';
+  };
+  /* a graph drawn from a small data table: line, bar or scatter; several series; axes with units */
+  var COLS = ['#2563eb', '#dc2626', '#059669', '#d97706', '#7c3aed', '#db2777'];
+  function nice(lo, hi) {
+    if (!(hi > lo)) { hi = lo + 1; } var span = hi - lo, step = Math.pow(10, Math.floor(Math.log10(span / 5))), f = span / 5 / step;
+    step *= f > 5 ? 10 : f > 2 ? 5 : f > 1 ? 2 : 1; return { lo: Math.floor(lo / step) * step, hi: Math.ceil(hi / step) * step, step: step };
+  }
+  var num = function (v) { var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : null; };
+  var lab = function (n) { return Math.abs(n) >= 1e5 || (Math.abs(n) < 1e-3 && n) ? n.toExponential(1) : +n.toFixed(6) + ''; };
+  T.graphSvg = function (g) {
+    var rows = (g.rows || []).filter(function (r) { return r && r.length > 1 && String(r[0]).trim() !== ''; }), ser = (g.series && g.series.length ? g.series : ['']).slice(0, 6), kind = g.kind || 'line';
+    var W = 640, H = 380, L = 70, R = 18, Tp = g.title ? 34 : 16, B = 58, pw = W - L - R, ph = H - Tp - B;
+    if (!rows.length) return '<p class="small muted">(No data for this graph yet.)</p>';
+    var xs = rows.map(function (r) { return num(r[0]); }), cat = kind === 'bar' || xs.some(function (x) { return x == null; });
+    var ys = []; rows.forEach(function (r) { ser.forEach(function (s, k) { var v = num(r[k + 1]); if (v != null) ys.push(v); }); });
+    var yr = nice(Math.min(0, Math.min.apply(null, ys.length ? ys : [0])), Math.max.apply(null, ys.length ? ys : [1]));
+    var xr = cat ? null : nice(g.zero === false ? Math.min.apply(null, xs) : Math.min(0, Math.min.apply(null, xs)), Math.max.apply(null, xs));
+    var X = function (i) { return cat ? L + pw * (i + 0.5) / rows.length : L + pw * (xs[i] - xr.lo) / (xr.hi - xr.lo); }, Y = function (v) { return Tp + ph - ph * (v - yr.lo) / (yr.hi - yr.lo); };
+    var o = '<svg class="qgraph" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + E((g.title || 'Graph') + ': ' + (g.y || 'y') + ' against ' + (g.x || 'x')) + '" style="width:100%;max-width:640px;height:auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0">';
+    if (g.title) o += '<text x="' + (W / 2) + '" y="22" text-anchor="middle" font-size="15" font-weight="700" fill="#172033">' + E(g.title) + '</text>';
+    for (var v = yr.lo; v <= yr.hi + yr.step / 2; v += yr.step) { var yy = Y(v); o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + yy + '" y2="' + yy + '" stroke="#e2e8f0"/><text x="' + (L - 6) + '" y="' + (yy + 4) + '" text-anchor="end" font-size="11" fill="#475569">' + lab(v) + '</text>'; }
+    if (cat) rows.forEach(function (r, i) { o += '<text x="' + X(i) + '" y="' + (Tp + ph + 16) + '" text-anchor="middle" font-size="11" fill="#475569">' + E(String(r[0]).slice(0, 14)) + '</text>'; });
+    else for (var u = xr.lo; u <= xr.hi + xr.step / 2; u += xr.step) { var xx = L + pw * (u - xr.lo) / (xr.hi - xr.lo); o += '<line x1="' + xx + '" x2="' + xx + '" y1="' + Tp + '" y2="' + (Tp + ph) + '" stroke="#f1f5f9"/><text x="' + xx + '" y="' + (Tp + ph + 16) + '" text-anchor="middle" font-size="11" fill="#475569">' + lab(u) + '</text>'; }
+    o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(Math.max(yr.lo, 0)) + '" y2="' + Y(Math.max(yr.lo, 0)) + '" stroke="#334155" stroke-width="1.5"/><line x1="' + L + '" x2="' + L + '" y1="' + Tp + '" y2="' + (Tp + ph) + '" stroke="#334155" stroke-width="1.5"/>';
+    ser.forEach(function (s, k) {
+      var c = COLS[k % COLS.length], pts = rows.map(function (r, i) { var val = num(r[k + 1]); return val == null ? null : [X(i), Y(val)]; });
+      if (kind === 'bar') { var bw = pw / rows.length * 0.8 / ser.length; pts.forEach(function (p, i) { if (!p) return; var x0 = L + pw * i / rows.length + pw / rows.length * 0.1 + bw * k, y0 = Y(Math.max(yr.lo, 0)); o += '<rect x="' + x0 + '" y="' + Math.min(p[1], y0) + '" width="' + bw + '" height="' + Math.abs(y0 - p[1]) + '" fill="' + c + '" rx="2"/>'; }); }
+      else { var ok = pts.filter(Boolean); if (kind === 'line' && ok.length > 1) o += '<polyline fill="none" stroke="' + c + '" stroke-width="2.4" points="' + ok.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ') + '"/>';
+        ok.forEach(function (p) { o += kind === 'scatter' ? '<g stroke="' + c + '" stroke-width="2.2"><line x1="' + (p[0] - 5) + '" y1="' + (p[1] - 5) + '" x2="' + (p[0] + 5) + '" y2="' + (p[1] + 5) + '"/><line x1="' + (p[0] - 5) + '" y1="' + (p[1] + 5) + '" x2="' + (p[0] + 5) + '" y2="' + (p[1] - 5) + '"/></g>' : '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3.5" fill="' + c + '"/>'; }); }
+    });
+    o += '<text x="' + (L + pw / 2) + '" y="' + (H - 12) + '" text-anchor="middle" font-size="13" font-weight="600" fill="#172033">' + E(g.x || '') + '</text>';
+    o += '<text transform="translate(16 ' + (Tp + ph / 2) + ') rotate(-90)" text-anchor="middle" font-size="13" font-weight="600" fill="#172033">' + E(g.y || '') + '</text>';
+    if (ser.length > 1 || ser[0]) o += ser.map(function (s, k) { return '<g transform="translate(' + (L + 10 + k * 120) + ' ' + (Tp + 8) + ')"><rect width="12" height="12" rx="2" fill="' + COLS[k % COLS.length] + '"/><text x="16" y="10" font-size="11" fill="#172033">' + E(String(s).slice(0, 16)) + '</text></g>'; }).join('');
+    return o + '</svg>';
   };
   T.hasTable = function (prompt) { return T.text(prompt).split('\n').some(isRow); };
   /* tab-separated text (copied from Word or Excel) → | a | b | rows */
