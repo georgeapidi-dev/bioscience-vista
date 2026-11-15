@@ -9,8 +9,8 @@
   var TABS = [['requests', '🙋 Join requests'], ['members', '👥 Members & access'], ['teachers', '🧑‍🏫 Teachers'], ['payments', '💳 Payments'], ['settings', '⚙️ Prices & settings'], ['schools', '🏫 Schools'], ['reviews', '⭐ Reviews'], ['admins', '🔑 Admins']];
   function draw() {
     app.innerHTML = '<div class="row2 cband" style="--k:#7c3aed"><div><p class="label">Admin</p><h2 style="margin:0">Learnova admin</h2><p class="small">Approvals, members, teachers, payments and settings</p></div><div class="cta"><a class="btn sm" href="/staff/">🌐 Main site</a><a class="btn sm" href="/teach/">🏫 My classes</a></div></div>' +
-      '<div class="cta" role="tablist">' + TABS.map(function (t) { return '<button type="button" class="btn sm' + (TAB === t[0] ? ' main' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="ais" class="small" style="margin:10px 0;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:#f8fafc"></div><section class="panel grp" id="tab"><p class="muted small">Loading…</p></section>';
-    aiStatus(false);
+      '<div class="cta" role="tablist">' + TABS.map(function (t) { return '<button type="button" class="btn sm' + (TAB === t[0] ? ' main' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="ais" class="small" style="margin:10px 0;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:#f8fafc"></div><div id="ems" class="small" style="margin:10px 0;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:#f8fafc"></div><section class="panel grp" id="tab"><p class="muted small">Loading…</p></section>';
+    aiStatus(false); mailStatus(null);
     app.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { TAB = b.getAttribute('data-t'); history.replaceState(null, '', '#' + TAB); draw(); }; });
     ({ requests: requests, members: members, teachers: teachers, payments: payments, settings: settings, schools: schools, reviews: reviews, admins: admins })[TAB](app.querySelector('#tab'));
   }
@@ -35,6 +35,33 @@
     S.db.functions.invoke('ai-status', { body: {} }).then(function (res) { var d = res.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } }
       AIS = d && d.state ? d : { ok: false, state: 'error', message: 'Could not check the AI helper just now.' }; show(AIS);
     }, function () { show({ ok: false, state: 'error', message: 'Could not check the AI helper just now.' }); });
+  }
+  // Email notices (migration 037 and the server function send-email): are they switched on, how many wait, were sent or failed
+  var EMS = null;
+  function mailStatus(act) {
+    var box = app.querySelector('#ems'); if (!box) return;
+    var show = function (d) {
+      if (!d || d.off) { box.style.background = '#f8fafc'; box.style.borderColor = 'var(--line)';
+        box.innerHTML = '<b>⚪ Email notices: not switched on yet</b> · <span class="muted">Approval requests and messages still appear on the site. Emails start once the email service is set up.</span>'; return; }
+      var ok = d.configured && !d.failed, col = !d.configured ? '#b45309' : ok ? '#15803d' : '#b91c1c', bg = !d.configured ? '#fffbeb' : ok ? '#f0fdf4' : '#fef2f2';
+      box.style.background = bg; box.style.borderColor = col;
+      box.innerHTML = '<b style="color:' + col + '">' + (!d.configured ? '🟠 Email notices: waiting for the email service key' : ok ? '🟢 Email notices: working' : '🔴 Email notices: some emails failed') + '</b> · ' +
+        (d.sent || 0) + ' sent, ' + (d.waiting || 0) + ' waiting, ' + (d.failed || 0) + ' failed.' +
+        (d.configured && d.test_sender ? ' <span class="muted">Using the test sender: emails reach only the address of the email service account until the site domain is verified.</span>' : '') +
+        (d.last_error && (d.failed || d.waiting) ? ' <span class="muted">Last problem: ' + E(d.last_error) + '</span>' : '') +
+        ' <button type="button" class="btn sm" id="emt" style="margin-left:6px"' + (d.configured ? '' : ' disabled') + '>Send me a test email</button> <button type="button" class="btn sm" id="emc">Check again</button>' +
+        (d.note ? ' <b>' + E(d.note) + '</b>' : '');
+      box.querySelector('#emc').onclick = function () { mailStatus('check'); };
+      box.querySelector('#emt').onclick = function () { mailStatus('test'); };
+    };
+    if (EMS && !act) return show(EMS);
+    box.innerHTML = '<span class="muted">' + (act === 'test' ? 'Sending a test email…' : 'Checking email notices…') + '</span>';
+    if (!S.db.functions) return show({ off: true });
+    S.db.functions.invoke('send-email', { body: act === 'test' ? { test: true } : { status: true } }).then(function (res) { var d = res.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } }
+      if (!d || res.error || d.error) { EMS = { off: true }; return show(EMS); }
+      if (act === 'test') d.note = d.sent_now ? 'Test email sent: look in your inbox.' : 'The test email was not sent.';
+      EMS = d; show(d);
+    }, function () { EMS = { off: true }; show(EMS); });
   }
   // one name per school: merge spellings teachers typed differently
   function schools(t) {

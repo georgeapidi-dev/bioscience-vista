@@ -1,12 +1,12 @@
 /* Assessment centre · Learnova: exam-style questions (/quizzes/) and examinations (/exams/). Marking is done on the server by submit_quiz. */
 (function () {
   var T = window.BVT;
-  var S = window.BVS, E = S.E, app = document.getElementById('app'), timer = null, beat = null, GUARD = null, ME;
+  var S = window.BVS, E = S.E, app = document.getElementById('app'), timer = null, beat = null, GUARD = null, TM = null, ME;
   var EXAM = app.getAttribute('data-mode') === 'exam', NOUN = EXAM ? 'examination' : 'question set', HOME = EXAM ? '/exams/' : '/quizzes/';
   S.guard(app).then(function (me) { ME = me; route(); window.addEventListener('hashchange', route); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
-  function route() { clearInterval(timer); clearInterval(beat); if (GUARD) GUARD.off(); var id = location.hash.slice(1); return id ? open(id) : list(); }
+  function route() { clearInterval(timer); clearInterval(beat); if (TM) { TM.stop(); TM = null; } if (GUARD) GUARD.off(); var id = location.hash.slice(1); return id ? open(id) : list(); }
   function fail(r) { app.innerHTML = '<section class="panel"><p class="msg">' + E(S.nice(r.error || r)) + '</p><p><a href="#">← All ' + NOUN + 's</a></p></section>'; }
 
   // the sets for my classes; each says its subject (Biology, Chemistry or Physics) from migration 036 on, before it the subject is read from the topic and title
@@ -104,6 +104,10 @@
       app.innerHTML = '<section class="panel"><p class="label">' + (EXAM ? 'Exam' : 'Quiz') + '</p><h2>' + E(q.title) + '</h2>' + (q.instructions ? '<p>' + E(q.instructions) + '</p>' : '') +
         (EXAM ? '<p class="panel tint small"><b>Exam conditions.</b> Work on your own. Once you start, the timer keeps running even if you close the page, and the exam is handed in automatically when time runs out.</p>' : '') + '<ul class="small"><li>' + (q.time_limit_minutes ? 'You have <b>' + q.time_limit_minutes + ' minutes</b>. The timer keeps running if you close the page.' : 'There is no time limit.') + '</li><li>Attempts allowed: ' + q.max_attempts + ' (used ' + at.length + ')</li><li>Your answers are saved as you go, so you can carry on if your device switches off. Press <b>Submit</b> when you finish.</li></ul>' +
         '<div class="acts"><button class="btn main" id="go" type="button">' + (EXAM ? 'Start exam' : 'Start quiz') + '</button><a class="btn" href="#">Back</a></div><p class="msg" id="m"></p></section>';
+      if (window.BVTimer) BVTimer.peek(S.db, 'quiz', q.id).then(function (t) {   // the time allowance (the teacher can change it for a class)
+        var li = app.querySelector('ul.small li'); if (!t || !li) return;
+        li.innerHTML = '⏱ You have <b>' + t.minutes + ' minute' + (t.minutes === 1 ? '' : 's') + '</b>. The timer starts when you press Start. ' +
+          (EXAM ? 'It keeps running if you close the page, and the examination is handed in automatically when the time runs out.' : 'When the time is used up you can still finish: the extra time is recorded for your teacher.'); });
       var R = rules(q), ul = app.querySelector('ul.small');
       if (ul) ul.insertAdjacentHTML('beforeend', '<li><b>Stay on this page.</b> ' + (R.fullscreen && fsOK() ? 'The ' + NOUN + ' opens in full screen. ' : '') + 'Leaving the page, another tab or another window is recorded and your teacher can see it.' +
         (R.mode === 'autosubmit' ? ' If you leave ' + R.max + ' time' + (R.max > 1 ? 's' : '') + ', it is handed in automatically.' : '') + ' Copying and pasting are switched off.</li>');
@@ -206,7 +210,7 @@
       S.db.from('quiz_attempts').select('*').eq('id', attempt).maybeSingle().then(function (a) { var row = a.data || {}; build(Object.keys(local).length ? local : (row.answers || {}), row); }, function () { build(local, {}); });
       function build(saved, row) {
       var secs = qs.length ? qs[0].seconds_left : null, MODE = {};
-      app.innerHTML = '<form id="qf" class="grp"><div class="row2 sticky-top"><div><p class="label">' + E(q.title) + '</p><b id="cnt"></b></div>' + (secs != null ? '<span class="timer" id="tm" aria-live="off"></span>' : '') + '</div>' +
+      app.innerHTML = '<form id="qf" class="grp"><div class="row2 sticky-top"><div><p class="label">' + E(q.title) + '</p><b id="cnt"></b></div>' + '<span class="timer" id="tm" role="timer" aria-live="off"></span></div>' +
         qs.map(function (x, i) {
           var name = 'q-' + x.question_id, opts = x.options || [], v = saved[x.question_id], md = T.parse(x.prompt).mode || (x.kind === 'short' && T.detect ? T.detect(T.text(x.prompt)) : ''), drawn = x.kind === 'short' && /^(graph|draw|annotate)$/.test(md);   /* a question that asks only for a graph or a drawing gets the tool as its answer, even when no answer style was set */
           MODE[x.question_id] = md;
@@ -243,7 +247,7 @@
       function submit(auto, why) {
         if (sent) return; var g = collect(), miss = qs.length - Object.keys(g).length;
         if (!auto && miss && !confirmInline(miss)) return;
-        sent = true; clearInterval(timer); clearInterval(beat); clearTimeout(pt); if (GUARD) GUARD.off(); app.querySelector('#m').className = 'msg'; app.querySelector('#m').textContent = why === 'left' ? 'Handing in because you left the ' + NOUN + ' too many times…' : auto ? 'Time is up. Submitting…' : 'Submitting…';
+        sent = true; clearInterval(timer); clearInterval(beat); clearTimeout(pt); if (TM) { TM.stop(); TM = null; } if (GUARD) GUARD.off(); app.querySelector('#m').className = 'msg'; app.querySelector('#m').textContent = why === 'left' ? 'Handing in because you left the ' + NOUN + ' too many times…' : auto ? 'Time is up. Submitting…' : 'Submitting…';
         S.db.rpc('submit_quiz', { attempt: attempt, given: g }).then(function (res) {
           // AI suggestions for written answers the rules could not mark (hybrid / AI mode only; the server decides and never charges for objective questions)
           if (!res.error && (q.feedback_mode || 'hybrid') !== 'rule' && S.db.functions) { try { S.db.functions.invoke('ai-mark', { body: { attempt: attempt } }).then(function () {}, function () {}).then(function () { return S.db.functions.invoke('result-feedback', { body: { attempt: attempt } }); }).then(function () { return S.db.functions.invoke('analyse', { body: { attempt: attempt } }); }).then(function () {}, function () {}); } catch (e) {} }
@@ -256,11 +260,16 @@
       var warned = false;
       function confirmInline(miss) { if (warned) return true; warned = true; var m = app.querySelector('#m'); m.className = 'msg'; m.textContent = miss + ' question' + (miss > 1 ? 's are' : ' is') + ' not answered. Press Submit again to hand in anyway.'; return false; }
       f.onsubmit = function (e) { e.preventDefault(); submit(false); };
-      if (secs != null) {
-        var end = Date.now() + secs * 1000, tm = app.querySelector('#tm');
-        var tick = function () { var s = Math.max(0, Math.round((end - Date.now()) / 1000)); tm.textContent = '⏱ ' + Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); tm.classList.toggle('low', s < 60); if (!s) submit(true); };
+      // The timer starts by itself. Examinations are handed in at zero; exam-style sets only warn, and the extra time is recorded (site_assets/tasktimer.js).
+      var tm = app.querySelector('#tm');
+      if (window.BVTimer) {
+        if (TM) TM.stop();
+        TM = BVTimer.start({ db: S.db, kind: 'quiz', ref: q.id, mount: tm, auto: EXAM, attempt: attempt, fallbackSeconds: secs, noun: NOUN, onZero: function () { if (EXAM) submit(true); } });
+      } else if (secs != null) {
+        var end = Date.now() + secs * 1000;
+        var tick = function () { var s = Math.max(0, Math.round((end - Date.now()) / 1000)); tm.textContent = '⏱ ' + Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); tm.classList.toggle('low', s < 60); if (!s && EXAM) submit(true); };
         tick(); timer = setInterval(tick, 1000);
-      }
+      } else tm.hidden = true;
       }
     });
   }

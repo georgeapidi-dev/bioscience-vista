@@ -59,7 +59,9 @@
     u.onend = function () { btn.textContent = '🔊 Listen'; }; btn.textContent = '⏹ Stop'; speechSynthesis.speak(u);
   }
 
+  var TMR = null;   // the lesson's timer starts by itself the first time the lesson is drawn (site_assets/tasktimer.js)
   function draw() {
+    if (!TMR && window.BVTimer && ATT && ATT.status === 'in_progress' && !preview) TMR = BVTimer.start({ db: S.db, kind: 'quiz', ref: id, attempt: ATT.id, minutes: 45, noun: 'lesson' });
     var st = steps(); if (step >= st.length) step = st.length - 1; if (step < 0) step = 0;
     var cur = st[step], mine = items.filter(function (x) { return (x.section || 'Explore') === cur; });
     var answered = function (s) { return items.filter(function (x) { return (x.section || 'Explore') === s && x.kind !== 'info'; }).every(function (x) { return ans[x.question_id] != null && ans[x.question_id] !== ''; }); };
@@ -226,6 +228,7 @@
     }).catch(function (e) { btn.disabled = false; msg(S.nice(e)); });
   }
   function done() {
+    if (TMR) { TMR.stop(); TMR = null; }
     var by = {}, show = Q.show_results || ATT.released, n = 0; (ATT.detail || []).forEach(function (d) { by[d.question_id] = d; });
     app.innerHTML = '<section class="panel tint"><p class="label">' + E(Q.title) + '</p><h2>' + (show ? 'Your mark: ' + E(ATT.score) + ' / ' + E(ATT.max_score) : 'Handed in ✓') + '</h2>' +
       (show ? '' : '<p>Well done for finishing. Your teacher will check your answers and release your mark; it will appear here and on your dashboard.</p>') +

@@ -64,6 +64,21 @@
   }).catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
   // My classes, joining a class (school or teacher first, then the class; no codes) and premium access
+  /* Missed and unfinished tasks (migration 037). The same list is sent once as a message; here it stays until the task is done. */
+  function reminders(box) {
+    if (!box) return;
+    S.db.rpc('my_reminders').then(function (r) {
+      var items = !r.error && Array.isArray(r.data) ? r.data : []; if (!items.length) return;
+      var missed = items.filter(function (t) { return t.reason === 'missed'; }).length, open = items.length - missed;
+      box.innerHTML = '<section class="panel" role="status" style="border-left:6px solid #f59e0b;background:linear-gradient(120deg,#fffbeb,#fff7ed);color:#431407"><h3 style="margin-top:0">⏰ Reminder: ' +
+        [missed ? missed + ' missed task' + (missed === 1 ? '' : 's') : '', open ? open + ' task' + (open === 1 ? '' : 's') + ' not finished' : ''].filter(Boolean).join(' and ') + '</h3>' +
+        items.slice(0, 8).map(function (t) {
+          return '<p style="margin:6px 0">' + (t.reason === 'missed' ? '<span class="pill" style="background:#fee2e2;color:#991b1b">Missed</span> ' : '<span class="pill" style="background:#fef3c7;color:#92400e">Not finished</span> ') +
+            (t.url ? '<a href="' + E(t.url) + '"><b>' + E(t.title) + '</b></a>' : '<b>' + E(t.title) + '</b>') + (t.due_at ? ' <span class="small">was due ' + E(S.when(t.due_at)) + '</span>' : '') +
+            (t.url ? ' <a class="btn sm main" href="' + E(t.url) + '" style="margin-left:6px">' + (t.reason === 'missed' ? 'Do it now' : 'Carry on') + '</a>' : '') + '</p>'; }).join('') +
+        (items.length > 8 ? '<p class="small">and ' + (items.length - 8) + ' more.</p>' : '') + '<p class="small" style="margin-bottom:0">Your work so far is saved. Each task has a timer that starts when you open it.</p></section>';
+    }, function () {});
+  }
   function classesPanel(me, box) {
     var a = me.access || {}, mine = a.classes || [];
     var link = function (c) { return c.slug ? '/' + c.slug + '/' : '/class/?id=' + c.id; };
@@ -263,7 +278,7 @@
     var fb = res.filter(function (r) { return r.teacher_feedback || r.ai_feedback; });
     var h = '<div class="row2"><div><p class="label">My dashboard</p><h2>Hello, ' + E(first) + ' 👋</h2><p class="muted small">' + E(me.classes.map(function (c) { return c.name; }).join(', ') || 'No class yet') + ' · ' + E(me.user.email) + '</p></div>' +
       '<div class="cta"><a class="btn main sm" href="/live/" style="background:#7c3aed;border-color:#7c3aed">🎥 Live lessons</a><a class="btn main sm" href="/board/" style="background:#0d9488;border-color:#0d9488">🖊 Whiteboard</a><a class="btn main sm" href="/check/" style="background:#ea580c;border-color:#ea580c" title="Answer the question your teacher sends during a lesson">⚡ Live Check</a><a class="btn sm" href="/learn/">Learning centre</a><a class="btn sm" href="/quizzes/">📝 Exam-style questions</a><a class="btn sm" href="/exams/">🧪 Examinations</a><button class="btn sm" type="button" id="so">Log out</button></div></div>';
-    h += '<div id="wblive"></div><div id="mycl"></div>';
+    h += '<div id="wblive"></div><div id="remind"></div><div id="mycl"></div>';
     h += '<div class="stats"><div class="stat"><span class="small muted">Overall score</span><b>' + (max ? Math.round(100 * got / max) + '%' : '–') + '</b></div>' +
       '<div class="stat"><span class="small muted">Lessons completed</span><b>' + done + ' / ' + prog.length + '</b></div>' +
       '<div class="stat"><span class="small muted">To do</span><b>' + (openTasks + todo.length) + '</b></div>' +
@@ -291,6 +306,7 @@
         if (r.error) { b.disabled = false; alert(S.nice(r.error)); return; }
         tasks.forEach(function (t) { if (t.id === b.getAttribute('data-done')) t.state = 'done'; }); draw(me, res, prog, quizzes, att, tasks); }); }; });
     classesPanel(me, app.querySelector('#mycl'));
+    if (!me.view) reminders(app.querySelector('#remind'));
     learningPlan(me, prog);
     reviseNext(me, prog);
     myLessons(me); reviewBox(me);
