@@ -36,6 +36,8 @@
     '.bd-ov .q{border:1px solid var(--line,#dde3ea);border-radius:14px;padding:12px;margin:10px 0;background:var(--card,#fff)}.bd-ov .res{font-weight:800;margin:6px 0 0}.bd-ov .res.good{color:#15803d}.bd-ov .res.bad{color:#b91c1c}' +
     '.bd-start{display:grid;gap:14px;margin:14px 0 16px}.bd-start h3{margin:0 0 8px;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:#64748b}.bd-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}@media (max-width:760px){.bd-tiles{grid-template-columns:1fr}}' +
     '.bd-tile{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line,#dde3ea);border-left:5px solid var(--k);border-radius:14px;background:var(--card,#fff);color:inherit;text-decoration:none;min-width:0}.bd-tile:hover,.bd-tile:focus-visible{border-color:var(--k);box-shadow:0 6px 18px rgba(15,23,42,.08);outline:none}.bd-tile .ic{grid-row:span 2;font-size:1.6rem;width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:color-mix(in srgb,var(--k) 12%,transparent)}.bd-tile b{font-size:1rem}.bd-tile>span:last-child{color:#64748b;font-size:.85rem}' +
+    '.bd-kinds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}.bd-kinds button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:2px;place-items:center;text-align:center;padding:10px;border:2px solid #e2e8f0;border-radius:14px;background:var(--card,#fff);font-weight:700}.bd-kinds button span{font-size:1.5rem}.bd-kinds button[aria-checked=true]{border-color:#4f46e5;background:#eef2ff;color:#312e81}.bd-kinds button:focus-visible{outline:3px solid #a5b4fc}@media (max-width:520px){.bd-kinds{grid-template-columns:1fr}}' +
+    '.bd-more{border:1px dashed #cbd5e1;border-radius:12px;padding:6px 10px;margin:8px 0;background:#fafbff}.bd-more>summary{cursor:pointer;font-size:.86rem;color:#475569;font-weight:600}.bd-more[open]>summary{margin-bottom:8px}' +
     '.bd-lib{display:grid;gap:10px}.bd-card{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border:1px solid var(--line,#dde3ea);border-left:6px solid var(--k);border-radius:14px;padding:10px 12px;background:var(--card,#fff)}.bd-card h4{margin:0}.bd-card .acts{display:flex;gap:6px;flex-wrap:wrap}@media (max-width:640px){.bd-card{grid-template-columns:1fr}}';
   var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   var missing038 = function (e) { return /main_site|questions_kind_check|violates check constraint|answers_teacher|row-level security/.test(String(e && (e.message || e.details) || e)); };
@@ -50,7 +52,7 @@
   function route() {
     var h = location.hash.replace(/^#/, '').split('/');
     if (h[0] === 'new') return start(CAT[h[1]] ? h[1] : 'quiz');
-    if (h[0] === 'import') { start('exam', true); return importDialog(); }
+    if (h[0] === 'import') { start('exam', true); return quick(false, 'import'); }
     if (h[0] === 'edit' && /^[0-9a-f-]{36}$/.test(h[1] || '')) return load(h[1]);
     library();
   }
@@ -98,7 +100,7 @@
   }
   function start(cat, quiet) {
     ST = { id: null, cat: cat, title: '', instructions: '', subject: '', time: '', attempts: cat === 'lesson' ? 3 : cat === 'exam' ? 1 : 2, show: cat !== 'exam', main: false, classes: [], questions: [newQ(cat === 'lesson' ? 'info' : 'mcq', cat === 'lesson' ? 'Question' : 'Section A')], changed: false };
-    SEL = 0; draw(); if (!quiet) genDialog();   // a new item starts with "Build it for me" (or a blank page)
+    SEL = 0; draw(); if (!quiet) quick();   // a new item starts with "Build it for me" (or a blank page)
   }
   function load(id) {
     app.innerHTML = '<p class="muted">Opening…</p>';
@@ -121,14 +123,14 @@
   function draw() {
     var K = CAT[ST.cat];
     app.innerHTML = '<div class="bd-top"><div><p class="label"><a href="#">← My assessments and lessons</a></p><h2>' + K[0] + ' ' + (ST.id ? 'Edit' : 'New') + ' ' + K[1].toLowerCase() + '</h2></div>' +
-      '<div class="acts"><button class="btn" type="button" id="gen" style="background:linear-gradient(120deg,#7c3aed,#db2777);color:#fff;border-color:transparent">✨ Build it for me</button><button class="btn" type="button" id="bank" style="background:linear-gradient(120deg,#0ea5e9,#22c55e);color:#fff;border-color:transparent">📚 Question bank</button><button class="btn" type="button" id="imp" style="background:linear-gradient(120deg,#ea580c,#f59e0b);color:#fff;border-color:transparent">📄 Import paper</button><button class="btn" type="button" id="pvall">👁 Preview as a student</button><button class="btn main" type="button" id="save">💾 Preview and save</button></div></div>' +
+      '<div class="acts"><button class="btn" type="button" id="gen" style="background:linear-gradient(120deg,#7c3aed,#db2777);color:#fff;border-color:transparent">✨ Add questions</button><button class="btn" type="button" id="bank" style="background:linear-gradient(120deg,#0ea5e9,#22c55e);color:#fff;border-color:transparent">📚 Question bank</button><button class="btn" type="button" id="pvall">👁 Preview as a student</button><button class="btn main" type="button" id="save">💾 Preview and save</button></div></div>' +
       '<div class="bd"><aside class="bd-col" aria-label="Questions"><h3>Items <span class="small muted" id="tot"></span></h3><div class="bd-list" id="list"></div>' +
       '<h3 style="margin-top:14px">＋ Add</h3><div class="bd-pal">' + KINDS.map(function (g, gi) { return '<details' + (gi === 0 ? ' open' : '') + '><summary>' + g[0] + '</summary>' + g[1].map(function (k) { return '<button type="button" data-add="' + k[0] + '">' + k[1] + ' ' + k[2] + '</button>'; }).join('') + '</details>'; }).join('') + '</div></aside>' +
       '<section class="bd-col" aria-label="Edit the item" id="ed"></section>' +
       '<aside class="bd-col" aria-label="Settings and preview"><h3>⚙️ Settings</h3><div id="set"></div><h3 style="margin-top:14px">👁 What the student sees</h3><div class="bd-pv" id="pv"></div></aside></div>';
     app.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = function () { var cur = ST.questions[SEL] || {}; ST.questions.splice(SEL + 1, 0, newQ(b.getAttribute('data-add'), cur.section || (ST.cat === 'lesson' ? 'Explore' : ''))); SEL++; ST.changed = true; list(); editor(); preview(); }; });
     app.querySelector('#pvall').onclick = function () { overlay(false); };
-    app.querySelector('#gen').onclick = function () { genDialog(); }; app.querySelector('#imp').onclick = function () { importDialog(); }; app.querySelector('#bank').onclick = bankDialog;
+    app.querySelector('#gen').onclick = function () { quick(!blankItems()); }; app.querySelector('#bank').onclick = bankDialog;
     app.querySelector('#save').onclick = function () { overlay(true); };
     settings(); list(); editor(); preview();
   }
@@ -148,6 +150,17 @@
 
   function pic(o) { return T && T.optPic ? T.optPic(o) : null; }
   function field(lab, html, hint) { return '<label class="bd-f"><span>' + lab + '</span>' + html + (hint ? '<small>' + hint + '</small>' : '') + '</label>'; }
+  /* simple view: the boxes most teachers never need are folded under "More options" (filled automatically); open stays open */
+  var OPEN = {};
+  function tuck(box, sels, label, key) {
+    var parts = sels.filter(Boolean).map(function (q) { var el = box.querySelector(q); return el && (el.closest('.bd-f') || el.closest('label') || el); }).filter(Boolean);
+    if (!parts.length) return;
+    var d = document.createElement('details'); d.className = 'bd-more'; d.open = !!OPEN[key]; d.innerHTML = '<summary>⚙️ ' + label + '</summary>'; d.ontoggle = function () { OPEN[key] = d.open; };
+    var holder = document.createElement('div'); holder.className = 'bd-row'; d.appendChild(holder);
+    var last = parts[parts.length - 1]; last.parentNode.insertBefore(d, last.nextSibling);
+    parts.forEach(function (el) { (el.querySelector && el.querySelector('#e-media, #e-ex, #s-i') ? d : holder).appendChild(el); });
+    var empty = [].slice.call(box.querySelectorAll('.bd-row')).filter(function (r) { return !r.children.length && r !== holder; }); empty.forEach(function (r) { r.remove(); });
+  }
   function settings() {
     var box = app.querySelector('#set'), K = CAT[ST.cat];
     box.innerHTML = field('Title', '<input id="s-t" value="' + E(ST.title) + '" placeholder="' + (ST.cat === 'lesson' ? 'e.g. Photosynthesis: how plants make food' : 'e.g. Grade 10 · Physics · Electromagnetism') + '">') +
@@ -158,6 +171,7 @@
       (ST.cat === 'lesson' ? '' : '<label class="chk"><input type="checkbox" id="s-r"' + (ST.show ? ' checked' : '') + '> Show scores straight after handing in (otherwise you release them)</label>') +
       '<fieldset style="margin-top:10px"><legend>Add to my classes</legend>' + (MYCLASSES.length ? MYCLASSES.map(function (c) { return '<label class="chk"><input type="checkbox" name="cl" value="' + c.id + '"' + (ST.classes.indexOf(c.id) >= 0 ? ' checked' : '') + '> ' + E(c.name) + '</label>'; }).join('') : '<p class="small muted">You have no classes yet. It stays in your library until you add it to a class.</p>') + '</fieldset>' +
       (IS_ADMIN && HAS_MAIN ? '<label class="chk" style="margin-top:8px"><input type="checkbox" id="s-main"' + (ST.main ? ' checked' : '') + '> 🌐 On the main site (admin only): every teacher can find it and add it to their classes</label>' : '');
+    tuck(box, ['#s-i', '#s-s', '#s-m', '#s-a', '#s-r'], 'More settings: ' + E(settingsLine()), 'set');
     var on = function (sel, fn) { var el = box.querySelector(sel); if (el) el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', function () { fn(el); ST.changed = true; }); };
     on('#s-t', function (el) { ST.title = el.value; }); on('#s-i', function (el) { ST.instructions = el.value; }); on('#s-s', function (el) { ST.subject = el.value; });
     on('#s-m', function (el) { ST.time = el.value; }); on('#s-a', function (el) { ST.attempts = el.value; }); on('#s-r', function (el) { ST.show = el.checked; }); on('#s-main', function (el) { ST.main = el.checked; });
@@ -165,6 +179,9 @@
     box.querySelectorAll('[name=cl]').forEach(function (c) { c.onchange = function () { ST.classes = [].map.call(box.querySelectorAll('[name=cl]:checked'), function (x) { return x.value; }); ST.changed = true; }; });
   }
 
+  function settingsLine() {
+    return (ST.time ? ST.time + ' min' : 'no time limit') + ' · ' + (ST.attempts || 1) + ' attempt' + (+ST.attempts > 1 ? 's' : '') + (ST.cat === 'lesson' ? '' : ' · ' + (ST.show ? 'scores shown at once' : 'you release the scores')) + (ST.subject ? ' · ' + ST.subject : '');
+  }
   function editor() {
     var box = app.querySelector('#ed'), q = ST.questions[SEL]; if (!q) { box.innerHTML = '<p class="muted">Add an item from the list on the left.</p>'; return; }
     var K = KN[q.kind], auto = QT && QT.has(q.kind);
@@ -186,6 +203,7 @@
     }
     if (auto) h += '<fieldset><legend>Answer</legend><div id="e-auto"></div><div id="e-prob" class="small" style="color:#b45309;margin-top:6px"></div></fieldset>';
     box.innerHTML = h;
+    tuck(box, ['#e-cr', '#e-df', ST.cat === 'lesson' ? null : '#e-sec', '#e-media', '#e-ex'], 'More options: section, MYP criterion, difficulty, video, sound, feedback', 'ed');
     var bind = function (sel, fn) { var el = box.querySelector(sel); if (el) el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', function () { fn(el.value); touch(); }); };
     bind('#e-sec', function (v) { q.section = v; }); bind('#e-cr', function (v) { q.crit = v; }); bind('#e-df', function (v) { q.diff = v; }); bind('#e-mk', function (v) { q.marks = Math.max(0, +v || 0); }); bind('#e-p', function (v) { q.prompt = v; }); bind('input#e-img', function (v) { q.image = String(v || '').trim(); if (q.kind === 'label' || q.kind === 'hotspot') { q.draft.image = q.image; editor(); } });
     bind('#e-ex', function (v) { q.explanation = v; }); bind('#e-mo', function (v) { q.model = v; }); bind('#e-pt', function (v) { q.points = v; }); bind('#e-ru', function (v) { q.rubric = v; }); bind('#e-ax', function (v) { q.axes = v; });
@@ -238,6 +256,7 @@
   }
   function overlay(saving) {
     var ov = document.createElement('div'); ov.className = 'bd-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Preview');
+    autoFix(); list(); editor(); settings();
     var inner = document.createElement('div'), K = CAT[ST.cat], answers = {}, probs = check(); ov.appendChild(inner);
     inner.innerHTML = '<div class="bd-top"><div><p class="label">Preview: this is what a student sees</p><h2>' + K[0] + ' ' + E(ST.title || '(no title yet)') + '</h2></div><button class="btn" type="button" data-close>✕ Close</button></div>' + (ST.instructions ? '<p>' + E(ST.instructions) + '</p>' : '') +
       (ST.questions.some(function (q) { return q.ai; }) ? '<div class="bd-warn">🔎 ' + ST.questions.filter(function (q) { return q.ai; }).length + ' automatically built items have not been opened yet. You can save, but please check them first.</div>' : '') + (probs.length ? '<div class="bd-warn"><b>Fix these before saving:</b><ul>' + probs.map(function (p) { return '<li>' + E(p) + '</li>'; }).join('') + '</ul></div>' : '') + '<div id="ovq"></div>' +
@@ -255,6 +274,14 @@
     var sv = inner.querySelector('#ovsave'); if (sv) sv.onclick = function () { sv.disabled = true; inner.querySelector('#ovm').textContent = 'Saving…'; save().then(function (id) { ov.remove(); ST.changed = false; done(id); }, function (e) { sv.disabled = false; inner.querySelector('#ovm').textContent = missing038(e) ? 'Not saved: the new question types and teachers\' answer keys switch on when the database update for the builder is run. Ask the admin.' : 'Not saved: ' + S.nice(e); }); };
     ov.addEventListener('keydown', function (e) { if (e.key === 'Escape') ov.remove(); });
     document.body.appendChild(ov); inner.querySelector('[data-close]').focus();
+  }
+  function autoFix() {   // tidy what can be tidied without asking: empty items and choices, missing marks, criteria, difficulty, title
+    var keep = ST.questions.filter(function (q) { var empty = !String(q.prompt || '').trim() && !q.image && !(q.media || []).length && !(q.options || []).some(function (o) { return String(o).trim() && !/^(true|false)$/i.test(o); }) && !(q.draft && JSON.stringify(q.draft).replace(/[^A-Za-z0-9]|choices|ok|true|false|pairs|items|groups|text|value|tol|unit|cols|rows|image|spots|extra|ratio/g, '').length);
+      if (empty && q.id) (ST.removed = ST.removed || []).push(q.id); return !empty; });
+    if (keep.length && keep.length !== ST.questions.length) { ST.questions = keep; SEL = Math.min(SEL, keep.length - 1); }
+    ST.questions.forEach(function (q) { if (q.kind !== 'mcq') return; var c = q.options[q.correct], o = q.options.filter(function (x, j) { return String(x).trim() || j === q.correct; }); q.options = o; q.correct = c == null ? -1 : o.indexOf(c); });
+    autoFill();
+    if (!ST.title.trim()) { var f = ST.questions.filter(function (q) { return q.kind !== 'info'; })[0]; ST.title = f ? (T ? T.text(f.prompt) : f.prompt).replace(/^\d+[\.(a-z)\s]*/, '').split(/[.?!\n]/)[0].slice(0, 70) : 'Untitled'; }
   }
   function check() {
     var out = []; if (!ST.title.trim()) out.push('Give it a title (Settings).');
@@ -280,6 +307,169 @@
   var GEN = { level: '', files: [], objectives: '', count: 0, types: null, criteria: ['A', 'C', 'D'], pics: true, mode: 'replace' };
   try { GEN.level = localStorage.getItem('bv-gen-level') || ''; } catch (e) {}
   function blankItems() { return ST.questions.every(function (q) { return !String(q.prompt || '').trim() && !(q.draft && JSON.stringify(q.draft).replace(/["\[\]{}:,]|choices|ok|true|false|t|pairs|l|r|items|groups|g|text|value|tol|unit|cols|rows|image|spots|extra|x|y|ratio/g, '').trim()); }); }
+  /* ================================================================ ✨ Quick build: one screen, everything else automatic
+     The teacher picks what to make, types the topic and/or drops any files, and presses Build. The builder decides:
+       · a file that is a question paper → its questions are imported (diagrams cut out), with the mark scheme if one is dropped too;
+       · otherwise (examinations and practice) → questions come from the site's checked question bank for the matching topics,
+         and only the shortfall is written new by AI; lessons are written by AI from the topic and files;
+     then marks, criteria, difficulty, title, time, attempts, results and the class are all set automatically. */
+  var SIZES = { exam: [12, 20, 30], quiz: [8, 12, 20], lesson: [12, 16, 22] };
+  function guessLevel(text) {
+    var t = String(text || '');
+    if (/\b(IB|DP\s?[12]?|diploma)\b[^\n]{0,40}\bHL\b|\bHL\b[^\n]{0,40}\b(IB|DP|biology|chemistry|physics)\b/i.test(t)) return 'IB Diploma HL';
+    if (/\b(IB|DP\s?[12]?|diploma)\b[^\n]{0,40}\bSL\b|\bSL\b[^\n]{0,40}\b(IB|DP|biology|chemistry|physics)\b/i.test(t)) return 'IB Diploma SL';
+    if (/\b(IB|DP\s?[12]|diploma)\b|\b[A-D][1-4]\.[1-4]\b|\bpaper 1A\b/i.test(t)) return 'IB Diploma HL';
+    if (/\bA2\b|\bA Level\b|\bA-level\b/i.test(t)) return 'A Level';
+    if (/\bAS\b(?: Level)?/.test(t)) return 'AS Level';
+    if (/IGCSE/i.test(t)) return /\bcore\b/i.test(t) ? 'IGCSE Core' : 'IGCSE Extended';
+    var g = /\b(?:grade|year|gr\.?)\s*(6|7|8|9|10)\b/i.exec(t) || /\bG(6|7|8|9|10)\b/.exec(t); if (g) return LEVELS[+g[1] - 6];
+    var m = /\bMYP\s*([1-5])\b/i.exec(t); if (m) return LEVELS[+m[1] - 1];
+    return '';
+  }
+  var STOP = /^(the|and|with|from|that|this|their|about|into|for|how|what|which|why|when|where|questions?|exam|examination|test|quiz|practice|paper|lesson|grade|level|unit|topic|year|biology|chemistry|physics|science|myp|igcse|diploma|students?|describe|explain|state|outline)$/i;
+  function words(t) { return String(t || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter(function (w) { return w.length >= 4 && !STOP.test(w); }); }
+  function matchTopics(rows, text, level) {
+    var ws = words(text); if (!ws.length) return [];
+    var want = /IB/.test(level) ? /IB/ : /AS|A Level/.test(level) ? /AS|A Level/ : /Grade|MYP/.test(level) ? /MYP/ : null;
+    return rows.map(function (r) { var name = (r.topic + ' ' + r.course).toLowerCase(), sc = 0; ws.forEach(function (w) { if (name.indexOf(w) >= 0) sc += 2; else if (name.indexOf(w.slice(0, 5)) >= 0) sc += 1; });
+        if (want && !want.test(r.course + ' ' + r.level)) sc = 0; return { r: r, sc: sc }; })
+      .filter(function (x) { return x.sc > 0 && x.r.n > 0; }).sort(function (a, b) { return b.sc - a.sc; })
+      .filter(function (x, i, a) { return x.sc >= a[0].sc - 1; }).slice(0, 4).map(function (x) { return x.r; });
+  }
+  function isScheme(name, lines) { return /mark|\bms\b|scheme|answer|key/i.test(name || '') || lines.slice(0, 40).some(function (l) { return /mark ?scheme|marking (guide|key)|answer key|^answers?$/i.test(l); }); }
+  function autoFill() {   // marks, criterion and difficulty for every question that has none
+    var myp = /Grade|MYP/.test(GEN.level || '') || ST.subject;
+    ST.questions.forEach(function (q) {
+      if (q.kind === 'info') return; var t = (T ? T.text(q.prompt) : q.prompt) || '', mk = /\[\s*(\d{1,2})\s*\]\s*$/.exec(t);
+      if (!(+q.marks > 0)) q.marks = mk ? +mk[1] : q.kind === 'essay' ? 6 : /^(short|graph|draw|annotate|table)$/.test(q.kind) ? 2 : 1;
+      if (!q.diff) q.diff = q.kind === 'essay' || +q.marks >= 5 || /\b(evaluate|discuss|justify|to what extent)\b/i.test(t) ? 3 : +q.marks >= 3 || /\b(explain|analy[sz]e|calculate|suggest|predict|compare)\b/i.test(t) ? 2 : 1;
+      if (myp && !q.crit) q.crit = /\b(hypothes|variable|method|plan|design|fair test|predict)/i.test(t) ? 'B' : /\b(table|graph|plot|calculate|data|results|conclusion|trend|anomal|reliab|valid)/i.test(t) ? 'C' : /\b(impact|implication|society|ethic|environment|econom|advantage|disadvantage|benefit|risk)/i.test(t) ? 'D' : 'A';
+    });
+  }
+  function autoSettings(o) {
+    var marks = ST.questions.reduce(function (a, q) { return a + (q.kind === 'info' ? 0 : +q.marks || 0); }, 0);
+    if (!ST.title.trim()) ST.title = o.title || 'Untitled';
+    if (!ST.instructions.trim() && ST.cat !== 'lesson') ST.instructions = ST.cat === 'exam' ? 'Answer all questions. The marks for each question are shown in brackets. Use the tools under each answer box for graphs, tables, drawings and symbols.' : 'Answer every question, then hand in to see your results and feedback.';
+    if (ST.cat === 'exam' && !ST.time) ST.time = Math.max(15, Math.ceil(marks * (/IB|A Level|AS/.test(GEN.level || '') ? 1.3 : 1.1) / 5) * 5);
+    if (ST.cat === 'quiz' && !ST.time) ST.time = '';
+    ST.attempts = ST.cat === 'exam' ? 1 : ST.cat === 'lesson' ? 3 : 2; ST.show = ST.cat !== 'exam';
+    if (!ST.subject && /Grade|MYP/.test(GEN.level || '')) { var t = (ST.title + ' ' + (o.text || '')).toLowerCase(); ST.subject = /cell|organ|plant|animal|gene|dna|ecolog|evolution|enzyme|photosynth|respirat|digest|blood|disease|species|classification/.test(t) ? 'Biology' : /atom|bond|reaction|acid|salt|element|compound|mole|metal|organic|equilibri|electroly|periodic|redox/.test(t) ? 'Chemistry' : /force|motion|energy|wave|electric|magnet|circuit|light|sound|pressure|radioact|space|gravity/.test(t) ? 'Physics' : ''; }
+    if (o.cls && ST.classes.indexOf(o.cls) < 0) ST.classes.push(o.cls);
+    autoFill();
+  }
+  function quick(addMode, focus) {
+    var ov = document.createElement('div'); ov.className = 'bd-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Build');
+    var inner = document.createElement('div'); ov.appendChild(inner); var files = [], cat = ST.cat, size = 1, stop = false;
+    var guess = guessLevel(MYCLASSES.map(function (c) { return c.name; }).join('\n')); if (!GEN.level) { try { GEN.level = localStorage.getItem('bv-gen-level') || guess; } catch (e) { GEN.level = guess; } }
+    inner.innerHTML = '<div class="bd-top"><div><p class="label">' + (addMode ? 'Add questions' : 'New') + '</p><h2>✨ ' + (addMode ? 'Add questions' : 'Build it for me') + '</h2></div><button class="btn" type="button" data-close aria-label="Close">✕</button></div>' +
+      (addMode ? '' : '<div class="bd-kinds" role="radiogroup" aria-label="What to make">' + ['exam', 'quiz', 'lesson'].map(function (c) { return '<button type="button" role="radio" data-cat="' + c + '" aria-checked="' + (c === cat) + '"><span>' + CAT[c][0] + '</span>' + ({ exam: 'Examination', quiz: 'Practice questions', lesson: 'Interactive lesson' })[c] + '</button>'; }).join('') + '</div>') +
+      field('What is it about?', '<textarea id="q-t" rows="2" placeholder="A topic, e.g. Enzymes and digestion · or paste your objectives">' + E(ST.title) + '</textarea>') +
+      '<div class="bvm-drop" id="q-drop" tabindex="0" role="button" aria-label="Add files"><b>📎 ' + (focus === 'import' ? 'Drop the question paper and its mark scheme here' : 'Add files (optional): a question paper and mark scheme, notes or slides') + '</b><span class="small muted">PDF, Word, PowerPoint, Excel, text or photos · drop them here or click to choose</span><span class="small" id="q-fl"></span><input type="file" multiple hidden id="q-f" accept=".pdf,.docx,.dotx,.pptx,.potx,.ppsx,.xlsx,.xlsm,.odt,.odp,.ods,.csv,.tsv,.html,.htm,.rtf,.txt,.md,image/*"></div>' +
+      '<div class="bd-row" style="margin-top:10px">' + field('Level', '<select id="q-l"><option value="">Choose…</option>' + LEVELS.map(function (l) { return '<option' + (GEN.level === l ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '</select>') +
+        field('Size', '<select id="q-n"><option value="0">Short</option><option value="1" selected>Standard</option><option value="2">Long</option></select>') +
+        (addMode || !MYCLASSES.length ? '' : field('Set it for', '<select id="q-c"><option value="">Not yet (keep it in my library)</option>' + MYCLASSES.map(function (c) { return '<option value="' + c.id + '">' + E(c.name) + '</option>'; }).join('') + '</select>')) + '</div>' +
+      '<p class="small muted" id="q-how"></p>' +
+      '<div id="q-run" hidden><ol id="q-steps" class="small" style="line-height:1.9;margin:6px 0"></ol><div style="height:10px;border-radius:6px;background:#e2e8f0;overflow:hidden"><i id="q-bar" style="display:block;height:100%;width:0;background:linear-gradient(90deg,#4f46e5,#0ea5e9);transition:width .4s"></i></div></div>' +
+      '<p class="msg" id="q-m" role="alert"></p>' +
+      '<div class="acts"><button class="btn main" type="button" id="q-go">✨ Build</button><button class="btn" type="button" data-close>' + (addMode || ST.id || !blankItems() ? 'Cancel' : 'Start with a blank page') + '</button>' +
+      '<button class="btn sm" type="button" id="q-adv" style="margin-left:auto">More choices (question types, criteria)…</button></div>';
+    var $ = function (x) { return inner.querySelector(x); };
+    var how = function () { var lesson = cat === 'lesson'; $('#q-how').textContent = files.length ? 'A question paper is imported question by question (with its diagrams and mark scheme). Notes and slides are used to ' + (lesson ? 'write the lesson.' : 'write any questions the question bank does not have.') :
+      lesson ? 'A complete six-step lesson is written for the topic, with reading, real pictures and questions.' : 'Checked questions come from the site\'s question bank for this topic first; anything missing is written new and marked 🔎 for you to check.'; };
+    inner.querySelectorAll('[data-cat]').forEach(function (b) { b.onclick = function () { cat = b.getAttribute('data-cat'); inner.querySelectorAll('[data-cat]').forEach(function (x) { x.setAttribute('aria-checked', String(x === b)); }); how(); }; });
+    var dz = $('#q-drop'), fi = $('#q-f'), showFiles = function () { $('#q-fl').textContent = files.length ? '✓ ' + files.map(function (f) { return f.name; }).join(' · ') : ''; dz.classList.toggle('on', !!files.length); how();
+      if (!$('#q-t').value.trim() && files[0]) $('#q-t').value = files[0].name.replace(/\.[a-z0-9]+$/i, '').replace(/[_]+/g, ' ').trim();
+      var g = guessLevel(files.map(function (f) { return f.name; }).join(' ')); if (g && !$('#q-l').value) $('#q-l').value = g; };
+    dz.onclick = function (e) { if (e.target !== fi) fi.click(); }; dz.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } };
+    fi.onchange = function () { files = files.concat([].slice.call(this.files || [])); this.value = ''; showFiles(); };
+    dz.addEventListener('dragover', function (e) { e.preventDefault(); dz.classList.add('on'); }); dz.addEventListener('drop', function (e) { e.preventDefault(); files = files.concat([].slice.call(e.dataTransfer.files || [])); showFiles(); });
+    $('#q-t').oninput = function () { var g = guessLevel(this.value); if (g) $('#q-l').value = g; };
+    $('#q-adv').onclick = function () { stop = true; ov.remove(); if (!addMode) { ST.cat = cat; ST.title = $('#q-t').value.trim() || ST.title; } GEN.level = $('#q-l').value || GEN.level; genDialog(addMode); };
+    inner.querySelectorAll('[data-close]').forEach(function (b) { b.onclick = function () { stop = true; ov.remove(); }; });
+    ov.addEventListener('keydown', function (e) { if (e.key === 'Escape' && $('#q-run').hidden) { stop = true; ov.remove(); } });
+    var step = function (text, state) { var ol = $('#q-steps'), li = ol.lastElementChild; if (!li || li.dataset.done) { li = document.createElement('li'); ol.appendChild(li); } li.textContent = (state === 'ok' ? '✅ ' : state === 'warn' ? '⚠️ ' : '⏳ ') + text; if (state) li.dataset.done = 1; };
+    var ui = { step: step, bar: function (f) { $('#q-bar').style.width = Math.round(f * 100) + '%'; }, stopped: function () { return stop; } };
+    $('#q-go').onclick = function () {
+      var text = $('#q-t').value.trim(), level = $('#q-l').value, m = $('#q-m');
+      if (!text && !files.length) { m.textContent = 'Type the topic or add a file.'; $('#q-t').focus(); return; }
+      if (!level) level = guessLevel(text);
+      if (!level && !files.length) { m.textContent = 'Choose the level, so the questions suit your students.'; $('#q-l').focus(); return; }
+      GEN.level = level; try { if (level) localStorage.setItem('bv-gen-level', level); } catch (e) {}
+      if (!addMode && ST.cat !== cat) { ST.cat = cat; ST.questions.forEach(function (q) { q.section = cat === 'lesson' ? 'Explore' : ''; }); }
+      var target = addMode ? SIZES[ST.cat][0] : SIZES[ST.cat][+$('#q-n').value || 0], cls = $('#q-c') ? $('#q-c').value : '', title = text.split('\n')[0].slice(0, 120);
+      m.textContent = ''; inner.querySelectorAll('input,select,textarea,button:not([data-close])').forEach(function (x) { x.disabled = true; }); $('#q-run').hidden = false;
+      var before = addMode ? ST.questions.slice() : [], got = { paper: 0, bank: 0, ai: 0, matched: 0, pics: 0 };
+      if (!addMode) { (ST.removed = ST.removed || []).push.apply(ST.removed, ST.questions.filter(function (q) { return q.id; }).map(function (q) { return q.id; })); ST.questions = []; }
+      var keep = function (items) { ST.questions = ST.questions.concat(items); };
+      if (!addMode && title && !files.length) ST.title = title.charAt(0).toUpperCase() + title.slice(1);
+      var Q = window.BVQ, read = [], chain = Promise.resolve();
+      if (files.length && Q) { Q.IMGS.length = 0; files.forEach(function (f) { chain = chain.then(function () { step('Reading ' + f.name, ''); return Q.readFile(f).then(function (ls) { read.push({ f: f, lines: ls }); step('Read ' + f.name, 'ok'); }, function (e) { step(f.name + ': ' + (e.message || e), 'warn'); }); }); }); }
+      chain.then(function () {
+        ui.bar(0.15);
+        // 1 · question papers in the files
+        var schemes = read.filter(function (r) { return isScheme(r.f.name, r.lines); }), others = read.filter(function (r) { return schemes.indexOf(r) < 0; }), notes = [];
+        others.forEach(function (r) {
+          var qs = Q.parsePaper(r.lines);
+          if (qs.length >= 3 && ST.cat !== 'lesson') {
+            var n = 0; if (schemes.length) { n = Q.applyScheme(qs, Q.parseScheme(schemes[0].lines)); got.matched += n; }
+            var items = qs.map(function (x) { var q = fromRule(x, ''); if (x.ref) q.prompt = (/^\d+$/.test(x.ref) ? x.ref + '. ' : x.ref + ' ') + q.prompt; q.ai = true; return q; });
+            got.paper += items.length; got.pics += items.filter(function (q) { return q.image; }).length; keep(items);
+            step(r.f.name + ': ' + items.length + ' questions imported' + (schemes.length ? ', ' + n + ' answers from the mark scheme' : '') + (got.pics ? ', ' + got.pics + ' with diagrams' : ''), 'ok');
+          } else notes.push(r);
+        });
+        if (got.paper) return;   // a paper was dropped: that is the examination
+        var noteText = notes.map(function (r) { return r.lines.filter(function (l) { return !/^\[\[img:\d+\]\]$/.test(l); }).join('\n'); }).join('\n').slice(0, 60000);
+        // 2 · examinations and practice: the checked question bank first
+        var bank = ST.cat === 'lesson' ? Promise.resolve() : S.db.rpc('practice_topics').then(function (r) {
+          if (r.error) { step('The question bank is not available just now', 'warn'); return; }
+          var tops = matchTopics(r.data || [], text + ' ' + noteText.slice(0, 400), level);
+          if (!tops.length) { step('No matching topic in the question bank: new questions will be written', 'warn'); return; }
+          step('Question bank: ' + tops.map(function (t) { return t.topic; }).join(', '), '');
+          return S.db.rpc('bank_pick', { topic_ids: tops.map(function (t) { return t.topic_id; }), n: target, kinds: null, crit: '', diff: null }).then(function (p) {
+            if (p.error || !(p.data || []).length) { step('No questions found in those topics', 'warn'); return; }
+            return S.db.rpc('bank_copy', { ids: p.data }).then(function (c) { if (c.error) throw c.error;
+              return S.db.from('questions').select('*, question_answers(*)').in('id', c.data || []).then(function (x) {
+                var by = {}; (x.data || []).forEach(function (o) { by[o.id] = o; });
+                var items = (c.data || []).map(function (id) { return by[id]; }).filter(Boolean).map(fromRow);
+                if (ST.cat === 'exam') items.sort(function (a, b) { return (/^(mcq|tf)$/.test(a.kind) ? 0 : 1) - (/^(mcq|tf)$/.test(b.kind) ? 0 : 1) || (+a.marks || 0) - (+b.marks || 0); });
+                got.bank = items.length; keep(items); step(items.length + ' checked questions from the question bank', 'ok'); }); });
+          });
+        }).catch(function (e) { step('Question bank: ' + S.nice(e), 'warn'); });
+        // 3 · whatever is still missing is written new
+        return bank.then(function () {
+          ui.bar(0.35); var need = ST.cat === 'lesson' ? target : target - got.bank; if (need <= 0 || stop) return;
+          if (ST.cat !== 'lesson' && got.bank) step('Writing ' + need + ' more question' + (need === 1 ? '' : 's') + ' with AI', '');
+          GEN.count = need; GEN.types = null; GEN.objectives = text.indexOf('\n') > 0 ? text : ''; GEN.criteria = ['A', 'B', 'C', 'D']; GEN.pics = ST.cat === 'lesson'; GEN.mode = 'add';
+          var have = ST.questions.slice();
+          return runBuildLines({ title: title, lines: [].concat.apply([], notes.map(function (r) { return r.lines; })), ui: ui }).then(function (r) { got.ai = r.ai; }, function (e) {
+            ST.questions = have; step('New questions could not be written: ' + (e.message || e), 'warn');
+            if (ST.cat === 'lesson' && notes.length) { ruleBuild(title, [].concat.apply([], notes.map(function (r) { return r.lines; })), true); got.ai = ST.questions.length; }
+          });
+        });
+      }).then(function () {
+        if (stop) return;
+        if (addMode) { var made = ST.questions.filter(function (q) { return before.indexOf(q) < 0; }); ST.questions = before.concat(made); SEL = before.length; } else SEL = 0;
+        if (!ST.questions.length) { inner.querySelectorAll('input,select,textarea,button').forEach(function (x) { x.disabled = false; }); m.textContent = 'Nothing could be built. Add a file with questions or notes, or try a different topic.'; return; }
+        if (!addMode) autoSettings({ title: title, text: text, cls: cls }); else autoFill();
+        ST.changed = true; ui.bar(1); ov.remove(); draw(); quickDone(got);
+      }).catch(function (e) { inner.querySelectorAll('input,select,textarea,button').forEach(function (x) { x.disabled = false; }); m.textContent = '⚠ ' + (e.message || e); });
+    };
+    how(); document.body.appendChild(ov); setTimeout(function () { $('#q-t').focus(); }, 30);
+  }
+  function runBuildLines(o) {   // runBuild with files already read (lines), adding to the items already built
+    var Q = window.BVQ, imgs = [], text = (o.lines || []).map(function (l) { var m = /^\[\[img:(\d+)\]\]$/.exec(l); if (m) { if (Q && Q.IMGS[+m[1]] && Q.IMGS[+m[1]].length > 9000) imgs.push(Q.IMGS[+m[1]]); return ''; } return l; }).filter(Boolean).join('\n');
+    return runBuild({ title: o.title, files: [], pre: { text: text, lines: o.lines || [], images: imgs }, ui: o.ui });
+  }
+  function quickDone(g) {
+    var marks = ST.questions.reduce(function (a, q) { return a + (q.kind === 'info' ? 0 : +q.marks || 0); }, 0), check = ST.questions.filter(function (q) { return q.ai; }).length;
+    var parts = []; if (g.paper) parts.push(g.paper + ' imported from your paper' + (g.matched ? ' (' + g.matched + ' with answers from the mark scheme)' : '')); if (g.bank) parts.push(g.bank + ' checked questions from the question bank'); if (g.ai) parts.push(g.ai + ' written new with AI');
+    var cls = ST.classes.map(function (id) { return (MYCLASSES.filter(function (c) { return c.id === id; })[0] || {}).name; }).filter(Boolean);
+    var n = document.createElement('div'); n.className = 'bd-ov'; n.innerHTML = '<div role="status"><h2>✅ Ready to check</h2><p><b>' + ST.questions.length + ' items, ' + marks + ' marks</b>: ' + E(parts.join(', ') || 'built') + '.</p>' +
+      '<p class="small">Set automatically: ' + E(settingsLine()) + (cls.length ? ' · for ' + E(cls.join(', ')) : '') + '. Change anything under Settings.</p>' +
+      (check ? '<p class="small">' + check + ' item' + (check === 1 ? ' is' : 's are') + ' marked <b>🔎 check me</b>: read ' + (check === 1 ? 'it' : 'them') + ' (new or imported questions can contain mistakes). Questions from the question bank are already checked.</p>' : '') +
+      '<p class="small">When it looks right, press <b>💾 Preview and save</b>.</p><div class="acts"><button class="btn main" type="button">Start checking</button></div></div>';
+    n.querySelector('button').onclick = function () { n.remove(); }; document.body.appendChild(n); n.querySelector('button').focus();
+  }
   function genDialog(addMode, note) {
     var ov = document.createElement('div'); ov.className = 'bd-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Build it for me');
     var K = CAT[ST.cat], lesson = ST.cat === 'lesson', myp = function () { return /MYP/.test(GEN.level); };
@@ -373,9 +563,9 @@
   }
   function runBuild(o) {
     var ui = o.ui, lesson = ST.cat === 'lesson', src, plan, made = [], total = 1;
-    ui.step('Reading your files', '');
-    return readAll(o.files, ui).then(function (r) {
-      src = r; ui.step(o.files.length ? 'Files read: ' + Math.round(r.text.length / 1000) + ' thousand characters, ' + r.images.length + ' picture' + (r.images.length === 1 ? '' : 's') : 'No files: building from your title and objectives', 'ok');
+    if (!o.pre) ui.step('Reading your files', '');
+    return (o.pre ? Promise.resolve(o.pre) : readAll(o.files, ui)).then(function (r) {
+      src = r; if (!o.pre) ui.step(o.files.length ? 'Files read: ' + Math.round(r.text.length / 1000) + ' thousand characters, ' + r.images.length + ' picture' + (r.images.length === 1 ? '' : 's') : 'No files: building from your title and objectives', 'ok');
       if (ui.stopped()) throw new Error('Stopped.');
       ui.step('Planning the ' + (lesson ? 'six steps' : 'sections'), ''); ui.bar(0.05);
       return patient({ mode: 'plan', kind: ST.cat, title: o.title, level: GEN.level, objectives: GEN.objectives, source: src.text, count: GEN.count, types: GEN.types || [], criteria: /MYP/.test(GEN.level) ? GEN.criteria : [] }, ui, 'Planning');
@@ -426,14 +616,14 @@
       return { n: made.length, ai: made.filter(function (q) { return q.ai; }).length, pics: made.filter(function (q) { return q.image; }).length, marks: made.reduce(function (a, q) { return a + (+q.marks || 0); }, 0) };
     }).catch(function (e) { if (!e.fallback && lesson && !made.length && src) { e.fallback = true; e.lines = src.lines; } throw e; });
   }
-  function ruleBuild(title, lines) {   // no AI: lay the lesson out from the files by fixed rules (as the old lesson maker did)
+  function ruleBuild(title, lines, quiet) {   // no AI: lay the lesson out from the files by fixed rules (as the old lesson maker did)
     var Q = window.BVQ; if (!Q || !Q.buildLesson) return;
     var items = Q.buildLesson(title || ST.title || 'This lesson', GEN.objectives, lines.length ? lines : null, null);
     ST.questions = items.map(function (x) { var k = x.kind === 'mcq' || x.kind === 'tf' || x.kind === 'info' ? x.kind : 'short', q = newQ(k, x.section || 'Explore');
       q.prompt = x.prompt || ''; q.marks = k === 'info' ? 0 : x.marks || 1; q.image = x.image || ''; q.model = x.scheme || ''; q.explanation = x.explanation || ''; q.rubric = x.rubric || ''; q.ai = true;
       if (k === 'mcq' || k === 'tf') { q.options = (x.options || []).slice(); q.correct = x.correct == null ? -1 : x.correct; } return q; });
     if (!ST.title.trim()) ST.title = title; ST.changed = true; SEL = 0; draw();
-    toastDone({ n: ST.questions.length, rule: true });
+    if (!quiet) toastDone({ n: ST.questions.length, rule: true });
   }
   function toastDone(r) {
     var n = document.createElement('div'); n.className = 'bd-ov'; n.innerHTML = '<div role="status"><h2>✨ ' + (r.rule ? 'Laid out from your files' : 'Built') + '</h2><p>' + r.n + ' items' + (r.marks ? ', ' + r.marks + ' marks' : '') + (r.pics ? ', ' + r.pics + ' with pictures' : '') + '.</p>' +

@@ -291,10 +291,17 @@
         return clean(lines);
       });
   }
+  /* page furniture of real exam papers: page numbers with paper codes, candidate boxes, margins, totals */
+  var FURN = new RegExp('^(' + [
+    '[–\\-—]\\s*\\d{1,3}\\s*[–\\-—](\\s+\\S+)?',                       // – 3 –  M25/4/BIOLO/HP2/ENG/TZ1/XX
+    '[A-Z]\\d{2}\\/\\d\\/[A-Z]{3,}\\/[A-Z0-9\\/]+(\\s+[–\\-—]\\s*\\d{1,3}\\s*[–\\-—])?',
+    '(©\\s*)?UCLES.*', '\\d{4}\\/\\d{2}\\/[A-Z]\\/[A-Z]\\/\\d{2}.*', '\\*\\s?\\d[\\d\\s]{8,}\\*?',
+    'please do not write on this page.*', 'answers written on this page will not be marked.*', 'do not write in this margin.*', '\\[total:?\\s*\\d+\\]',
+    'candidate (session )?number.*', 'international baccalaureate.*', '\\d+ pages?', 'this (question paper|document) consists of.*'].join('|') + ')$', 'i');
   function clean(lines) {
     return lines.map(function (l) { return String(l).replace(/[ \t]+/g, ' ').replace(/\s{2,}/g, ' ').trim(); })
       .filter(function (l) {
-        return l && !/^[\._…\-–—\s]{3,}$/.test(l) && !/^(page \d+( of \d+)?|\d+ ?\/ ?\d+|turn over|\[?turn over\]?|blank page|end of (question )?paper|©.*|\d{1,3})$/i.test(l);
+        return l && !/^[\._…\-–—\s]{3,}$/.test(l) && !/^(page \d+( of \d+)?|\d+ ?\/ ?\d+|turn over|\[?turn over\]?|blank page|end of (question )?paper|©.*|\d{1,3})$/i.test(l) && !FURN.test(l);
       })
       .map(function (l) { return l.replace(/\s*[\._…]{4,}\s*/g, ' ').trim(); }).filter(Boolean);
   }
@@ -321,7 +328,7 @@
       if (!cur) return;   // cover page, instructions
       var a = ANSWER.exec(line); if (a) { (cur.items.length ? cur.items[cur.items.length - 1] : cur).answer = a[1].trim(); return; }
       var o = ITEM.exec(line);
-      if (o) { cur.items.push({ label: o[1], text: [o[2]] }); return; }
+      if (o) { var o2 = ITEM.exec(o[2]); if (o2 && /^(i{1,3}|iv|v|vi{1,3})$/.test(o2[1]) && /[a-h]/i.test(o[1]) && !/^(i{1,3}|iv|v|vi{1,3})$/.test(o[1])) { cur.items.push({ label: o[1], text: [] }); cur.items.push({ label: o2[1], text: [o2[2]] }); return; } cur.items.push({ label: o[1], text: [o[2]] }); return; }
       if (cur.items.length) cur.items[cur.items.length - 1].text.push(line); else cur.stem.push(line);
     });
     var out = [];
@@ -421,6 +428,14 @@
         line.replace(/(\d{1,3})\s*[\.\)]?\s*([A-E])\b/g, function (_, n, l) { map[key(n)] = (map[key(n)] || []).concat([l]); });
         curKey = null; return;
       }
+      // IB mark schemes: "1. a", "b i", "ii", "2 a" in the question column, without brackets (a marking point is "a." with a full stop)
+      var nx = lastPart ? String.fromCharCode(lastPart.charCodeAt(0) + 1) : 'a';
+      var bare = /^(\d{1,3})\s*\.?\s+([a-h])(?:\s+(i{1,3}|iv|v|vi{1,3}))?\s+(.*)$/.exec(line);
+      if (bare && (lastNum === null || Math.abs(+bare[1] - lastNum) <= 3)) { lastNum = +bare[1]; lastPart = bare[2]; curKey = key(bare[1], bare[2], bare[3]); map[curKey] = (map[curKey] || []).concat([bare[4]]); return; }
+      var bl = lastNum !== null && /^([a-h])(?:\s+(i{1,3}|iv|v|vi{1,3}))?\s+(?!\.)(.*)$/.exec(line);
+      if (bl && (bl[1] === nx || (bl[1] === lastPart && bl[2]))) { lastPart = bl[1]; curKey = key(lastNum, bl[1], bl[2]); map[curKey] = (map[curKey] || []).concat([bl[3]]); return; }
+      var rm = lastNum !== null && lastPart && /^(i{1,3}|iv|v|vi{1,3})\s+(.*)$/.exec(line);
+      if (rm) { curKey = key(lastNum, lastPart, rm[1]); map[curKey] = (map[curKey] || []).concat([rm[2]]); return; }
       var m = REF.exec(line);
       if (m && (lastNum === null || Math.abs(+m[1] - lastNum) <= 3)) { lastNum = +m[1]; lastPart = m[2] || null; curKey = key(m[1], m[2], m[3]); map[curKey] = (map[curKey] || []).concat(m[4] ? [m[4]] : []); return; }
       var s = SUB.exec(line);
@@ -431,6 +446,7 @@
       }
       if (curKey) map[curKey].push(line);
     });
+    Object.keys(map).forEach(function (k) { map[k] = map[k].map(function (t) { return String(t).replace(/([;.])\s+\d{1,2}\s*$/, '$1').trim(); }).filter(function (t) { return t && !/^\d{1,2}$/.test(t); }); });
     if (!Object.keys(map).length) {   // a mark scheme with no question numbers: one answer per line, in the order of the questions
       var k = 0; lines.forEach(function (line) { var t = line.replace(/^(?:answer|ans)\s*[:\-–]\s*/i, '').trim(); if (!t || /^(mark ?scheme|answers?|marking (guide|key))\s*:?$/i.test(t)) return;
         if (k && (/^[•\-–*]\s+|^(and|or|accept|allow|OWTTE)\b/i.test(t) || /[;,]\s*$/.test(map[key(k)][map[key(k)].length - 1]))) { map[key(k)].push(t.replace(/^[•\-–*]\s*/, '')); return; }
