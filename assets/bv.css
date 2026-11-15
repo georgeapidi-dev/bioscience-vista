@@ -395,3 +395,18 @@ details.panel>summary::-webkit-details-marker{display:none}
 
 /* marking: a question that still has no mark stands out in red */
 .q.unmarked{border:2px solid #dc2626!important;background:#fef2f2;border-radius:12px;padding:10px}.unmarked-pill{background:#dc2626!important;color:#fff!important;font-weight:700}
+
+/* MYP Science (Grades 6 to 10): Biology, Chemistry and Physics are kept apart, one tab per subject */
+.sj{display:grid;gap:12px;min-width:0}
+.sj-tabs{display:flex;flex-wrap:wrap;gap:8px}
+.sj-tabs button{font:700 .95rem var(--body);min-height:44px;padding:8px 16px;border-radius:999px;border:2px solid var(--k);background:color-mix(in srgb,var(--k) 10%,var(--raised));color:var(--k);cursor:pointer}
+.sj-tabs button[aria-selected="true"]{background:var(--k);color:#fff}
+.sj-tabs button .n{font-weight:600;opacity:.9}
+.sj-tabs button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.sj-pane{display:grid;gap:12px;min-width:0;border-left:5px solid var(--k);padding-left:12px}
+.sj-pane[hidden]{display:none}
+.sj-h{margin:0;color:var(--k);font-size:1.15rem}
+.sj-tag{display:inline-block;padding:2px 9px;border-radius:999px;background:var(--k);color:#fff;font-size:.78rem;font-weight:700;white-space:nowrap}
+:root[data-theme="dark"] .sj-tabs button:not([aria-selected="true"]),:root[data-theme="dark"] .sj-h{color:color-mix(in srgb,var(--k) 45%,#fff)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sj-tabs button:not([aria-selected="true"]),:root:not([data-theme="light"]) .sj-h{color:color-mix(in srgb,var(--k) 45%,#fff)}}
+@media (max-width:560px){.sj-pane{padding-left:8px;border-left-width:4px}}

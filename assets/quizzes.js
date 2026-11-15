@@ -9,10 +9,14 @@
   function route() { clearInterval(timer); clearInterval(beat); if (GUARD) GUARD.off(); var id = location.hash.slice(1); return id ? open(id) : list(); }
   function fail(r) { app.innerHTML = '<section class="panel"><p class="msg">' + E(S.nice(r.error || r)) + '</p><p><a href="#">← All ' + NOUN + 's</a></p></section>'; }
 
+  // the sets for my classes; each says its subject (Biology, Chemistry or Physics) from migration 036 on, before it the subject is read from the topic and title
+  function quizRows(withSubject) {
+    return S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results,topic_id,' + (withSubject ? 'subject,' : '') + ' topics(name), quiz_classes(class_id, published, classes(id,name,archived_at,site_slug,follows,programme))').in('published', (ME.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false });
+  }
   function list() {
     app.innerHTML = '<p class="muted">Loading the Assessment centre…</p>';
     Promise.all([
-      S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results,topic_id, topics(name), quiz_classes(class_id, published, classes(id,name,archived_at))').in('published', (ME.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false }),
+      quizRows(true).then(function (r) { return r.error ? quizRows(false) : r; }),
       S.db.from('quiz_attempts').select('id,quiz_id,status,score,max_score,submitted_at,released').eq('student_id', ME.user.id),
       EXAM ? Promise.resolve({ data: [] }) : S.db.from('lessons').select('id,title,url,topic_id,sort_order,published').order('sort_order').then(function (r) { return r; }, function () { return { data: [] }; }),
       EXAM ? Promise.resolve({ data: [] }) : S.db.from('topics').select('id,parent_id').then(function (r) { return r; }, function () { return { data: [] }; }),
@@ -47,9 +51,10 @@
       qs.forEach(function (q) {
         var cls = (q.quiz_classes || []).map(function (x) { return x.classes; }).filter(function (c) { return c && !c.archived_at && (ME.staff || mine[c.id]); });
         if (!cls.length) cls = [{ id: '_', name: ME.staff ? 'Not set for a class' : 'Set for you' }];
-        cls.forEach(function (c) { if (!groups[c.id]) { groups[c.id] = { name: c.name, qs: [] }; order.push(c.id); } groups[c.id].qs.push(q); });
+        cls.forEach(function (c) { if (!groups[c.id]) { groups[c.id] = { name: c.name, cls: c, qs: [] }; order.push(c.id); } groups[c.id].qs.push(q); });
       });
       order.sort(function (a, b) { return groups[a].name.localeCompare(groups[b].name); });
+      var subjOf = function (q) { return BV.subj.of(q.subject, q.topics && q.topics.name, q.title); };
       var isDone = function (q) { return at.some(function (a) { return a.quiz_id === q.id && a.status !== 'in_progress'; }); };
       var pick = new URLSearchParams(location.search).get('class') || (order.length === 1 ? order[0] : '');
       app.innerHTML = '<div class="row2"><div><p class="label">Assessment centre</p><h2>' + (EXAM ? 'Examinations' : 'Exam-style questions') + '</h2><p class="muted small">' + (EXAM ? 'Timed examinations set by your teacher.' : 'Topic-by-topic practice questions, each with the interactive lessons it goes with.') + '</p></div><a class="btn sm" href="/dashboard/">My dashboard</a></div>' +
@@ -58,9 +63,11 @@
         (!order.length && !ME.staff ? '<p class="panel tint">Join a class on <a href="/dashboard/">your dashboard</a> to see your ' + NOUN + 's.</p>' : '') +
         (order.length > 1 ? '<div class="cta" role="tablist"><button type="button" class="btn sm' + (pick ? '' : ' main') + '" data-g="">All classes</button>' + order.map(function (g) { return '<button type="button" class="btn sm' + (pick === g ? ' main' : '') + '" data-g="' + E(g) + '">' + E(groups[g].name) + ' (' + groups[g].qs.length + ')</button>'; }).join('') + '</div>' : '') +
         order.filter(function (g) { return !pick || g === pick; }).map(function (g) { var gq = groups[g].qs, todo = gq.filter(function (q) { return !isDone(q); }), past = gq.filter(isDone);
+          var lists = function (qs2) { var td = qs2.filter(function (q) { return !isDone(q); }), ps = qs2.filter(isDone);
+            return '<h4>To do</h4>' + (td.length ? td.map(card).join('') : '<p class="emptybox">Nothing to do right now.</p>') + (ps.length ? '<h4>Completed</h4>' + ps.map(card).join('') : ''); };
+          // Grade 6 to 10 science: Biology, Chemistry and Physics are kept apart, one tab per subject
           return '<section class="grp panel"><h3 class="sec-h">🏫 ' + E(groups[g].name) + '</h3>' +
-            '<h4>To do</h4>' + (todo.length ? todo.map(card).join('') : '<p class="emptybox">Nothing to do right now.</p>') +
-            (past.length ? '<h4>Completed</h4>' + past.map(card).join('') : '') + '</section>'; }).join('');
+            (BV.subj.isMyp(groups[g].cls) ? BV.subj.split(gq, subjOf, lists) : lists(gq)) + '</section>'; }).join('');
       app.querySelectorAll('[data-reqq]').forEach(function (b) { b.onclick = function () { b.disabled = true;
         S.db.rpc('request_quiz', { qid: b.getAttribute('data-reqq'), cid: b.getAttribute('data-cls') }).then(function (r) { if (r.error) { b.disabled = false; alert(S.nice(r.error)); return; } list(); }); }; });
       app.querySelectorAll('[data-g]').forEach(function (b) { b.onclick = function () { var u = new URL(location.href); if (b.getAttribute('data-g')) u.searchParams.set('class', b.getAttribute('data-g')); else u.searchParams.delete('class'); history.replaceState(null, '', u); list(); }; });

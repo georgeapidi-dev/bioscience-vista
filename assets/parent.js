@@ -15,25 +15,32 @@
       if (!ids.length) return draw([], [], [], []);
       return Promise.all([
         S.db.from('profiles').select('id, full_name').in('id', ids),
-        S.db.from('student_results').select('student_id, title, score, max_score, teacher_feedback, ai_feedback, recorded_at').in('student_id', ids).order('recorded_at', { ascending: false }),
-        S.db.from('learning_progress').select('student_id, percent, lessons(title)').in('student_id', ids)
-      ]).then(function (x) { draw(x[0].data || [], x[1].data || [], x[2].data || [], ids); });
+        S.db.from('student_results').select('student_id, lesson_id, quiz_id, title, score, max_score, teacher_feedback, ai_feedback, recorded_at').in('student_id', ids).order('recorded_at', { ascending: false }),
+        S.db.from('learning_progress').select('student_id, lesson_id, percent, lessons(title)').in('student_id', ids)
+      ]).then(function (x) {   // Grade 6 to 10 science: marks and lessons are shown under their own subject (Biology, Chemistry or Physics)
+        var res = x[1].data || [], pg = x[2].data || [];
+        return S.subjectLookup(res.map(function (r) { return r.lesson_id; }).concat(pg.map(function (l) { return l.lesson_id; })), res.map(function (r) { return r.quiz_id; })).then(function (look) { SUBJ = look; }, function () {})
+          .then(function () { draw(x[0].data || [], res, pg, ids); });
+      });
     });
   }
 
+  var SUBJ = null;
+  function subjOfResult(r) { if (!SUBJ) return ''; var kind = r.quiz_id ? 'quiz' : 'lesson', id = r.quiz_id || r.lesson_id; return SUBJ.myp(kind, id, r.title) ? SUBJ[kind](id, r.title) : ''; }
+  function subjOfLesson(l) { var t = l.lessons && l.lessons.title; return SUBJ && SUBJ.myp('lesson', l.lesson_id, t) ? SUBJ.lesson(l.lesson_id, t) : ''; }
   function child(k, results, prog) {
     var rs = results.filter(function (r) { return r.student_id === k.id; }), pg = prog.filter(function (l) { return l.student_id === k.id; });
     var marked = rs.filter(function (r) { return r.score != null; });
     var s = marked.reduce(function (a, r) { return a + +r.score; }, 0), m = marked.reduce(function (a, r) { return a + +r.max_score; }, 0);
     var avg = S.pct(s, m);
     return '<section class="panel"><div class="row2"><h2>' + E(k.full_name) + '</h2>' + (avg == null ? '' : '<span class="pill">Average ' + avg + '%</span>') + '</div>' +
-      '<h3>Lesson progress</h3>' + (pg.length ? pg.map(function (l) { return '<div class="row2"><span class="small">' + E(l.lessons ? l.lessons.title : '') + '</span><span class="small muted">' + l.percent + '%</span></div><div class="bar"><i style="width:' + l.percent + '%"></i></div>'; }).join('') : '<p class="muted">No lessons opened yet.</p>') +
-      '<h3>Marks and feedback</h3>' + (rs.length ? rs.map(function (r) {
+      '<h3>Lesson progress</h3>' + (pg.length ? BV.subj.split(pg, subjOfLesson, function (part) { return part.map(function (l) { return '<div class="row2"><span class="small">' + E(l.lessons ? l.lessons.title : '') + '</span><span class="small muted">' + l.percent + '%</span></div><div class="bar"><i style="width:' + l.percent + '%"></i></div>'; }).join(''); }) : '<p class="muted">No lessons opened yet.</p>') +
+      '<h3>Marks and feedback</h3>' + (rs.length ? BV.subj.split(rs, subjOfResult, function (part) { return part.map(function (r) {
         return '<article class="task"><div class="top2"><b>' + E(r.title) + '</b><span class="small muted">' + E(S.when(r.recorded_at)) + '</span></div>' +
           '<p><b>' + (r.score == null ? 'Not marked yet' : E(r.score) + ' / ' + E(r.max_score)) + '</b></p>' +
           (r.teacher_feedback ? '<div class="fb"><h4>Teacher feedback</h4><p>' + E(r.teacher_feedback) + '</p></div>' : '') +
           (r.ai_feedback ? '<div class="fb ai"><h4>AI feedback</h4>' + (BV.md ? BV.md(r.ai_feedback) : '<p>' + E(r.ai_feedback) + '</p>') + '</div>' : '') + '</article>';
-      }).join('') : '<p class="emptybox">No marks yet.</p>') +
+      }).join(''); }) : '<p class="emptybox">No marks yet.</p>') +
       '<p class="small"><button class="btn sm" type="button" data-unlink="' + E(k.id) + '">Remove this link</button></p></section>';
   }
 

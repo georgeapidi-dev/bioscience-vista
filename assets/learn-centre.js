@@ -91,9 +91,10 @@
             var kids = (KIDS[t.id] || []).filter(function (k) { return k.published && (!q || match(k) || match(t)) && (!onlyLessons || count(k)); }), n = count(t);
             return '<details class="ltopic"' + (n || q ? ' open' : '') + '><summary><span class="lt-name">' + E(t.name) + '</span><span class="pill">' + (n ? n + ' item' + (n === 1 ? '' : 's') : 'coming soon') + '</span>' + (t.programme && t.programme !== 'IB DP' && t.programme !== 'IGCSE' ? '<span class="small muted">' + E(t.programme) + '</span>' : '') + '</summary>' +
               (t.summary ? '<p class="small muted">' + E(t.summary) + '</p>' : '') + (items(t) ? '<div class="lgrid">' + items(t) + '</div>' : '') +
-              kids.map(function (k) { var inner = items(k);
-                return '<div class="lsub' + (inner ? '' : ' empty') + '"><h4>' + E(k.name) + (k.summary && /HL only/.test(k.summary) ? ' <span class="pill">HL</span>' : '') + addHere(k) + '</h4>' +
-                  (inner ? '<div class="lgrid">' + inner + '</div>' : '<p class="small muted">Interactive lessons coming soon.</p>') + '</div>'; }).join('') +
+              (function (subs) {   // MYP Science: the units of a grade are kept in their subjects (Biology, Chemistry, Physics), one tab each
+                return s.slug === 'myp-science' ? BV.subj.split(kids, function (k) { return BV.subj.of(k.name); }, subs) : subs(kids); })(function (list) { return list.map(function (k) { var inner = items(k);
+                return '<div class="lsub' + (inner ? '' : ' empty') + '"><h4>' + E(s.slug === 'myp-science' ? String(k.name).replace(/^(Biology|Chemistry|Physics) · /, '') : k.name) + (k.summary && /HL only/.test(k.summary) ? ' <span class="pill">HL</span>' : '') + addHere(k) + '</h4>' +
+                  (inner ? '<div class="lgrid">' + inner + '</div>' : '<p class="small muted">Interactive lessons coming soon.</p>') + '</div>'; }).join(''); }) +
               (!kids.length && !items(t) ? '<p class="small muted">Interactive lessons coming soon.</p>' : '') + (!kids.length ? '<p>' + addHere(t) + '</p>' : '') + '</details>';
           }).join('') : '<p class="emptybox">Nothing matches.</p>');
         app.querySelectorAll('[data-s]').forEach(function (b) { b.onclick = function () { cur = b.getAttribute('data-s'); history.replaceState(null, '', '#' + cur); draw(); }; });

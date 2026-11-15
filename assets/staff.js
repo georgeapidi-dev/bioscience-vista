@@ -7,6 +7,13 @@
   var ADMIN_TABS = ['bookings', 'roles', 'activity'];
   // /teach/ is "My classes": the same dashboard, limited to the classes this teacher owns (any teacher, and the admin's own classes)
   var TEACH = location.pathname.indexOf('/teach/') === 0, MINE = {}, CLASS_OF = {};
+  // Grade 6 to 10 science is kept in its three subjects everywhere (Biology, Chemistry, Physics): QSUBJ is true when quizzes.subject exists (migration 036)
+  var QSUBJ = false;
+  function topicName(tid) { for (var i = 0; i < TOPICS.length; i++) if (TOPICS[i].id === tid) return TOPICS[i].name; return ''; }
+  function quizSubj(q) { return BV.subj.of(q.subject, topicName(q.topic_id), q.title); }
+  function mypQuiz(q) {   // a question set or exam for a Grade 6 to 10 science class
+    return (q.quiz_classes || []).some(function (x) { return CLASSES.some(function (c) { return c.id === x.class_id && BV.subj.isMyp(c); }); }) || /^MYP/.test(progOf(q.topic_id)) || /\bgrade (6|7|8|9|10)\b/i.test(q.title || '');
+  }
   function mine(sid) { return !TEACH || !!MINE[sid]; }
   /* Admin only, on My classes (/teach/): look into another teacher's classroom. The database already lets the admin read and edit every class
      (policy classes_admin); this only chooses whose classes the page lists. Nothing changes for teachers. */
@@ -53,8 +60,8 @@
   function loadScript(src) { return new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = src; x.onload = ok; x.onerror = function () { bad(new Error('Could not load ' + src)); }; document.head.appendChild(x); }); }
   var ARCHIVED = [];
   function refs() {
-    return Promise.all([S.db.from('topics').select('id,name,code,programme,parent_id,sort_order, subjects(name,sort_order)').order('sort_order'), S.db.from('classes').select('*').order('name')])
-      .then(function (x) { TOPICS = x[0].data || [];
+    return Promise.all([S.db.from('topics').select('id,name,code,programme,parent_id,sort_order, subjects(name,sort_order)').order('sort_order'), S.db.from('classes').select('*').order('name'), S.quizSubjectCol()])
+      .then(function (x) { TOPICS = x[0].data || []; QSUBJ = x[2] === true;
         var all = (x[1].data || []).filter(function (c) { return TEACH ? c.owner_kind !== 'main' && c.teacher_id === OWNER() : c.owner_kind === 'main' && (ME.admin || c.teacher_id === ME.user.id); });   /* main site (/staff/) and My classes (/teach/) are kept apart */
         CLASSES = all.filter(function (c) { return !c.archived_at; }); ARCHIVED = all.filter(function (c) { return c.archived_at; });
         var others = {}; if (TEACH && ME.admin) (x[1].data || []).forEach(function (c) { if (c.owner_kind !== 'main' && c.teacher_id && c.teacher_id !== ME.user.id) others[c.teacher_id] = (others[c.teacher_id] || 0) + 1; });
@@ -645,7 +652,7 @@
   }
   function quizBoard(body, c, state) {
     return Promise.all([roster(c.id),
-      S.db.from('quiz_classes').select('published, quizzes(id,title,category,published,due_at,opens_at,time_limit_minutes,show_results,created_at, quiz_questions(question_id))').eq('class_id', c.id),
+      S.db.from('quiz_classes').select('published, quizzes(id,title,category,published,due_at,opens_at,time_limit_minutes,show_results,created_at,topic_id' + (QSUBJ ? ',subject' : '') + ', quiz_questions(question_id))').eq('class_id', c.id),
       S.db.rpc('class_quiz_board', { cls: c.id })]).then(function (x) {
       if (x[1].error) throw x[1].error; if (x[2].error) throw x[2].error;
       var kids = x[0], qs = (x[1].data || []).filter(function (r) { return r.quizzes; }).map(function (r) { return Object.assign({}, r.quizzes, { live: !!r.published }); }), by = {}, extra = {};
@@ -653,7 +660,7 @@
       (x[2].data || []).forEach(function (r) { (by[r.quiz_id] = by[r.quiz_id] || {})[r.student_id] = r; });
       if (!qs.length) { body.innerHTML = '<p class="emptybox">No quizzes or exams are linked to ' + E(c.name) + ' yet. In <a href="#quizzes">Quizzes and exams</a>, open a quiz and tick this class; then publish it here.</p>'; return; }
       if (!kids.length) { body.innerHTML = '<p class="emptybox">No students have joined ' + E(c.name) + ' yet. Give them the join code <b class="code">' + E(c.join_code) + '</b> to type on the registration page.</p>'; return; }
-      var html = filters(state) + qs.map(function (q, qi) {
+      var one = function (q, qi) {
         var nq = (q.quiz_questions || []).length, rows = kids.map(function (k) {
           var a = (by[q.id] || {})[k.id], st = !a ? 'none' : a.status === 'in_progress' ? 'prog' : 'done';
           return { k: k, a: a, st: st };
@@ -678,7 +685,9 @@
             var res = !a || r.st !== 'done' ? '' : a.status === 'needs_marking' ? '<a class="btn sm" href="#marking/' + a.attempt_id + '">Mark</a>' : (a.score != null ? a.score + ' / ' + a.max_score : '') + (a.released || q.show_results ? '' : ' <span class="small muted">(not released)</span>');
             return '<tr><td><a href="#students/' + r.k.id + '">' + E(r.k.full_name || '(no name)') + '</a>' + dashLink(r.k.id) + (r.k.approved ? '' : ' <span class="pill new">not approved</span>') + '</td><td>' + stat + '</td><td class="small">' + prog + (a && a.attempts > 1 ? ' · attempt ' + a.attempts : '') + flag + '</td><td class="small">' + (a ? ago(r.st === 'done' ? a.submitted_at : a.last_seen) : '–') + '</td><td>' + res + '</td></tr>';
           }).join('') + '</table></div></details>';
-      }).join('');
+      };
+      // Grade 6 to 10 science: Biology, Chemistry and Physics sets are kept apart, one tab per subject
+      var html = filters(state) + (BV.subj.isMyp(c) ? BV.subj.split(qs, quizSubj, function (list) { return list.map(one).join(''); }) : qs.map(one).join(''));
       body.innerHTML = html; wireFilters(body, state);
       wireMS(body);
       body.querySelectorAll('[data-remark]').forEach(function (b) { b.onclick = function () {
@@ -796,7 +805,7 @@
       if (x[1].error) throw x[1].error;
       x.splice(2, 1);
       var kids = x[0], board = x[1].data || [], lessons = x[2].data || [], tp = {}; TOPICS.forEach(function (t) { tp[t.id] = t; });
-      var title = {}; lessons.forEach(function (l) { title[l.external_id] = l.title; });
+      var title = {}, subjOfLesson = {}; lessons.forEach(function (l) { title[l.external_id] = l.title; subjOfLesson[l.external_id] = (tp[l.topic_id] || {}).name || ''; });
       var last = {}; board.forEach(function (r) { if (!last[r.lesson] || r.last_saved > last[r.lesson]) last[r.lesson] = r.last_saved; });
       var active = Object.keys(last).sort(function (a, b) { return last[b] < last[a] ? -1 : 1; });
       var own = MATS[c.id] || [];   // only this class's own lessons (its lesson list); otherwise its programme
@@ -816,8 +825,13 @@
       var anonBy = {}; anon.forEach(function (w) { var k = w.student_name.trim().toLowerCase(); (anonBy[k] = anonBy[k] || { n: w.student_name, c: w.class_name, steps: {}, t: w.saved_at }).steps[w.step] = 1; });
       var chips = function (st) { var out = ''; for (var i = 1; i <= 6; i++) out += '<span class="stp' + (st.indexOf(i) >= 0 ? ' on' : '') + '" title="Step ' + i + (st.indexOf(i) >= 0 ? ' saved' : ' not saved') + '">' + i + '</span>'; return out; };
       body.innerHTML = '<div class="row2"><label class="small">Lesson <select id="lsel" style="max-width:520px">' +
-          (active.length ? '<optgroup label="Lessons this class has worked on">' + active.map(function (id) { return '<option value="' + E(id) + '"' + (id === L ? ' selected' : '') + '>' + E(title[id] || id) + ' · ' + ago(last[id]) + '</option>'; }).join('') + '</optgroup>' : '') +
-          (prog.length ? '<optgroup label="Other lessons for ' + E(c.programme || 'this class') + '">' + prog.map(function (l) { return '<option value="' + E(l.external_id) + '"' + (l.external_id === L ? ' selected' : '') + '>' + E(l.title) + '</option>'; }).join('') + '</optgroup>' : '') +
+          (active.length ? '<optgroup label="Lessons this class has worked on">' + active.map(function (id) { var sj = BV.subj.isMyp(c) ? BV.subj.of(subjOfLesson[id], title[id]) : '';
+            return '<option value="' + E(id) + '"' + (id === L ? ' selected' : '') + '>' + (sj ? E(sj) + ' · ' : '') + E(title[id] || id) + ' · ' + ago(last[id]) + '</option>'; }).join('') + '</optgroup>' : '') +
+          (function () { var opt = function (l) { return '<option value="' + E(l.external_id) + '"' + (l.external_id === L ? ' selected' : '') + '>' + E(l.title) + '</option>'; };
+            if (!prog.length) return '';
+            if (!BV.subj.isMyp(c)) return '<optgroup label="Other lessons for ' + E(c.programme || 'this class') + '">' + prog.map(opt).join('') + '</optgroup>';
+            var G = BV.subj.groups(prog, function (l) { return BV.subj.of((tp[l.topic_id] || {}).name, l.title); });   // Grade 6 to 10: one group per subject
+            return G.names.map(function (n) { return '<optgroup label="' + E(BV.subj.info(n)[0]) + ' lessons">' + G.by[n].map(opt).join('') + '</optgroup>'; }).join(''); })() +
         '</select></label></div>' + filters(state) +
         '<section class="panel"><b>' + E(title[L] || L) + '</b><div class="small"><b style="color:var(--ok)">✓ ' + nDone + ' finished all six steps</b> · <b style="color:#b45309">✎ ' + nProg + ' part-way</b> · <b style="color:#b91c1c">○ ' + nNone + ' not started</b> · of ' + list.length + '</div>' +
         bar([[nDone, 'var(--ok)', 'finished'], [nProg, '#f59e0b', 'part-way'], [nNone, '#fca5a5', 'not started']], list.length) +
@@ -960,14 +974,20 @@
     if (args[0] === 'import') return quizImport(p);
     if (args[0] && args[1] === 'preview') return quizPreview(p, args[0]);
     if (args[0]) return quizEdit(p, args[0]);
-    S.db.from('quizzes').select('id,title,published,due_at,show_results,category,created_by, quiz_classes(class_id), quiz_questions(question_id)').neq('category', 'lesson').order('created_at', { ascending: false }).then(function (r) {
+    S.db.from('quizzes').select('id,title,published,due_at,show_results,category,created_by,topic_id' + (QSUBJ ? ',subject' : '') + ', quiz_classes(class_id), quiz_questions(question_id)').neq('category', 'lesson').order('created_at', { ascending: false }).then(function (r) {
       if (TEACH) r.data = (r.data || []).filter(function (q) { return (!ME.admin && q.created_by === ME.user.id) || q.quiz_classes.some(function (x) { return CLASSES.some(function (c) { return c.id === x.class_id; }); }); });
       var cn = {}; CLASSES.forEach(function (c) { cn[c.id] = c.name; });
+      // Grades 6 to 10: every quiz and exam belongs to Biology, Chemistry or Physics; the buttons show one subject at a time
+      var rows = r.data || [], sOf = function (q) { return mypQuiz(q) ? quizSubj(q) : ''; }, any = rows.some(mypQuiz), pick = any ? (quizzes.pick || '') : '';
+      var shown = rows.filter(function (q) { return !pick || sOf(q) === pick; });
       p.innerHTML = '<div class="acts"><a class="btn main sm" href="#quizzes/import">⬆ Import from PDF or Word</a><a class="btn sm" href="#quizzes/new">＋ New quiz or exam</a></div>' +
         '<p class="small muted">📄 <b>Mark scheme</b> opens a printable mark scheme for that quiz or exam: correct answers, mark points, model answers and level descriptors. Use Print → Save as PDF to keep or share it.</p>' +
-        ((r.data || []).length ? '<div class="tablewrap"><table class="marks"><tr><th>Title</th><th>Type</th><th>Questions</th><th>Classes</th><th>Due</th><th>Results</th><th>Status</th><th></th></tr>' + r.data.map(function (q) {
-          return '<tr><td><a href="#quizzes/' + q.id + '">' + E(q.title) + '</a></td><td>' + (q.category === 'exam' ? '🧪 Exam' : '📝 Quiz') + '</td><td>' + q.quiz_questions.length + '</td><td class="small">' + E(q.quiz_classes.map(function (c) { return cn[c.class_id] || '…'; }).join(', ') || '–') + '</td><td class="small">' + E(S.when(q.due_at) || '–') + '</td><td class="small">' + (q.show_results ? 'shown at once' : 'after you release') + '</td><td>' + (q.published ? '<span class="pill">Published</span>' : 'Draft') + '</td><td><a class="btn sm" href="#quizzes/' + q.id + '/preview">👁 Preview</a> <button type="button" class="btn sm" data-ms="' + q.id + '">📄 Mark scheme</button></td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No quizzes yet. Import a question paper or make one from scratch.</p>');
+        (any ? '<div class="row2" style="justify-content:flex-start"><span class="small muted">Grades 6 to 10 by subject:</span><button type="button" class="btn sm' + (pick ? '' : ' main') + '" data-qs="">All quizzes and exams</button>' +
+          BV.subj.list.map(function (x) { return '<button type="button" class="btn sm' + (pick === x[0] ? ' main' : '') + '" data-qs="' + x[0] + '"' + (pick === x[0] ? ' style="background:' + x[1] + ';border-color:' + x[1] + ';color:#fff"' : '') + '>' + x[2] + ' ' + x[0] + ' (' + rows.filter(function (q) { return sOf(q) === x[0]; }).length + ')</button>'; }).join('') + '</div>' : '') +
+        (shown.length ? '<div class="tablewrap"><table class="marks"><tr><th>Title</th>' + (any ? '<th>Subject</th>' : '') + '<th>Type</th><th>Questions</th><th>Classes</th><th>Due</th><th>Results</th><th>Status</th><th></th></tr>' + shown.map(function (q) {
+          return '<tr><td><a href="#quizzes/' + q.id + '">' + E(q.title) + '</a></td>' + (any ? '<td>' + (sOf(q) ? BV.subj.tag(sOf(q)) : mypQuiz(q) ? '<span class="small muted">not set</span>' : '') + '</td>' : '') + '<td>' + (q.category === 'exam' ? '🧪 Exam' : '📝 Quiz') + '</td><td>' + q.quiz_questions.length + '</td><td class="small">' + E(q.quiz_classes.map(function (c) { return cn[c.class_id] || '…'; }).join(', ') || '–') + '</td><td class="small">' + E(S.when(q.due_at) || '–') + '</td><td class="small">' + (q.show_results ? 'shown at once' : 'after you release') + '</td><td>' + (q.published ? '<span class="pill">Published</span>' : 'Draft') + '</td><td><a class="btn sm" href="#quizzes/' + q.id + '/preview">👁 Preview</a> <button type="button" class="btn sm" data-ms="' + q.id + '">📄 Mark scheme</button></td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">' + (pick ? 'No ' + E(pick) + ' quizzes or exams yet.' : 'No quizzes yet. Import a question paper or make one from scratch.') + '</p>');
       wireMS(p);
+      p.querySelectorAll('[data-qs]').forEach(function (b) { b.onclick = function () { quizzes.pick = b.getAttribute('data-qs'); quizzes(p, args); }; });
     });
   }
 
@@ -1033,7 +1053,9 @@
         return { id: o.id, ref: ref, kind: o.kind, prompt: o.prompt, options: o.options || [], correct: an.correct_option == null ? -1 : an.correct_option, marks: o.marks, scheme: an.mark_scheme || an.model_answer || '', rubric: an.rubric || '', explanation: an.explanation || '', image: o.image_url || '', fb: an }; });
       p.innerHTML = '<p><a href="#quizzes">← All quizzes and exams</a></p><form class="panel grp" id="qf"><h3>' + (isNew ? 'New quiz or exam' : 'Settings') + '</h3>' +
         '<div class="row2"><label class="f" style="flex:1">Title<input id="t" required value="' + E(q.title) + '"></label><label class="f">Type<select id="cat"><option value="quiz"' + (q.category !== 'exam' ? ' selected' : '') + '>Quiz (Quiz centre)</option><option value="exam"' + (q.category === 'exam' ? ' selected' : '') + '>Exam (Online exams page)</option></select></label></div><label class="f">Instructions<textarea id="ins" rows="2">' + E(q.instructions || '') + '</textarea></label>' +
-        '<div class="row2"><label class="f">Topic<select id="tp">' + topicOpts(q.topic_id) + '</select></label><label class="f">Time limit (minutes, blank = none)<input id="tl" type="number" min="1" value="' + E(q.time_limit_minutes || '') + '"></label><label class="f">Attempts<input id="ma" type="number" min="1" value="' + E(q.max_attempts || 1) + '"></label></div>' +
+        '<div class="row2"><label class="f">Topic<select id="tp">' + topicOpts(q.topic_id) + '</select></label>' +
+          (QSUBJ ? '<label class="f">Subject (Grades 6 to 10)<select id="sj" title="Grade 6 to 10 science is kept in three subjects. Students see this quiz or exam only under the subject chosen here."><option value="">Work it out from the topic and title</option>' +
+            BV.subj.list.map(function (x) { return '<option value="' + x[0] + '"' + (q.subject === x[0] ? ' selected' : '') + '>' + x[2] + ' ' + x[0] + '</option>'; }).join('') + '</select></label>' : '') + '<label class="f">Time limit (minutes, blank = none)<input id="tl" type="number" min="1" value="' + E(q.time_limit_minutes || '') + '"></label><label class="f">Attempts<input id="ma" type="number" min="1" value="' + E(q.max_attempts || 1) + '"></label></div>' +
         '<div class="row2"><label class="f">Opens<input id="op" type="datetime-local" value="' + dt(q.opens_at) + '"></label><label class="f">Due<input id="du" type="datetime-local" value="' + dt(q.due_at) + '"></label></div>' +
         '<fieldset><legend>Set for classes</legend>' + (CLASSES.length ? CLASSES.map(function (c) { return '<label class="chk"><input type="checkbox" name="cl" value="' + c.id + '"' + (set.indexOf(c.id) >= 0 ? ' checked' : '') + '> ' + E(c.name) + '</label>'; }).join('') : '<p class="small">Create a class first.</p>') + '</fieldset>' +
         '<fieldset><legend>Results</legend><label class="chk"><input type="radio" name="sr" value="hold"' + (q.show_results ? '' : ' checked') + '> I check and release results (recommended for written answers)</label>' +
@@ -1090,6 +1112,7 @@
           feedback_mode: p.querySelector('#fm').value,
           integrity: Object.assign({}, q.integrity || {}, { mode: p.querySelector('#xm').value, max: Math.max(1, +p.querySelector('#xn').value || 3), fullscreen: p.querySelector('#xf').checked, seb: p.querySelector('#xs').checked, block_web: p.querySelector('#xb').checked }) };
         var cls = [].map.call(p.querySelectorAll('[name=cl]:checked'), function (c) { return c.value; });
+        if (p.querySelector('#sj')) row.subject = p.querySelector('#sj').value || null;   // Grades 6 to 10: Biology, Chemistry or Physics (migration 036)
         if (row.published && !cls.length) { toast('Choose at least one class before publishing.', true); return; }
         if (row.published && !isNew && !qs.length) { toast('Add questions before publishing.', true); return; }
         var qpw = p.querySelector('#xq').value, qclr = p.querySelector('#xqc') && p.querySelector('#xqc').checked;
@@ -1968,8 +1991,10 @@
       var list = function () {
         var sub = t.querySelector('#msub').value, q = t.querySelector('#mq').value.trim().toLowerCase(), only = t.querySelector('#monly').checked, last = '';
         var rows = CAT.filter(function (m) { return (!sub || m.subject === sub) && (!only || have[m.path]) && (!q || (m.title + ' ' + (m.unit || '')).toLowerCase().indexOf(q) >= 0); }).slice(0, 400);
-        t.querySelector('#mlist').innerHTML = rows.map(function (m) { var u = m.subject + ' · ' + (m.unit || ''), hd = u !== last ? '<p class="label" style="margin-top:10px">' + E(u) + '</p>' : ''; last = u;
-          return hd + '<label class="chk" style="display:flex;gap:8px"><input type="checkbox" data-p="' + E(m.path) + '"' + (have[m.path] ? ' checked' : '') + '><span>' + E(m.title) + (m.level === 'HL only' ? ' <span class="pill">HL</span>' : '') + ' <a class="small" href="' + E(m.path) + '" target="_blank" rel="noopener">open</a></span></label>'; }).join('') || '<p class="small muted">Nothing found.</p>';
+        var mrows = function (list) { var last = ''; return list.map(function (m) { var u = /^MYP /.test(m.subject || '') && m.unit ? m.unit : m.subject + ' · ' + (m.unit || ''), hd = u !== last ? '<p class="label" style="margin-top:10px">' + E(u) + '</p>' : ''; last = u;
+          return hd + '<label class="chk" style="display:flex;gap:8px"><input type="checkbox" data-p="' + E(m.path) + '"' + (have[m.path] ? ' checked' : '') + '><span>' + E(m.title) + (m.level === 'HL only' ? ' <span class="pill">HL</span>' : '') + ' <a class="small" href="' + E(m.path) + '" target="_blank" rel="noopener">open</a></span></label>'; }).join(''); };
+        // Grade 6 to 10 science lessons: one tab per subject (Biology, Chemistry, Physics)
+        t.querySelector('#mlist').innerHTML = rows.length ? BV.subj.split(rows, function (m) { return /^MYP /.test(m.subject || '') ? BV.subj.of(m.subject) : ''; }, mrows) : '<p class="small muted">Nothing found.</p>';
         t.querySelectorAll('[data-p]').forEach(function (b) { b.onchange = function () { var pth = b.getAttribute('data-p'); b.disabled = true;
           (b.checked ? S.db.from('class_materials').insert({ class_id: c.id, path: pth, added_by: ME.user.id, sort: Object.keys(have).length }) : S.db.from('class_materials').delete().eq('class_id', c.id).eq('path', pth)).then(function (r) {
             b.disabled = false; if (r.error) { b.checked = !b.checked; return toast(S.nice(r.error), true); } if (b.checked) have[pth] = 1; else delete have[pth]; delete MATS[c.id]; }); }; });
@@ -1978,16 +2003,19 @@
     });
   }
   function tcQuizzes(t, c) {
-    Promise.all([S.db.from('quizzes').select('id,title,category,published,created_by').order('title'), S.db.from('quiz_classes').select('quiz_id,published').eq('class_id', c.id)]).then(function (x) {
+    Promise.all([S.db.from('quizzes').select('id,title,category,published,created_by,topic_id' + (QSUBJ ? ',subject' : '')).order('title'), S.db.from('quiz_classes').select('quiz_id,published').eq('class_id', c.id)]).then(function (x) {
       var set = {}; (x[1].data || []).forEach(function (r) { set[r.quiz_id] = r.published ? 'live' : 'wait'; });
       var all = (x[0].data || []).filter(function (z) { return set[z.id] || z.published || z.created_by === ME.user.id; }).sort(function (a, b) { return (set[b.id] ? 1 : 0) - (set[a.id] ? 1 : 0) || a.title.localeCompare(b.title); });
       t.innerHTML = '<p class="small">Quizzes and exams linked to this class. Students see one only after you press <b>Publish</b>. Add more from the list, or make your own in <a href="#quizzes">Quizzes &amp; exams</a>.</p><label class="f">Search<input id="qq" placeholder="quiz title"></label><label class="chk"><input type="checkbox" id="qonly" checked> Only quizzes in this class</label><div id="ql"></div>';
       var list = function () { var q = t.querySelector('#qq').value.trim().toLowerCase(), only = t.querySelector('#qonly').checked;
-        t.querySelector('#ql').innerHTML = all.filter(function (z) { return (!only || set[z.id]) && (!q || z.title.toLowerCase().indexOf(q) >= 0); }).slice(0, 300).map(function (z) { var st = set[z.id];
+        var rowsOf = function (zs) { return zs.map(function (z) { var st = set[z.id];
           return '<div class="row2" style="justify-content:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)"><span style="flex:1">' + (z.category === 'exam' ? '🧪 ' : '📝 ') + E(z.title) + (z.created_by === ME.user.id ? ' <span class="pill">mine</span>' : '') +
             (st === 'live' ? ' <span class="pill ok">Published</span>' : st === 'wait' ? ' <span class="pill">Not published</span>' : '') + '</span>' +
             (st === 'live' ? '<button type="button" class="btn sm" data-p="' + z.id + '" data-on="0">⏸ Unpublish</button>' : '<button type="button" class="btn sm main" data-p="' + z.id + '" data-on="1">📢 Publish</button>') +
-            (st ? '<button type="button" class="btn sm" data-rm="' + z.id + '" title="Remove from this class">✕</button>' : '') + '</div>'; }).join('') || '<p class="small muted">No quizzes here yet.</p>';
+            (st ? '<button type="button" class="btn sm" data-rm="' + z.id + '" title="Remove from this class">✕</button>' : '') + '</div>'; }).join(''); };
+        var found = all.filter(function (z) { return (!only || set[z.id]) && (!q || z.title.toLowerCase().indexOf(q) >= 0); }).slice(0, 300);
+        // a Grade 6 to 10 science class: one tab per subject (Biology, Chemistry, Physics)
+        t.querySelector('#ql').innerHTML = !found.length ? '<p class="small muted">No quizzes here yet.</p>' : BV.subj.isMyp(c) ? BV.subj.split(found, quizSubj, rowsOf) : rowsOf(found);
         t.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { var id = b.getAttribute('data-p'), on = b.getAttribute('data-on') === '1'; b.disabled = true;
           S.db.rpc('set_quiz_published', { qid: id, cid: c.id, on_off: on }).then(function (r) { b.disabled = false; if (!ok(r)) return; set[id] = on ? 'live' : 'wait'; list(); }); }; });
         t.querySelectorAll('[data-rm]').forEach(function (b) { b.onclick = function () { var id = b.getAttribute('data-rm'); b.disabled = true;

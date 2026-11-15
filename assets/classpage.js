@@ -11,12 +11,14 @@
       var mine = me.staff || c.teacher_id === me.user.id || (me.classes || []).some(function (x) { return x.id === c.id; });
       if (!mine) { app.innerHTML = '<p class="emptybox">Your teacher has not approved you for <b>' + E(c.name) + '</b> yet.</p>'; return; }
       return S.db.from('class_materials').select('path,sort,materials(title,unit,subject,level)').eq('class_id', id).order('sort').then(function (x) {
-        var rows = x.data || [], last = '';
+        var rows = x.data || [];
         app.innerHTML = '<header class="grp"><p class="label">' + E([c.school_name, c.subject, c.level].filter(Boolean).join(' · ')) + '</p><h1>' + E(c.name) + '</h1>' + (c.description ? '<p class="muted">' + E(c.description) + '</p>' : '') +
           (!me.ok && !me.staff ? '<p class="msg">Lessons open when you have <a href="/premium/">premium access</a>.</p>' : '') +
           '<div class="cta"><a class="btn sm" href="/quizzes/">Quizzes for my classes</a><a class="btn sm" href="/messages/">Message my teacher</a><a class="btn sm" href="/dashboard/">My dashboard</a></div></header>' +
-          (rows.length ? '<section class="grp">' + rows.map(function (m) { var t = m.materials || {}, u = t.unit || '', hd = u !== last ? '<h3 class="sec-h">' + E(u) + '</h3>' : ''; last = u;
-            return hd + '<article class="task"><div class="top2"><b><a href="' + E(m.path) + '">' + E(t.title || m.path) + '</a></b>' + (t.level === 'HL only' ? '<span class="pill">HL</span>' : '') + '</div></article>'; }).join('') + '</section>'
+          (rows.length ? '<section class="grp">' + BV.subj.split(rows, function (m) { var t = m.materials || {}; return /^MYP /.test(t.subject || '') ? BV.subj.of(t.subject, t.unit) : ''; }, function (list) { var last = '';
+            // Grade 6 to 10 science: one tab per subject (Biology, Chemistry, Physics); inside a tab, lessons sit under their unit
+            return list.map(function (m) { var t = m.materials || {}, u = t.unit || '', hd = u !== last ? '<h3 class="sec-h">' + E(u) + '</h3>' : ''; last = u;
+              return hd + '<article class="task"><div class="top2"><b><a href="' + E(m.path) + '">' + E(t.title || m.path) + '</a></b>' + (t.level === 'HL only' ? '<span class="pill">HL</span>' : '') + '</div></article>'; }).join(''); }) + '</section>'
             : '<p class="emptybox">Your teacher has not added lessons yet.</p>');
       });
     });

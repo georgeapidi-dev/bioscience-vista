@@ -123,7 +123,7 @@
     t.innerHTML = '<p class="small muted">Loading…</p>';
     Promise.all([CAT ? Promise.resolve({ data: CAT }) : S.db.from('materials').select('*').order('sort'), S.db.from('class_materials').select('path,sort').eq('class_id', c.id)]).then(function (x) {
       CAT = x[0].data || []; var have = {}; (x[1].data || []).forEach(function (m) { have[m.path] = 1; });
-      if (c.ro) { var last0 = ''; t.innerHTML = '<p class="small muted">Lessons in this class (view only).</p>' + (CAT.filter(function (m) { return have[m.path]; }).map(function (m) { var u = m.subject + ' · ' + (m.unit || ''), hd = u !== last0 ? '<p class="label" style="margin-top:10px">' + E(u) + '</p>' : ''; last0 = u;
+      if (c.ro) { var last0 = ''; t.innerHTML = '<p class="small muted">Lessons in this class (view only).</p>' + (CAT.filter(function (m) { return have[m.path]; }).map(function (m) { var u = /^MYP /.test(m.subject || '') && m.unit ? m.unit : m.subject + ' · ' + (m.unit || ''), hd = u !== last0 ? '<p class="label" style="margin-top:10px">' + E(u) + '</p>' : ''; last0 = u;
         return hd + '<p>📘 <a href="' + E(m.path) + '" target="_blank" rel="noopener">' + E(m.title) + '</a></p>'; }).join('') || '<p class="small muted">No lessons yet.</p>'); return; }
       var subjects = []; CAT.forEach(function (m) { if (subjects.indexOf(m.subject) < 0) subjects.push(m.subject); });
       t.innerHTML = '<p class="small">Tick the Learnova lessons your students should see. They appear on your class page; students open them with their own account and their marks come to you under <b>Results</b>.</p>' +
@@ -133,8 +133,10 @@
       var list = function () {
         var sub = t.querySelector('#msub').value, q = t.querySelector('#mq').value.trim().toLowerCase(), only = t.querySelector('#monly').checked, last = '';
         var rows = CAT.filter(function (m) { return (!sub || m.subject === sub) && (!only || have[m.path]) && (!q || (m.title + ' ' + (m.unit || '')).toLowerCase().indexOf(q) >= 0); }).slice(0, 400);
-        t.querySelector('#mlist').innerHTML = rows.map(function (m) { var u = m.subject + ' · ' + (m.unit || ''), hd = u !== last ? '<p class="label" style="margin-top:10px">' + E(u) + '</p>' : ''; last = u;
-          return hd + '<label class="chk" style="display:flex;gap:8px"><input type="checkbox" data-p="' + E(m.path) + '"' + (have[m.path] ? ' checked' : '') + '><span>' + E(m.title) + (m.level === 'HL only' ? ' <span class="pill">HL</span>' : '') + ' <a class="small" href="' + E(m.path) + '" target="_blank" rel="noopener">preview</a></span></label>'; }).join('') || '<p class="small muted">Nothing matches.</p>';
+        var mrows = function (list) { var last = ''; return list.map(function (m) { var u = /^MYP /.test(m.subject || '') && m.unit ? m.unit : m.subject + ' · ' + (m.unit || ''), hd = u !== last ? '<p class="label" style="margin-top:10px">' + E(u) + '</p>' : ''; last = u;
+          return hd + '<label class="chk" style="display:flex;gap:8px"><input type="checkbox" data-p="' + E(m.path) + '"' + (have[m.path] ? ' checked' : '') + '><span>' + E(m.title) + (m.level === 'HL only' ? ' <span class="pill">HL</span>' : '') + ' <a class="small" href="' + E(m.path) + '" target="_blank" rel="noopener">preview</a></span></label>'; }).join(''); };
+        // Grade 6 to 10 science lessons: one tab per subject (Biology, Chemistry, Physics)
+        t.querySelector('#mlist').innerHTML = rows.length ? BV.subj.split(rows, function (m) { return /^MYP /.test(m.subject || '') ? BV.subj.of(m.subject) : ''; }, mrows) : '<p class="small muted">Nothing matches.</p>';
         t.querySelectorAll('[data-p]').forEach(function (b) { b.onchange = function () { var p = b.getAttribute('data-p'); b.disabled = true;
           (b.checked ? S.db.from('class_materials').insert({ class_id: c.id, path: p, added_by: ME.user.id, sort: Object.keys(have).length }) : S.db.from('class_materials').delete().eq('class_id', c.id).eq('path', p)).then(function (r) {
             b.disabled = false; if (r.error) { b.checked = !b.checked; return alert(S.nice(r.error)); } if (b.checked) have[p] = 1; else delete have[p]; }); }; });
@@ -144,23 +146,29 @@
   }
   function quizzes(t, c) {
     t.innerHTML = '<p class="small muted">Loading…</p>';
-    Promise.all([S.db.from('quizzes').select('id,title,category,time_limit_minutes,max_attempts').eq('published', true).order('title'),
-      S.db.from('quiz_classes').select('quiz_id,published, quizzes(id,title,category,time_limit_minutes,max_attempts)').eq('class_id', c.id)]).then(function (x) {
+    S.quizSubjectCol().then(function (has) { var cols = 'id,title,category,time_limit_minutes,max_attempts,' + (has ? 'subject,' : '') + ' topics(name)';
+    return Promise.all([S.db.from('quizzes').select(cols).eq('published', true).order('title'),
+      S.db.from('quiz_classes').select('quiz_id,published, quizzes(' + cols + ')').eq('class_id', c.id)]); }).then(function (x) {
+      // a Grade 6 to 10 science class: quizzes and exams are kept in their subjects (Biology, Chemistry, Physics), one tab each
+      var sjOf = function (z) { return BV.subj.of(z.subject, z.topics && z.topics.name, z.title); }, split = function (zs, rows) { return BV.subj.isMyp(c) ? BV.subj.split(zs, sjOf, rows) : rows(zs); };
       var cat = x[0].data || [], links = x[1].data || [], set = {}, byId = {};
       links.forEach(function (r) { set[r.quiz_id] = r.published ? 'live' : 'wait'; if (r.quizzes) byId[r.quiz_id] = r.quizzes; });
       cat.forEach(function (z) { byId[z.id] = byId[z.id] || z; });
       var all = Object.keys(byId).map(function (k) { return byId[k]; }).sort(function (a, b) { return (set[b.id] ? 1 : 0) - (set[a.id] ? 1 : 0) || a.title.localeCompare(b.title); });
-      if (c.ro) { t.innerHTML = '<p class="small muted">Quizzes for this class (view only).</p>' + (all.filter(function (z) { return set[z.id]; }).map(function (z) { return '<p>📝 ' + E(z.title) + ' <span class="small muted">' + (set[z.id] === 'live' ? 'published' : 'not published yet') + '</span></p>'; }).join('') || '<p class="small muted">No quizzes yet.</p>'); return; }
+      if (c.ro) { var mineQ = all.filter(function (z) { return set[z.id]; });
+        t.innerHTML = '<p class="small muted">Quizzes for this class (view only).</p>' + (mineQ.length ? split(mineQ, function (zs) { return zs.map(function (z) { return '<p>📝 ' + E(z.title) + ' <span class="small muted">' + (set[z.id] === 'live' ? 'published' : 'not published yet') + '</span></p>'; }).join(''); }) : '<p class="small muted">No quizzes yet.</p>'); return; }
       var nWait = all.filter(function (z) { return set[z.id] === 'wait'; }).length;
       t.innerHTML = '<p class="small">Quizzes for your course are already linked to this class. Students see a quiz only after you press <b>Publish</b>. ' +
         (nWait ? '<b>' + nWait + ' quiz' + (nWait === 1 ? '' : 'zes') + ' waiting for you to publish.</b>' : '') + '</p><label class="f">Search<input id="qq" placeholder="quiz title"></label><div id="ql"></div>';
       var list = function () { var q = t.querySelector('#qq').value.trim().toLowerCase();
-        t.querySelector('#ql').innerHTML = all.filter(function (z) { return !q || z.title.toLowerCase().indexOf(q) >= 0; }).slice(0, 300).map(function (z) {
+        var rowsOf = function (zs) { return zs.map(function (z) {
           var st = set[z.id];
           return '<div class="row2" style="justify-content:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)"><span style="flex:1">📝 ' + E(z.title) + ' <span class="small muted">' + E(z.category || 'quiz') + (z.time_limit_minutes ? ' · ' + z.time_limit_minutes + ' min' : '') + '</span>' +
             (st === 'live' ? ' <span class="pill ok">Published</span>' : st === 'wait' ? ' <span class="pill">Not published</span>' : '') + '</span>' +
             (st === 'live' ? '<button type="button" class="btn sm" data-p="' + E(z.id) + '" data-on="0">⏸ Unpublish</button>' : '<button type="button" class="btn sm main" data-p="' + E(z.id) + '" data-on="1">📢 Publish</button>') +
-            (st ? '<button type="button" class="btn sm" data-rm="' + E(z.id) + '" title="Remove from this class">✕</button>' : '') + '</div>'; }).join('') || '<p class="small muted">No quizzes found.</p>';
+            (st ? '<button type="button" class="btn sm" data-rm="' + E(z.id) + '" title="Remove from this class">✕</button>' : '') + '</div>'; }).join(''); };
+        var found = all.filter(function (z) { return !q || z.title.toLowerCase().indexOf(q) >= 0; }).slice(0, 300);
+        t.querySelector('#ql').innerHTML = found.length ? split(found, rowsOf) : '<p class="small muted">No quizzes found.</p>';
         t.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { var id = b.getAttribute('data-p'), on = b.getAttribute('data-on') === '1'; b.disabled = true;
           S.db.rpc('set_quiz_published', { qid: id, cid: c.id, on_off: on }).then(function (r) { b.disabled = false; if (r.error) return alert(S.nice(r.error)); set[id] = on ? 'live' : 'wait'; list(); }); }; });
         t.querySelectorAll('[data-rm]').forEach(function (b) { b.onclick = function () { var id = b.getAttribute('data-rm'); b.disabled = true;

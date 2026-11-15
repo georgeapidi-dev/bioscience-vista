@@ -51,7 +51,16 @@
         : (function (q) { return (me.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? q.eq('published', true) : q; })(S.db.from('quizzes').select('id,title,due_at,opens_at,time_limit_minutes,max_attempts,category')),   // students: quizzes published for their classes (per class, migration 025)
       S.db.from('quiz_attempts').select('quiz_id,status,score,max_score,submitted_at').eq('student_id', me.user.id),
       me.view ? Promise.resolve({ data: [] }) : S.db.rpc('my_todo').then(function (r) { return r; }, function () { return { data: [] }; })
-    ]).then(function (x) { draw(me, x[0].data || [], x[1].data || [], x[2].data || [], x[3].data || [], x[4].data || []); });
+    ]).then(function (x) {
+      // Grade 6 to 10 science: every result, lesson and question set is shown under its own subject (Biology, Chemistry or Physics).
+      // The subject comes from the set itself (migration 036) or from the topic the lesson or set belongs to.
+      if (!(me.classes || []).some(BV.subj.isMyp)) return draw(me, x[0].data || [], x[1].data || [], x[2].data || [], x[3].data || [], x[4].data || []);
+      var res = x[0].data || [], prog = x[1].data || [];
+      return S.subjectLookup(res.map(function (r) { return r.lesson_id; }).concat(prog.map(function (p) { return p.lesson_id; })), res.map(function (r) { return r.quiz_id; }).concat((x[2].data || []).map(function (q) { return q.id; }))).then(function (look) {
+        SUBJ = look;
+        draw(me, res, prog, x[2].data || [], x[3].data || [], x[4].data || []);
+      });
+    });
   }).catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
   // My classes, joining a class (school or teacher first, then the class; no codes) and premium access
@@ -176,19 +185,22 @@
   function learningPlan(me, prog) {
     var box = app.querySelector('#plan'); if (!box) return;
     var ids = (me.classes || []).map(function (c) { return c.id; }); if (!ids.length) { box.remove(); return; }
-    S.db.from('class_materials').select('class_id,path,sort,materials(title,unit)').in('class_id', ids).order('sort').then(function (r) {
+    S.db.from('class_materials').select('class_id,path,sort,materials(title,unit,subject)').in('class_id', ids).order('sort').then(function (r) {
       var mats = r.data || [], byPath = {}, seen = {};
       prog.forEach(function (p) { var u = p.lessons && p.lessons.url; if (u) { var k = u.replace(/^https?:\/\/[^/]+/, '').replace(/[?#].*$/, ''); if (k.slice(-1) !== '/') k += '/'; byPath[k] = p; } });
       var going = [], next = [];
       mats.forEach(function (m) { if (seen[m.path]) return; seen[m.path] = 1; var p = byPath[m.path];
         if (p && p.status !== 'completed') going.push({ m: m, p: p }); else if (!p) next.push({ m: m }); });
-      var perClass = {}; next = next.filter(function (x) { perClass[x.m.class_id] = (perClass[x.m.class_id] || 0) + 1; return perClass[x.m.class_id] <= 3; });
+      // Grade 6 to 10 science: the next lessons are chosen per subject (Biology, Chemistry, Physics), so the plan never runs one subject into another
+      var sj = function (x) { var t = x.m.materials || {}; return /^MYP /.test(t.subject || '') ? BV.subj.of(t.subject, t.unit) : ''; };
+      var perClass = {}; next = next.filter(function (x) { var k = x.m.class_id + '|' + sj(x); perClass[k] = (perClass[k] || 0) + 1; return perClass[k] <= (sj(x) ? 2 : 3); });
       var total = Object.keys(seen).length, done = Object.keys(seen).filter(function (k) { return byPath[k] && byPath[k].status === 'completed'; }).length;
       var row = function (x, tag) { var t = x.m.materials || {}; return '<p>📘 <a href="' + E(x.m.path) + '">' + E(t.title || x.m.path) + '</a> <span class="small muted">' + E(t.unit || '') + (tag ? ' · ' + tag : '') + '</span></p>'; };
+      var rows = function (list, tagOf, max) { return BV.subj.split(list, sj, function (part, name) { return part.slice(0, name ? 3 : max).map(function (x) { return row(x, tagOf && tagOf(x)); }).join(''); }); };
       box.innerHTML = '<h3>🧭 My learning plan</h3><p class="small muted">Chosen for you from your classes and your progress. Each lesson gives instant feedback on every step; your learning profile below shows what to practise.</p>' +
         '<div class="bar"><i style="width:' + (total ? Math.round(100 * done / total) : 0) + '%"></i></div><p class="small">' + done + ' of ' + total + ' lessons in your classes completed</p>' +
-        (going.length ? '<h4>Finish what you started</h4>' + going.slice(0, 4).map(function (x) { return row(x, x.p.percent + '% done'); }).join('') : '') +
-        (next.length ? '<h4>Up next</h4>' + next.slice(0, 6).map(function (x) { return row(x); }).join('') : (going.length ? '' : '<p>You have finished every lesson in your classes. Try the <a href="/quizzes/">quizzes</a> to test yourself.</p>')) +
+        (going.length ? '<h4>Finish what you started</h4>' + rows(going, function (x) { return x.p.percent + '% done'; }, 4) : '') +
+        (next.length ? '<h4>Up next</h4>' + rows(next, null, 6) : (going.length ? '' : '<p>You have finished every lesson in your classes. Try the <a href="/quizzes/">quizzes</a> to test yourself.</p>')) +
         '<p class="small"><a href="/tutor/">Stuck? Ask the Science Help Desk</a> · <a href="/messages/">Message your teacher</a></p>';
     }, function () { box.remove(); });
   }
@@ -239,6 +251,8 @@
         .subscribe(function (st) { if (st === 'SUBSCRIBED') ch.send({ type: 'broadcast', event: 'hello', payload: {} }); });
     });
   }
+  var SUBJ = null;   // set for students in a Grade 6 to 10 science class: works out the subject of a lesson or question set
+  function stag(kind, id, title) { if (!SUBJ) return ''; var n = SUBJ[kind](id, title); return n ? BV.subj.tag(n) + ' ' : ''; }
   function draw(me, res, prog, quizzes, att, tasks) {
     var first = (me.profile.full_name || 'there').split(' ')[0], got = 0, max = 0;
     res.forEach(function (r) { if (r.score != null && r.max_score) { got += +r.score; max += +r.max_score; } });
@@ -254,17 +268,18 @@
       '<div class="stat"><span class="small muted">Lessons completed</span><b>' + done + ' / ' + prog.length + '</b></div>' +
       '<div class="stat"><span class="small muted">To do</span><b>' + (openTasks + todo.length) + '</b></div>' +
       '<div class="stat"><span class="small muted">Feedback received</span><b>' + fb.length + '</b></div></div>';
-    h += '<div class="two"><section class="panel"><h3>📌 To do</h3>' + todoHtml(tasks) + (todo.length || !tasks.length ? (tasks.length ? '<p class="small muted" style="margin:10px 0 2px">Also open for your class:</p>' : '') : '') + (todo.length ? todo.map(function (q) { return '<p>' + ({ exam: '🧪', lesson: '📘' }[q.category] || '📝') + ' <a href="' + ({ exam: '/exams/', lesson: '/lesson/' }[q.category] || '/quizzes/') + '#' + q.id + '">' + E(q.title) + '</a>' + (q.due_at ? ' <span class="small muted">due ' + E(S.when(q.due_at)) + '</span>' : '') + '</p>'; }).join('') : (tasks.length ? '' : '<p class="muted">Nothing to do right now. Well done!</p>')) +
-      prog.filter(function (p) { return p.status !== 'completed'; }).slice(0, 5).map(function (p) { return '<p>📘 <a href="' + E(p.lessons && p.lessons.url || '/learn/') + '">' + E(p.lessons ? p.lessons.title : 'Lesson') + '</a> <span class="small muted">' + p.percent + '% done</span></p>'; }).join('') + '</section>' +
-      '<section class="panel"><h3>My progress</h3>' + (prog.length ? prog.slice(0, 8).map(function (p) { return '<div class="grp" style="gap:4px"><div class="row2"><span class="small">' + E(p.lessons ? p.lessons.title : '') + '</span><span class="small muted">' + p.percent + '%</span></div><div class="bar"><i style="width:' + p.percent + '%"></i></div></div>'; }).join('') : '<p class="muted">Open a lesson from the <a href="/learn/">Learning centre</a> to start.</p>') + '</section></div>';
+    h += '<div class="two"><section class="panel"><h3>📌 To do</h3>' + todoHtml(tasks) + (todo.length || !tasks.length ? (tasks.length ? '<p class="small muted" style="margin:10px 0 2px">Also open for your class:</p>' : '') : '') + (todo.length ? todo.map(function (q) { return '<p>' + ({ exam: '🧪', lesson: '📘' }[q.category] || '📝') + ' ' + stag('quiz', q.id, q.title) + '<a href="' + ({ exam: '/exams/', lesson: '/lesson/' }[q.category] || '/quizzes/') + '#' + q.id + '">' + E(q.title) + '</a>' + (q.due_at ? ' <span class="small muted">due ' + E(S.when(q.due_at)) + '</span>' : '') + '</p>'; }).join('') : (tasks.length ? '' : '<p class="muted">Nothing to do right now. Well done!</p>')) +
+      prog.filter(function (p) { return p.status !== 'completed'; }).slice(0, 5).map(function (p) { return '<p>📘 ' + stag('lesson', p.lesson_id, p.lessons && p.lessons.title) + '<a href="' + E(p.lessons && p.lessons.url || '/learn/') + '">' + E(p.lessons ? p.lessons.title : 'Lesson') + '</a> <span class="small muted">' + p.percent + '% done</span></p>'; }).join('') + '</section>' +
+      '<section class="panel"><h3>My progress</h3>' + (prog.length ? prog.slice(0, 8).map(function (p) { return '<div class="grp" style="gap:4px"><div class="row2"><span class="small">' + stag('lesson', p.lesson_id, p.lessons && p.lessons.title) + E(p.lessons ? p.lessons.title : '') + '</span><span class="small muted">' + p.percent + '%</span></div><div class="bar"><i style="width:' + p.percent + '%"></i></div></div>'; }).join('') : '<p class="muted">Open a lesson from the <a href="/learn/">Learning centre</a> to start.</p>') + '</section></div>';
     h += '<section class="panel" id="mylessons"><h3>📘 My interactive lessons</h3><p class="small muted">Loading…</p></section>';
     h += '<section class="panel" id="revise" style="border-left:6px solid #db2777"><h3>🎯 Revise next</h3><p class="small muted">Looking at your results…</p></section>';
     h += '<section class="panel" id="plan"><h3>🧭 My learning plan</h3><p class="small muted">Loading…</p></section>';
     h += '<section class="panel" id="anbox"><h3>📊 My learning profile</h3><p class="muted small">Loading…</p></section>';
-    h += '<section class="grp"><h3 class="sec-h">My results and feedback</h3>' + (res.length ? res.map(function (r) { var pc = S.pct(+r.score, +r.max_score);
+    var resOf = function (r) { return SUBJ ? (r.quiz_id ? SUBJ.quiz(r.quiz_id, r.title) : SUBJ.lesson(r.lesson_id, r.title)) : ''; };
+    h += '<section class="grp"><h3 class="sec-h">My results and feedback</h3>' + (res.length ? BV.subj.split(res, resOf, function (part) { return part.map(function (r) { var pc = S.pct(+r.score, +r.max_score);
       return '<article class="task"><div class="top2"><b>' + E(r.title || 'Task') + '</b><span class="score">' + (r.score == null ? 'Being marked' : E(r.score) + ' / ' + E(r.max_score) + (pc != null ? ' (' + pc + '%)' : '')) + '</span></div>' +
         '<div class="bar"><i style="width:' + (pc || 0) + '%"></i></div><span class="small muted">' + E(S.when(r.recorded_at)) + '</span>' +
-        (r.teacher_feedback ? '<div class="fb tch"><h4>Teacher feedback</h4>' + BV.md(r.teacher_feedback) + '</div>' : '') + (r.ai_feedback ? '<div class="fb ai"><h4>Feedback</h4>' + BV.md(String(r.ai_feedback).replace(/_🤖 Automatic AI feedback from your marks on each question\./, '_📝 Feedback from your marks on each question.').replace(/_⚙ Automatic feedback from your marks on each question\._/, '_📝 Feedback from your marks on each question._')) + '</div>' : '') + '</article>'; }).join('') :
+        (r.teacher_feedback ? '<div class="fb tch"><h4>Teacher feedback</h4>' + BV.md(r.teacher_feedback) + '</div>' : '') + (r.ai_feedback ? '<div class="fb ai"><h4>Feedback</h4>' + BV.md(String(r.ai_feedback).replace(/_🤖 Automatic AI feedback from your marks on each question\./, '_📝 Feedback from your marks on each question.').replace(/_⚙ Automatic feedback from your marks on each question\._/, '_📝 Feedback from your marks on each question._')) + '</div>' : '') + '</article>'; }).join(''); }) :
       '<p class="emptybox">No results yet. Results appear here when you finish lessons and quizzes.</p>') + '</section>';
     h += '<details class="panel"><summary><b>My profile</b></summary><form id="pf" class="grp" style="margin-top:10px"><label class="f">Full name<input id="pn" value="' + E(me.profile.full_name) + '"></label><button class="btn sm" type="submit">Save</button><p class="msg" id="pm"></p></form>' +
       '<p class="small muted">Marks from before accounts were switched on are still on <a href="/progress/">My learning (personal code)</a>.</p></details>';

@@ -79,6 +79,24 @@
     var a = document.querySelector('.cta-nav'); if (!a || !me) return;
     a.textContent = me.admin ? 'My dashboards' : me.staff || me.school ? 'Teacher dashboard' : me.parent ? "My child's progress" : 'My dashboard'; a.href = me.admin ? '/teach/' : me.staff ? '/staff/' : me.school ? '/teach/' : me.parent ? '/parent/' : '/dashboard/';
   };
+  /* Grade 6 to 10 science: each question set and exam says its subject (Biology, Chemistry or Physics) in quizzes.subject (migration 036).
+     Resolves true when that column exists; before the migration the subject is read from the set's topic and title (BV.subj.of). */
+  S.quizSubjectCol = function () { if (!S._qsc) S._qsc = S.db.from('quizzes').select('subject').limit(1).then(function (r) { return !r.error; }, function () { return false; }); return S._qsc; };
+  /* Which subject a lesson or a question set belongs to, for pages that list a student's work (dashboard, parent view).
+     Give the lesson ids and quiz ids on the page; resolves { lesson(id, title), quiz(id, title), myp(kind, id, title) }. */
+  S.subjectLookup = function (lessonIds, quizIds) {
+    var uniq = function (a) { return (a || []).filter(function (v, i, x) { return v && x.indexOf(v) === i; }); }, none = Promise.resolve({ data: [] });
+    var soft = function (q) { return q.then(function (r) { return r.error ? { data: [] } : r; }, function () { return { data: [] }; }); };
+    var lids = uniq(lessonIds), qids = uniq(quizIds);
+    return Promise.all([soft(S.db.from('topics').select('id,name,programme,parent_id')), lids.length ? soft(S.db.from('lessons').select('id,topic_id').in('id', lids)) : none,
+      qids.length ? S.quizSubjectCol().then(function (has) { return soft(S.db.from('quizzes').select('id,topic_id' + (has ? ',subject' : '')).in('id', qids)); }) : none]).then(function (y) {
+      var T = {}, lt = {}, qz = {}; (y[0].data || []).forEach(function (t) { T[t.id] = t; }); (y[1].data || []).forEach(function (l) { lt[l.id] = l.topic_id; }); (y[2].data || []).forEach(function (q) { qz[q.id] = q; });
+      var prog = function (tid) { var t = T[tid] || {}; return t.programme || (T[t.parent_id] || {}).programme || ''; };
+      return { lesson: function (id, title) { return BV.subj.of((T[lt[id]] || {}).name, title); },
+        quiz: function (id, title) { var q = qz[id] || {}; return BV.subj.of(q.subject, (T[q.topic_id] || {}).name, title); },
+        myp: function (kind, id, title) { return /^MYP/.test(prog(kind === 'quiz' ? (qz[id] || {}).topic_id : lt[id])) || /\bgrade (6|7|8|9|10)\b/i.test(title || ''); } };
+    });
+  };
   S.pct = function (s, m) { return m ? Math.round(100 * s / m) : null; };
   S.when = function (t) { return t ? new Date(t).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : ''; };
   if (S.on) { S.me().then(S.updateNav).catch(function () {}); S.logVisit(); }

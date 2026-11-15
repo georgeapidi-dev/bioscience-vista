@@ -33,6 +33,65 @@
 
   BV.store = function (k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } };
   BV.esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  /* MYP Science (Grades 6 to 10) is kept in its three subjects everywhere: Biology, Chemistry and Physics are never mixed in one list.
+     BV.subj.of(text, …): the subject a lesson, topic, question set or exam belongs to. A text that names its subject ("MYP Chemistry",
+     "Physics · Waves", "Grade 10 · Biology · …") decides, in the order given; otherwise the subject is read from the words of the titles.
+     BV.subj.split(items, subjectOf, render): one tab per subject; each tab shows only that subject's items.
+     BV.subj.isMyp(class): true for a Grade 6 to 10 (MYP 1 to 5) science class. */
+  BV.subj = (function () {
+    var LIST = [['Biology', '#15803d', '🌿'], ['Chemistry', '#c2410c', '⚗️'], ['Physics', '#1d4ed8', '⚡']], OTHER = ['Other', '#6d28d9', '📚'];
+    var NAMED = /\b(biology|chemistry|physics)\b/i;
+    var WORDS = [['Biology', /\b(cell|dna|rna|gene|inherit|enzyme|nutri|food|diet|digest|photosynth|respirat|reproduc|evolution|biotech|classif|organism|living|understanding life|ecolog|ecosystem|plant|protein|carbohydrate|lipid|microscop|osmosis|mitosis|meiosis|cloning|stem cell|hormone|pollinat|vertebrate|microorganism|selective breeding|natural selection)/],
+      ['Chemistry', /\b(matter|acid|alkali|atom|element|compound|mixture|particle|reaction|bonding|periodic|chemic|solution|solute|solvent|separat|substance)/],
+      ['Physics', /\b(force|energy|electric|wave|motion|density|radioactiv|measur|speed|light|sound|heat|circuit|magnet|pressure|mass and weight|scientific investigation|introduction to science)/]];
+    function of() {
+      var a = [].slice.call(arguments).filter(Boolean).map(String), i, m;
+      for (i = 0; i < a.length; i++) { m = NAMED.exec(a[i]); if (m) return m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase(); }
+      var t = a.join(' · ').toLowerCase();
+      for (i = 0; i < WORDS.length; i++) if (WORDS[i][1].test(t)) return WORDS[i][0];
+      return '';
+    }
+    function asked() {   // the subject named in the address: /grade-10/#chemistry or /quizzes/?subject=Chemistry
+      var h = '', q = ''; try { h = decodeURIComponent(location.hash.slice(1)); q = new URLSearchParams(location.search).get('subject') || ''; } catch (e) {}
+      return LIST.map(function (x) { return x[0]; }).filter(function (x) { return x.toLowerCase() === h.toLowerCase() || x.toLowerCase() === q.toLowerCase(); })[0] || '';
+    }
+    function info(n) { return LIST.filter(function (x) { return x[0] === n; })[0] || OTHER; }
+    function tag(n) { var x = info(n); return '<span class="sj-tag" style="--k:' + x[1] + '">' + x[2] + ' ' + BV.esc(x[0]) + '</span>'; }
+    function isMyp(c) { if (!c) return false; var t = [c.site_slug, c.follows, c.slug, c.programme, c.course, c.name].filter(Boolean).join(' ').toLowerCase(); return /\bgrade[- ]?(6|7|8|9|10)\b/.test(t) || /\bmyp ?[1-5]?\b/.test(t); }
+    function groups(items, subjectOf) {
+      var g = {}; items.forEach(function (it) { var s = subjectOf(it) || ''; if (!info(s) || info(s) === OTHER) s = ''; (g[s] = g[s] || []).push(it); });
+      var names = LIST.map(function (x) { return x[0]; }).filter(function (n) { return g[n]; }); if (g['']) names.push('');
+      return { by: g, names: names };
+    }
+    function split(items, subjectOf, render) {
+      var G = groups(items, subjectOf), names = G.names;
+      if (!names.length || (names.length === 1 && names[0] === '')) return render(items, '');   // nothing here belongs to one of the three subjects
+      var want = asked() || BV.store('bv-subj'), pick = want && names.indexOf(want) >= 0 ? want : names[0];
+      return '<div class="sj"><div class="sj-tabs" role="tablist" aria-label="Subjects">' + names.map(function (n) { var x = info(n);
+        return '<button type="button" role="tab" data-sj-tab="' + BV.esc(x[0]) + '" aria-selected="' + (n === pick) + '" style="--k:' + x[1] + '">' + x[2] + ' ' + BV.esc(x[0]) + ' <span class="n">(' + G.by[n].length + ')</span></button>'; }).join('') + '</div>' +
+        names.map(function (n) { var x = info(n);
+          return '<section class="sj-pane" role="tabpanel" data-sj="' + BV.esc(x[0]) + '" aria-label="' + BV.esc(x[0]) + '" style="--k:' + x[1] + '"' + (n === pick ? '' : ' hidden') + '><h3 class="sj-h">' + x[2] + ' ' + BV.esc(x[0]) + '</h3>' + render(G.by[n], n) + '</section>'; }).join('') + '</div>';
+    }
+    function show(box, name) {   // open one subject's tab in a block (no change when the block has no such subject)
+      var tabs = [].filter.call(box.children[0] ? box.children[0].children : [], function (b) { return b.hasAttribute('data-sj-tab'); });
+      if (!tabs.some(function (b) { return b.getAttribute('data-sj-tab') === name; })) return false;
+      tabs.forEach(function (b) { b.setAttribute('aria-selected', b.getAttribute('data-sj-tab') === name ? 'true' : 'false'); });
+      [].forEach.call(box.children, function (p) { if (p.hasAttribute('data-sj')) p.hidden = p.getAttribute('data-sj') !== name; });
+      return true;
+    }
+    function showAll(name) { [].forEach.call(document.querySelectorAll('.sj'), function (b) { show(b, name); }); }
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-sj-tab]') : null; if (!b) return;
+      var name = b.getAttribute('data-sj-tab'); BV.store('bv-subj', name); showAll(name);   // every list on the page follows the subject chosen
+    });
+    function first() {   // pages built with their tabs already in place (class pages): open the subject in the address, or the one chosen last time
+      var n = asked(); if (n) BV.store('bv-subj', n); else n = BV.store('bv-subj');
+      if (n) showAll(n);
+    }
+    first(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', first);   // this script sits below the page content, so the tabs are already there; once more when the page has finished loading
+    window.addEventListener('hashchange', first);
+    return { list: LIST, other: OTHER, of: of, info: info, tag: tag, isMyp: isMyp, groups: groups, split: split, show: showAll };
+  })();
   /* tiny markdown for AI text: **bold**, bullets, line breaks */
   BV.md = function (t) {
     var lines = BV.esc(t).split(/\n/), out = '', inl = false;
