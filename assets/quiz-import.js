@@ -306,7 +306,7 @@
   var ANSWER = /^(?:answer|ans|correct answer|key)\s*[:\-–]\s*(.+)$/i;
   var ROMAN = /^(i{1,3}|iv|v|vi{1,3}|ix|x)$/;
   Q.clean = clean;
-  Q.parsePaper = function (lines) {
+  function parseNumbered(lines) {
     lines = clean(lines); var qs = [], cur = null, last = 0, early = [];
     lines.forEach(function (line) {
       var pm = IMGLINE.exec(line);
@@ -355,6 +355,54 @@
       });
     });
     return out;
+  }
+  /* Questions with no numbers (worksheets, slides, notes, pasted text): a new question starts at a line that reads as a question
+     (ends with "?" or a mark such as [2], or starts with a command term such as Explain, State, Calculate, Which…).
+     Lines A–D under it are its choices; other lines before a question are its context (a passage, data or a diagram). */
+  var CMD = /^(explain|describe|state|identify|calculate|outline|suggest|compare|contrast|define|draw|plot|sketch|label|annotate|evaluate|discuss|name|give|list|what|which|why|how|when|where|who|whose|complete|write|predict|determine|deduce|distinguish|estimate|justify|analy[sz]e|apply|construct|design|show|use|find|classify|interpret|measure|fill in|choose|select|circle|match|true or false|is|are|does|do|can|could|would|should|will)\b/i;
+  function askLike(t) {
+    t = String(t || '').trim(); if (t.length < 7) return false;
+    if (/\?\s*$/.test(t) || MARKS.test(t)) return true;
+    return CMD.test(t) && t.length > 14 && !/^(is|are|does|do|can|could|would|should|will|use|show|when|where|who|how|what|which)\b/i.test(t);   // question words must end with "?"
+  }
+  function ended(t) { return /[\?\.:]\s*$/.test(t) || MARKS.test(t); }
+  Q.parseLoose = function (lines) {
+    lines = clean(lines); var out = [], cur = null, ctx = [], ctxPics = [], n = 0;
+    function finish() {
+      if (!cur) return; var text = cur.text.join(' ').trim(), mm = MARKS.exec(text); if (mm) text = text.replace(MARKS, '');
+      var opts = cur.opts, letters = opts.length >= 2 && opts.length <= 6 && opts.every(function (o, k) { return o.label.toLowerCase() === 'abcdef'[k]; });
+      var o = letters ? opts.map(function (x) { return x.text; }) : [], correct = -1;
+      if (!letters && opts.length) text += '\n' + opts.map(function (x) { return x.label + ') ' + x.text; }).join('\n');
+      if (cur.answer && o.length) { var L = /^\(?([A-Fa-f])\)?\b/.exec(cur.answer); if (L) correct = 'abcdef'.indexOf(L[1].toLowerCase()); }
+      var tfq = /^true or false\b|\(true or false\)|true\/false/i.test(text) && !o.length;
+      if (tfq) { o = ['True', 'False']; text = text.replace(/^true or false[:.\s-]*/i, ''); text = text.charAt(0).toUpperCase() + text.slice(1); if (cur.answer) correct = /^t/i.test(cur.answer) ? 0 : /^f/i.test(cur.answer) ? 1 : -1; }
+      n++; var tf = o.length === 2 && /^true$/i.test(o[0]) && /^false$/i.test(o[1]);
+      out.push({ ref: String(n), kind: o.length ? (tf ? 'tf' : 'mcq') : 'short', prompt: (cur.stem.length ? cur.stem.join('\n') + '\n\n' : '') + text, options: o, correct: correct,
+        marks: mm ? +mm[1] : o.length ? 1 : 2, scheme: !o.length && cur.answer ? cur.answer : '', rubric: '', explanation: '', image: cur.pics[0] || '', images: cur.pics.slice() });
+      cur = null;
+    }
+    lines.forEach(function (line) {
+      var pm = IMGLINE.exec(line);
+      if (pm) { var url = Q.IMGS[+pm[1]]; if (!url) return; if (cur && !ctx.length && !cur.opts.length && !ended(cur.text.join(' '))) cur.pics.push(url); else if (cur && !ctx.length && /\b(diagram|figure|graph|picture|image|photo|shown|shows|below)\b/i.test(cur.text.join(' '))) cur.pics.push(url); else ctxPics.push(url); return; }
+      if (/^\*\*[^*]+\*\*$/.test(line) && line.length < 80) { finish(); ctx = []; ctxPics = []; return; }   // a heading starts a new part
+      var a = ANSWER.exec(line); if (a && cur) { cur.answer = a[1].trim(); return; }
+      var o = ITEM.exec(line);
+      if (o && cur && !(askLike(o[2]) && /[a-h]/.test(o[1]) && o[2].length > 40)) { cur.opts.push({ label: o[1], text: o[2].trim() }); return; }
+      var body = o ? o[2] : line.replace(/^(?:[•\-–*]|Q\s*[:.)]|Question\s*[:.)]?)\s*/i, '');
+      if (askLike(body)) { var lead = []; if (/^[a-z(]/.test(body)) while (ctx.length && !ended(ctx[ctx.length - 1]) && lead.length < 3) { lead.unshift(ctx.pop()); if (/^[A-Z]/.test(lead[0])) break; } body = lead.concat([body]).join(' '); var keepCtx = cur && !ctx.length && cur.stemShare && /\b(diagram|figure|graph|table|data|results|passage|text|above|shown|labell?ed|structure|[A-Z])\b/.test(body.replace(/^[A-Z][a-z]+/, '')) ? cur.stemShare : null; finish(); if (!out.length && !cur) ctx = ctx.filter(function (l) { return !(l.split(/\s+/).length <= 8 && !/[.?!:;,]\s*$/.test(l) && !/\d/.test(l)); });   // a title above the first question
+        cur = { stem: ctx.length ? ctx.slice() : keepCtx || [], text: [body], opts: [], pics: ctxPics.slice(), answer: null }; cur.stemShare = ctx.length ? ctx.slice() : keepCtx; ctx = []; ctxPics = []; return; }
+      if (cur && !cur.opts.length && !ended(cur.text.join(' '))) { cur.text.push(line); return; }   // the question carries on
+      if (cur && cur.opts.length && !ended(line) && line.length < 60 && !ctx.length) { cur.opts[cur.opts.length - 1].text += ' ' + line; return; }
+      ctx.push(line);
+    });
+    finish();
+    return out;
+  };
+  Q.parsePaper = function (lines) {   // numbered questions when the paper is numbered; otherwise questions found by how they read
+    var num = parseNumbered(lines), asks = clean(lines).filter(function (l) { return !IMGLINE.test(l) && askLike(l.replace(/^\(?[a-hA-H0-9ivx]{1,4}[\.\)]\s+/, '')); }).length;
+    if (num.length >= 2 && num.length >= asks * 0.5) return num;
+    var loose = Q.parseLoose(lines);
+    return loose.length > num.length ? loose : num;
   };
 
   /* ---------- 3. read a mark scheme and attach it ---------- */
@@ -383,6 +431,11 @@
       }
       if (curKey) map[curKey].push(line);
     });
+    if (!Object.keys(map).length) {   // a mark scheme with no question numbers: one answer per line, in the order of the questions
+      var k = 0; lines.forEach(function (line) { var t = line.replace(/^(?:answer|ans)\s*[:\-–]\s*/i, '').trim(); if (!t || /^(mark ?scheme|answers?|marking (guide|key))\s*:?$/i.test(t)) return;
+        if (k && (/^[•\-–*]\s+|^(and|or|accept|allow|OWTTE)\b/i.test(t) || /[;,]\s*$/.test(map[key(k)][map[key(k)].length - 1]))) { map[key(k)].push(t.replace(/^[•\-–*]\s*/, '')); return; }
+        k++; map[key(k)] = [t]; });
+    }
     return map;
   };
   function normRef(ref) { var m = /^(\d+)\s*\(?([a-h])?\)?\s*\(?((?:i{1,3}|iv|v|vi{1,3}))?\)?$/i.exec(String(ref).replace(/\s/g, '')); return m ? key(m[1], m[2], m[3]) : String(ref).toLowerCase(); }
@@ -392,7 +445,8 @@
     qs.forEach(function (q) {
       var got = map[normRef(q.ref)]; if (!got || !got.length) return; used++;
       var text = got.join('\n').trim();
-      if (q.kind === 'mcq' || q.kind === 'tf') {
+      if (q.kind === 'tf' && /^(true|false|t|f)\b/i.test(text)) { q.correct = /^t/i.test(text) ? 0 : 1; }
+      else if (q.kind === 'mcq' || q.kind === 'tf') {
         var L = /^\(?([A-Fa-f])\)?(?:\b|$)/.exec(text); if (L) q.correct = 'abcdef'.indexOf(L[1].toLowerCase());
         var rest = text.replace(/^\(?[A-Fa-f]\)?[\s\.:\-–]*/, '').trim(); if (rest) q.explanation = rest;
       } else {
