@@ -379,7 +379,7 @@
   };
   T.levelPill = function (score, max, label) {
     var l = T.level(+score, +max, label);
-    return l ? ' <span class="pill bv-grade" data-g="' + E([+score, +max, String(label || '').slice(0, 300)].join('\u0001')) + '" style="background:#ede9fe;color:#5b21b6;font-weight:700">' + l.name + ' ' + l.n + ' of ' + l.of + '</span>' : '';
+    return l ? ' <span class="pill bv-grade" data-g="' + String([+score, +max, String(label || '').slice(0, 300)].join('\u0001')).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }) + '" style="background:#ede9fe;color:#5b21b6;font-weight:700">' + l.name + ' ' + l.n + ' of ' + l.of + '</span>' : '';
   };
   function refreshPills() {   // grades already on the page are redrawn once the teacher's boundaries have arrived
     document.querySelectorAll('.bv-grade[data-g]').forEach(function (el) {
