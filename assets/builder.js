@@ -82,7 +82,7 @@
   /* ================================================================ the item being built */
   function newQ(kind, section) {
     var q = { id: null, kind: kind, prompt: '', marks: kind === 'info' ? 0 : kind === 'essay' ? 6 : 1, section: section || 'Explore', image: '', options: kind === 'tf' ? ['True', 'False'] : kind === 'mcq' ? ['', '', '', ''] : [], correct: kind === 'tf' ? 0 : -1,
-      model: '', points: '', rubric: '', explanation: '', axes: 'x,y', media: [] };
+      model: '', points: '', rubric: '', explanation: '', axes: 'x,y', media: [], crit: '', diff: '' };
     if (QT && QT.has(kind)) q.draft = QT.blank(kind);
     return q;
   }
@@ -102,6 +102,8 @@
       ST.questions = (x[2].data || []).map(function (z) { return fromRow(z.questions || {}); });
       if (!ST.questions.length) ST.questions.push(newQ(ST.cat === 'lesson' ? 'info' : 'mcq', ST.cat === 'lesson' ? 'Question' : ''));
       SEL = 0; draw();
+      var tu = null; try { tu = JSON.parse(sessionStorage.getItem('bv-topup') || 'null'); sessionStorage.removeItem('bv-topup'); } catch (e) {}
+      if (tu && tu.id === ST.id && tu.n > 0) { GEN.count = tu.n; GEN.types = tu.types; if (tu.crit) GEN.criteria = [tu.crit]; GEN.objectives = 'Questions on: ' + tu.title; genDialog(true, 'The question bank had ' + tu.n + ' fewer questions than you asked for. Build the rest with ✨ AI on the same topics?'); }
     });
   }
 
@@ -134,6 +136,7 @@
   }
   function touch() { ST.changed = true; clearTimeout(touch.t); touch.t = setTimeout(function () { list(); preview(); }, 250); }
 
+  function pic(o) { return T && T.optPic ? T.optPic(o) : null; }
   function field(lab, html, hint) { return '<label class="bd-f"><span>' + lab + '</span>' + html + (hint ? '<small>' + hint + '</small>' : '') + '</label>'; }
   function settings() {
     var box = app.querySelector('#set'), K = CAT[ST.cat];
@@ -159,7 +162,9 @@
       '<button type="button" class="btn sm" id="dup">⧉ Copy</button><button type="button" class="btn sm" id="del" style="color:#b91c1c">🗑 Remove</button></div></div>';
     if (auto && !HAS_MAIN) h += '<p class="bd-warn">This kind of question can be built and previewed now. It can be saved once the database update for the new question types is run.</p>';
     h += '<div class="bd-row">' + (ST.cat === 'lesson' ? field('Lesson step', '<select id="e-sec">' + STEPS.map(function (s) { return '<option' + (q.section === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>') : field('Section (optional)', '<input id="e-sec" value="' + E(q.section || '') + '" placeholder="e.g. Section A or Criterion A">')) +
-      (q.kind === 'info' ? '' : field('Marks', '<input id="e-mk" type="number" min="0" max="50" value="' + E(q.marks) + '">')) + '</div>' +
+      (q.kind === 'info' ? '' : field('Marks', '<input id="e-mk" type="number" min="0" max="50" value="' + E(q.marks) + '">') +
+        field('MYP criterion', '<select id="e-cr"><option value="">—</option>' + ['A', 'B', 'C', 'D'].map(function (c) { return '<option' + (q.crit === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select>') +
+        field('Difficulty', '<select id="e-df"><option value="">—</option>' + DIFF.map(function (d, i) { return '<option value="' + (i + 1) + '"' + (+q.diff === i + 1 ? ' selected' : '') + '>' + d + '</option>'; }).join('') + '</select>')) + '</div>' +
       field(q.kind === 'info' ? 'Text (**bold**, a line starting with • for a list, a YouTube link on its own line shows the video)' : 'Question', '<textarea id="e-p" rows="' + (q.kind === 'info' ? 7 : 3) + '">' + E(q.prompt) + '</textarea>') +
       (q.kind === 'label' || q.kind === 'hotspot' ? '' : field('Picture (optional)', '<input id="e-img" type="url" value="' + E(q.image) + '" placeholder="https://… link to a picture">', q.kind === 'annotate' ? 'Students draw and write on this picture.' : 'Use a picture you have the right to use (for example from Wikimedia Commons).')) + (window.BVM ? '<div class="bd-f"><span>Pictures, video, audio, graphs and drawings</span><div id="e-media"></div></div>' : '');
     if (q.kind === 'mcq' || q.kind === 'tf') h += '<fieldset><legend>Choices: tick the correct one</legend><div id="e-opts"></div>' + (q.kind === 'mcq' ? '<button type="button" class="bd-add" id="e-oadd">＋ Add a choice</button>' : '') + '</fieldset>' + field('Why the answer is correct (shown in feedback)', '<textarea id="e-ex" rows="2">' + E(q.explanation) + '</textarea>');
@@ -172,12 +177,16 @@
     if (auto) h += '<fieldset><legend>Answer</legend><div id="e-auto"></div><div id="e-prob" class="small" style="color:#b45309;margin-top:6px"></div></fieldset>';
     box.innerHTML = h;
     var bind = function (sel, fn) { var el = box.querySelector(sel); if (el) el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', function () { fn(el.value); touch(); }); };
-    bind('#e-sec', function (v) { q.section = v; }); bind('#e-mk', function (v) { q.marks = Math.max(0, +v || 0); }); bind('#e-p', function (v) { q.prompt = v; }); bind('#e-img', function (v) { q.image = v.trim(); if (q.kind === 'label' || q.kind === 'hotspot') { q.draft.image = q.image; editor(); } });
+    bind('#e-sec', function (v) { q.section = v; }); bind('#e-cr', function (v) { q.crit = v; }); bind('#e-df', function (v) { q.diff = v; }); bind('#e-mk', function (v) { q.marks = Math.max(0, +v || 0); }); bind('#e-p', function (v) { q.prompt = v; }); bind('#e-img', function (v) { q.image = v.trim(); if (q.kind === 'label' || q.kind === 'hotspot') { q.draft.image = q.image; editor(); } });
     bind('#e-ex', function (v) { q.explanation = v; }); bind('#e-mo', function (v) { q.model = v; }); bind('#e-pt', function (v) { q.points = v; }); bind('#e-ru', function (v) { q.rubric = v; }); bind('#e-ax', function (v) { q.axes = v; });
     var opts = box.querySelector('#e-opts');
-    if (opts) { var drawOpts = function () { opts.innerHTML = q.options.map(function (o, j) { return '<div class="bd-opt"><input type="radio" name="e-ok" value="' + j + '"' + (q.correct === j ? ' checked' : '') + ' aria-label="Choice ' + 'ABCDEFGH'.charAt(j) + ' is correct"><b>' + 'ABCDEFGH'.charAt(j) + '</b><input type="text" data-o="' + j + '" value="' + E(o) + '"' + (q.kind === 'tf' ? ' readonly' : '') + ' aria-label="Choice ' + 'ABCDEFGH'.charAt(j) + '">' + (q.kind === 'mcq' ? '<button type="button" class="bd-x" data-ox="' + j + '" aria-label="Remove choice ' + 'ABCDEFGH'.charAt(j) + '">✕</button>' : '') + '</div>'; }).join('');
+    if (opts) { var drawOpts = function () { opts.innerHTML = q.options.map(function (o, j) { return '<div class="bd-opt"><input type="radio" name="e-ok" value="' + j + '"' + (q.correct === j ? ' checked' : '') + ' aria-label="Choice ' + 'ABCDEFGH'.charAt(j) + ' is correct"><b>' + 'ABCDEFGH'.charAt(j) + '</b>' + (pic(o) ? '<img src="' + E(pic(o).src) + '" alt="" style="height:44px;max-width:80px;object-fit:contain;border-radius:6px;border:1px solid #e2e8f0">' : '') + '<input type="text" data-o="' + j + '" value="' + E(pic(o) ? pic(o).text : o) + '"' + (q.kind === 'tf' ? ' readonly' : '') + ' placeholder="' + (pic(o) ? 'Words under the picture (optional)' : '') + '" aria-label="Choice ' + 'ABCDEFGH'.charAt(j) + '">' +
+        (q.kind === 'mcq' && window.BVM ? '<button type="button" class="bd-x" data-op="' + j + '" title="' + (pic(o) ? 'Change the picture' : 'Make this choice a picture') + '" aria-label="Picture for choice ' + 'ABCDEFGH'.charAt(j) + '">🖼</button>' + (pic(o) ? '<button type="button" class="bd-x" data-onp="' + j + '" title="Remove the picture" aria-label="Remove the picture from choice ' + 'ABCDEFGH'.charAt(j) + '">⊘</button>' : '') : '') +
+        (q.kind === 'mcq' ? '<button type="button" class="bd-x" data-ox="' + j + '" aria-label="Remove choice ' + 'ABCDEFGH'.charAt(j) + '">✕</button>' : '') + '</div>'; }).join('');
+        opts.querySelectorAll('[data-op]').forEach(function (b) { b.onclick = function () { var j = +b.getAttribute('data-op'), cur = pic(q.options[j]); BVM.open.image(cur ? { t: 'image', src: cur.src, cap: cur.text } : null, ME.user.id, function (m) { q.options[j] = '[[img:' + m.src + ']] ' + (m.cap || (cur ? cur.text : '')); drawOpts(); touch(); }); }; });
+        opts.querySelectorAll('[data-onp]').forEach(function (b) { b.onclick = function () { var j = +b.getAttribute('data-onp'); q.options[j] = pic(q.options[j]).text; drawOpts(); touch(); }; });
         opts.querySelectorAll('[name=e-ok]').forEach(function (r) { r.onchange = function () { q.correct = +r.value; touch(); }; });
-        opts.querySelectorAll('[data-o]').forEach(function (t) { t.oninput = function () { q.options[+t.getAttribute('data-o')] = t.value; touch(); }; });
+        opts.querySelectorAll('[data-o]').forEach(function (t) { t.oninput = function () { var j = +t.getAttribute('data-o'), pc = pic(q.options[j]); q.options[j] = pc ? '[[img:' + pc.src + ']] ' + t.value : t.value; touch(); }; });
         opts.querySelectorAll('[data-ox]').forEach(function (b) { b.onclick = function () { var j = +b.getAttribute('data-ox'); q.options.splice(j, 1); if (q.correct === j) q.correct = -1; else if (q.correct > j) q.correct--; drawOpts(); touch(); }; }); };
       drawOpts(); var oa = box.querySelector('#e-oadd'); if (oa) oa.onclick = function () { if (q.options.length < 8) { q.options.push(''); drawOpts(); } }; }
     if (auto) { if ((q.kind === 'label' || q.kind === 'hotspot') && !q.draft.image) q.draft.image = q.image;
@@ -197,7 +206,7 @@
     var wrap = document.createElement('div'); wrap.className = 'q';
     if (q.kind === 'info') { wrap.innerHTML = (q.image ? '<img src="' + E(q.image) + '" alt="" style="max-width:100%;border-radius:10px">' : '') + rich(promptOf(q)); return wrap; }
     wrap.innerHTML = '<p><b>' + n + '.</b> ' + rich(T ? T.text(q.prompt) : q.prompt).replace(/^<p>|<\/p>$/g, '') + ' <span class="pill">' + q.marks + ' mark' + (q.marks === 1 ? '' : 's') + '</span></p>' + ((q.media || []).length && T.mediaHtml ? T.mediaHtml(q.media) : '') + (q.image && q.kind !== 'annotate' && q.kind !== 'label' && q.kind !== 'hotspot' ? '<img src="' + E(q.image) + '" alt="" style="max-width:100%;max-height:320px;border-radius:10px">' : '');
-    if (q.kind === 'mcq' || q.kind === 'tf') { q.options.forEach(function (o, j) { var l = document.createElement('label'); l.className = 'opt'; l.innerHTML = '<input type="radio" name="pv' + n + Math.random().toString(36).slice(2, 6) + '" value="' + j + '"> ' + E(o || '(empty choice)'); l.querySelector('input').onchange = function () { onAns(j); }; wrap.appendChild(l); }); }
+    if (q.kind === 'mcq' || q.kind === 'tf') { q.options.forEach(function (o, j) { var l = document.createElement('label'); l.className = 'opt'; l.innerHTML = '<input type="radio" name="pv' + n + Math.random().toString(36).slice(2, 6) + '" value="' + j + '"> ' + (o ? (T && T.opt ? T.opt(o) : E(o)) : '(empty choice)'); l.querySelector('input').onchange = function () { onAns(j); }; wrap.appendChild(l); }); }
     else if ((q.kind === 'label' || q.kind === 'hotspot') && !q.draft.image) { var no = document.createElement('p'); no.className = 'small muted'; no.textContent = '🖼 The picture appears here once you add its link.'; wrap.appendChild(no); }
     else if (QT && QT.has(q.kind)) { var p = QT.pack(q.kind, q.draft); wrap.appendChild(QT.student(q.kind, p.options, '', onAns)); }
     else if (/^(graph|draw|annotate)$/.test(q.kind) && T && T.pad) { var hp = document.createElement('div'); wrap.appendChild(hp); var a = String(q.axes || '').split(','); try { T.pad(hp, { mode: q.kind, x: (a[0] || 'x').trim(), y: (a[1] || 'y').trim(), image: q.image, onchange: function () { onAns('drawn'); } }); } catch (e) {} }
@@ -259,13 +268,13 @@
   var GEN = { level: '', files: [], objectives: '', count: 0, types: null, criteria: ['A', 'C', 'D'], pics: true, mode: 'replace' };
   try { GEN.level = localStorage.getItem('bv-gen-level') || ''; } catch (e) {}
   function blankItems() { return ST.questions.every(function (q) { return !String(q.prompt || '').trim() && !(q.draft && JSON.stringify(q.draft).replace(/["\[\]{}:,]|choices|ok|true|false|t|pairs|l|r|items|groups|g|text|value|tol|unit|cols|rows|image|spots|extra|x|y|ratio/g, '').trim()); }); }
-  function genDialog(addMode) {
+  function genDialog(addMode, note) {
     var ov = document.createElement('div'); ov.className = 'bd-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Build it for me');
     var K = CAT[ST.cat], lesson = ST.cat === 'lesson', myp = function () { return /MYP/.test(GEN.level); };
     if (!GEN.count) GEN.count = lesson ? 16 : ST.cat === 'exam' ? 20 : 10;
     var inner = document.createElement('div'); ov.appendChild(inner);
     inner.innerHTML = '<div class="bd-top"><div><p class="label">' + K[0] + ' ' + K[1] + '</p><h2>✨ Build it for me</h2></div><button class="btn" type="button" data-close>✕</button></div>' +
-      '<p>Upload your notes, slides, worksheet or past paper, or type the objectives, or both. ' + (lesson ? 'You get a complete six-step inquiry lesson (question, explore, test, explain, challenge, reflect) with reading text, real pictures and a mix of question types.' : 'You get a complete set of questions with answer keys, marking points and model answers.') + ' Every item is marked <b>check me</b> until you have opened it. Nothing is saved until you preview and save.</p>' +
+      (note ? '<p class="bd-warn">' + E(note) + '</p>' : '') + '<p>Upload your notes, slides, worksheet or past paper, or type the objectives, or both. ' + (lesson ? 'You get a complete six-step inquiry lesson (question, explore, test, explain, challenge, reflect) with reading text, real pictures and a mix of question types.' : 'You get a complete set of questions with answer keys, marking points and model answers.') + ' Every item is marked <b>check me</b> until you have opened it. Nothing is saved until you preview and save.</p>' +
       '<div class="bd-row">' + field('Title or topic', '<input id="g-t" value="' + E(ST.title) + '" placeholder="e.g. Photosynthesis">') + field('Level', '<select id="g-l"><option value="">Choose…</option>' + LEVELS.map(function (l) { return '<option' + (GEN.level === l ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '</select>') + '</div>' +
       field('Objectives or what to cover (optional)', '<textarea id="g-o" rows="3" placeholder="One per line, e.g.\nDescribe how plants make glucose\nExplain how light intensity affects the rate of photosynthesis">' + E(GEN.objectives) + '</textarea>') +
       field('Files (optional): PDF, Word, PowerPoint, Excel, web page, text or pictures', '<input id="g-f" type="file" multiple accept=".pdf,.docx,.dotx,.pptx,.potx,.ppsx,.xlsx,.xlsm,.odt,.odp,.ods,.csv,.tsv,.html,.htm,.rtf,.txt,.md,image/*">', 'Pictures in your files are used in the lesson. The files stay on your device: only their text is sent to the AI.') +
@@ -333,7 +342,7 @@
     });
   }
   function fromAI(it) {   // an item written by the AI -> a builder item
-    var q = newQ(it.kind, it.section || ''); q.ai = true; q.section = ST.cat === 'lesson' ? (STEPS.indexOf(it.section) >= 0 ? it.section : 'Explore') : it.section || '';
+    var q = newQ(it.kind, it.section || ''); q.ai = true; var cm = /criterion\s*([ABCD])\b/i.exec(it.focus || ''); if (cm) q.crit = cm[1].toUpperCase(); q.diff = it.kind === 'info' ? '' : it.kind === 'essay' || (it.marks || 1) >= 5 ? 3 : (it.marks || 1) >= 3 || /^(short|number|graph|draw|table)$/.test(it.kind) ? 2 : 1; q.section = ST.cat === 'lesson' ? (STEPS.indexOf(it.section) >= 0 ? it.section : 'Explore') : it.section || '';
     var pts = function (p) { return (p || []).map(function (x) { return x.text + (x.keywords && x.keywords.length ? ': ' + x.keywords.join(' / ') : ''); }).join('\n'); };
     var noComma = function (t) { return String(t || '').replace(/,/g, ' /'); };
     q.prompt = it.kind === 'info' ? it.text : it.prompt || ''; q.explanation = it.explanation || ''; q.marks = it.kind === 'info' ? 0 : it.marks || 1; q.imageQuery = it.image_query || '';
@@ -367,7 +376,7 @@
         if (ui.stopped()) throw new Error('Stopped.');
         k++; ui.step('Writing ' + (lesson ? b[0].section.toLowerCase() + ' items' : b[0].section) + ' (' + k + ' of ' + batches.length + ')', '');
         return patient({ mode: 'items', kind: ST.cat, title: plan.title || o.title, level: GEN.level, objectives: (plan.objectives || []).join('\n') || GEN.objectives, source: src.text, items: b, done: made.map(function (q) { return String(q.prompt).slice(0, 120); }) }, ui, 'Writing').then(function (r) {
-          var good = 0; r.items.forEach(function (it, i) { var q = it && fromAI(Object.assign({ section: b[i].section }, it)); if (q) { made.push(q); good++; } });
+          var good = 0; r.items.forEach(function (it, i) { var q = it && fromAI(Object.assign({ section: b[i].section, focus: b[i].focus }, it)); if (q) { made.push(q); good++; } });
           ui.step('Wrote ' + good + ' of ' + b.length + ' ' + (lesson ? b[0].section.toLowerCase() + ' items' : 'items in ' + b[0].section) + (good < b.length ? ' (the rest did not pass the quality checks and were left out)' : ''), good < b.length ? 'warn' : 'ok');
           ui.bar(0.1 + 0.7 * k / batches.length);
         }, function (e) { if (ui.stopped()) throw e; ui.step('A batch could not be written: ' + (e.message || e), 'warn'); });
@@ -425,13 +434,14 @@
      By topic: a random choice from chosen topics (practice_topics, bank_pick).
      From outside: a question paper, worksheet or pasted text read in the browser (quiz-import.js).
      With AI: "Build it for me" adding after the current items. */
+  var DIFF = ['Easier', 'Medium', 'Harder'];
   var BANKKINDS = [['', 'All types'], ['mcq', '🔘 Multiple choice'], ['tf', '✅ True or false'], ['multi', '☑️ Several correct'], ['match', '🔗 Match'], ['order', '🔢 Order'], ['classify', '🗂️ Sort'], ['gaps', '✍️ Gaps'], ['cloze', '🔽 Drop-down'], ['number', '🔟 Calculation'], ['table', '▦ Table'], ['short', '✏️ Written'], ['essay', '📄 Extended'], ['graph', '📈 Graph or drawing'], ['label', '🏷️ Label'], ['hotspot', '🎯 Click the part']];
   function fromRow(o) {   // a saved question (with its answer key) -> a builder item
     var an = o.question_answers || {}; if (Array.isArray(an)) an = an[0] || {};
     var kind = o.kind, pr = T ? T.parse(o.prompt || '') : { text: o.prompt || '', mode: '', media: [] }, md = pr.mode;
     if (kind === 'short' && /^(graph|draw|annotate)$/.test(md)) kind = md; else if (kind === 'short' && an.rubric) kind = 'essay';
     if (!KN[kind]) kind = 'short';
-    var out = { id: o.id, kind: kind, prompt: pr.text, media: pr.media || [], marks: o.marks || 0, section: o.section || '', image: o.image_url || '', options: Array.isArray(o.options) ? o.options : [], correct: an.correct_option == null ? -1 : an.correct_option,
+    var out = { id: o.id, kind: kind, prompt: pr.text, media: pr.media || [], crit: o.criterion || '', diff: o.difficulty || '', marks: o.marks || 0, section: o.section || '', image: o.image_url || '', options: Array.isArray(o.options) ? o.options : [], correct: an.correct_option == null ? -1 : an.correct_option,
       model: an.model_answer || an.mark_scheme || '', rubric: an.rubric || '', explanation: an.explanation || '', axes: [pr.x || 'x', pr.y || 'y'].join(','), mode: md,
       points: (Array.isArray(an.points) ? an.points : []).map(function (p) { return (p.text || '') + ((p.any || []).length ? ': ' + p.any.join(' / ') : ''); }).join('\n') };
     if (QT && QT.has(kind)) out.draft = QT.unpack(kind, o.options, an.accepted);
@@ -481,15 +491,16 @@
       site();
     }
     // ---- site courses
-    var F = { term: '', crs: '', kind: '', mine: false, off: 0 }, picked = {}, cache = {};
+    var F = { term: '', crs: '', kind: '', crit: '', diff: '', mine: false, off: 0 }, picked = {}, cache = {};
     function site() {
       box.innerHTML = '<div class="bd-row" style="align-items:end"><label class="bd-f" style="flex:3"><span>Search</span><input id="b-q" type="search" value="' + E(F.term) + '" placeholder="e.g. enzymes, osmosis, half-life, titration"></label>' +
-        '<label class="bd-f"><span>Course</span><select id="b-c"><option value="">All courses</option></select></label><label class="bd-f"><span>Type</span><select id="b-k">' + BANKKINDS.map(function (k) { return '<option value="' + k[0] + '"' + (F.kind === k[0] ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select></label></div>' +
+        '<label class="bd-f"><span>Course</span><select id="b-c"><option value="">All courses</option></select></label><label class="bd-f"><span>Type</span><select id="b-k">' + BANKKINDS.map(function (k) { return '<option value="' + k[0] + '"' + (F.kind === k[0] ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select></label>' +
+        '<label class="bd-f"><span>Criterion</span>' + critSel('b-cr', F.crit) + '</label><label class="bd-f"><span>Difficulty</span>' + diffSel('b-d', F.diff) + '</label></div>' +
         '<label class="chk small"><input type="checkbox" id="b-m"' + (F.mine ? ' checked' : '') + '> Only questions I wrote</label><p class="small muted" id="b-n" role="status"></p><div id="b-r" class="bk-list"></div><div class="acts" style="position:sticky;bottom:-24px;background:var(--bg,#fff);padding:10px 0;border-top:1px solid var(--line,#e2e8f0)"><button class="btn main" type="button" id="b-add" disabled>＋ Add the chosen questions</button><button class="btn" type="button" id="b-more" hidden>Show more</button></div>';
       S.db.rpc('bank_courses').then(function (r) { var sel = box.querySelector('#b-c'); if (!sel) return; (r.data || []).forEach(function (c) { var o = document.createElement('option'); o.value = c.course; o.textContent = c.course + ' (' + c.n + ')'; if (c.course === F.crs) o.selected = true; sel.appendChild(o); }); });
-      var timer, go = function () { F.term = box.querySelector('#b-q').value.trim(); F.crs = box.querySelector('#b-c').value; F.kind = box.querySelector('#b-k').value; F.mine = box.querySelector('#b-m').checked; F.off = 0; run(false); };
+      var timer, go = function () { F.term = box.querySelector('#b-q').value.trim(); F.crs = box.querySelector('#b-c').value; F.kind = box.querySelector('#b-k').value; F.crit = box.querySelector('#b-cr').value; F.diff = box.querySelector('#b-d').value; F.mine = box.querySelector('#b-m').checked; F.off = 0; run(false); };
       box.querySelector('#b-q').oninput = function () { clearTimeout(timer); timer = setTimeout(go, 350); };
-      box.querySelector('#b-c').onchange = go; box.querySelector('#b-k').onchange = go; box.querySelector('#b-m').onchange = go;
+      box.querySelector('#b-c').onchange = go; box.querySelector('#b-k').onchange = go; box.querySelector('#b-cr').onchange = go; box.querySelector('#b-d').onchange = go; box.querySelector('#b-m').onchange = go;
       box.querySelector('#b-more').onclick = function () { F.off += 30; run(true); };
       box.querySelector('#b-add').onclick = function () { var ids = Object.keys(picked), b = this; if (!ids.length) return; b.disabled = true; b.textContent = 'Copying…';
         copyIn(ids, 'from the question bank').then(function () { picked = {}; close(); }, function (e) { b.disabled = false; b.textContent = '＋ Add the chosen questions'; box.querySelector('#b-n').innerHTML = fail(e); }); };
@@ -498,7 +509,7 @@
     function kindsOf(k) { return !k ? null : k === 'graph' ? ['graph', 'draw', 'annotate'] : [k]; }
     function run(more) {
       var res = box.querySelector('#b-r'), nn = box.querySelector('#b-n'); if (!more) res.innerHTML = '<p class="muted">Searching…</p>';
-      S.db.rpc('bank_search', { term: F.term, crs: F.crs, kinds: kindsOf(F.kind), mine: F.mine, lim: 30, off: F.off }).then(function (r) {
+      S.db.rpc('bank_search', { term: F.term, crs: F.crs, kinds: kindsOf(F.kind), mine: F.mine, lim: 30, off: F.off, crit: F.crit, diff: F.diff ? +F.diff : null }).then(function (r) {
         if (!box.querySelector('#b-r')) return;
         if (r.error) { res.innerHTML = fail(r.error); return; }
         var rows = r.data || [], total = rows.length ? rows[0].total : 0; if (!more) res.innerHTML = '';
@@ -511,7 +522,7 @@
     function card(o) {
       var pr = T ? T.parse(o.prompt) : { text: o.prompt, mode: '' }, k = o.kind === 'short' && /^(graph|draw|annotate)$/.test(pr.mode) ? pr.mode : o.kind, kn = KN[k] || KN.short;
       var opts = Array.isArray(o.options) && o.options.length && (o.kind === 'mcq' || o.kind === 'tf') ? '<ol type="A" class="small" style="margin:4px 0 0 18px">' + o.options.slice(0, 6).map(function (x) { return '<li>' + E(String(x).slice(0, 120)) + '</li>'; }).join('') + '</ol>' : '';
-      return '<label class="bk-card"><input type="checkbox" data-pick value="' + o.id + '"' + (picked[o.id] ? ' checked' : '') + '><span class="bk-body"><span class="bk-meta">' + kn[1] + ' ' + kn[2] + ' · ' + o.marks + ' mark' + (o.marks === 1 ? '' : 's') + ' · <b>' + E(o.course) + '</b>' + (o.topic ? ' · ' + E(o.topic) : '') + (o.own ? ' · <span class="pill">mine</span>' : '') + '</span>' +
+      return '<label class="bk-card"><input type="checkbox" data-pick value="' + o.id + '"' + (picked[o.id] ? ' checked' : '') + '><span class="bk-body"><span class="bk-meta">' + kn[1] + ' ' + kn[2] + ' · ' + o.marks + ' mark' + (o.marks === 1 ? '' : 's') + ' · <b>' + E(o.course) + '</b>' + (o.topic ? ' · ' + E(o.topic) : '') + (o.criterion ? ' · Criterion ' + o.criterion : '') + (o.difficulty ? ' · ' + DIFF[o.difficulty - 1] : '') + (o.own ? ' · <span class="pill">mine</span>' : '') + '</span>' +
         '<span class="bk-q">' + rich(String(pr.text).slice(0, 700)) + '</span>' + (o.image_url ? '<img src="' + E(o.image_url) + '" alt="" loading="lazy" style="max-height:110px;max-width:220px;border-radius:8px">' : '') + opts + '<span class="bk-src small muted">From: ' + E(o.source || '') + '</span></span></label>';
     }
     // ---- random by topic
@@ -519,13 +530,13 @@
       box.innerHTML = '<p class="muted">Loading the topics…</p>';
       S.db.rpc('practice_topics').then(function (r) {
         if (r.error) { box.innerHTML = fail(r.error); return; }
-        box.innerHTML = topicPicker(r.data || [], 'bt') + '<div class="bd-row" style="align-items:end"><label class="bd-f"><span>How many questions</span><input id="t-n" type="number" min="1" max="60" value="10"></label><label class="bd-f"><span>Type</span><select id="t-k">' + BANKKINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + '</option>'; }).join('') + '</select></label></div>' +
+        box.innerHTML = topicPicker(r.data || [], 'bt') + '<div class="bd-row" style="align-items:end"><label class="bd-f"><span>How many questions</span><input id="t-n" type="number" min="1" max="60" value="10"></label><label class="bd-f"><span>Type</span><select id="t-k">' + BANKKINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + '</option>'; }).join('') + '</select></label><label class="bd-f"><span>Criterion</span>' + critSel('t-cr', '') + '</label><label class="bd-f"><span>Difficulty</span>' + diffSel('t-d', '') + '</label></div>' +
           '<p class="msg" id="t-m" role="status"></p><div class="acts"><button class="btn main" type="button" id="t-go">🎲 Pick and add the questions</button></div>';
         wirePicker(box, 'bt');
         box.querySelector('#t-go').onclick = function () {
           var ids = chosenTopics(box, 'bt'), b = this, m = box.querySelector('#t-m'); if (!ids.length) { m.textContent = 'Tick at least one topic.'; return; }
           b.disabled = true; b.textContent = 'Picking…';
-          S.db.rpc('bank_pick', { topic_ids: ids, n: +box.querySelector('#t-n').value || 10, kinds: kindsOf(box.querySelector('#t-k').value) }).then(function (r) {
+          S.db.rpc('bank_pick', { topic_ids: ids, n: +box.querySelector('#t-n').value || 10, kinds: kindsOf(box.querySelector('#t-k').value), crit: box.querySelector('#t-cr').value, diff: +box.querySelector('#t-d').value || null }).then(function (r) {
             if (r.error) throw r.error; if (!(r.data || []).length) throw new Error('No questions of that type in these topics. Choose another type or more topics.');
             return copyIn(r.data, 'from the chosen topics');
           }).then(close, function (e) { b.disabled = false; b.textContent = '🎲 Pick and add the questions'; m.innerHTML = fail(e); });
@@ -568,6 +579,9 @@
     sel.onchange = function () { root.querySelectorAll('[data-tset^="' + key + '-"]').forEach(function (f) { var on = f.getAttribute('data-tset') === key + '-' + sel.value; f.hidden = !on; if (!on) f.querySelectorAll('input').forEach(function (c) { c.checked = false; }); }); };
     root.querySelectorAll('[data-tall]').forEach(function (b) { b.onclick = function () { var cs = b.closest('fieldset').querySelectorAll('input'), all = [].every.call(cs, function (c) { return c.checked; }); cs.forEach(function (c) { c.checked = !all; }); b.textContent = all ? 'Tick all' : 'Untick all'; }; });
   }
+  function chosenNames(root, key) { return [].map.call(root.querySelectorAll('[data-topic="' + key + '"]:checked'), function (c) { return c.parentNode.textContent.replace(/\(\d+\)\s*$/, '').trim(); }); }
+  function critSel(id, v) { return '<select id="' + id + '"><option value="">Any</option>' + ['A', 'B', 'C', 'D'].map(function (c) { return '<option' + (v === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select>'; }
+  function diffSel(id, v) { return '<select id="' + id + '"><option value="">Any</option>' + DIFF.map(function (d, i) { return '<option value="' + (i + 1) + '"' + (String(v) === String(i + 1) ? ' selected' : '') + '>' + d + '</option>'; }).join('') + '</select>'; }
   function chosenTopics(root, key) { return [].map.call(root.querySelectorAll('[data-topic="' + key + '"]:checked'), function (c) { return c.value; }); }
   // library: a whole new draft generated from topics (practice_make, teacher mode) and opened in the builder
   function generateDialog() {
@@ -578,14 +592,20 @@
     S.db.rpc('practice_topics').then(function (r) {
       if (r.error) { box.innerHTML = '<p class="msg">' + (/practice_|schema cache|does not exist/.test(r.error.message || '') ? 'This switches on when the admin runs the database update 039.' : E(S.nice(r.error))) + '</p>'; return; }
       box.innerHTML = '<p class="small muted">The questions are copied into a new draft in your library with their answer keys. Edit anything, then preview, save and set it for your classes.</p>' + topicPicker(r.data || [], 'gd') +
-        '<div class="bd-row" style="align-items:end"><label class="bd-f" style="flex:2"><span>Title (optional)</span><input id="g2-t" placeholder="e.g. Cells and transport: revision questions"></label><label class="bd-f"><span>How many questions</span><input id="g2-n" type="number" min="3" max="40" value="12"></label><label class="bd-f"><span>Type</span><select id="g2-k">' + BANKKINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + '</option>'; }).join('') + '</select></label></div>' +
+        '<div class="bd-row" style="align-items:end"><label class="bd-f" style="flex:2"><span>Title (optional)</span><input id="g2-t" placeholder="e.g. Cells and transport: revision questions"></label><label class="bd-f"><span>How many questions</span><input id="g2-n" type="number" min="3" max="40" value="12"></label><label class="bd-f"><span>Type</span><select id="g2-k">' + BANKKINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + '</option>'; }).join('') + '</select></label><label class="bd-f"><span>Criterion</span>' + critSel('g2-cr', '') + '</label><label class="bd-f"><span>Difficulty</span>' + diffSel('g2-d', '') + '</label></div>' +
+        '<label class="chk small"><input type="checkbox" id="g2-ai" checked> If the bank has too few questions, top up with ✨ new AI questions on the same topics (you check them before saving)</label>' +
         '<p class="msg" id="g2-m" role="status"></p><div class="acts"><button class="btn main" type="button" id="g2-go">🎲 Generate</button></div>';
       wirePicker(box, 'gd');
       box.querySelector('#g2-go').onclick = function () {
         var ids = chosenTopics(box, 'gd'), b = this, m = box.querySelector('#g2-m'); if (!ids.length) { m.textContent = 'Tick at least one topic.'; return; }
         var k = box.querySelector('#g2-k').value; b.disabled = true; b.textContent = 'Generating…';
-        S.db.rpc('practice_make', { topic_ids: ids, n: +box.querySelector('#g2-n').value || 12, kinds: k === 'graph' ? ['short'] : k ? [k] : null, set_title: box.querySelector('#g2-t').value.trim() || null }).then(function (r) {
-          if (r.error) throw r.error; ov.remove(); location.hash = 'edit/' + r.data;
+        var want = +box.querySelector('#g2-n').value || 12, crit = box.querySelector('#g2-cr').value, diff = +box.querySelector('#g2-d').value || null, names = chosenNames(box, 'gd');
+        S.db.rpc('practice_make', { topic_ids: ids, n: want, kinds: k === 'graph' ? ['short'] : k ? [k] : null, set_title: box.querySelector('#g2-t').value.trim() || null, crit: crit, diff: diff }).then(function (r) {
+          if (r.error) throw r.error;
+          return S.db.from('quiz_questions').select('question_id', { count: 'exact', head: true }).eq('quiz_id', r.data).then(function (c) {
+            var got = c && c.count != null ? c.count : c && Array.isArray(c.data) ? c.data.length : want;
+            if (got < want && box.querySelector('#g2-ai').checked) { try { sessionStorage.setItem('bv-topup', JSON.stringify({ id: r.data, n: want - got, title: names.join(', '), types: k ? [k === 'graph' ? 'graph' : k] : null, crit: crit })); } catch (e) {} }
+            ov.remove(); location.hash = 'edit/' + r.data; });
         }).catch(function (e) { b.disabled = false; b.textContent = '🎲 Generate'; m.textContent = '⚠ ' + S.nice(e); });
       };
     });
@@ -594,7 +614,7 @@
   /* ================================================================ saving */
   function points(text) { return String(text || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean).map(function (l) { var i = l.indexOf(':'), t = i > 0 ? l.slice(0, i).trim() : l, w = i > 0 ? l.slice(i + 1).split('/').map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean) : [t.toLowerCase()]; return { text: t, any: w, all: [], marks: 1 }; }); }
   function rowOf(q) {
-    var dbKind = /^(essay|graph|draw|annotate)$/.test(q.kind) ? 'short' : q.kind, r = { kind: dbKind, prompt: promptOf(q), marks: q.kind === 'info' ? 0 : +q.marks || 0, section: q.section || null, image_url: q.image || null, options: [] },
+    var dbKind = /^(essay|graph|draw|annotate)$/.test(q.kind) ? 'short' : q.kind, r = { kind: dbKind, prompt: promptOf(q), marks: q.kind === 'info' ? 0 : +q.marks || 0, section: q.section || null, image_url: q.image || null, options: [], criterion: q.kind === 'info' ? null : q.crit || null, difficulty: q.kind === 'info' ? null : +q.diff || null },
       a = { correct_option: null, model_answer: q.model || null, mark_scheme: q.model || null, explanation: q.explanation || null, rubric: q.rubric || null, points: null, accepted: null };
     if (q.kind === 'mcq' || q.kind === 'tf') { r.options = q.options.map(function (o) { return String(o).trim(); }).filter(function (o, j) { return o || j === q.correct; }); a.correct_option = q.correct; a.model_answer = r.options[q.correct] || null; a.mark_scheme = null; }
     else if (QT && QT.has(q.kind)) { var p = QT.pack(q.kind, q.draft); r.options = p.options; a.accepted = p.accepted; a.model_answer = p.model; a.mark_scheme = p.model; }

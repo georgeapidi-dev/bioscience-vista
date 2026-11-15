@@ -458,3 +458,5 @@ a.pw-les:hover{background:color-mix(in srgb,var(--k) 16%,var(--raised))}
 .qm video{display:block;width:100%;max-height:420px;border-radius:10px;background:#000}
 .qm-aud{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.qm-aud>span{font-size:1.6rem}.qm-aud audio{flex:1;min-width:220px}.qm-aud figcaption{flex-basis:100%;text-align:left}
 legend .qmedia{font-weight:400}
+.qopt-img{display:block;max-width:min(260px,100%);max-height:200px;border-radius:10px;margin:6px 0}.qopt-cap{display:block}
+label.opt:has(.qopt-img),.pr-opt:has(.qopt-img){display:inline-block;vertical-align:top;margin-right:8px}

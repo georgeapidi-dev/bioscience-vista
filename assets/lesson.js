@@ -124,7 +124,7 @@
       '<select class="qdrop"' + (lock ? ' disabled' : '') + '><option value="">Choose an answer…</option>' + (x.options || []).map(function (o, j) { return '<option value="' + j + '"' + (String(v) === String(j) ? ' selected' : '') + '>' + E(o) + '</option>'; }).join('') + '</select></fieldset>' + ansBox(x);
     if (x.kind === 'short' && /^(graph|draw|annotate)$/.test(md)) return '<div class="q' + (lock ? ' locked' : '') + '" data-q="' + qid + '" data-draw="' + md + '"' + (lock ? ' data-locked="1"' : '') + '>' + (md === 'annotate' ? head.replace(/<img [^>]*class="limg">$/, '') : head) + '<div data-pad></div></div>' + ansBox(x);
     if (x.kind === 'mcq' || x.kind === 'tf') return '<fieldset class="q" data-q="' + qid + '"><legend class="sr">Question ' + x._n + '</legend>' + head + (x.options || []).map(function (o, j) {
-      return '<label class="opt"><input type="radio" name="q' + qid + '" value="' + j + '"' + (String(v) === String(j) ? ' checked' : '') + (lock ? ' disabled' : '') + '> ' + E(o) + '</label>'; }).join('') + '</fieldset>' + ansBox(x);
+      return '<label class="opt"><input type="radio" name="q' + qid + '" value="' + j + '"' + (String(v) === String(j) ? ' checked' : '') + (lock ? ' disabled' : '') + '> ' + (window.BVT && BVT.opt ? BVT.opt(o) : E(o)) + '</label>'; }).join('') + '</fieldset>' + ansBox(x);
     var pic = isPic(v);
     return '<div class="q' + (lock ? ' locked' : '') + '" data-q="' + qid + '"' + (lock ? ' data-locked="1"' : '') + '>' + head +
       '<div class="mode" role="tablist"><button type="button" data-mode="type" aria-pressed="' + !pic + '">⌨ Type</button><button type="button" data-mode="write" aria-pressed="' + pic + '">✏️ Write by hand</button></div>' +

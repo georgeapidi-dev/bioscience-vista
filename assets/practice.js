@@ -27,18 +27,20 @@
   function need039(e) { return /practice_|my_practice|revision_sets|schema cache|does not exist|relation/i.test((e && e.message) || String(e || '')); }
   function fail(e) { return '<p class="msg">' + (need039(e) ? 'This part switches on when the admin runs the database update 039.' : E(S.nice(e))) + '</p>'; }
   function rich(t) { return T && T.rich ? T.rich(t || '') : '<p>' + E(t) + '</p>'; }
+  function pic(o) { return T && T.optPic ? T.optPic(o) : null; }
+  function opt(o) { return T && T.opt ? T.opt(o) : E(o); }
   function media(list) { return list && list.length && T && T.mediaHtml ? T.mediaHtml(list) : ''; }
 
   S.guard(app, { school: true, allowPending: true }).then(function (me) {
     ME = me; TEACH = me.staff || me.school || (me.roles || []).indexOf('teacher') >= 0;
-    var h = (location.hash || '').replace(/^#/, ''); TAB = /^(gen|mine|results)$/.test(h) ? h : 'gen'; frame();
+    var h = (location.hash || '').replace(/^#/, ''); TAB = /^(gen|mine|results|classes)$/.test(h) ? h : 'gen'; frame();
   });
   function frame() {
     app.innerHTML = '<div class="pr-hero"><h2>🎯 Practice and revision</h2><p>' + (TEACH ? 'Generate question sets from the course questions for your classes, and make quick revision questions.' : 'Choose your level and topics: get a fresh set of questions, marked straight away with results and feedback. Make your own revision questions and flashcards too.') + '</p></div>' +
-      '<nav class="pr-tabs" role="tablist"><button type="button" role="tab" data-t="gen">🎯 ' + (TEACH ? 'Generate from topics' : 'Practice questions') + '</button><button type="button" role="tab" data-t="mine">🃏 My revision questions</button>' + (TEACH ? '' : '<button type="button" role="tab" data-t="results">📈 My results</button>') + '</nav><div id="pane"></div>';
+      '<nav class="pr-tabs" role="tablist"><button type="button" role="tab" data-t="gen">🎯 ' + (TEACH ? 'Generate from topics' : 'Practice questions') + '</button><button type="button" role="tab" data-t="mine">🃏 My revision questions</button>' + (TEACH ? '<button type="button" role="tab" data-t="classes">📊 My classes\' practice</button>' : '<button type="button" role="tab" data-t="results">📈 My results</button>') + '</nav><div id="pane"></div>';
     app.querySelectorAll('[data-t]').forEach(function (b) { b.setAttribute('aria-selected', b.getAttribute('data-t') === TAB); b.onclick = function () { TAB = b.getAttribute('data-t'); history.replaceState(null, '', '#' + TAB); frame(); }; });
     var p = app.querySelector('#pane');
-    ({ gen: generator, mine: mySets, results: results }[TAB] || generator)(p);
+    ({ gen: generator, mine: mySets, results: results, classes: classPractice }[TAB] || generator)(p);
   }
 
   /* ================================================================ 🎯 generator */
@@ -53,20 +55,23 @@
       p.innerHTML = '<section class="panel grp"><h3>1. Your course and level</h3><div class="pr-chips" role="radiogroup">' + order.map(function (g, i) { return '<label><input type="radio" name="lv" value="' + i + '"' + (i === pick ? ' checked' : '') + '>' + E(g) + '</label>'; }).join('') + '</div>' +
         '<h3>2. Topics <button type="button" class="btn sm" id="all">Tick all</button></h3><div class="pr-topics" id="tp"></div>' +
         '<h3>3. Your set</h3><div class="row2" style="flex-wrap:wrap;gap:14px;align-items:flex-start"><div><b>Questions</b><div class="pr-chips">' + [5, 10, 15, 20].map(function (n) { return '<label><input type="radio" name="n" value="' + n + '"' + (n === (store('n') || 10) ? ' checked' : '') + '>' + n + '</label>'; }).join('') + '</div></div>' +
-        '<div><b>Type</b><div class="pr-chips">' + LEVEL_TYPES.map(function (k, i) { return '<label><input type="radio" name="ty" value="' + k[0] + '"' + (i === 0 ? ' checked' : '') + '>' + k[1] + '</label>'; }).join('') + '</div></div></div>' +
+        '<div><b>Type</b><div class="pr-chips">' + LEVEL_TYPES.map(function (k, i) { return '<label><input type="radio" name="ty" value="' + k[0] + '"' + (i === 0 ? ' checked' : '') + '>' + k[1] + '</label>'; }).join('') + '</div></div>' +
+        '<div><b>Difficulty</b><div class="pr-chips">' + [['', '🎚️ Any'], ['1', '🟢 Easier'], ['2', '🟡 Medium'], ['3', '🔴 Harder']].map(function (d, i) { return '<label><input type="radio" name="df" value="' + d[0] + '"' + (i === 0 ? ' checked' : '') + '>' + d[1] + '</label>'; }).join('') + '</div></div>' +
+        '<div id="crw"><b>MYP criterion</b><div class="pr-chips">' + [['', 'Any'], ['A', 'A · Knowing'], ['B', 'B · Inquiring'], ['C', 'C · Processing'], ['D', 'D · Reflecting']].map(function (d, i) { return '<label><input type="radio" name="cr" value="' + d[0] + '"' + (i === 0 ? ' checked' : '') + '>' + d[1] + '</label>'; }).join('') + '</div></div></div>' +
+        (TEACH ? '' : '<p class="small" style="margin:10px 0 0">🔁 Questions you got wrong before come back in your sets until you get them right.</p>') +
         (TEACH ? '<label class="f" style="margin-top:10px">Title (optional)<input id="ttl" placeholder="e.g. Cells and transport: revision questions"></label>' : '') +
         '<p class="msg" id="m" role="status"></p><div class="acts"><button class="btn main" type="button" id="go" style="font-size:1.1rem;padding:12px 22px">' + (TEACH ? '🎲 Generate a draft' : '🚀 Make my practice set') + '</button></div>' +
         '<p class="small muted">' + (TEACH ? 'The questions are copied with their answer keys into a new draft in <a href="/build/">My assessments and lessons</a>, ready to edit, preview, save and set.' : 'Questions you had in the last three weeks come last, so each set is fresh. Choice and fill-in answers are marked at once; written answers get detailed feedback.') + '</p></section>';
       var tp = p.querySelector('#tp');
-      function topics() { var g = order[+p.querySelector('[name=lv]:checked').value]; store('level', g); tp.innerHTML = by[g].map(function (t) { return '<label class="pr-topic"><input type="checkbox" value="' + t.topic_id + '"><span>' + E(t.topic) + ' <span class="small muted">(' + t.n + ')</span></span></label>'; }).join(''); }
+      function topics() { var g = order[+p.querySelector('[name=lv]:checked').value]; store('level', g); var cw = p.querySelector('#crw'); if (cw) { cw.hidden = !/MYP/.test(g); if (cw.hidden) cw.querySelector('[name=cr]').checked = true; } tp.innerHTML = by[g].map(function (t) { return '<label class="pr-topic"><input type="checkbox" value="' + t.topic_id + '"><span>' + E(t.topic) + ' <span class="small muted">(' + t.n + ')</span></span></label>'; }).join(''); }
       p.querySelectorAll('[name=lv]').forEach(function (x) { x.onchange = topics; }); topics();
       p.querySelector('#all').onclick = function () { var cs = tp.querySelectorAll('input'), all = [].every.call(cs, function (c) { return c.checked; }); cs.forEach(function (c) { c.checked = !all; }); this.textContent = all ? 'Tick all' : 'Untick all'; };
       p.querySelector('#go').onclick = function () {
         var ids = [].map.call(tp.querySelectorAll('input:checked'), function (c) { return c.value; }), m = p.querySelector('#m'), b = this;
         if (!ids.length) { m.textContent = 'Tick at least one topic.'; return; }
-        var n = +p.querySelector('[name=n]:checked').value, ty = p.querySelector('[name=ty]:checked').value; store('n', n);
+        var n = +p.querySelector('[name=n]:checked').value, ty = p.querySelector('[name=ty]:checked').value, df = p.querySelector('[name=df]:checked').value, cr = p.querySelector('[name=cr]:checked').value; store('n', n);
         b.disabled = true; b.textContent = 'Making your set…'; m.textContent = '';
-        S.db.rpc('practice_make', { topic_ids: ids, n: n, kinds: ty === 'quick' ? QUICK : ty ? [ty] : null, set_title: TEACH ? (p.querySelector('#ttl').value.trim() || null) : null }).then(function (r) {
+        S.db.rpc('practice_make', { topic_ids: ids, n: n, kinds: ty === 'quick' ? QUICK : ty ? [ty] : null, set_title: TEACH ? (p.querySelector('#ttl').value.trim() || null) : null, crit: cr, diff: df ? +df : null }).then(function (r) {
           if (r.error) throw r.error; location.href = TEACH ? '/build/#edit/' + r.data : '/quizzes/#' + r.data;
         }).catch(function (e) { b.disabled = false; b.textContent = TEACH ? '🎲 Generate a draft' : '🚀 Make my practice set'; m.innerHTML = need039(e) ? fail(e) : '⚠ ' + E(S.nice(e)); });
       };
@@ -86,6 +91,26 @@
           return '<article class="pr-card" style="--k:' + col(pc) + '"><h4>' + E(x.title) + '</h4><span class="small muted">' + new Date(x.made).toLocaleDateString() + ' · ' + x.questions + ' questions · ' + x.tries + ' of 3 tries</span>' +
             (pc == null ? '<span class="small">' + (x.open_try ? '⏳ Started, not handed in yet' : 'Not tried yet') + '</span>' : '<div><b>' + pc + '%</b> best (' + (+x.best) + ' of ' + (+x.max_score) + ')<div class="pr-bar"><i style="width:' + pc + '%;background:' + col(pc) + '"></i></div></div>') +
             '<div class="acts"><a class="btn sm main" href="/quizzes/#' + x.id + '">' + (pc == null ? (x.open_try ? '▶ Carry on' : '▶ Start') : x.tries < 3 ? '🔁 Try again or see feedback' : '📋 See feedback') + '</a></div></article>'; }).join('') + '</div>';
+    });
+  }
+  /* ================================================================ 📊 teachers: their students' practice */
+  function classPractice(p) {
+    p.innerHTML = '<p class="muted">Loading your classes…</p>';
+    S.db.from('classes').select('id,name').eq('teacher_id', ME.user.id).is('archived_at', null).order('name').then(function (r) {
+      var cls = r.data || []; if (!cls.length) { p.innerHTML = '<section class="panel"><p>You have no classes yet.</p></section>'; return; }
+      var pick = store('cls'); if (!cls.some(function (c) { return c.id === pick; })) pick = cls[0].id;
+      p.innerHTML = '<section class="panel"><div class="row2" style="gap:10px;flex-wrap:wrap;align-items:end"><label class="f">Class<select id="pc">' + cls.map(function (c) { return '<option value="' + c.id + '"' + (c.id === pick ? ' selected' : '') + '>' + E(c.name) + '</option>'; }).join('') + '</select></label>' +
+        '<label class="f">Period<select id="pd"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select></label></div></section><div id="pv"></div>';
+      var go = function () { var c = p.querySelector('#pc').value, d = +p.querySelector('#pd').value, v = p.querySelector('#pv'); store('cls', c); v.innerHTML = '<p class="muted">Loading…</p>';
+        S.db.rpc('class_practice', { cls: c, days: d }).then(function (x) {
+          if (x.error) { v.innerHTML = fail(x.error); return; }
+          var st = (x.data && x.data.students) || [], tp = (x.data && x.data.topics) || [], active = st.filter(function (s) { return s.sets; }).length;
+          v.innerHTML = '<section class="panel"><div class="row2" style="gap:16px;flex-wrap:wrap"><div><span class="small muted">Students practising</span><div class="pr-big">' + active + ' / ' + st.length + '</div></div><div><span class="small muted">Practice sets</span><div class="pr-big">' + st.reduce(function (a, s) { return a + s.sets; }, 0) + '</div></div></div></section>' +
+            (tp.length ? '<section class="panel"><h3>Topics practised</h3><div class="pr-grid">' + tp.map(function (t) { return '<article class="pr-card" style="--k:' + col(t.avg) + '"><h4>' + E(t.topic) + '</h4><span class="small muted">' + t.sets + ' sets by ' + t.students + ' student' + (t.students === 1 ? '' : 's') + '</span>' + (t.avg == null ? '<span class="small">Not handed in yet</span>' : '<div><b>' + t.avg + '%</b> average<div class="pr-bar"><i style="width:' + t.avg + '%;background:' + col(t.avg) + '"></i></div></div>') + '</article>'; }).join('') + '</div></section>' : '') +
+            '<section class="panel"><h3>Students</h3><div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Sets</th><th>Handed in</th><th>Average</th><th>Last practice</th><th>Topics to support</th></tr>' +
+            st.map(function (s) { return '<tr><td>' + E(s.name) + '</td><td>' + s.sets + '</td><td>' + s.done + '</td><td style="color:' + col(s.avg) + ';font-weight:700">' + (s.avg == null ? '–' : s.avg + '%') + '</td><td>' + (s.last ? new Date(s.last).toLocaleDateString() : '<span class="muted">none</span>') + '</td><td>' + ((s.weak || []).length ? (s.weak || []).map(E).join(', ') : '<span class="muted">–</span>') + '</td></tr>'; }).join('') + '</table></div><p class="small muted">"Topics to support": topics where the student\'s practice average is below 50%.</p></section>';
+        }); };
+      p.querySelector('#pc').onchange = go; p.querySelector('#pd').onchange = go; go();
     });
   }
   function col(pc) { return pc == null ? '#94a3b8' : pc >= 80 ? '#16a34a' : pc >= 50 ? '#d97706' : '#dc2626'; }
@@ -134,7 +159,7 @@
       '<label class="f">' + (card ? 'Front: a word, question or picture' : 'Question') + '<textarea id="i-q" rows="3">' + E(it.q) + '</textarea></label>' +
       '<div class="f"><span class="small"><b>Pictures, graphs, drawings, audio, video</b></span><div id="i-m"></div></div>' +
       (card ? '<label class="f">Back: the answer or meaning<textarea id="i-a" rows="3">' + E(it.a) + '</textarea></label>' : '') +
-      (it.k === 'mcq' || it.k === 'tf' ? '<fieldset><legend>Choices: tick the correct one</legend>' + it.o.map(function (o, j) { return '<div class="row2" style="gap:6px;margin:4px 0"><input type="radio" name="ok" value="' + j + '"' + (it.c === j ? ' checked' : '') + ' aria-label="Correct choice"><input type="text" data-o="' + j + '" value="' + E(o) + '"' + (it.k === 'tf' ? ' readonly' : '') + ' style="flex:1"></div>'; }).join('') + '</fieldset>' : '') +
+      (it.k === 'mcq' || it.k === 'tf' ? '<fieldset><legend>Choices: tick the correct one</legend>' + it.o.map(function (o, j) { return '<div class="row2" style="gap:6px;margin:4px 0"><input type="radio" name="ok" value="' + j + '"' + (it.c === j ? ' checked' : '') + ' aria-label="Correct choice">' + (pic(o) ? '<img src="' + E(pic(o).src) + '" alt="" style="height:40px;max-width:70px;object-fit:contain;border-radius:6px">' : '') + '<input type="text" data-o="' + j + '" value="' + E(pic(o) ? pic(o).text : o) + '"' + (it.k === 'tf' ? ' readonly' : '') + ' style="flex:1">' + (it.k === 'mcq' && window.BVM ? '<button type="button" class="btn sm" data-op="' + j + '" title="Make this choice a picture" aria-label="Picture for this choice">🖼</button>' : '') + '</div>'; }).join('') + '</fieldset>' : '') +
       (it.k === 'short' ? '<label class="f">Model answer (shown after you answer, you mark yourself)<textarea id="i-a" rows="3">' + E(it.a) + '</textarea></label>' : '') +
       (it.k !== 'card' && it.k !== 'short' && it.k !== 'mcq' && it.k !== 'tf' ? '<div id="i-qt"></div><p class="small" id="i-pb" style="color:#b45309"></p>' : '') +
       (!card ? '<label class="f">Explanation (optional, shown after answering)<input id="i-x" value="' + E(it.x || '') + '"></label>' : '');
@@ -142,7 +167,8 @@
     var ia = ed.querySelector('#i-a'); if (ia) ia.oninput = function () { it.a = this.value; };
     var ix = ed.querySelector('#i-x'); if (ix) ix.oninput = function () { it.x = this.value; };
     ed.querySelectorAll('[name=ok]').forEach(function (r) { r.onchange = function () { it.c = +r.value; }; });
-    ed.querySelectorAll('[data-o]').forEach(function (t) { t.oninput = function () { it.o[+t.getAttribute('data-o')] = t.value; }; });
+    ed.querySelectorAll('[data-o]').forEach(function (t) { t.oninput = function () { var j = +t.getAttribute('data-o'), pc = pic(it.o[j]); it.o[j] = pc ? '[[img:' + pc.src + ']] ' + t.value : t.value; }; });
+    ed.querySelectorAll('[data-op]').forEach(function (b) { b.onclick = function () { var j = +b.getAttribute('data-op'), cur = pic(it.o[j]); BVM.open.image(cur ? { t: 'image', src: cur.src, cap: cur.text } : null, ME.user.id, function (m) { it.o[j] = '[[img:' + m.src + ']] ' + (m.cap || (cur ? cur.text : '')); editor(p); }); }; });
     if (window.BVM) BVM.editor(ed.querySelector('#i-m'), it.m = it.m || [], function () {}, { uid: ME.user.id });
     var qt = ed.querySelector('#i-qt'); if (qt && QT) { var pb = function () { ed.querySelector('#i-pb').textContent = QT.problems(it.k, it.d).join(' '); }; qt.appendChild(QT.editor(it.k, it.d, pb)); pb(); }
     ed.querySelector('#dup').onclick = function () { SET.items.splice(SEL + 1, 0, JSON.parse(JSON.stringify(it))); SEL++; editor(p); };
@@ -233,7 +259,7 @@
   function front(it) { return rich(T ? T.text(it.q) : it.q) + media(it.m); }
   function answerText(it) {
     if (it.k === 'card' || it.k === 'short') return it.a;
-    if (it.k === 'mcq' || it.k === 'tf') return it.o[it.c];
+    if (it.k === 'mcq' || it.k === 'tf') return T && T.optText ? T.optText(it.o[it.c]) : it.o[it.c];
     if (QT && QT.has(it.k)) return QT.pack(it.k, it.d).model;
     return '';
   }
@@ -261,14 +287,14 @@
       p.innerHTML = '<section class="panel pr-play"><div class="row2"><span class="small muted">Question ' + (i + 1) + ' of ' + qs.length + '</span><span class="small muted">Score ' + got + ' / ' + max + '</span></div><div class="pr-bar"><i style="width:' + Math.round(100 * i / qs.length) + '%;background:#4f46e5"></i></div>' +
         '<div style="margin:12px 0">' + front(it) + '</div><div id="ans"></div><div id="fb"></div><div class="acts"><button class="btn main" type="button" id="chk">Check</button><button class="btn" type="button" id="nx" hidden>Next ➜</button></div></section>';
       var ans = p.querySelector('#ans'), fb = p.querySelector('#fb');
-      if (it.k === 'mcq' || it.k === 'tf') ans.innerHTML = shuffle(it.o.map(function (o, j) { return j; })).map(function (j) { return '<label class="pr-opt"><input type="radio" name="a" value="' + j + '"> ' + E(it.o[j]) + '</label>'; }).join('');
+      if (it.k === 'mcq' || it.k === 'tf') ans.innerHTML = shuffle(it.o.map(function (o, j) { return j; })).map(function (j) { return '<label class="pr-opt"><input type="radio" name="a" value="' + j + '"> ' + opt(it.o[j]) + '</label>'; }).join('');
       else if (it.k === 'card' || it.k === 'short') ans.innerHTML = '<textarea id="t" rows="3" style="width:100%;box-sizing:border-box" placeholder="Type your answer, then check"></textarea>';
       else if (QT && QT.has(it.k)) { var pk = QT.pack(it.k, it.d); ans.appendChild(QT.student(it.k, pk.options, '', function (v) { val = v; })); }
       p.querySelector('#chk').onclick = function () {
         this.hidden = true; p.querySelector('#nx').hidden = false;
         if (it.k === 'mcq' || it.k === 'tf') { var c = p.querySelector('[name=a]:checked'), ok = c && +c.value === it.c; max++; if (ok) got++; else missed.push(it);
           ans.querySelectorAll('.pr-opt').forEach(function (l) { var v = +l.querySelector('input').value; l.querySelector('input').disabled = true; if (v === it.c) l.classList.add('ok'); else if (c && v === +c.value) l.classList.add('no'); });
-          fb.innerHTML = '<div class="pr-fb ' + (ok ? 'good">✅ Correct!' : 'bad">❌ Not quite. The answer: ' + E(it.o[it.c])) + (it.x ? '<br><span style="font-weight:400">' + E(it.x) + '</span>' : '') + '</div>'; }
+          fb.innerHTML = '<div class="pr-fb ' + (ok ? 'good">✅ Correct!' : 'bad">❌ Not quite. The answer: ' + opt(it.o[it.c])) + (it.x ? '<br><span style="font-weight:400">' + E(it.x) + '</span>' : '') + '</div>'; }
         else if (it.k === 'card' || it.k === 'short') { var mine = p.querySelector('#t').value.trim(); p.querySelector('#t').disabled = true;
           fb.innerHTML = '<div class="pr-fb part">Model answer: ' + E(it.a) + (it.x ? '<br><span style="font-weight:400">' + E(it.x) + '</span>' : '') + '</div><p>Were you right?</p><div class="acts"><button class="btn main sm" type="button" data-s="1">✅ Yes</button><button class="btn sm" type="button" data-s="0">❌ No</button></div>';
           p.querySelector('#nx').hidden = true; void mine;
@@ -290,7 +316,7 @@
       p.innerHTML = '<section class="panel pr-play"><div class="row2"><span class="pr-timer" id="tm"></span><span class="pr-big" style="font-size:1.6rem">⚡ ' + score + '</span></div><div style="margin:10px 0">' + front(it) + '</div><div id="ans"></div><p id="fl" class="small"></p></section>';
       var ans = p.querySelector('#ans');
       var mark = function (ok) { done++; if (ok) score++; else missed.push(it); p.querySelector('#fl').textContent = ok ? '✅' : '❌ ' + answerText(it); setTimeout(next, ok ? 250 : 1100); };
-      if (it.k === 'mcq' || it.k === 'tf') { ans.innerHTML = shuffle(it.o.map(function (o, j) { return j; })).map(function (j) { return '<button type="button" class="pr-opt" style="width:100%;text-align:left;font:inherit" data-j="' + j + '">' + E(it.o[j]) + '</button>'; }).join(''); ans.querySelectorAll('[data-j]').forEach(function (b) { b.onclick = function () { ans.querySelectorAll('button').forEach(function (x) { x.disabled = true; }); b.classList.add(+b.getAttribute('data-j') === it.c ? 'ok' : 'no'); mark(+b.getAttribute('data-j') === it.c); }; }); }
+      if (it.k === 'mcq' || it.k === 'tf') { ans.innerHTML = shuffle(it.o.map(function (o, j) { return j; })).map(function (j) { return '<button type="button" class="pr-opt" style="width:100%;text-align:left;font:inherit" data-j="' + j + '">' + opt(it.o[j]) + '</button>'; }).join(''); ans.querySelectorAll('[data-j]').forEach(function (b) { b.onclick = function () { ans.querySelectorAll('button').forEach(function (x) { x.disabled = true; }); b.classList.add(+b.getAttribute('data-j') === it.c ? 'ok' : 'no'); mark(+b.getAttribute('data-j') === it.c); }; }); }
       else if (it.k === 'card') { ans.innerHTML = '<div class="acts"><button class="btn sm" type="button" id="sh">Show the answer</button></div>'; p.querySelector('#sh').onclick = function () { ans.innerHTML = '<div class="pr-fb part">' + E(it.a) + '</div><div class="acts"><button class="btn main sm" data-k="1">✅ Knew it</button><button class="btn sm" data-k="0">❌ Did not</button></div>'; ans.querySelectorAll('[data-k]').forEach(function (b) { b.onclick = function () { mark(b.getAttribute('data-k') === '1'); }; }); }; }
       else { var pk = QT.pack(it.k, it.d); ans.appendChild(QT.student(it.k, pk.options, '', function (v) { val = v; })); var bt = document.createElement('button'); bt.className = 'btn main sm'; bt.type = 'button'; bt.textContent = 'Check'; bt.style.marginTop = '8px'; ans.appendChild(bt); bt.onclick = function () { bt.disabled = true; mark(QT.score(it.k, pk.options, pk.accepted, val, 1).got >= 1); }; }
       tick();

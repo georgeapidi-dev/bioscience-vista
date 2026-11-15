@@ -221,7 +221,7 @@
             (window.BVQT && BVQT.has(x.kind) ? '<div data-qt="' + x.question_id + '"></div>' : drawn ? '<div data-pad="' + x.question_id + '"></div>' :
              x.kind !== 'short' && md === 'dropdown' ? '<select class="qdrop" name="' + name + '"><option value="">Choose an answer…</option>' + opts.map(function (o, j) { return '<option value="' + j + '"' + (String(v) === String(j) ? ' selected' : '') + '>' + 'ABCDEFGH'.charAt(j) + '. ' + E(o) + '</option>'; }).join('') + '</select>' :
              x.kind === 'short' ? '<textarea name="' + name + '" rows="' + (x.marks >= 6 ? 12 : x.marks >= 3 ? 7 : 3) + '" placeholder="Type your answer' + (x.marks >= 3 ? ' (worth ' + x.marks + ' marks: give ' + x.marks + ' clear points)' : '') + '">' + E(v || '') + '</textarea>' :
-              opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"' + (String(v) === String(j) ? ' checked' : '') + '> <b>' + 'ABCDEFGH'.charAt(j) + '.</b> ' + E(o) + '</label>'; }).join('')) + '</fieldset>';
+              opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"' + (String(v) === String(j) ? ' checked' : '') + '> <b>' + 'ABCDEFGH'.charAt(j) + '.</b> ' + (T.opt ? T.opt(o) : E(o)) + '</label>'; }).join('')) + '</fieldset>';
         }).join('') + '<div class="acts"><button class="btn main" type="submit">Submit answers</button><a class="btn" href="' + BACK + '">Save and leave</a></div><p class="msg" id="m" role="alert"></p></form>';
       var f = app.querySelector('#qf'), pads = {}, QT = {};
       qs.forEach(function (x) {   // the ten automatically marked kinds (site_assets/qtypes.js): the answer is kept as a JSON string

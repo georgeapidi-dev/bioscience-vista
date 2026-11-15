@@ -47,6 +47,11 @@
     return out.join('');
   };
   T.media = function (prompt) { return T.parse(prompt).media; };
+  /* a choice can be a picture: "[[img:https://…]] optional words" */
+  var OPTIMG = /^\s*\[\[img:(\S+?)\]\]\s*([\s\S]*)$/;
+  T.optPic = function (o) { var m = OPTIMG.exec(String(o || '')); return m ? { src: m[1], text: m[2] } : null; };
+  T.opt = function (o) { var m = T.optPic(o); if (!m) return E(o); var src = safe(m.src); return (src ? '<img class="qopt-img" src="' + E(src) + '" alt="' + E(m.text || 'Picture choice') + '" loading="lazy">' : '') + (m.text ? '<span class="qopt-cap">' + E(m.text) + '</span>' : ''); };
+  T.optText = function (o) { var m = T.optPic(o); return m ? (m.text || 'the picture') : String(o == null ? '' : o); };
 
   /* ---------- media in questions: picture, video (YouTube or a file), audio, graph from data, drawing ---------- */
   var YT = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([\w-]{11})/;

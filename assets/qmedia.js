@@ -28,7 +28,7 @@
     if (!uid || !S || !S.db || !S.db.storage) return Promise.reject(new Error('Sign in again to upload files.'));
     var path = uid + '/' + new Date().toISOString().slice(0, 10) + '-' + Math.random().toString(36).slice(2, 10) + ext(type);
     return S.db.storage.from(BUCKET).upload(path, blob, { contentType: type, upsert: false, cacheControl: '31536000' }).then(function (r) {
-      if (r.error) throw new Error(/bucket not found|not found/i.test(r.error.message || '') ? 'File uploads switch on when the admin runs the database update 039.' : r.error.message || 'Upload failed.');
+      if (r.error) throw new Error(/bucket not found|not found/i.test(r.error.message || '') ? 'File uploads switch on when the admin runs the database update 039.' : /row-level security|violates|unauthori[sz]ed|403/i.test(r.error.message || '') ? 'Your space for uploaded files is full (teachers 500 MB, students 50 MB), or your account is not approved yet. Use a link (for example YouTube or Wikimedia Commons) instead, or ask the admin.' : /exceeded|too large|payload/i.test(r.error.message || '') ? 'That file is too large. Files can be up to ' + MAXMB + ' MB.' : r.error.message || 'Upload failed.');
       return S.db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
     });
   }

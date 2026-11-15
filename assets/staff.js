@@ -736,8 +736,8 @@
         var prompt = String(q.prompt || '').replace(/\[\[answer:[^\]]*\]\]/g, '_____');
         if ((q.kind === 'mcq' || q.kind === 'tf') && opts.length) {
           h += '<ol class="opts" type="A">' + opts.map(function (o, i) { var right = i === a.correct_option, fb = (a.option_feedback || [])[i];
-            return '<li class="' + (right ? 'right' : '') + '">' + E(o) + (right ? ' <b>✓ correct</b>' : '') + (fb ? '<div class="why">' + E(fb) + '</div>' : '') + '</li>'; }).join('') + '</ol>';
-          h += '<p class="ans"><b>Answer:</b> ' + (a.correct_option != null ? L[a.correct_option] + ' (' + E(opts[a.correct_option]) + ')' : '<i>not set</i>') + ' [1]</p>';
+            return '<li class="' + (right ? 'right' : '') + '">' + (BVT.opt ? BVT.opt(o) : E(o)) + (right ? ' <b>✓ correct</b>' : '') + (fb ? '<div class="why">' + E(fb) + '</div>' : '') + '</li>'; }).join('') + '</ol>';
+          h += '<p class="ans"><b>Answer:</b> ' + (a.correct_option != null ? L[a.correct_option] + ' (' + E(BVT.optText ? BVT.optText(opts[a.correct_option]) : opts[a.correct_option]) + ')' : '<i>not set</i>') + ' [1]</p>';
         }
         var pts = Array.isArray(a.points) ? a.points : [];
         if (pts.length) h += '<p class="ans"><b>Mark points</b> (one mark each unless shown):</p><ul>' + pts.map(function (p) {
@@ -1272,7 +1272,7 @@
             (drawn ? '<div data-pad="' + z.id + '"></div>' :
              z.kind !== 'short' && md === 'dropdown' ? '<select class="qdrop" name="' + name + '"><option value="">Choose an answer…</option>' + opts.map(function (o, j) { return '<option value="' + j + '">' + L.charAt(j) + '. ' + E(o) + '</option>'; }).join('') + '</select>' :
              z.kind === 'short' ? '<textarea name="' + name + '" rows="' + (z.marks >= 6 ? 10 : z.marks >= 3 ? 6 : 3) + '" placeholder="Type an answer to test the marking"></textarea>'
-              : opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"> <b>' + L.charAt(j) + '.</b> ' + E(o) + '</label>'; }).join('')) +
+              : opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"> <b>' + L.charAt(j) + '.</b> ' + (BVT.opt ? BVT.opt(o) : E(o)) + '</label>'; }).join('')) +
             '<div class="pvres" hidden></div></fieldset>';
         }).join('') +
         '<div class="acts"><button class="btn main" type="submit">Check my answers</button><a class="btn" href="#quizzes/' + id + '">Back to editing</a></div><p class="msg ok" id="pvm" role="status"></p></form>';
