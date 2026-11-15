@@ -27,20 +27,16 @@
         (s.items.length ? '<div class="res">' + s.items.map(BV.card).join('') + '</div>' : '<p class="emptybox">Coming soon.</p>') + '</section>';
     }).join('');
   };
-  var live = document.getElementById('live'), news = document.getElementById('news');
-  var target = live || news; if (!target) return;
-  BV.api('content', { page: target.getAttribute('data-page') }).then(function (d) {
-    if (!d || !d.ok) return;
-    if (news) {
-      var items = (d.sections[0] && d.sections[0].items) || [];
-      if (!items.length) return;
-      news.innerHTML = '<h2 class="sec-h">' + E((d.intro && d.intro.title) || 'Announcements') + '</h2>' +
-        items.map(function (it) { return '<div class="item"><b>' + E(it.title) + '</b><span>' + E(it.desc) + '</span>' + (it.link ? '<div class="acts"><a class="go" href="' + E(it.link) + '">Open</a></div>' : '') + '</div>'; }).join('');
-      news.hidden = false; return;
-    }
-    if (d.intro) { var t = document.getElementById('ptitle'), p = document.getElementById('pdesc'); if (t && d.intro.title) t.textContent = d.intro.title; if (p && d.intro.desc) p.textContent = d.intro.desc; }
-    live.innerHTML = BV.renderSections(d.sections);
-    var toc = document.querySelector('nav.toc[data-live]');
-    if (toc) toc.innerHTML = d.sections.map(function (s) { return '<a href="#' + s.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '">' + E(s.name) + '</a>'; }).join('');
-  });
+  /* The first backend (Google Sheet) was retired on 15 Nov 2026: page sections are built into the pages, and the home page
+     shows the admin's public announcements from Learnova (table announcements, migration 044). */
+  var news = document.getElementById('news');
+  if (!news || !BV.sbUrl || !BV.sbKey) return;
+  fetch(BV.sbUrl + '/rest/v1/announcements?select=title,body,link,created_at,expires_at,pinned&class_id=is.null&is_public=eq.true&order=pinned.desc,created_at.desc&limit=8',
+    { headers: { apikey: BV.sbKey, Authorization: 'Bearer ' + BV.sbKey } }).then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) {
+    var now = Date.now(); rows = (rows || []).filter(function (a) { return !a.expires_at || new Date(a.expires_at).getTime() >= now; }).slice(0, 4);
+    if (!rows.length) return;
+    news.innerHTML = '<h2 class="sec-h">📣 Announcements</h2>' + rows.map(function (it) {
+      return '<div class="item"><b>' + E(it.title) + '</b><span>' + E(it.body) + '</span>' + (it.link && /^(\/|https:\/\/)/.test(it.link) ? '<div class="acts"><a class="go" href="' + E(it.link) + '">Open</a></div>' : '') + '</div>'; }).join('');
+    news.hidden = false;
+  }, function () {});
 })();

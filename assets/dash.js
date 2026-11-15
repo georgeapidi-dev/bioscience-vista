@@ -270,6 +270,21 @@
   }
   // when a teacher is writing on the class whiteboard right now, say so at the top of the dashboard
   var bwOn = false;
+  /* announcements from the student's teachers and from Learnova (table announcements, migration 044) */
+  function news(me) {
+    var box = document.getElementById('bv-news'); if (!box) return;
+    var ids = (me.classes || []).map(function (c) { return c.id; }).filter(Boolean);
+    var f = 'class_id.is.null' + (ids.length ? ',class_id.in.(' + ids.join(',') + ')' : '');
+    S.db.from('announcements').select('id,class_id,title,body,link,pinned,created_at,expires_at').or(f).order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(12).then(function (r) {
+      if (r.error) return;   // before migration 044 the box simply stays empty
+      var now = Date.now(), cn = {}; (me.classes || []).forEach(function (c) { cn[c.id] = c.name; });
+      var rows = (r.data || []).filter(function (a) { return !a.expires_at || new Date(a.expires_at).getTime() >= now; }).slice(0, 6);
+      if (!rows.length) { box.innerHTML = ''; return; }
+      box.innerHTML = '<section class="panel" style="border-left:6px solid #ea580c"><h3 style="margin-top:0">📣 Announcements</h3>' + rows.map(function (a) {
+        return '<div style="margin:8px 0"><b>' + (a.pinned ? '📌 ' : '') + E(a.title) + '</b> <span class="small muted">' + E(a.class_id ? cn[a.class_id] || 'Your class' : 'Learnova') + ' · ' + E(new Date(a.created_at).toLocaleDateString()) + '</span>' +
+          (a.body ? '<div style="white-space:pre-wrap">' + E(a.body) + '</div>' : '') + (a.link ? '<div><a href="' + E(a.link) + '">Open →</a></div>' : '') + '</div>'; }).join('') + '</section>';
+    }, function () {});
+  }
   function boardWatch(me) {
     if (bwOn || !S.db.channel || !(me.classes || []).length) return; bwOn = true;
     me.classes.forEach(function (c) {
@@ -292,7 +307,7 @@
     var fb = res.filter(function (r) { return r.teacher_feedback || r.ai_feedback; });
     var h = '<div class="row2"><div><p class="label">My dashboard</p><h2>Hello, ' + E(first) + ' 👋</h2><p class="muted small">' + E(me.classes.map(function (c) { return c.name; }).join(', ') || 'No class yet') + ' · ' + E(me.user.email) + '</p></div>' +
       '<div class="cta"><a class="btn main sm" href="/live/" style="background:#7c3aed;border-color:#7c3aed">🎥 Live lessons</a><a class="btn main sm" href="/board/" style="background:#0d9488;border-color:#0d9488">🖊 Whiteboard</a><a class="btn main sm" href="/check/" style="background:#ea580c;border-color:#ea580c" title="Answer the question your teacher sends during a lesson">⚡ Live Check</a><a class="btn main sm" href="/practice/" style="background:linear-gradient(120deg,#4f46e5,#db2777);border-color:#db2777">🎯 Practice and revision</a><a class="btn sm" href="/learn/">Learning centre</a><a class="btn sm" href="/quizzes/">📝 Exam-style questions</a><a class="btn sm" href="/exams/">🧪 Examinations</a><button class="btn sm" type="button" id="so">Log out</button></div></div>';
-    h += '<div id="wblive"></div><div id="remind"></div><div id="mycl"></div>';
+    h += '<div id="wblive"></div><div id="bv-news"></div><div id="remind"></div><div id="mycl"></div>';
     h += '<div class="stats"><div class="stat"><span class="small muted">Overall score</span><b>' + (max ? Math.round(100 * got / max) + '%' : '–') + '</b></div>' +
       '<div class="stat"><span class="small muted">Lessons completed</span><b>' + done + ' / ' + prog.length + '</b></div>' +
       '<div class="stat"><span class="small muted">To do</span><b>' + (openTasks + todo.length) + '</b></div>' +
@@ -311,8 +326,8 @@
         (r.teacher_feedback ? '<div class="fb tch"><h4>Teacher feedback</h4>' + BV.md(r.teacher_feedback) + '</div>' : '') + (r.ai_feedback ? '<div class="fb ai"><h4>Feedback</h4>' + BV.md(String(r.ai_feedback).replace(/_🤖 Automatic AI feedback from your marks on each question\./, '_📝 Feedback from your marks on each question.').replace(/_⚙ Automatic feedback from your marks on each question\._/, '_📝 Feedback from your marks on each question._')) + '</div>' : '') + '</article>'; }).join(''); }) :
       '<p class="emptybox">No results yet. Results appear here when you finish lessons and quizzes.</p>') + '</section>';
     h += '<details class="panel"><summary><b>My profile</b></summary><form id="pf" class="grp" style="margin-top:10px"><label class="f">Full name<input id="pn" value="' + E(me.profile.full_name) + '"></label><button class="btn sm" type="submit">Save</button><p class="msg" id="pm"></p></form>' +
-      '<p class="small muted">Marks from before accounts were switched on are still on <a href="/progress/">My learning (personal code)</a>.</p></details>';
-    app.innerHTML = h; boardWatch(me);
+      '</details>';
+    app.innerHTML = h; boardWatch(me); news(me);
     app.querySelector('#so').onclick = S.signOut;
     myProfile(me);
     app.querySelectorAll('[data-done]').forEach(function (b) { b.onclick = function () {

@@ -108,10 +108,23 @@
     }
     function cell(p, n) { var lv = n >= ((d.settings || {}).min_items || 3) ? levelOf(p, th) : null, L = LEVEL[lv]; return '<span class="ba-cell" style="background:' + (L ? L[2] : '#f1f5f9') + ';color:' + (L ? L[1] : '#475569') + '" title="' + n + ' marked questions">' + (p == null ? '–' : p + '%') + '</span>'; }
     var need = studs.filter(function (x) { return x.items >= ((d.settings || {}).min_items || 3) && x.pct < (th.practice || 50); }), strong = studs.filter(function (x) { return x.items >= ((d.settings || {}).min_items || 3) && x.pct >= (th.secure || 85); });
-    h += '<div class="ba-grid2"><div><h5>Need additional support</h5>' + (need.length ? list(need.map(function (x) { return x.name + ' (' + x.pct + '%)'; })) : '<p class="small muted">None at the moment.</p>') + '</div>' +
+    // suggested support for each student who needs it: their two weakest topics with enough evidence, ready to add to the intervention plan
+    var minI = (d.settings || {}).min_items || 3;
+    d.studentSupport = need.map(function (x) {
+      var weak = (d.grid || []).filter(function (c) { return c.student_id === x.student_id && c.items >= minI && c.pct != null && c.pct < (th.developing || 70); })
+        .sort(function (a, b) { return a.pct - b.pct; }).slice(0, 2);
+      var tops = weak.map(function (c) { return c.topic + ' (' + c.pct + '%)'; });
+      return { student_id: x.student_id, title: 'Support for ' + x.name + (weak.length ? ': ' + weak.map(function (c) { return c.topic; }).join(' and ') : ''),
+        evidence: x.name + ' scores ' + x.pct + '% overall on ' + x.items + ' marked questions' + (tops.length ? '; weakest topics ' + tops.join(', ') : '') + '.',
+        action: (weak.length ? 'Reteach ' + weak.map(function (c) { return c.topic; }).join(' and ') + ' in a short small-group session, then set the matching lesson again and a short practice set; ' : 'Check in one to one and set a short practice set on the latest topic; ') + 'review the result after one week.' };
+    });
+    h += '<div class="ba-grid2"><div><h5>Need additional support</h5>' + (need.length ? '<ul class="ba-list">' + d.studentSupport.map(function (g, i) {
+      return '<li><b>' + E(need[i].name) + '</b> (' + need[i].pct + '%)<div class="small">' + E(g.evidence) + '</div>' + (opts.save ? '<button type="button" class="btn sm" data-ivst="' + i + '">＋ Plan support</button>' : '') + '</li>'; }).join('') + '</ul>' : '<p class="small muted">None at the moment.</p>') + '</div>' +
       '<div><h5>Strong mastery</h5>' + (strong.length ? list(strong.map(function (x) { return x.name + ' (' + x.pct + '%)'; })) : '<p class="small muted">None yet.</p>') + '</div></div>';
     if ((d.missed || []).length) h += '<h5>Most frequently missed questions</h5><table class="ba-t"><tr><th>Assessment</th><th>Q</th><th>Objective</th><th>Class score</th><th>Wrong / partly</th></tr>' + d.missed.map(function (m) {
       return '<tr><td class="small">' + E(m.title) + '</td><td>' + E(m.q) + '</td><td>' + E(m.objective) + '</td><td>' + m.pct + '%</td><td class="small">' + m.wrong + ' / ' + m.partial + ' of ' + m.attempts + '</td></tr>'; }).join('') + '</table>';
+    if ((d.wrong || []).length) h += '<h5>❌ Most common wrong answers</h5><p class="small muted">Multiple-choice questions where several students chose the same wrong option: the idea behind that option is often a misconception worth discussing with the class.</p><table class="ba-t"><tr><th>Question</th><th>Wrong answer chosen</th><th>Correct answer</th><th>Students</th></tr>' + d.wrong.map(function (w) {
+      return '<tr><td class="small">' + E(w.prompt) + '<div class="muted">' + E(w.title) + '</div></td><td>' + E(w.chosen) + '</td><td class="small">' + E(w.correct) + '</td><td class="small">' + w.n + (w.names ? '<div class="muted">' + E(w.names) + '</div>' : '') + '</td></tr>'; }).join('') + '</table>';
     if ((d.misconceptions || []).length) h += '<h5>💡 Common misconceptions</h5><ul class="ba-list">' + d.misconceptions.map(function (m) { return '<li>' + E(m.misconception) + ' <span class="small muted">(' + m.students + ' student' + (m.students === 1 ? '' : 's') + ')</span></li>'; }).join('') + '</ul>';
     if ((d.progress || []).length) h += '<h5>Progress across assessments</h5><table class="ba-t"><tr><th>Assessment</th><th>Type</th><th>Date</th><th>Average</th><th>High</th><th>Low</th><th>Students</th></tr>' + d.progress.map(function (p) {
       return '<tr><td>' + E(p.title) + '</td><td class="small">' + E(p.kind) + '</td><td class="small">' + when(p.at) + '</td><td>' + bar(p.avg, levelOf(p.avg, th)) + ' ' + p.avg + '%</td><td>' + p.high + '%</td><td>' + p.low + '%</td><td>' + p.n + '</td></tr>'; }).join('') + '</table>';

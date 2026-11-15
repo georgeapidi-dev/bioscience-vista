@@ -1364,6 +1364,54 @@
       tick();
     });
     upd();
+    recorder(el, name, m);
+  }
+  /* Results go to the teacher: "Record this result" keeps the controls and the result of each run in a table, and a signed-in
+     student's table is saved to their account (table sim_attempts, the same place as the virtual laboratories), so the teacher
+     sees it under Lab work. One record per student, simulation and page. */
+  function uid() { try { return crypto.randomUUID(); } catch (e) { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }); } }
+  function kget(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+  function kset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function recorder(el, name, m) {
+    var KEY = 'bv-simrec:' + location.pathname + ':' + name + ':' + (Array.prototype.indexOf.call(document.querySelectorAll('[data-sim="' + name + '"]'), el));
+    var S = kget(KEY) || { id: uid(), rows: [], log: [], started: new Date().toISOString() };
+    var row = el.querySelector('.sim-run-row'); if (!row) return;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'sim-run sim-rec'; b.style.background = '#7c3aed'; b.textContent = '📋 Record this result';
+    row.insertBefore(b, row.querySelector('.sim-hint'));
+    var box = document.createElement('div'); box.className = 'sim-recbox'; el.appendChild(box);
+    function controls() {
+      var o = {}; el.querySelectorAll('.sim-c label').forEach(function (l) { var c = l.querySelector('input,select'); if (!c) return;
+        var t = (l.childNodes[0] && l.childNodes[0].textContent || l.textContent).trim(); o[t] = c.tagName === 'SELECT' ? (c.options[c.selectedIndex] || {}).text || c.value : c.value; });
+      return o;
+    }
+    function lessonName() { var h = document.querySelector('h1'); return (h ? h.textContent.trim() : document.title).slice(0, 140); }
+    function draw(msg) {
+      if (!S.rows.length) { box.innerHTML = msg ? '<p class="sim-cap">' + E(msg) + '</p>' : ''; return; }
+      var cols = Object.keys(S.rows[0]).filter(function (k) { return k[0] !== '_'; });
+      box.innerHTML = '<p class="sim-cap"><b>My recorded results</b> (' + S.rows.length + ')</p><div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:.85rem;width:100%"><tr>' +
+        '<th style="border:1px solid #cbd5e1;padding:4px">#</th>' + cols.map(function (c) { return '<th style="border:1px solid #cbd5e1;padding:4px;text-align:left">' + E(c) + '</th>'; }).join('') + '</tr>' +
+        S.rows.map(function (r, i) { return '<tr><td style="border:1px solid #cbd5e1;padding:4px">' + (i + 1) + '</td>' + cols.map(function (c) { return '<td style="border:1px solid #cbd5e1;padding:4px">' + E(r[c]) + '</td>'; }).join('') + '</tr>'; }).join('') +
+        '</table></div>' + (msg ? '<p class="sim-cap">' + E(msg) + '</p>' : '');
+    }
+    function send() {
+      var db = (window.BVS && window.BVS.db) || window.BV_DB || window.BV_LDB;
+      if (!db || !db.auth) return Promise.resolve('Kept in this browser. Sign in to send your results to your teacher.');
+      return db.auth.getSession().then(function (r) {
+        var u = r.data && r.data.session && r.data.session.user; if (!u) return 'Kept in this browser. Sign in to send your results to your teacher.';
+        return db.from('sim_attempts').upsert({ id: S.id, student_id: u.id, sim: 'sim:' + name, sim_title: m.title + ' · ' + lessonName(), variables: S.log.slice(-200), data: S.rows,
+          answers: { _hypothesis: '', Page: location.pathname }, scores: {}, score: 0, max_score: 0, hints: 0, trials: S.rows.length, started_at: S.started, updated_at: new Date().toISOString() })
+          .then(function (x) { return x.error ? 'Saved in this browser (could not reach your account just now).' : '✓ Sent to your teacher (Lab work).'; });
+      }).catch(function () { return 'Saved in this browser.'; });
+    }
+    el.querySelectorAll('.sim-c input,.sim-c select').forEach(function (c) { c.addEventListener('change', function () {
+      var l = c.closest('label'); S.log.push([new Date().toISOString(), l ? (l.childNodes[0] && l.childNodes[0].textContent || '').trim() : c.id, c.value]); if (S.log.length > 300) S.log = S.log.slice(-200); kset(KEY, S);
+    }); });
+    b.addEventListener('click', function () {
+      var out = el.querySelector('.sim-out'), r = controls(); r.Result = out ? out.textContent.replace(/\s+/g, ' ').trim().slice(0, 400) : '';
+      S.rows.push(r); if (S.rows.length > 60) S.rows = S.rows.slice(-60); kset(KEY, S); draw('Saving…');
+      send().then(function (msg) { draw(msg); });
+    });
+    draw();
   }
   function all() { document.querySelectorAll('[data-sim]').forEach(mount); }
   window.BVSim = { mount: mount, models: Object.keys(M) };
