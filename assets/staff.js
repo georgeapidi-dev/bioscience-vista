@@ -3,7 +3,7 @@
    no service-role key or admin password is ever used in the browser. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, TOPICS = [], CLASSES = [];
-  var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['questions', '❓ Student questions'], ['labs', '🔬 Lab work'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['grading', '🎯 Grade boundaries'], ['content', 'Content'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
+  var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['questions', '❓ Student questions'], ['labs', '🔬 Lab work'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['grading', '🎯 Grade boundaries'], ['bin', '🗑 Bin'], ['content', 'Content'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
   var ADMIN_TABS = ['bookings', 'roles', 'activity'];
   // /teach/ is "My classes": the same dashboard, limited to the classes this teacher owns (any teacher, and the admin's own classes)
   var TEACH = location.pathname.indexOf('/teach/') === 0, MINE = {}, CLASS_OF = {};
@@ -43,7 +43,7 @@
     '.ccards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.ccard2{--k:#2563eb;border-radius:16px;padding:14px;color:#fff;text-decoration:none;background:linear-gradient(135deg,var(--k),color-mix(in srgb,var(--k) 72%,#fff));box-shadow:0 8px 20px color-mix(in srgb,var(--k) 30%,transparent);display:flex;flex-direction:column;gap:6px}',
     '.ccard2 b{font-size:1.1rem}.ccard2 a{color:#fff;font-weight:700}.ccard2 .small{opacity:.95}.ccard2:hover{transform:translateY(-2px)}'
   ].join('\n'); document.head.appendChild(st); })();
-  var TABHUE = { overview: '#7c3aed', work: '#2563eb', questions: '#db2777', labs: '#0891b2', approvals: '#ea580c', classes: '#059669', students: '#4f46e5', quizzes: '#ca8a04', lessons: '#0d9488', marking: '#dc2626', grading: '#7c3aed', content: '#9333ea' };
+  var TABHUE = { overview: '#7c3aed', work: '#2563eb', questions: '#db2777', labs: '#0891b2', approvals: '#ea580c', classes: '#059669', students: '#4f46e5', quizzes: '#ca8a04', lessons: '#0d9488', marking: '#dc2626', grading: '#7c3aed', bin: '#64748b', content: '#9333ea' };
 
   S.guard(app, TEACH ? { school: true, allowPending: true } : { staff: true }).then(function (me) { ME = me; return TEACH ? courseRequests() : null; }).then(function () { if (TEACH && !teachGate(ME)) throw 'gate'; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(firstClasses).then(function () { window.addEventListener('hashchange', route); route(); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
@@ -63,6 +63,7 @@
     return Promise.all([S.db.from('topics').select('id,name,code,programme,parent_id,sort_order, subjects(name,sort_order)').order('sort_order'), S.db.from('classes').select('*').order('name'), S.quizSubjectCol()])
       .then(function (x) { TOPICS = x[0].data || []; QSUBJ = x[2] === true;
         var all = (x[1].data || []).filter(function (c) { return TEACH ? c.owner_kind !== 'main' && c.teacher_id === OWNER() : c.owner_kind === 'main' && (ME.admin || c.teacher_id === ME.user.id); });   /* main site (/staff/) and My classes (/teach/) are kept apart */
+        all = all.filter(function (c) { return !c.deleted_at; });   // removed classes are in the 🗑 Bin (migration 042)
         CLASSES = all.filter(function (c) { return !c.archived_at; }); ARCHIVED = all.filter(function (c) { return c.archived_at; });
         var others = {}; if (TEACH && ME.admin) (x[1].data || []).forEach(function (c) { if (c.owner_kind !== 'main' && c.teacher_id && c.teacher_id !== ME.user.id) others[c.teacher_id] = (others[c.teacher_id] || 0) + 1; });
         TEACHERS = Object.keys(others).map(function (id) { return { id: id, n: others[id] }; });
@@ -103,12 +104,45 @@
         '<label class="f" style="margin:0;min-width:240px">Whose classroom<select id="aspick"><option value="">My own classes</option>' + TEACHERS.map(function (t) { return '<option value="' + t.id + '"' + (t.id === AS ? ' selected' : '') + '>' + E(TNAME[t.id] || 'Teacher') + ' (' + t.n + ' class' + (t.n === 1 ? '' : 'es') + ')</option>'; }).join('') + '</select></label></div>' : '') +
       '<nav class="tabs" aria-label="Teacher sections">' + TABS.filter(function (t) { return ADMIN_TABS.indexOf(t[0]) < 0 || (ME.admin && !TEACH); }).map(function (t) { return '<a href="#' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</a>'; }).join('') + '</nav><div id="pane"><p class="muted">Loading…</p></div>';
     app.innerHTML = head; app.querySelector('#so').onclick = S.signOut;
+    (function () {   // switch between the admin, teacher and student views of the site
+      var va = document.createElement('div'); va.className = 'panel row2'; va.id = 'viewas'; va.style.alignItems = 'center';
+      va.innerHTML = '<span><b>👁 View the site as:</b> ' + (ME.admin ? '<a class="btn sm' + (TEACH ? '' : ' main') + '" href="/staff/">🛠 Admin</a> ' : '') + '<a class="btn sm' + (TEACH ? ' main' : '') + '" href="/teach/">🧑‍🏫 Teacher</a></span>' +
+        '<label class="f" style="margin:0;min-width:240px">🎒 Student preview<select id="vas"><option value="">Choose a class…</option>' + CLASSES.map(function (c) { return '<option value="' + c.id + '">' + E(c.name) + '</option>'; }).join('') + '</select></label>';
+      var nav = app.querySelector('nav.tabs'); if (nav) nav.parentNode.insertBefore(va, nav);
+      va.querySelector('#vas').onchange = function () { if (this.value) location.href = '/dashboard/?preview=' + encodeURIComponent(this.value) + '&from=' + (TEACH ? 'teach' : 'staff'); };
+    })();
     var pk = app.querySelector('#aspick'); if (pk) pk.onchange = function () { AS = pk.value || null; try { if (AS) sessionStorage.setItem('bv-as-teacher', AS); else sessionStorage.removeItem('bv-as-teacher'); } catch (e) {}
       TC.cur = null; if (history.replaceState) history.replaceState(null, '', location.pathname + '#overview'); refs().then(route); };
     app.classList.add('teach-ui');
     app.querySelectorAll('nav.tabs a').forEach(function (a) { var k = TABHUE[a.getAttribute('href').slice(1)]; if (k) a.style.setProperty('--k', k); });
     var pane = app.querySelector('#pane');
-    ({ overview: TEACH ? teachOverview : overview, work: lessonWork, questions: helpDesk, labs: labWork, approvals: TEACH ? teachApprovals : approvals, activity: activity, lessons: lessons, classes: TEACH ? teachClasses : classes, students: students, quizzes: quizzes, marking: marking, grading: gradeBounds, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
+    ({ overview: TEACH ? teachOverview : overview, work: lessonWork, questions: helpDesk, labs: labWork, approvals: TEACH ? teachApprovals : approvals, activity: activity, lessons: lessons, classes: TEACH ? teachClasses : classes, students: students, quizzes: quizzes, marking: marking, grading: gradeBounds, bin: binTab, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
+  }
+
+  /* ---------- 🗑 Bin: removed classes, deleted quizzes and lessons stay here for 30 days (migration 042) ---------- */
+  function binTab(p) {
+    p.innerHTML = '<p class="muted">Loading the bin…</p>';
+    S.db.rpc('bin_list').then(function (r) {
+      if (r.error) { p.innerHTML = '<p class="emptybox">The bin needs database update 042 (' + E(r.error.message) + ').</p>'; return; }
+      var rows = r.data || [], KIND = { quiz: '📝 Quiz or lesson', lesson: '📘 Lesson', 'class': '🏫 Class' };
+      var left = function (d) { var n = 30 - Math.floor((Date.now() - new Date(d).getTime()) / 864e5); return n > 0 ? n + ' day' + (n === 1 ? '' : 's') : 'due for deletion'; };
+      p.innerHTML = '<section class="panel tint"><h3 style="margin-top:0">🗑 Bin</h3><p>Deleted quizzes, interactive lessons' + (ME.admin ? ' and removed classes' : '') + ' stay here for 30 days. <b>Restore</b> brings an item back (unpublished, so you can check it before students see it again).' +
+        (ME.admin ? ' As the admin you can also <b>delete permanently</b>; this cannot be undone.' : ' After 30 days the admin can delete it permanently.') + '</p>' +
+        (ME.admin ? '<div class="acts"><button type="button" class="btn sm" id="empty" style="--c:#b91c1c">Delete everything older than 30 days</button></div>' : '') + '</section>' +
+        (rows.length ? '<div class="tablewrap"><table class="marks"><tr><th>Item</th><th>Type</th>' + (ME.admin ? '<th>Owner</th>' : '') + '<th>Deleted</th><th>Kept for</th><th></th></tr>' + rows.map(function (x) {
+          return '<tr><td>' + E(x.title || 'Untitled') + '</td><td class="small">' + E(KIND[x.kind] || x.kind) + '</td>' + (ME.admin ? '<td class="small">' + E(x.owner_name || '–') + '</td>' : '') +
+            '<td class="small">' + E(S.when(x.deleted_at)) + (x.deleted_by_name ? ' by ' + E(x.deleted_by_name) : '') + '</td><td class="small">' + E(left(x.deleted_at)) + '</td>' +
+            '<td><button type="button" class="btn sm" data-rs="' + x.kind + '|' + x.id + '">↩ Restore</button>' + (ME.admin ? ' <button type="button" class="btn sm" data-pg="' + x.kind + '|' + x.id + '" style="--c:#b91c1c">Delete permanently</button>' : '') + '</td></tr>';
+        }).join('') + '</table></div>' : '<p class="emptybox">The bin is empty.</p>');
+      p.querySelectorAll('[data-rs]').forEach(function (b) { b.onclick = function () { var k = b.getAttribute('data-rs').split('|');
+        S.db.rpc('restore_item', { kind: k[0], item: k[1] }).then(function (x) { if (ok(x, 'Restored')) refs().then(function () { binTab(p); }); }); }; });
+      p.querySelectorAll('[data-pg]').forEach(function (b) { b.onclick = function () { var k = b.getAttribute('data-pg').split('|');
+        if (prompt('Delete permanently? This cannot be undone' + (k[0] === 'class' ? ': its students are taken out of the class' : k[0] === 'quiz' ? ': students\' answers and marks for it are deleted too' : '') + '.\n\nType DELETE to confirm.') !== 'DELETE') return;
+        S.db.rpc('purge_item', { kind: k[0], item: k[1] }).then(function (x) { if (ok(x, 'Deleted permanently')) binTab(p); }); }; });
+      var em = p.querySelector('#empty'); if (em) em.onclick = function () {
+        if (prompt('Permanently delete everything that has been in the bin for more than 30 days? Type DELETE to confirm.') !== 'DELETE') return;
+        S.db.rpc('empty_bin', { days: 30 }).then(function (x) { if (ok(x, (x.data || 0) + ' item' + (x.data === 1 ? '' : 's') + ' deleted permanently')) binTab(p); }); };
+    });
   }
 
   /* ---------- grade boundaries: each teacher sets the % needed for each IB grade (HL, SL) and MYP level (migration 041) ---------- */
@@ -338,7 +372,7 @@
   /* archive, restore or remove a class (admin). Lessons, quizzes, notes and simulations always stay. */
   function archivedPanel() {
     return '<section class="panel"><h3 style="margin:0">Archived classes</h3><p class="small muted">Archive a class when it ends or when you change school. Its students can no longer sign in to lessons or materials, and it disappears from your lists. ' +
-      'All your lessons, quizzes, notes and simulations stay, ready for new classes. Students\' past results are kept. <b>Remove</b> deletes the class itself and takes its students out of it (they would need to join a class and be approved again).</p>' +
+      'All your lessons, quizzes, notes and simulations stay, ready for new classes. Students\' past results are kept. <b>Remove</b> moves the class to the 🗑 Bin for 30 days; deleting it permanently from the bin takes its students out of it.</p>' +
       (ARCHIVED.length ? '<div class="tablewrap"><table class="marks"><tr><th>Class</th><th>Programme</th><th>Archived</th><th></th></tr>' + ARCHIVED.map(function (c) {
         return '<tr><td>' + E(c.name) + '</td><td>' + E(c.programme || '') + '</td><td>' + E(S.when(c.archived_at)) + '</td><td><button type="button" class="btn sm" data-restore="' + c.id + '">↩ Restore</button> <button type="button" class="btn sm" data-rmold="' + c.id + '" style="--c:#b91c1c">Remove</button></td></tr>'; }).join('') + '</table></div>'
         : '<p class="emptybox">No archived classes.</p>') + '</section>';
@@ -350,10 +384,8 @@
   }
   function removeClass(p, id) {
     var c = CLASSES.concat(ARCHIVED).filter(function (x) { return x.id === id; })[0] || {};
-    var typed = prompt('Remove ' + (c.name || 'this class') + ' permanently?\n\nThe class, its join code and its class links (to-do items, quiz settings for this class) are deleted. Its students are taken out of the class and need approval again. ' +
-      'Your lessons, quizzes, notes, simulations and students\' past results are kept.\n\nThis cannot be undone. Type REMOVE to confirm.');
-    if (typed !== 'REMOVE') return;
-    S.db.rpc('remove_class', { cid: id }).then(function (r) { if (ok(r, 'Class removed' + (r.data ? ' · ' + r.data + ' student' + (r.data === 1 ? '' : 's') + ' taken out' : ''))) classes(p); });
+    if (!confirm('Remove ' + (c.name || 'this class') + '?\n\nIt goes to the 🗑 Bin for 30 days and can be restored from there. Deleting it permanently from the bin takes its students out of it.')) return;
+    S.db.rpc('bin_item', { kind: 'class', item: id }).then(function (r) { if (ok(r, 'Class moved to the 🗑 Bin')) refs().then(function () { (TEACH ? teachClasses : classes)(p); }); });
   }
   function classes(p, args) {
     if (args && args[0]) return refs().then(function () { classPage(p, args[0], args[1]); });
@@ -442,7 +474,7 @@
   function pickLists() {
     if (PICK) return Promise.resolve(PICK);
     return Promise.all([S.db.from('lessons').select('id,title,url,external_id,topic_id').eq('published', true).order('sort_order'),
-      S.db.from('quizzes').select('id,title,category,published, quiz_classes(class_id,published)').order('created_at', { ascending: false }),
+      S.db.from('quizzes').select('id,title,category,published, quiz_classes(class_id,published)').is('deleted_at', null).order('created_at', { ascending: false }),
       S.db.from('resources').select('id,title,url,topic_id').eq('published', true).order('sort_order'),
       S.db.from('simulations').select('id,title,url,topic_id').eq('published', true).order('sort_order')]).then(function (x) {
       PICK = { lesson: x[0].data || [], quiz: x[1].data || [], resource: x[2].data || [], sim: x[3].data || [] }; return PICK; });
@@ -1024,7 +1056,7 @@
     if (args[0] === 'import') return quizImport(p);
     if (args[0] && args[1] === 'preview') return quizPreview(p, args[0]);
     if (args[0]) return quizEdit(p, args[0]);
-    S.db.from('quizzes').select('id,title,published,due_at,show_results,category,created_by,topic_id' + (QSUBJ ? ',subject' : '') + ', quiz_classes(class_id), quiz_questions(question_id)').neq('category', 'lesson').order('created_at', { ascending: false }).then(function (r) {
+    S.db.from('quizzes').select('id,title,published,due_at,show_results,category,created_by,topic_id' + (QSUBJ ? ',subject' : '') + ', quiz_classes(class_id), quiz_questions(question_id)').is('deleted_at', null).neq('category', 'lesson').order('created_at', { ascending: false }).then(function (r) {
       if (TEACH) r.data = (r.data || []).filter(function (q) { return (!ME.admin && q.created_by === ME.user.id) || q.quiz_classes.some(function (x) { return CLASSES.some(function (c) { return c.id === x.class_id; }); }); });
       r.data = (r.data || []).filter(function (q) { return !(/^Practice: /.test(q.title || '') && !(q.quiz_classes || []).length && q.created_by !== ME.user.id); });   // students' own practice sets (migration 039) stay out of this list
       var cn = {}; CLASSES.forEach(function (c) { cn[c.id] = c.name; });
@@ -1179,7 +1211,7 @@
           S.db.from('quiz_classes').delete().eq('quiz_id', qid).then(function () { return cls.length ? S.db.from('quiz_classes').insert(cls.map(function (c) { return { quiz_id: qid, class_id: c }; })) : { error: null }; })
             .then(function (r2) { if (ok(r2, 'Quiz saved')) { if (isNew) location.hash = 'quizzes/' + qid; else quizEdit(p, qid); } });
         }); };
-      var del = p.querySelector('#del'); if (del) del.onclick = function () { if (del.dataset.sure) { S.db.from('quizzes').delete().eq('id', id).then(function (r) { if (ok(r, 'Quiz deleted')) location.hash = 'quizzes'; }); } else { del.dataset.sure = 1; del.textContent = 'Click again to delete (attempts are deleted too)'; } };
+      var del = p.querySelector('#del'); if (del) del.onclick = function () { if (del.dataset.sure) { S.db.rpc('bin_item', { kind: 'quiz', item: id }).then(function (r) { if (ok(r, 'Quiz moved to the 🗑 Bin (restore it within 30 days)')) location.hash = 'quizzes'; }); } else { del.dataset.sure = 1; del.textContent = 'Click again to move it to the bin'; } };
       apLayout(p, isNew);
       if (isNew) return;
       var listEl = p.querySelector('#qlist'), removed = [];
@@ -1443,7 +1475,7 @@
   /* ---------- lesson builder: objectives or a file → interactive six-step lesson ---------- */
   function lessons(p, args) {
     if (args[0]) { location.replace('/build/#' + (args[0] === 'new' ? 'new/lesson' : 'edit/' + args[0])); return; }   // the new builder replaces the old lesson maker
-    S.db.from('quizzes').select('id,title,published,created_at,created_by, quiz_classes(class_id), quiz_questions(question_id)').eq('category', 'lesson').order('created_at', { ascending: false }).then(function (r) {
+    S.db.from('quizzes').select('id,title,published,created_at,created_by, quiz_classes(class_id), quiz_questions(question_id)').eq('category', 'lesson').is('deleted_at', null).order('created_at', { ascending: false }).then(function (r) {
       if (TEACH) r.data = (r.data || []).filter(function (q) { return (!ME.admin && q.created_by === ME.user.id) || q.quiz_classes.some(function (x) { return CLASSES.some(function (c) { return c.id === x.class_id; }); }); });
       var cn = {}; CLASSES.forEach(function (c) { cn[c.id] = c.name; });
       p.innerHTML = '<div class="acts"><a class="btn main sm" href="/build/#new/lesson">✨ Build a lesson from a file or objectives</a><a class="btn sm" href="/build/">📚 My assessments and lessons</a></div>' +
@@ -1521,8 +1553,8 @@
           draw(); var el = stepsEl.querySelector('[data-i="' + (last + 1) + '"] [data-f=prompt]'); if (el) el.focus(); }; });
       }
       draw();
-      var del = p.querySelector('#ldel'); if (del) del.onclick = function () { if (!del.dataset.sure) { del.dataset.sure = 1; del.textContent = 'Click again to delete the lesson and its answers'; return; }
-        S.db.from('lessons').delete().eq('external_id', 'IL-' + meta.id).then(function () { return S.db.from('quizzes').delete().eq('id', meta.id); }).then(function (r) { if (ok(r, 'Lesson deleted')) location.hash = 'lessons'; }); };
+      var del = p.querySelector('#ldel'); if (del) del.onclick = function () { if (!del.dataset.sure) { del.dataset.sure = 1; del.textContent = 'Click again to move the lesson to the bin'; return; }
+        S.db.rpc('bin_item', { kind: 'quiz', item: meta.id }).then(function (r) { if (ok(r, 'Lesson moved to the 🗑 Bin (restore it within 30 days)')) location.hash = 'lessons'; }); };
       p.querySelector('#ls').onclick = function () {
         sync(); var bad = items.map(Q.check).filter(Boolean)[0]; if (bad) { toast(bad, true); return; }
         var title = p.querySelector('#t').value.trim(); if (!title) { toast('Give the lesson a title.', true); return; }
@@ -1947,6 +1979,13 @@
         (CLASSES.length ? '<div class="cchips">' + CLASSES.map(function (x) { return '<button type="button" class="cchip' + (x.id === TC.cur ? ' on' : '') + '" style="--k:' + hue(x.id) + '" data-c="' + x.id + '">' + E(x.name) + (x.active ? '' : ' (closed)') + '</button>'; }).join('') + '</div>' : '<p class="small muted">' + (MYC !== null && !ME.admin ? 'No classes yet. Your class for a course is made when the Learnova admin approves the course (see My courses below).' : 'No classes yet. Press ＋ New class and choose the course you teach.') + '</p>') +
         '<div id="newbox"></div></section><div id="mycbox"></div><div id="cbox"></div>';
       myCourses().then(function () { coursePanel(p.querySelector('#mycbox')); });
+      if (ARCHIVED.length) {   // the teacher's archived classes: restore any of them (the admin can also remove them to the bin)
+        var ad = document.createElement('details'); ad.className = 'panel'; ad.innerHTML = '<summary style="cursor:pointer;font-weight:700">🗄 Archived classes (' + ARCHIVED.length + ')</summary><p class="small muted">Archived classes keep their students\' results. Restore a class to use it again.</p>' +
+          ARCHIVED.map(function (x) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(x.name) + '</b> <span class="small muted">archived ' + E(S.when(x.archived_at)) + '</span></span><span class="cta"><button type="button" class="btn sm" data-unarc="' + x.id + '">↩ Restore</button>' + (ME.admin ? ' <button type="button" class="btn sm" data-binc="' + x.id + '" style="--c:#b91c1c">Remove</button>' : '') + '</span></div>'; }).join('');
+        p.querySelector('#mycbox').before(ad);
+        ad.querySelectorAll('[data-unarc]').forEach(function (b) { b.onclick = function () { S.db.rpc('archive_class', { cid: b.getAttribute('data-unarc'), archive: false }).then(function (r) { if (ok(r, 'Class restored')) refs().then(function () { teachClasses(p); }); }); }; });
+        ad.querySelectorAll('[data-binc]').forEach(function (b) { b.onclick = function () { removeClass(p, b.getAttribute('data-binc')); }; });
+      }
       if (p.querySelector('#newc')) p.querySelector('#newc').onclick = function () { classForm(p.querySelector('#newbox'), null, p); };
       p.querySelector('#chs').onclick = function () { changeSchool(p); };
       p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { TC.cur = b.getAttribute('data-c'); TC.tab = 'students'; teachClasses(p); }; });
@@ -2006,10 +2045,13 @@
     var tabs = [['students', '👥 Students'], ['materials', '📘 Lessons'], ['qz', '📝 Quizzes'], ['team', '🤝 Co-teachers']];
     box.innerHTML = '<section class="panel grp"><div class="row2 cband" style="--k:' + hue(c.id) + '"><div><h3 style="margin:0">' + E(c.name) + '</h3><p class="small muted">' + E([c.subject, c.level].filter(Boolean).join(' · ')) +
       (c.listed ? ' · students find it under <b>' + E(c.school_name || ME.profile.school_name || 'your name') + '</b>' : ' · hidden from the join list') + '</p></div>' +
-      '<span class="cta"><button class="btn sm" type="button" id="sync" title="Add any new Learnova lessons and quizzes for this course">⟳ Add new course lessons</button><button class="btn sm" type="button" id="edc">Edit</button></span></div><div id="edbox"></div>' +
+      '<span class="cta"><button class="btn sm" type="button" id="sync" title="Add any new Learnova lessons and quizzes for this course">⟳ Add new course lessons</button><button class="btn sm" type="button" id="edc">Edit</button><button class="btn sm" type="button" id="carc" title="Archive this class: students keep their results; you can restore it later">🗄 Archive</button></span></div><div id="edbox"></div>' +
       '<p class="qlinks"><a style="--k:#7c3aed" href="#classes/' + c.id + '/todo">📌 To-do list: set lessons and quizzes</a><a style="--k:#059669" href="#classes/' + c.id + '/register">🗒 Register</a><a style="--k:#db2777" href="#classes/' + c.id + '/activity">👀 Activity</a><a style="--k:#0f766e" href="' + '/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a><a style="--k:#7c3aed" href="/live/?class=' + c.id + '">🎥 Live lessons</a><a style="--k:#0d9488" href="#classes/' + c.id + '/lessons">🧪 Lesson progress</a><a style="--k:#ca8a04" href="#classes/' + c.id + '/quizzes">📝 Quiz results</a><a style="--k:#2563eb" href="#classes/' + c.id + '/analysis">📊 Analysis</a></p>' +
       '<div class="cchips" role="tablist">' + tabs.map(function (t, i) { return '<button type="button" class="cchip' + (TC.tab === t[0] ? ' on' : '') + '" style="--k:' + ['#4f46e5', '#0d9488', '#ca8a04', '#ea580c'][i] + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="tab"></div></section>';
     box.querySelector('#edc').onclick = function () { classForm(box.querySelector('#edbox'), c, p); };
+    box.querySelector('#carc').onclick = function () {
+      if (!confirm('Archive ' + c.name + '?\n\nIt leaves your class list and its students lose access to its lessons and quizzes. Their results are kept, and you can restore the class at any time under Archived classes.')) return;
+      S.db.rpc('archive_class', { cid: c.id, archive: true }).then(function (r) { if (!ok(r, 'Class archived')) return; TC.cur = null; refs().then(function () { teachClasses(p); }); }); };
     box.querySelector('#sync').onclick = function () { var b = this; b.disabled = true; S.db.rpc('set_class_course', { cid: c.id, course_slug: null }).then(function (x) { b.disabled = false; if (!ok(x)) return;
       toast(c.course ? 'Added ' + x.data.lessons + ' new lessons and ' + x.data.quizzes + ' new quizzes.' : 'Choose the course first: press Edit.'); MATS = {}; classBox(box, c, p); }); };
     box.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { TC.tab = b.getAttribute('data-t'); classBox(box, c, p); }; });
@@ -2021,13 +2063,30 @@
       var en = r.data || [];
       tcNames(en.map(function (e) { return e.student_id; })).then(function (nm) {
         var wait = en.filter(function (e) { return e.status === 'pending'; }), held = en.filter(function (e) { return e.status === 'teacher_ok'; }), okk = en.filter(function (e) { return e.status === 'approved'; });
+        var others = CLASSES.filter(function (o) { return o.id !== c.id && o.owner_kind !== 'main'; });   // the teacher's other open classes
         okk.sort(function (a, b) { return (nm[a.student_id] || '').localeCompare(nm[b.student_id] || ''); });
         t.innerHTML = '<h4>Requests to join (' + wait.length + ')</h4>' + (wait.length ? wait.map(function (e) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(nm[e.student_id] || 'Student') + '</b> <span class="small muted">asked ' + E(S.when(e.requested_at)) + '</span></span><span class="cta"><button class="btn main sm" data-ok="' + e.id + '">Accept</button><button class="btn sm" data-no="' + e.id + '">Decline</button></span></div>'; }).join('') : '<p class="small muted">None.</p>') +
           (held.length ? '<h4>Waiting for Learnova to confirm (' + held.length + ')</h4>' + held.map(function (e) { return '<p>' + E(nm[e.student_id] || 'Student') + '</p>'; }).join('') : '') +
-          '<h4>Students in this class (' + okk.length + ')</h4>' + (okk.length ? okk.map(function (e) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><a href="#students/' + e.student_id + '">' + E(nm[e.student_id] || 'Student') + '</a></span><span class="cta"><a class="btn sm" href="/messages/">Message</a><button class="btn sm" data-no="' + e.id + '">Remove</button></span></div>'; }).join('') : '<p class="small muted">No students yet. They find your class under your school and ask to join.</p>');
+          '<h4>Students in this class (' + okk.length + ')</h4>' + (okk.length ? okk.map(function (e) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><a href="#students/' + e.student_id + '">' + E(nm[e.student_id] || 'Student') + '</a></span><span class="cta">' + (others.length ? '<select class="btn sm" data-mv="' + e.student_id + '" aria-label="Move to another class"><option value="">Move to…</option>' + others.map(function (o) { return '<option value="' + o.id + '">' + E(o.name) + '</option>'; }).join('') + '</select>' : '') + '<a class="btn sm" href="/messages/">Message</a><button class="btn sm" data-no="' + e.id + '">Remove</button></span></div>'; }).join('') : '<p class="small muted">No students yet. They find your class under your school and ask to join, or add them below.</p>') +
+          '<h4>➕ Add existing students</h4><p class="small muted">Search for students of your school or of your other classes by name, student number or email, and add them to <b>' + E(c.name) + '</b>.</p>' +
+          '<div class="row2"><input id="sfind" placeholder="Name, student number or email" style="flex:1"><button type="button" class="btn sm" id="sgo">Search</button></div><div id="sres"></div>';
         t.querySelectorAll('[data-ok],[data-no]').forEach(function (b) { b.onclick = function () { var yes = b.hasAttribute('data-ok');
           if (!yes && !b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'Click again to confirm'; return; }
           S.db.rpc('decide_enrolment', { eid: b.getAttribute(yes ? 'data-ok' : 'data-no'), approve: yes }).then(function (x) { if (ok(x, yes ? 'Accepted' : 'Done')) refs().then(function () { tcStudents(t, c); }); }); }; });
+        t.querySelectorAll('[data-mv]').forEach(function (sel) { sel.onchange = function () { var to = sel.value; if (!to) return; var name = sel.options[sel.selectedIndex].text;
+          if (!confirm('Move ' + (nm[sel.getAttribute('data-mv')] || 'this student') + ' to ' + name + '? Their past results stay with them.')) { sel.value = ''; return; }
+          S.db.rpc('teacher_move_student', { sid: sel.getAttribute('data-mv'), from_cid: c.id, to_cid: to }).then(function (x) { if (ok(x, 'Moved to ' + name)) refs().then(function () { tcStudents(t, c); }); }); }; });
+        var find = function () { var q = t.querySelector('#sfind').value.trim(), out = t.querySelector('#sres'); if (q.length < 2) { out.innerHTML = '<p class="small muted">Type at least 2 letters.</p>'; return; }
+          out.innerHTML = '<p class="small muted">Searching…</p>';
+          S.db.rpc('teacher_find_students', { q: q }).then(function (x) {
+            if (x.error) { out.innerHTML = '<p class="small">' + E(S.nice(x.error)) + '</p>'; return; }
+            var rows = (x.data || []).filter(function (s2) { return !okk.some(function (e) { return e.student_id === s2.id; }); });
+            out.innerHTML = rows.length ? rows.map(function (s2) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(s2.full_name || 'Student') + '</b> <span class="small muted">' + E([s2.student_number, s2.school_name, s2.classes ? 'in ' + s2.classes : 'no class'].filter(Boolean).join(' · ')) + '</span></span><button type="button" class="btn main sm" data-add="' + s2.id + '">Add to class</button></div>'; }).join('')
+              : '<p class="small muted">No students found who are not already in this class.</p>';
+            out.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = function () { b.disabled = true;
+              S.db.rpc('teacher_add_student', { sid: b.getAttribute('data-add'), cid: c.id }).then(function (y) { if (!ok(y, y.data === 'approved' ? 'Added to the class' : 'Added: waiting for Learnova to confirm')) { b.disabled = false; return; } refs().then(function () { tcStudents(t, c); }); }); }; });
+          }); };
+        t.querySelector('#sgo').onclick = find; t.querySelector('#sfind').onkeydown = function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); find(); } };
       });
     });
   }
@@ -2054,7 +2113,7 @@
     });
   }
   function tcQuizzes(t, c) {
-    Promise.all([S.db.from('quizzes').select('id,title,category,published,created_by,topic_id' + (QSUBJ ? ',subject' : '')).order('title'), S.db.from('quiz_classes').select('quiz_id,published').eq('class_id', c.id)]).then(function (x) {
+    Promise.all([S.db.from('quizzes').select('id,title,category,published,created_by,topic_id' + (QSUBJ ? ',subject' : '')).is('deleted_at', null).order('title'), S.db.from('quiz_classes').select('quiz_id,published').eq('class_id', c.id)]).then(function (x) {
       var set = {}; (x[1].data || []).forEach(function (r) { set[r.quiz_id] = r.published ? 'live' : 'wait'; });
       var all = (x[0].data || []).filter(function (z) { return set[z.id] || z.published || z.created_by === ME.user.id; }).sort(function (a, b) { return (set[b.id] ? 1 : 0) - (set[a.id] ? 1 : 0) || a.title.localeCompare(b.title); });
       t.innerHTML = '<p class="small">Quizzes and exams linked to this class. Students see one only after you press <b>Publish</b>. Add more from the list, or make your own in <a href="#quizzes">Quizzes &amp; exams</a>.</p><label class="f">Search<input id="qq" placeholder="quiz title"></label><label class="chk"><input type="checkbox" id="qonly" checked> Only quizzes in this class</label><div id="ql"></div>';

@@ -5,6 +5,20 @@
      The database already lets the admin read a student's results (can_view_student); buttons that would act for the student are switched off. */
   var VIEW = null;
   S.guard(app, { allowPending: true }).then(function (me0) {
+    /* Teachers and the admin: /dashboard/?preview=<class id> shows the dashboard a student of that class sees, view only (nothing is saved for a student). */
+    var pv = new URLSearchParams(location.search).get('preview');
+    if (pv && (me0.staff || me0.school || (me0.roles || []).indexOf('teacher') >= 0)) return S.db.from('classes').select('id,name,programme,level,subject').eq('id', pv).maybeSingle().then(function (r) {
+      var c = r.data; if (!c) throw new Error('That class was not found, or it is not one of yours.');
+      var from = new URLSearchParams(location.search).get('from') === 'staff' ? '/staff/' : '/teach/';
+      VIEW = { id: me0.user.id, name: 'a student in ' + c.name };
+      var bar = document.createElement('div'); bar.className = 'panel tint row2'; bar.id = 'viewbar'; bar.setAttribute('role', 'status');
+      bar.innerHTML = '<span>🎒 <b>Student preview.</b> This is the dashboard a student in <b>' + E(c.name) + '</b> sees. It is view only: nothing you click here is saved as a student.</span><span class="cta"><span class="small" id="viewmsg"></span><a class="btn sm" href="' + from + '">↩ Back to the ' + (from === '/staff/' ? 'admin' : 'teacher') + ' view</a></span>';
+      app.before(bar);
+      var block = '[data-done],[data-join],[data-leave],[data-retry],#addc,#joinbox,#pf,#rvf,#aip,#so';
+      ['click', 'submit'].forEach(function (ev) { app.addEventListener(ev, function (e) { var t = e.target && e.target.closest ? e.target.closest(block) : null; if (!t) return; e.preventDefault(); e.stopPropagation(); bar.querySelector('#viewmsg').textContent = 'Not available in the student preview.'; }, true); });
+      var cls = [{ id: c.id, name: c.name, programme: c.programme, status: 'approved' }];
+      return { user: { id: me0.user.id, email: '' }, profile: { full_name: 'Student preview', approved: true, class_id: c.id }, roles: ['student'], staff: false, admin: false, ok: true, view: true, preview: true, access: { premium: true, classes: cls }, classes: cls };
+    });
     var asId = new URLSearchParams(location.search).get('as');
     if (!asId || !me0.admin) return me0;
     return Promise.all([S.db.from('profiles').select('*').eq('id', asId).maybeSingle(),
