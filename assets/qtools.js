@@ -357,20 +357,49 @@
 
   /* Grading scales (admin's rule): MYP work is reported as a level 1 to 8, IB Diploma work as a grade 1 to 7.
      MYP: eight equal bands of the marks (0 marks = level 0). Diploma: the school's boundaries 20, 30, 44, 54, 64 and 77 %. */
+  /* Grades. Each teacher sets their own boundaries for IB HL, IB SL and MYP (Grade boundaries tab; table grade_boundaries, migration 041).
+     A student sees grades from the boundaries of their own class's teacher; until a teacher saves any, the defaults below apply. */
+  T.DEFAULT_BOUNDS = { HL: [14, 26, 38, 49, 60, 72], SL: [14, 26, 38, 49, 60, 72], MYP: [1, 13, 26, 38, 51, 63, 76, 88] };   // minimum % for IB grades 2–7, and for MYP levels 1–8
+  T.BOUNDS = { HL: T.DEFAULT_BOUNDS.HL, SL: T.DEFAULT_BOUNDS.SL, MYP: T.DEFAULT_BOUNDS.MYP }; T.MYLEVEL = null;
   T.scaleOf = function (label) {
     var t = String(label || '');
-    if (t === 'MYP' || t === 'DP') return t;
+    if (t === 'MYP' || t === 'DP' || t === 'HL' || t === 'SL') return t;
     if (/\bMYP\b|\bGrade\s*(6|7|8|9|10)\b|^\/?g(6|7|8|9|10)-|^G(6|7|8|9|10)-|^\/?(leafdisc|review|classification|separating-mixtures-2)\b/i.test(t)) return 'MYP';
+    var hl = /\bHL\b|\(HL\)|\bHigher Level\b/.test(t), sl = /\bSL\b|\bStandard Level\b/.test(t);
+    if (hl && !sl) return 'HL'; if (sl && !hl) return 'SL';
     if (/\bIB\b|\bDP\s?[12]?\b|Diploma|\b(SL|HL)\b|^\s*(Theme\s+)?[A-D][1-4]\.[1-4]\b|\b(Structure|Reactivity)\s+\d|^\/?[abcd]\d\d-lesson|^\/?(chem|phys|ess|maths)-/i.test(t)) return 'DP';
     return '';
   };
   T.level = function (score, max, scale) {
     scale = T.scaleOf(scale); if (!scale || !(max > 0) || score == null || isNaN(score)) return null;
     var p = 100 * score / max;
-    if (scale === 'MYP') return { n: p <= 0 ? 0 : Math.min(8, Math.ceil(p / 12.5 - 1e-9)), of: 8, name: 'MYP level' };
-    var n = 1; [20, 30, 44, 54, 64, 77].forEach(function (b) { if (p >= b) n++; }); return { n: n, of: 7, name: 'IB grade' };
+    if (scale === 'MYP') { var m = 0; T.BOUNDS.MYP.forEach(function (b) { if (p >= b) m++; }); return { n: m, of: 8, name: 'MYP level' }; }
+    if (scale === 'DP') scale = T.MYLEVEL || 'HL';   // not labelled HL or SL: the student's own level
+    var n = 1; T.BOUNDS[scale].forEach(function (b) { if (p >= b) n++; }); return { n: n, of: 7, name: 'IB grade' };
   };
-  T.levelPill = function (score, max, label) { var l = T.level(+score, +max, label); return l ? ' <span class="pill" style="background:#ede9fe;color:#5b21b6;font-weight:700">' + l.name + ' ' + l.n + ' of ' + l.of + '</span>' : ''; };
+  T.levelPill = function (score, max, label) {
+    var l = T.level(+score, +max, label);
+    return l ? ' <span class="pill bv-grade" data-g="' + E([+score, +max, String(label || '').slice(0, 300)].join('\u0001')) + '" style="background:#ede9fe;color:#5b21b6;font-weight:700">' + l.name + ' ' + l.n + ' of ' + l.of + '</span>' : '';
+  };
+  function refreshPills() {   // grades already on the page are redrawn once the teacher's boundaries have arrived
+    document.querySelectorAll('.bv-grade[data-g]').forEach(function (el) {
+      var g = el.getAttribute('data-g').split('\u0001'), l = T.level(+g[0], +g[1], g[2]); if (l) el.textContent = l.name + ' ' + l.n + ' of ' + l.of;
+    });
+  }
+  T.setBounds = function (b) {
+    b = b || {}; ['HL', 'SL', 'MYP'].forEach(function (k) { T.BOUNDS[k] = Array.isArray(b[k]) && b[k].length === T.DEFAULT_BOUNDS[k].length ? b[k].map(Number) : T.DEFAULT_BOUNDS[k]; });
+    T.MYLEVEL = b.level === 'HL' || b.level === 'SL' ? b.level : null; refreshPills();
+  };
+  T.loadBounds = function (force) {
+    var db = (window.BVS && window.BVS.db) || window.BV_LDB; if (!db || !db.rpc) return Promise.resolve(T.BOUNDS);
+    if (!force) { try { var c = JSON.parse(sessionStorage.getItem('bv-bounds') || 'null'); if (c && Date.now() - c.t < 600000) { T.setBounds(c.b); return Promise.resolve(T.BOUNDS); } } catch (e) {} }
+    return db.rpc('my_grade_boundaries').then(function (r) {
+      if (r.error || !r.data) return T.BOUNDS;
+      try { sessionStorage.setItem('bv-bounds', JSON.stringify({ t: Date.now(), b: r.data })); } catch (e) {}
+      T.setBounds(r.data); return T.BOUNDS;
+    }, function () { return T.BOUNDS; });
+  };
+  setTimeout(function () { T.loadBounds(); }, 300);   // after the page's own sign-in client is ready
 
   /* ---- lesson pages ---- */
   if (!document.querySelector('section.step, [data-save]') || document.getElementById('qf')) return;

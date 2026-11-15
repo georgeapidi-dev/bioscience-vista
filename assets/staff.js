@@ -3,7 +3,7 @@
    no service-role key or admin password is ever used in the browser. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, TOPICS = [], CLASSES = [];
-  var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['questions', '❓ Student questions'], ['labs', '🔬 Lab work'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['content', 'Content'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
+  var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['questions', '❓ Student questions'], ['labs', '🔬 Lab work'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['grading', '🎯 Grade boundaries'], ['content', 'Content'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
   var ADMIN_TABS = ['bookings', 'roles', 'activity'];
   // /teach/ is "My classes": the same dashboard, limited to the classes this teacher owns (any teacher, and the admin's own classes)
   var TEACH = location.pathname.indexOf('/teach/') === 0, MINE = {}, CLASS_OF = {};
@@ -43,7 +43,7 @@
     '.ccards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.ccard2{--k:#2563eb;border-radius:16px;padding:14px;color:#fff;text-decoration:none;background:linear-gradient(135deg,var(--k),color-mix(in srgb,var(--k) 72%,#fff));box-shadow:0 8px 20px color-mix(in srgb,var(--k) 30%,transparent);display:flex;flex-direction:column;gap:6px}',
     '.ccard2 b{font-size:1.1rem}.ccard2 a{color:#fff;font-weight:700}.ccard2 .small{opacity:.95}.ccard2:hover{transform:translateY(-2px)}'
   ].join('\n'); document.head.appendChild(st); })();
-  var TABHUE = { overview: '#7c3aed', work: '#2563eb', questions: '#db2777', labs: '#0891b2', approvals: '#ea580c', classes: '#059669', students: '#4f46e5', quizzes: '#ca8a04', lessons: '#0d9488', marking: '#dc2626', content: '#9333ea' };
+  var TABHUE = { overview: '#7c3aed', work: '#2563eb', questions: '#db2777', labs: '#0891b2', approvals: '#ea580c', classes: '#059669', students: '#4f46e5', quizzes: '#ca8a04', lessons: '#0d9488', marking: '#dc2626', grading: '#7c3aed', content: '#9333ea' };
 
   S.guard(app, TEACH ? { school: true, allowPending: true } : { staff: true }).then(function (me) { ME = me; return TEACH ? courseRequests() : null; }).then(function () { if (TEACH && !teachGate(ME)) throw 'gate'; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(firstClasses).then(function () { window.addEventListener('hashchange', route); route(); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
@@ -108,7 +108,57 @@
     app.classList.add('teach-ui');
     app.querySelectorAll('nav.tabs a').forEach(function (a) { var k = TABHUE[a.getAttribute('href').slice(1)]; if (k) a.style.setProperty('--k', k); });
     var pane = app.querySelector('#pane');
-    ({ overview: TEACH ? teachOverview : overview, work: lessonWork, questions: helpDesk, labs: labWork, approvals: TEACH ? teachApprovals : approvals, activity: activity, lessons: lessons, classes: TEACH ? teachClasses : classes, students: students, quizzes: quizzes, marking: marking, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
+    ({ overview: TEACH ? teachOverview : overview, work: lessonWork, questions: helpDesk, labs: labWork, approvals: TEACH ? teachApprovals : approvals, activity: activity, lessons: lessons, classes: TEACH ? teachClasses : classes, students: students, quizzes: quizzes, marking: marking, grading: gradeBounds, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
+  }
+
+  /* ---------- grade boundaries: each teacher sets the % needed for each IB grade (HL, SL) and MYP level (migration 041) ---------- */
+  function gradeBounds(p) {
+    var D = BVT.DEFAULT_BOUNDS, KIND = [['HL', 'IB Diploma · Higher Level (HL)', 'Grade', 2], ['SL', 'IB Diploma · Standard Level (SL)', 'Grade', 2], ['MYP', 'MYP (Grades 6–10)', 'Level', 1]];
+    p.innerHTML = '<p class="muted">Loading your boundaries…</p>';
+    S.db.from('grade_boundaries').select('scale,bounds,updated_at').eq('teacher_id', ME.user.id).then(function (r) {
+      if (r.error) { p.innerHTML = '<p class="emptybox">Grade boundaries are not available yet (' + E(r.error.message) + ').</p>'; return; }
+      var mine = {}; (r.data || []).forEach(function (x) { mine[x.scale] = x; });
+      p.innerHTML = '<section class="panel tint"><h3 style="margin-top:0">🎯 Grade boundaries</h3><p>Set the percentage a student needs for each grade. Your students\' quizzes, exam-style questions and interactive lessons are graded with <b>your</b> boundaries: '
+        + 'IB grades 1–7 for HL and SL classes, and MYP levels 1–8 for Grade 6–10 classes. Below the lowest boundary a student gets grade 1 (IB) or level 0 (MYP). Each boundary must be higher than the one before.</p>'
+        + (TEACH && ME.admin && AS ? '<p class="small"><b>Note:</b> these are your own boundaries, not those of the classroom you are viewing.</p>' : '') + '</section>'
+        + KIND.map(function (k) {
+          var b = (mine[k[0]] && mine[k[0]].bounds) || D[k[0]];
+          return '<section class="panel" data-scale="' + k[0] + '"><h3 style="margin-top:0">' + E(k[1]) + '</h3>'
+            + '<p class="small muted">' + (mine[k[0]] ? 'Your boundaries, saved ' + E(S.when ? S.when(mine[k[0]].updated_at) : mine[k[0]].updated_at) + '.' : 'Using the default boundaries. Change them and save to use your own.') + '</p>'
+            + '<div class="tablewrap"><table><tr>' + b.map(function (_, i) { return '<th>' + k[2] + ' ' + (i + k[3]) + '</th>'; }).join('') + '</tr><tr>'
+            + b.map(function (v, i) { return '<td><input type="number" min="0" max="100" step="0.5" value="' + E(v) + '" data-i="' + i + '" style="width:5.2em" aria-label="' + k[2] + ' ' + (i + k[3]) + ' minimum percentage"> %</td>'; }).join('') + '</tr></table></div>'
+            + '<p class="small" data-try></p><div class="acts"><button type="button" class="btn main sm" data-save>Save ' + k[0] + ' boundaries</button> <button type="button" class="btn sm" data-reset>Back to defaults</button> <span class="small" data-msg></span></div></section>';
+        }).join('');
+      p.querySelectorAll('section[data-scale]').forEach(function (sec) {
+        var sc = sec.getAttribute('data-scale'), msg = sec.querySelector('[data-msg]'), ins = [].slice.call(sec.querySelectorAll('input[data-i]'));
+        function vals() { return ins.map(function (x) { return +x.value; }); }
+        function ok(v) { return v.every(function (x, i) { return isFinite(x) && x >= 0 && x <= 100 && (i === 0 || x > v[i - 1]); }); }
+        function preview() {
+          var v = vals(), t = sec.querySelector('[data-try]');
+          if (!ok(v)) { t.innerHTML = '<span style="color:#b91c1c">Each boundary must be between 0 and 100 and higher than the one before.</span>'; return; }
+          var keep = BVT.BOUNDS[sc]; BVT.BOUNDS[sc] = v;
+          t.textContent = 'Example: ' + [25, 50, 75].map(function (pc) { var l = BVT.level(pc, 100, sc); return pc + ' % → ' + l.name + ' ' + l.n; }).join(' · ');
+          BVT.BOUNDS[sc] = keep;
+        }
+        ins.forEach(function (x) { x.oninput = preview; }); preview();
+        sec.querySelector('[data-save]').onclick = function () {
+          var v = vals(); if (!ok(v)) { msg.textContent = 'Please fix the boundaries first.'; return; }
+          msg.textContent = 'Saving…';
+          S.db.from('grade_boundaries').upsert({ teacher_id: ME.user.id, scale: sc, bounds: v, updated_at: new Date().toISOString() }).then(function (x) {
+            if (x.error) { msg.textContent = 'Could not save: ' + x.error.message; return; }
+            try { sessionStorage.removeItem('bv-bounds'); } catch (e) {} BVT.loadBounds(true); msg.textContent = '✓ Saved. Your students now see grades with these boundaries.';
+          });
+        };
+        sec.querySelector('[data-reset]').onclick = function () {
+          msg.textContent = 'Resetting…';
+          S.db.from('grade_boundaries').delete().eq('teacher_id', ME.user.id).eq('scale', sc).then(function (x) {
+            if (x.error) { msg.textContent = 'Could not reset: ' + x.error.message; return; }
+            D[sc].forEach(function (v, i) { ins[i].value = v; }); preview();
+            try { sessionStorage.removeItem('bv-bounds'); } catch (e) {} BVT.loadBounds(true); msg.textContent = '✓ Back to the default boundaries.';
+          });
+        };
+      });
+    });
   }
 
   /* ---------- lesson work: each student's completed interactive lesson, shown as a finished document ---------- */
