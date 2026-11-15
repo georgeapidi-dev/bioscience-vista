@@ -122,26 +122,101 @@
       return file.arrayBuffer().then(function (buf) { return lib.getDocument({ data: buf }).promise; });
     }).then(function (pdf) {
       var pages = []; for (var i = 1; i <= pdf.numPages; i++) pages.push(i);
-      var lib = window.pdfjsLib;
-      return Promise.all(pages.map(function (n) { return pdf.getPage(n).then(function (p) { return Promise.all([p.getTextContent(), pdfPics(lib, p)]).then(function (r) { r[0].pics = r[1]; return r[0]; }); }); })).then(function (contents) {
-        var lines = [];
-        contents.forEach(function (c) {
-          // group text pieces that share a baseline into one line, top to bottom, left to right
+      var lib = window.pdfjsLib, lines = [];
+      // one page at a time (keeps memory low): text, plus every diagram on the page cut out as a picture
+      return pages.reduce(function (chain, n) { return chain.then(function () { return pdf.getPage(n).then(function (p) {
+        return p.getTextContent().then(function (tc) { return pdfDiagrams(lib, p, tc.items).then(function (dg) {
           var rows = [];
-          (c.pics || []).forEach(function (pic) { rows.push({ y: pic.y, bits: [{ x: 0, s: keepImg(pic.url) }], pic: true }); });
-          c.items.forEach(function (it) { if (!it.str || !it.str.trim()) return; var y = it.transform[5], x = it.transform[4];
+          dg.pics.forEach(function (pic) { rows.push({ y: pic.y, bits: [{ x: 0, s: keepImg(pic.url) }], pic: true }); });
+          tc.items.forEach(function (it, k) { if (!it.str || !it.str.trim() || dg.skip[k]) return; var y = it.transform[5], x = it.transform[4];
             var row = rows.filter(function (r) { return !r.pic && Math.abs(r.y - y) < 3; })[0]; if (!row) { row = { y: y, bits: [] }; rows.push(row); } row.bits.push({ x: x, s: it.str }); });
           rows.sort(function (a, b) { return b.y - a.y; }).forEach(function (r) { lines.push(r.bits.sort(function (a, b) { return a.x - b.x; }).map(function (b) { return b.s; }).join(' ')); });
-        });
+          if (typeof p.cleanup === 'function') p.cleanup();
+        }); });
+      }); }); }, Promise.resolve()).then(function () {
         var out = clean(lines);
         if (out.filter(function (l) { return !IMGLINE.test(l); }).join('').length >= 40) return out;
-        // scanned PDF (pictures only): show the first pages as pictures in the lesson
+        // scanned PDF (pictures only): show the first pages as pictures
         var pg = []; for (var j = 1; j <= Math.min(pdf.numPages, 8); j++) pg.push(j);
         return Promise.all(pg.map(function (n) { return pdf.getPage(n).then(function (page) { var vp = page.getViewport({ scale: 1.4 }), c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
           return page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise.then(function () { return new Promise(function (ok) { c.toBlob(ok, 'image/jpeg', 0.85); }); }).then(function (b) { return shrink(b, 1100); }); }); }))
           .then(function (urls) { return urls.map(function (u, i) { return ['**Page ' + (i + 1) + '**', keepImg(u)]; }).reduce(function (a, b) { return a.concat(b); }, []); });
       });
     });
+  }
+  /* Diagrams on one PDF page, found automatically: drawn shapes and lines (vector graphics) and embedded pictures are grouped into
+     regions; each region, with the short labels on and around it, is cut out of the rendered page as a picture. Answer lines,
+     page borders and rules are left out. Returns {pics: [{y, url}], skip: {index of a text item now inside a picture: true}}. */
+  Q.pdfDiagrams = pdfDiagrams;
+  function pdfDiagrams(lib, page, items) {
+    var OPS = lib.OPS, view = page.view || [0, 0, 595, 842], PW = view[2] - view[0], PH = view[3] - view[1];
+    return page.getOperatorList().then(function (ops) {
+      var boxes = [], stack = [], m = [1, 0, 0, 1, 0, 0];
+      function mul(a, b) { return [a[0] * b[0] + a[2] * b[1], a[1] * b[0] + a[3] * b[1], a[0] * b[2] + a[2] * b[3], a[1] * b[2] + a[3] * b[3], a[0] * b[4] + a[2] * b[5] + a[4], a[1] * b[4] + a[3] * b[5] + a[5]]; }
+      function pt(x, y) { return [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]]; }
+      function addBox(x0, y0, x1, y1, img) { var c = [pt(x0, y0), pt(x1, y0), pt(x0, y1), pt(x1, y1)], xs = c.map(function (p) { return p[0]; }), ys = c.map(function (p) { return p[1]; });
+        boxes.push({ x0: Math.min.apply(null, xs), y0: Math.min.apply(null, ys), x1: Math.max.apply(null, xs), y1: Math.max.apply(null, ys), img: !!img, n: 1 }); }
+      ops.fnArray.forEach(function (fn, k) {
+        var a = ops.argsArray[k];
+        if (fn === OPS.save) stack.push(m.slice()); else if (fn === OPS.restore) m = stack.pop() || [1, 0, 0, 1, 0, 0];
+        else if (fn === OPS.transform) m = mul(m, a);
+        else if (fn === OPS.paintFormXObjectBegin) { stack.push(m.slice()); if (a && a[0] && a[0].length === 6) m = mul(m, a[0]); }
+        else if (fn === OPS.paintFormXObjectEnd) m = stack.pop() || [1, 0, 0, 1, 0, 0];
+        else if (fn === OPS.constructPath && a && a[0] && a[1]) {   // the box round every point of the path (curves included)
+          var xs = [], ys = [], q = 0, P = a[1];
+          a[0].forEach(function (op) { var n = op === OPS.rectangle ? 4 : op === OPS.curveTo ? 6 : op === OPS.curveTo2 || op === OPS.curveTo3 ? 4 : op === OPS.moveTo || op === OPS.lineTo ? 2 : 0;
+            if (op === OPS.rectangle) { xs.push(P[q], P[q] + P[q + 2]); ys.push(P[q + 1], P[q + 1] + P[q + 3]); } else for (var t = 0; t < n; t += 2) { xs.push(P[q + t]); ys.push(P[q + t + 1]); } q += n; });
+          if (xs.length) addBox(Math.min.apply(null, xs), Math.min.apply(null, ys), Math.max.apply(null, xs), Math.max.apply(null, ys));
+        }
+        else if (fn === OPS.paintImageXObject || fn === OPS.paintJpegXObject || fn === OPS.paintInlineImageXObject || fn === OPS.paintImageMaskXObject) addBox(0, 0, 1, 1, true);
+      });
+      // leave out the page frame and very large background boxes; tiny marks are kept (they may be part of a diagram)
+      boxes = boxes.filter(function (b) { var w = b.x1 - b.x0, h = b.y1 - b.y0; return !(w > PW * 0.85 && h > PH * 0.6) && w < PW * 1.01 && h < PH * 1.01 && (w > 0.2 || h > 0.2); });
+      // group boxes that touch or nearly touch
+      var GAP = 7, groups = [];
+      boxes.forEach(function (b) { groups.push({ x0: b.x0, y0: b.y0, x1: b.x1, y1: b.y1, n: 1, img: b.img, lines: !b.img && ((b.y1 - b.y0) < 2 || (b.x1 - b.x0) < 2), flat: (b.y1 - b.y0) < 2 && (b.x1 - b.x0) > 20, vert: (b.x1 - b.x0) < 2 && (b.y1 - b.y0) > 20 }); });
+      var merged = true;
+      while (merged) { merged = false;
+        for (var i = 0; i < groups.length; i++) for (var j = i + 1; j < groups.length; j++) { var A = groups[i], B = groups[j];
+          if (A.x0 - GAP <= B.x1 && B.x0 - GAP <= A.x1 && A.y0 - GAP <= B.y1 && B.y0 - GAP <= A.y1) {
+            groups[i] = { x0: Math.min(A.x0, B.x0), y0: Math.min(A.y0, B.y0), x1: Math.max(A.x1, B.x1), y1: Math.max(A.y1, B.y1), n: A.n + B.n, img: A.img || B.img, lines: A.lines && B.lines, flat: A.flat && B.flat, vert: A.vert || B.vert };
+            groups.splice(j, 1); merged = true; j--; } } }
+      var regions = groups.filter(function (g) { var w = g.x1 - g.x0, h = g.y1 - g.y0;
+        if (g.img) return w > 40 && h > 30;
+        if (w < 50 || h < 30) return false;     // rules, underlines, bullets, boxes round a mark
+        if (g.flat) return false;               // only horizontal lines: lines to write answers on
+        if (g.n < 3 && !(w > 80 && h > 60)) return false;
+        return true;
+      });
+      // bring in the short labels on or around each diagram; body text (long lines) stays text
+      var skip = {};
+      var box = function (it) { var x = it.transform[4], y = it.transform[5], w = it.width || 0, h = Math.abs(it.height || it.transform[3] || 8); return { x: x, y: y, w: w, h: h, cx: x + w / 2, cy: y + h / 2 }; };
+      regions = regions.filter(function (r) {   // a frame round a whole question (long lines of text inside) is not a diagram
+        var chars = 0, wide = false;
+        items.forEach(function (it) { if (!it.str || !it.str.trim()) return; var b = box(it); if (b.cx >= r.x0 && b.cx <= r.x1 && b.cy >= r.y0 && b.cy <= r.y1) { chars += it.str.length; if (b.w > PW * 0.45) wide = true; } });
+        if (r.lines && r.n >= 10 && !chars) return false;   // an empty grid to draw a graph on: students use the graph tool instead
+        return !wide && !(chars > 600 && (r.x1 - r.x0) > PW * 0.6);
+      });
+      regions.forEach(function (r) {
+        items.forEach(function (it, k) { if (!it.str || !it.str.trim()) return; var x = it.transform[4], y = it.transform[5], w = it.width || 0, h = Math.abs(it.height || it.transform[3] || 8);
+          var cx = x + w / 2, cy = y + h / 2, inside = cx >= r.x0 && cx <= r.x1 && cy >= r.y0 && cy <= r.y1,
+            near = cx >= r.x0 - 40 && cx <= r.x1 + 40 && cy >= r.y0 - 14 && cy <= r.y1 + 14 && w < Math.max(90, (r.x1 - r.x0) * 0.6) && w < PW * 0.35 && !/^\s*\(?\d+\)?\s*$|^\s*\([a-h]\)/.test(it.str) && !/\[\s*\d+\s*\]/.test(it.str);
+          if (inside || near) { skip[k] = true; r.x0 = Math.min(r.x0, x - 2); r.x1 = Math.max(r.x1, x + w + 2); r.y0 = Math.min(r.y0, y - 3); r.y1 = Math.max(r.y1, y + h + 2); } });
+      });
+      regions = regions.slice(0, 10); if (!regions.length) return { pics: [], skip: {} };
+      var vp = page.getViewport({ scale: 2 }), c = document.createElement('canvas'); c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+      var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+      return page.render({ canvasContext: g, viewport: vp }).promise.then(function () {
+        return Promise.all(regions.map(function (r) {
+          var q = vp.convertToViewportRectangle([r.x0 - 6, r.y0 - 6, r.x1 + 6, r.y1 + 6]), x = Math.max(0, Math.floor(Math.min(q[0], q[2]))), y = Math.max(0, Math.floor(Math.min(q[1], q[3]))),
+            w = Math.min(c.width - x, Math.ceil(Math.abs(q[2] - q[0]))), h = Math.min(c.height - y, Math.ceil(Math.abs(q[3] - q[1])));
+          if (w < 30 || h < 30) return null;
+          var o = document.createElement('canvas'), k = Math.min(1, 1100 / w); o.width = Math.round(w * k); o.height = Math.round(h * k);
+          var og = o.getContext('2d'); og.fillStyle = '#fff'; og.fillRect(0, 0, o.width, o.height); og.drawImage(c, x, y, w, h, 0, 0, o.width, o.height);
+          return { y: r.y1, url: o.toDataURL('image/jpeg', 0.86) };
+        })).then(function (pics) { c.width = c.height = 0; return { pics: pics.filter(Boolean), skip: skip }; });
+      });
+    }).catch(function () { return pdfPics(lib, page).then(function (p) { return { pics: p, skip: {} }; }); });
   }
   var IMGLINE = /^\[\[img:(\d+)\]\]$/;
   function pdfPics(lib, page) {   // embedded pictures (photos, scanned diagrams) on one PDF page, with their height on the page
@@ -262,17 +337,19 @@
         if (ans) { var L = /^\(?([A-Fa-f])\)?\b/.exec(ans); if (L && opts.length) correct = 'abcdef'.indexOf(L[1].toLowerCase()); }
         var tf = opts.length === 2 && /^true$/i.test(opts[0]) && /^false$/i.test(opts[1]);
         out.push({ ref: String(q.num), kind: opts.length ? (tf ? 'tf' : 'mcq') : 'short', prompt: stem, options: opts, correct: correct, marks: sm ? +sm[1] : opts.length ? 1 : 2,
-          scheme: !opts.length && ans ? ans : '', rubric: '', explanation: '', image: qpic || items.reduce(function (a, it) { return a || it.pics[0] || ''; }, '') });
+          scheme: !opts.length && ans ? ans : '', rubric: '', explanation: '', image: qpic || items.reduce(function (a, it) { return a || it.pics[0] || ''; }, ''),
+          images: (q.pics || []).concat.apply(q.pics || [], items.map(function (it) { return it.pics; })) });
         return;
       }
       // structured question: each lettered part (and roman sub-part) becomes its own question
-      var parent = '', first = true, carry = qpic;
+      var parent = '', first = true, carry = qpic, carryAll = (q.pics || []).slice();
       items.forEach(function (it) {
         var roman = ROMAN.test(it.label) && parent && !(it.label === 'i' && parent === 'h');
         if (!roman) parent = it.label.toLowerCase();
         var ref = q.num + '(' + parent + ')' + (roman ? '(' + it.label + ')' : '');
-        if (!roman && items.some(function (x) { return x !== it && ROMAN.test(x.label); }) && it.marks == null && items[items.indexOf(it) + 1] && ROMAN.test(items[items.indexOf(it) + 1].label)) { stem = (stem ? stem + '\n' : '') + '(' + parent + ') ' + it.text; if (it.pics[0]) carry = it.pics[0]; return; }
-        out.push({ ref: ref, kind: 'short', prompt: (first && stem ? stem + '\n\n' : '') + it.text, options: [], correct: -1, marks: it.marks || 1, scheme: it.answer || '', rubric: '', explanation: '', image: it.pics[0] || (first ? carry : '') });
+        if (!roman && items.some(function (x) { return x !== it && ROMAN.test(x.label); }) && it.marks == null && items[items.indexOf(it) + 1] && ROMAN.test(items[items.indexOf(it) + 1].label)) { stem = (stem ? stem + '\n' : '') + '(' + parent + ') ' + it.text; if (it.pics[0]) carry = it.pics[0]; carryAll = carryAll.concat(it.pics || []); return; }
+        var imgs = (first || carryAll.length ? carryAll : []).concat(it.pics || []); carryAll = [];
+        out.push({ ref: ref, kind: 'short', prompt: (first && stem ? stem + '\n\n' : '') + it.text, options: [], correct: -1, marks: it.marks || 1, scheme: it.answer || '', rubric: '', explanation: '', image: imgs[0] || '', images: imgs });
         if (it.pics[0] || first) carry = '';
         first = false;
       });

@@ -453,3 +453,108 @@
   function go() { scan(); setTimeout(scan, 1200); setTimeout(scan, 3500); levels(); setInterval(levels, 1500); }   // lessons that draw their questions with a script are scanned again
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
+
+/* Answer tools for every written answer (admin, Nov 2026: "graphing tool, table tool or keyboard, drawing tool").
+   - BVT.keyboard(ta)            science symbols typed into the box at the cursor (x², H₂O, →, ⇌, Δ, °, μ, ±, ×, √ …)
+   - BVT.writeBar(ta, {table})   for teachers writing a question: symbols, and a table written into the question text
+   - BVT.answerTools(ta, text, {pics, onchange})  for students: ⌨️ Symbols · ▦ Table · 📈 Graph · ✏️ Draw under the answer box.
+       The tools the question asks for are marked "suggested". A graph or drawing travels with the written answer as a line
+       [[pic:graph:data:image/jpeg;base64,…]] that the student never sees in the box.
+   - BVT.answerValue(ta)         the full answer: the typed text plus any graph or drawing
+   - BVT.splitAns(v)             {text, pics: {graph, draw}}     - BVT.answerHtml(v)  the answer for teachers and results pages
+   - BVT.answerText(v)           the typed words only (for the mark-scheme check) */
+(function () {
+  var T = window.BVT; if (!T) return;
+  var E = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var PIC = /\n?\[\[pic:(graph|draw):(data:image\/[a-z]+;base64,[A-Za-z0-9+\/=]+)\]\]/g;
+  T.splitAns = function (v) { var pics = {}, text = String(v == null ? '' : v).replace(PIC, function (m, k, d) { pics[k] = d; return ''; }); return { text: text.replace(/\s+$/, ''), pics: pics }; };
+  T.joinAns = function (text, pics) { var out = String(text || '').replace(/\s+$/, ''); ['graph', 'draw'].forEach(function (k) { if (pics && pics[k]) out += '\n[[pic:' + k + ':' + pics[k] + ']]'; }); return out; };
+  T.answerText = function (v) { return T.splitAns(v).text; };
+  T.answerValue = function (ta) { return ta && ta._bvTools ? T.joinAns(ta.value, ta._bvTools.pics) : ta ? ta.value : ''; };
+  T.answerHtml = function (v) {
+    var s = T.splitAns(v), t = s.text, html = '', a = t.indexOf('[Table]'), b = t.indexOf('[End of table]');
+    var para = function (x) { return x.trim() ? '<p style="white-space:pre-wrap;margin:.3em 0">' + E(x.trim()) + '</p>' : ''; };
+    if (a >= 0 && b > a) html = para(t.slice(0, a)) + T.table(t.slice(a + 7, b).split('\n').filter(function (l) { return l.trim(); }).map(function (l) { return '| ' + l + ' |'; })) + para(t.slice(b + 14));
+    else html = para(t);
+    ['graph', 'draw'].forEach(function (k) { if (s.pics[k]) html += '<figure style="margin:.4em 0"><img class="hw" src="' + s.pics[k] + '" alt="' + (k === 'graph' ? 'Graph drawn by the student' : 'Diagram drawn by the student') + '" style="max-width:100%;border:1px solid #d6dbe4;border-radius:8px;background:#fff"><figcaption class="small muted">' + (k === 'graph' ? '📈 Graph' : '✏️ Drawing') + '</figcaption></figure>'; });
+    return html || '<i>no answer</i>';
+  };
+
+  var KEYS = [
+    ['Powers', ['²', '³', '⁻¹', '⁻²', '⁻³', '⁰', '¹', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹', '⁺', '⁻', '×10']],
+    ['Formulas', ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉', '⁺', '²⁺', '³⁺', '⁻', '²⁻', '³⁻']],
+    ['Reactions', ['→', '⇌', '←', '↑', '↓', '(s)', '(l)', '(g)', '(aq)', 'Δ', '+']],
+    ['Maths', ['×', '÷', '±', '≈', '≠', '≤', '≥', '<', '>', '√', '∛', 'π', '∝', '∞', '½', '¼', '¾', '·', '°', '%', '‰', 'Σ', 'x̄']],
+    ['Greek', ['α', 'β', 'γ', 'δ', 'Δ', 'θ', 'λ', 'μ', 'ρ', 'σ', 'Ω', 'ω', 'φ', 'χ²']],
+    ['Units', ['°C', 'K', 'cm³', 'dm³', 'm s⁻¹', 'm s⁻²', 'mol dm⁻³', 'g cm⁻³', 'kJ mol⁻¹', 'J kg⁻¹ K⁻¹', 'Ω', 'μm', 'nm', 'N', 'Pa', 'W', 'V', 'A']]];
+  function fire(ta) { try { ta.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {} }
+  function insert(ta, s) {
+    var a = ta.selectionStart == null ? ta.value.length : ta.selectionStart, b = ta.selectionEnd == null ? a : ta.selectionEnd;
+    ta.value = ta.value.slice(0, a) + s + ta.value.slice(b); var p = a + s.length; ta.focus(); try { ta.setSelectionRange(p, p); } catch (e) {} fire(ta);
+  }
+  T.keyboard = function (ta) {
+    var box = document.createElement('div'); box.className = 'bvk'; box.setAttribute('role', 'group'); box.setAttribute('aria-label', 'Science symbols');
+    box.innerHTML = '<div class="bvk-tabs">' + KEYS.map(function (g, i) { return '<button type="button" data-g="' + i + '" aria-pressed="' + (i === 0) + '">' + g[0] + '</button>'; }).join('') + '</div><div class="bvk-keys"></div>' +
+      '<p class="small muted" style="margin:4px 0 0">Click a symbol to put it where the cursor is. Example: H₂O, CO₂, 3.0 × 10⁸ m s⁻¹, Fe³⁺.</p>';
+    var keys = box.querySelector('.bvk-keys'), show = function (i) { keys.innerHTML = KEYS[i][1].map(function (k) { var show = (i === 0 && /^[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]+$/.test(k) ? '<span style="opacity:.45">x</span>' : i === 1 && /^[₀₁₂₃₄₅₆₇₈₉⁰¹²³⁺⁻]+$/.test(k) ? '<span style="opacity:.45">X</span>' : '') + E(k); return '<button type="button" data-k="' + E(k) + '" aria-label="Type ' + E(k) + '">' + show + '</button>'; }).join('');
+      keys.querySelectorAll('[data-k]').forEach(function (b) { b.onmousedown = function (e) { e.preventDefault(); }; b.onclick = function () { insert(ta, b.getAttribute('data-k')); }; }); };
+    box.querySelectorAll('[data-g]').forEach(function (b) { b.onclick = function () { box.querySelectorAll('[data-g]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); }); show(+b.getAttribute('data-g')); }; });
+    show(0); return box;
+  };
+  /* a table builder that writes | a | b | rows into a question (the builder shows them as a table) */
+  function mdTable(ta) {
+    var box = document.createElement('div'); box.className = 'bvk'; var data = [['', '', ''], ['', '', ''], ['', '', '']];
+    function draw() {
+      box.innerHTML = '<p class="small" style="margin:0 0 6px"><b>▦ Table</b> · the first row is the heading row.</p><div style="overflow-x:auto"><table style="border-collapse:collapse">' + data.map(function (r, i) { return '<tr>' + r.map(function (c, j) { return '<td style="border:1px solid #94a3b8;padding:0"><input data-r="' + i + '" data-c="' + j + '" value="' + E(c) + '" aria-label="Row ' + (i + 1) + ', column ' + (j + 1) + '" style="border:0;padding:5px 7px;width:8em;font:inherit;' + (i ? '' : 'font-weight:700;background:#f1f5f9') + '"></td>'; }).join('') + '</tr>'; }).join('') + '</table></div>' +
+        '<p style="margin:6px 0 0;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn sm" data-a="row">＋ Row</button><button type="button" class="btn sm" data-a="col">＋ Column</button><button type="button" class="btn sm" data-a="rrow">− Row</button><button type="button" class="btn sm" data-a="rcol">− Column</button><button type="button" class="btn sm main" data-a="put">Put the table in the question</button></p>';
+      box.querySelectorAll('input').forEach(function (i) { i.oninput = function () { data[+i.getAttribute('data-r')][+i.getAttribute('data-c')] = i.value.replace(/[|\n]/g, ' '); }; });
+      box.querySelectorAll('[data-a]').forEach(function (b) { b.onclick = function () { var a = b.getAttribute('data-a');
+        if (a === 'row' && data.length < 30) data.push(data[0].map(function () { return ''; })); if (a === 'col' && data[0].length < 8) data.forEach(function (r) { r.push(''); });
+        if (a === 'rrow' && data.length > 2) data.pop(); if (a === 'rcol' && data[0].length > 1) data.forEach(function (r) { r.pop(); });
+        if (a === 'put') { insert(ta, '\n' + data.map(function (r) { return '| ' + r.map(function (c) { return c || ' '; }).join(' | ') + ' |'; }).join('\n') + '\n'); return; }
+        draw(); }; });
+    }
+    draw(); return box;
+  }
+  function bar(ta, buttons) {   // buttons: [key, label, make(holder) -> element | null, suggested]
+    var wrap = document.createElement('div'); wrap.className = 'bvk-bar'; var row = document.createElement('div'); row.className = 'bvk-row'; row.setAttribute('role', 'toolbar'); row.setAttribute('aria-label', 'Answer tools');
+    var host = document.createElement('div'), open = {}; wrap.appendChild(row); wrap.appendChild(host);
+    buttons.forEach(function (bt) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'btn sm' + (bt[3] ? ' bvk-sug' : ''); b.textContent = bt[1] + (bt[3] ? ' ★' : ''); b.setAttribute('aria-expanded', 'false'); b.setAttribute('data-tool', bt[0]);
+      if (bt[3]) b.title = 'This question asks for this';
+      b.onclick = function () {
+        if (open[bt[0]]) { open[bt[0]].hidden = !open[bt[0]].hidden; b.setAttribute('aria-expanded', String(!open[bt[0]].hidden)); return; }
+        var w = document.createElement('div'); w.style.margin = '6px 0'; host.appendChild(w); open[bt[0]] = w; b.setAttribute('aria-expanded', 'true'); var c = bt[2](w); if (c) w.appendChild(c);
+      };
+      row.appendChild(b);
+    });
+    ta.parentNode.insertBefore(wrap, ta.nextSibling); return { wrap: wrap, open: function (k) { var b = row.querySelector('[data-tool="' + k + '"]'); if (b && !open[k]) b.click(); } };
+  }
+  T.writeBar = function (ta, o) {
+    if (!ta || ta._bvBar) return; ta._bvBar = true; o = o || {};
+    var b = [['keys', '⌨️ Symbols', function () { return T.keyboard(ta); }]];
+    if (o.table) b.push(['table', '▦ Table', function () { return mdTable(ta); }]);
+    return bar(ta, b);
+  };
+  T.answerTools = function (ta, text, o) {
+    if (!ta || ta._bvTools) return ta && ta._bvTools; o = o || {};
+    var need = T.needs ? T.needs(text) : [], api = ta._bvTools = { pics: Object.assign({}, o.pics || {}) }, pads = {};
+    function padTool(k) { return function (w) {
+      var note = document.createElement('p'); note.className = 'small muted'; note.style.margin = '4px 0 0'; note.textContent = k === 'graph' ? 'Your graph is handed in with your answer. Label both axes with the quantity and unit.' : 'Your drawing is handed in with your answer. Label it with the Aa and label-line tools.';
+      var h = document.createElement('div'); w.appendChild(h); w.appendChild(note);
+      var pr = T.parse ? T.parse(text) : {}, pad = pads[k] = T.pad(h, { mode: k === 'graph' ? 'graph' : 'draw', x: pr.x || '', y: pr.y || '', value: api.pics[k] || '', readonly: !!o.readonly, onchange: function () {
+        var d = ''; try { d = pad.get(); } catch (e) {} if (d) api.pics[k] = d; else delete api.pics[k]; if (o.onchange) o.onchange(); } });
+      return null; }; }
+    var b = [['keys', '⌨️ Symbols', function () { return T.keyboard(ta); }, false],
+      ['table', '▦ Table', function () { return T.tableTool(ta); }, need.indexOf('table') >= 0],
+      ['graph', '📈 Graph', padTool('graph'), need.indexOf('graph') >= 0],
+      ['draw', '✏️ Draw', padTool('draw'), need.indexOf('draw') >= 0]];
+    if (o.readonly) b = b.filter(function (x) { return x[0] === 'graph' || x[0] === 'draw'; }).filter(function (x) { return api.pics[x[0]]; });
+    if (!b.length) return api;
+    var ui = bar(ta, b); ['graph', 'draw'].forEach(function (k) { if (api.pics[k]) ui.open(k); });
+    return api;
+  };
+  if (!document.getElementById('bvk-css')) { var st = document.createElement('style'); st.id = 'bvk-css';
+    st.textContent = '.bvk-bar{margin:6px 0 2px;min-width:0;max-width:100%}.bvk{max-width:100%;box-sizing:border-box;overflow-x:auto}.bvk-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.bvk-row .bvk-sug{border-color:#7c3aed;background:#f5f3ff;color:#5b21b6;font-weight:700}.bvk{border:1px solid var(--line,#cbd5e1);border-radius:12px;padding:8px;background:var(--card,#fff)}.bvk-tabs{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 6px}.bvk-tabs button{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:3px 10px;font:inherit;font-size:.85rem;cursor:pointer}.bvk-tabs button[aria-pressed=true]{background:#4f46e5;color:#fff;border-color:#4f46e5}.bvk-keys{display:flex;flex-wrap:wrap;gap:4px}.bvk-keys button{min-width:2.4em;padding:4px 8px;font-size:1.08rem!important;line-height:1.3;color:#172033;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;font:inherit;cursor:pointer}.bvk-keys button:hover,.bvk-keys button:focus-visible{background:#eef2ff;border-color:#4f46e5}';
+    document.head.appendChild(st); }
+})();

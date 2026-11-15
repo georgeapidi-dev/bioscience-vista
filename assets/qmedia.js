@@ -9,7 +9,7 @@
   var css = document.createElement('style');
   css.textContent = '.bvm{display:flex;flex-direction:column;gap:8px}.bvm-add{display:flex;flex-wrap:wrap;gap:6px}.bvm-add button{border:1px solid var(--line,#d6dbe4);background:var(--card,#fff);border-radius:999px;padding:6px 12px;font:inherit;font-size:.9rem;cursor:pointer}.bvm-add button:hover{border-color:#7c3aed;background:#f5f3ff}' +
     '.bvm-it{display:flex;gap:10px;align-items:center;border:1px solid var(--line,#e2e8f0);border-radius:12px;padding:6px 8px;background:var(--card,#fff)}.bvm-it .th{width:72px;height:48px;border-radius:8px;background:#f1f5f9 center/cover no-repeat;display:grid;place-items:center;font-size:1.5rem;flex:none;overflow:hidden}.bvm-it .th svg{width:72px;height:48px}.bvm-it .tx{flex:1;min-width:0;font-size:.88rem}.bvm-it .tx b{display:block}.bvm-it .tx span{color:var(--muted,#64748b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}.bvm-it button{border:0;background:none;cursor:pointer;font-size:1rem;padding:4px 6px;border-radius:6px}.bvm-it button:hover{background:#f1f5f9}' +
-    '.bvm-ov{position:fixed;inset:0;z-index:2100;background:rgba(15,23,42,.6);display:grid;place-items:start center;overflow:auto;padding:24px 12px}.bvm-ov>div{background:var(--bg,#fff);border-radius:18px;max-width:820px;width:100%;padding:18px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35)}.bvm-ov h2{margin:0 0 10px}.bvm-ov label{display:block;margin:8px 0}.bvm-ov label>span{display:block;font-weight:700;font-size:.9rem;margin-bottom:4px}.bvm-ov input[type=text],.bvm-ov input[type=url],.bvm-ov input[type=number],.bvm-ov select,.bvm-ov textarea{width:100%;box-sizing:border-box}.bvm-row{display:flex;gap:10px;flex-wrap:wrap}.bvm-row>*{flex:1;min-width:160px}.bvm-tabs{display:flex;gap:6px;margin:6px 0 10px}.bvm-tabs button{border:1px solid var(--line,#d6dbe4);background:var(--card,#fff);border-radius:999px;padding:5px 12px;cursor:pointer;font:inherit}.bvm-tabs button[aria-pressed=true]{background:#4f46e5;color:#fff;border-color:#4f46e5}.bvm-pv{margin:10px 0;padding:10px;border:1px dashed #c7d2fe;border-radius:12px;background:#f8fafc}.bvm-rec{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.bvm-dot{width:12px;height:12px;border-radius:50%;background:#dc2626;animation:bvmp 1s infinite}@keyframes bvmp{50%{opacity:.25}}.bvm-msg{color:#b91c1c;font-weight:600;min-height:1.2em}';
+    '.bvm-ov{position:fixed;inset:0;z-index:2100;background:rgba(15,23,42,.6);display:grid;place-items:start center;overflow:auto;padding:24px 12px}.bvm-ov>div{background:var(--bg,#fff);border-radius:18px;max-width:820px;width:100%;padding:18px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35)}.bvm-ov h2{margin:0 0 10px}.bvm-ov label{display:block;margin:8px 0}.bvm-ov label>span{display:block;font-weight:700;font-size:.9rem;margin-bottom:4px}.bvm-ov input[type=text],.bvm-ov input[type=url],.bvm-ov input[type=number],.bvm-ov select,.bvm-ov textarea{width:100%;box-sizing:border-box}.bvm-row{display:flex;gap:10px;flex-wrap:wrap}.bvm-row>*{flex:1;min-width:160px}.bvm-tabs{display:flex;gap:6px;margin:6px 0 10px}.bvm-tabs button{border:1px solid var(--line,#d6dbe4);background:var(--card,#fff);border-radius:999px;padding:5px 12px;cursor:pointer;font:inherit}.bvm-tabs button[aria-pressed=true]{background:#4f46e5;color:#fff;border-color:#4f46e5}.bvm-pv{margin:10px 0;padding:10px;border:1px dashed #c7d2fe;border-radius:12px;background:#f8fafc}.bvm-rec{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.bvm-dot{width:12px;height:12px;border-radius:50%;background:#dc2626;animation:bvmp 1s infinite}@keyframes bvmp{50%{opacity:.25}}.bvm-msg{color:#b91c1c;font-weight:600;min-height:1.2em}.bvm-drop{display:grid;gap:2px;place-items:center;text-align:center;border:2px dashed #a5b4fc;border-radius:14px;padding:14px;background:#f8faff;cursor:pointer;color:#312e81}.bvm-drop:hover,.bvm-drop:focus-visible,.bvm-drop.on{background:#eef2ff;border-color:#4f46e5;outline:none}.bvm-pf{display:grid;gap:6px}.bvm-pfimg{max-width:100%;max-height:220px;object-fit:contain;border-radius:10px;border:1px solid #e2e8f0;background:#fff;justify-self:start}.bvm-pfacts{display:flex;gap:6px;flex-wrap:wrap}';
   document.head.appendChild(css);
 
   function label(m) { return m.t === 'graph' ? (m.title || (m.y || 'y') + ' against ' + (m.x || 'x')) : m.cap || (m.t === 'video' && T.ytId(m.src) ? 'YouTube video' : String(m.src || '').split('/').pop().slice(0, 50)); }
@@ -43,11 +43,15 @@
     });
   }
   function dataUrl(blob) { return new Promise(function (ok, bad) { var r = new FileReader(); r.onload = function () { ok(r.result); }; r.onerror = bad; r.readAsDataURL(blob); }); }
-  function picUpload(blob, uid) {   // pictures: upload, or (no bucket yet) embed a small copy
+  function picUpload(blob, uid) {   // pictures: upload; if the upload is refused for any reason, keep a small copy inside the question so it always works
     return upload(blob, uid).catch(function (e) {
-      if (!/database update 039/.test(e.message)) throw e;
-      return shrink(blob, 900, 0.75).then(function (b) { if (b.size > 260000) throw e; return dataUrl(b); });
+      if (/larger than/.test(e.message)) throw e;
+      return shrink(blob, 1000, 0.78).then(function (b) { return b.size > 420000 ? shrink(b, 760, 0.7) : b; }).then(function (b) { if (b.size > 520000) throw e; return dataUrl(b); });
     });
+  }
+  function persist(src, uid) {   // a picture kept inside the page (data: address) → uploaded; anything else unchanged; never fails
+    if (!/^data:image\//.test(String(src || ''))) return Promise.resolve(src);
+    return upload(dataToBlob(src), uid).then(function (u) { return u; }, function () { return src; });
   }
   function dataToBlob(d) { var m = /^data:([^;]+);base64,(.*)$/.exec(d), b = atob(m[2]), a = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return new Blob([a], { type: m[1] }); }
 
@@ -72,26 +76,51 @@
 
   function picture(m, uid, done) {
     m = m || { t: 'image', src: '', cap: '', alt: '' };
-    var b = el(tabs(['⬆️ Upload', '🔗 Link'], m.src && !/question-media/.test(m.src) && !/^data:/.test(m.src) ? 1 : 0) +
-      '<div data-p="0">' + field('Picture file (PNG, JPG, GIF, WebP or SVG)', '<input type="file" accept="image/*" data-f>', 'Big photos are made smaller automatically. You can also paste a picture here (Ctrl+V).') + '</div>' +
-      '<div data-p="1" hidden>' + field('Link to a picture', '<input type="url" data-u value="' + E(/^data:/.test(m.src) ? '' : m.src) + '" placeholder="https://upload.wikimedia.org/…">', 'Use pictures you have the right to use, for example from Wikimedia Commons.') + '</div>' +
+    var b = el('<div data-drop class="bvm-drop" tabindex="0" role="button" aria-label="Choose, drop or paste a picture">' +
+      '<b>🖼️ Drop a picture here, paste it (Ctrl+V) or click to choose</b><span class="small muted">PNG, JPG, GIF, WebP or SVG · big photos are made smaller automatically</span><input type="file" accept="image/*" data-f hidden></div>' +
       field('Caption (optional)', '<input type="text" data-c value="' + E(m.cap) + '" placeholder="e.g. Figure 1: a plant cell seen with a light microscope">') +
       field('Description for screen readers', '<input type="text" data-a value="' + E(m.alt) + '" placeholder="What the picture shows">') + '<div class="bvm-pv" data-v>' + (m.src ? '<img src="' + E(m.src) + '" alt="" style="max-width:100%;max-height:260px">' : '<span class="muted small">The picture appears here.</span>') + '</div>');
-    var file = null, pane = function (i) { b.querySelectorAll('[data-p]').forEach(function (p) { p.hidden = +p.getAttribute('data-p') !== i; }); };
-    wireTabs(b, pane); pane(m.src && !/question-media/.test(m.src) && !/^data:/.test(m.src) ? 1 : 0);
-    var show = function (src) { b.querySelector('[data-v]').innerHTML = '<img src="' + E(src) + '" alt="" style="max-width:100%;max-height:260px">'; };
-    b.querySelector('[data-f]').onchange = function () { file = this.files[0] || null; if (file) show(URL.createObjectURL(file)); };
-    b.querySelector('[data-u]').oninput = function () { file = null; if (/^https?:\/\//.test(this.value.trim())) show(this.value.trim()); };
-    b.addEventListener('paste', function (e) { var it = [].filter.call((e.clipboardData || {}).items || [], function (x) { return /^image\//.test(x.type); })[0]; if (it) { file = it.getAsFile(); show(URL.createObjectURL(file)); e.preventDefault(); } });
+    var file = null, show = function (src) { b.querySelector('[data-v]').innerHTML = '<img src="' + E(src) + '" alt="" style="max-width:100%;max-height:260px">'; };
+    dropZone(b.querySelector('[data-drop]'), b.querySelector('[data-f]'), function (f) { file = f; show(URL.createObjectURL(f)); }, b);
     dialog('🖼️ Picture', b, function () {
-      var cap = b.querySelector('[data-c]').value.trim(), alt = b.querySelector('[data-a]').value.trim(), link = b.querySelector('[data-u]').value.trim();
+      var cap = b.querySelector('[data-c]').value.trim(), alt = b.querySelector('[data-a]').value.trim();
       if (file) return shrink(file, 1600).then(function (f) { return picUpload(f, uid); }).then(function (src) { done({ t: 'image', src: src, cap: cap, alt: alt }); });
-      if (/^https?:\/\/\S+$/.test(link)) { done({ t: 'image', src: link, cap: cap, alt: alt }); return; }
       if (m.src) { done({ t: 'image', src: m.src, cap: cap, alt: alt }); return; }
-      throw new Error('Choose a picture file, paste one, or give a link.');
+      throw new Error('Choose, drop or paste a picture first.');
     });
   }
-
+  /* click, drop or paste a picture file; pasteRoot gets the paste listener (default: the zone) */
+  function isPic(f) { return f && (/^image\//.test(f.type || '') || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(f.name || '')); }
+  function dropZone(zone, input, take, pasteRoot) {
+    zone.onclick = function (e) { if (e.target !== input) input.click(); };
+    zone.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } };
+    input.onchange = function () { if (isPic(this.files[0])) take(this.files[0]); this.value = ''; };
+    ['dragenter', 'dragover'].forEach(function (ev) { zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.add('on'); }); });
+    ['dragleave', 'drop'].forEach(function (ev) { zone.addEventListener(ev, function () { zone.classList.remove('on'); }); });
+    zone.addEventListener('drop', function (e) { e.preventDefault(); var f = [].filter.call((e.dataTransfer || {}).files || [], isPic)[0]; if (f) take(f); });
+    (pasteRoot || zone).addEventListener('paste', function (e) { var it = [].filter.call((e.clipboardData || {}).items || [], function (x) { return x.kind === 'file' && /^image\//.test(x.type); })[0]; if (it) { e.preventDefault(); take(it.getAsFile()); } });
+  }
+  /* BVM.picField(host, {value, uid, onChange, label, hint}): the picture of a question, with no link to type.
+     Choose, drop or paste a picture (it uploads at once), draw one, or remove it. onChange(src) gets the new address ('' when removed). */
+  function picField(host, o) {
+    o = o || {}; var val = o.value || '';
+    function render(msg) {
+      host.innerHTML = '<div class="bvm-pf">' + (val ? '<img src="' + E(val) + '" alt="" class="bvm-pfimg">' : '') +
+        '<div data-drop class="bvm-drop" tabindex="0" role="button" aria-label="' + (val ? 'Change the picture' : 'Add a picture') + ': choose, drop or paste"><b>' + (val ? '🔁 Change the picture' : '🖼️ ' + (o.label || 'Add a picture or diagram')) + '</b><span class="small muted">Drop it here, paste it (Ctrl+V) or click to choose' + (o.hint ? ' · ' + E(o.hint) : '') + '</span><input type="file" accept="image/*" data-f hidden></div>' +
+        '<div class="bvm-pfacts"><button type="button" class="btn sm" data-draw>✏️ Draw it instead</button>' + (val ? '<button type="button" class="btn sm" data-rm style="color:#b91c1c">✕ Remove</button>' : '') + '</div>' +
+        '<p class="small" data-pm role="status" style="margin:2px 0 0">' + (msg || '') + '</p></div>';
+      dropZone(host.querySelector('[data-drop]'), host.querySelector('[data-f]'), take, host);
+      host.querySelector('[data-draw]').onclick = function () { drawing(val && /^data:/.test(val) ? { src: val } : null, o.uid, function (m) { set(m.src, ''); }); };
+      var rm = host.querySelector('[data-rm]'); if (rm) rm.onclick = function () { set('', ''); };
+    }
+    function set(src, msg) { val = src; render(msg); if (o.onChange) o.onChange(src); }
+    function take(f) {
+      host.querySelector('[data-pm]').textContent = 'Adding the picture…';
+      shrink(f, 1600).then(function (x) { return picUpload(x, o.uid); }).then(function (src) { set(src, /^data:/.test(src) ? '✓ Added (kept inside the question; it is uploaded when you save).' : '✓ Added.'); },
+        function (e) { host.querySelector('[data-pm]').textContent = '⚠ ' + (e.message || e); });
+    }
+    render(); return { get: function () { return val; }, set: function (v) { val = v || ''; render(); } };
+  }
   function video(m, uid, done) {
     m = m || { t: 'video', src: '', cap: '' };
     var b = el(tabs(['▶️ YouTube link', '⬆️ Upload a short clip'], m.src && !T.ytId(m.src) ? 1 : 0) +
@@ -192,5 +221,5 @@
     render();
     return { list: list };
   }
-  window.BVM = { editor: editor, upload: upload, picUpload: picUpload, shrink: shrink, open: OPEN, TYPES: TYPES };
+  window.BVM = { editor: editor, upload: upload, picUpload: picUpload, persist: persist, picField: picField, dropZone: dropZone, dataToBlob: dataToBlob, shrink: shrink, open: OPEN, TYPES: TYPES };
 })();

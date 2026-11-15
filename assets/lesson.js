@@ -128,7 +128,7 @@
     var pic = isPic(v);
     return '<div class="q' + (lock ? ' locked' : '') + '" data-q="' + qid + '"' + (lock ? ' data-locked="1"' : '') + '>' + head +
       '<div class="mode" role="tablist"><button type="button" data-mode="type" aria-pressed="' + !pic + '">⌨ Type</button><button type="button" data-mode="write" aria-pressed="' + pic + '">✏️ Write by hand</button></div>' +
-      '<textarea rows="' + (x.marks >= 5 ? 9 : x.marks >= 3 ? 6 : 3) + '" placeholder="Type your answer"' + (pic ? ' hidden' : '') + (lock ? ' readonly' : '') + '>' + E(pic ? '' : v || '') + '</textarea>' +
+      '<textarea rows="' + (x.marks >= 5 ? 9 : x.marks >= 3 ? 6 : 3) + '" placeholder="Type your answer"' + (pic ? ' hidden' : '') + (lock ? ' readonly' : '') + '>' + E(pic ? '' : window.BVT && BVT.splitAns ? BVT.splitAns(v).text : v || '') + '</textarea>' +
       '<div class="hwbox"' + (pic ? '' : ' hidden') + '><canvas class="hwpad" width="900" height="' + (x.marks >= 5 ? 420 : 300) + '" aria-label="Writing area"></canvas>' +
       '<div class="toolbar small"><button type="button" data-pen="#172033" aria-pressed="true">Pen</button><button type="button" data-pen="#2563eb">Blue</button><button type="button" data-pen="eraser">Eraser</button><button type="button" data-clear>Clear</button></div></div></div>' + ansBox(x);
   }
@@ -156,6 +156,8 @@
         var w = b.getAttribute('data-mode') === 'write'; q.querySelector('textarea').hidden = w; q.querySelector('.hwbox').hidden = !w;
         q.querySelectorAll('[data-mode]').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); }); if (w) pad(q.querySelector('canvas'), q); }; });
       var c = q.querySelector('canvas'); if (c && !q.querySelector('.hwbox').hidden) pad(c, q);
+      var ta = q.querySelector('textarea'); if (ta && window.BVT && BVT.answerTools) { var qx = items.filter(function (i) { return i.question_id === q.getAttribute('data-q'); })[0] || {}, sv = inRepeat(steps()[step]) ? REP.ans[q.getAttribute('data-q')] : ans[q.getAttribute('data-q')];
+        BVT.answerTools(ta, BVT.text(qx.prompt || ''), { pics: BVT.splitAns(isPic(sv) ? '' : sv).pics, readonly: !!q.getAttribute('data-locked'), onchange: function () { dirty = true; } }); }
     });
   }
   /* handwriting pad (finger, stylus or mouse) */
@@ -188,7 +190,7 @@
       if (q.querySelector('input[type=radio]')) { if (r) tgt[qid] = +r.value; return; }
       var c = q.querySelector('canvas'), writing = !q.querySelector('.hwbox').hidden;
       if (writing && c && c._used) { var tmp = document.createElement('canvas'); tmp.width = 700; tmp.height = Math.round(c.height * 700 / c.width); tmp.getContext('2d').drawImage(c, 0, 0, tmp.width, tmp.height); tgt[qid] = tmp.toDataURL('image/jpeg', 0.6); }
-      else if (!writing) tgt[qid] = q.querySelector('textarea').value;
+      else if (!writing) { var tta = q.querySelector('textarea'); tgt[qid] = window.BVT && BVT.answerValue ? BVT.answerValue(tta) : tta.value; }
     });
   }
   function blanks(sc, src) { return items.filter(function (x) { return (x.section || 'Explore') === sc && x.kind !== 'info' && (src[x.question_id] == null || src[x.question_id] === ''); }); }
@@ -248,7 +250,7 @@
       '<section class="grp"><h3 class="sec-h">My answers</h3>' + items.filter(function (x) { return x.kind !== 'info'; }).map(function (x) {
         var v = (ATT.answers || {})[x.question_id], d = by[x.question_id] || {};
         return '<article class="q' + (show && d.max ? (+d.got === +d.max ? ' good' : +d.got > 0 ? ' part' : ' bad') : '') + '"><p><b>' + (++n) + '.</b> ' + E(x.prompt) + (show && d.max ? ' <span class="pill">' + E(d.got) + ' / ' + E(d.max) + '</span>' : '') + '</p>' +
-          (v == null || v === '' ? '<p class="small muted"><i>no answer</i></p>' : isPic(v) ? '<img class="hw" alt="My handwritten answer" src="' + E(v) + '">' : x.kind === 'short' ? '<p class="small" style="white-space:pre-wrap">' + E(v) + '</p>' : '<p class="small">' + E((x.options || [])[v]) + '</p>') +
+          (v == null || v === '' ? '<p class="small muted"><i>no answer</i></p>' : isPic(v) ? '<img class="hw" alt="My handwritten answer" src="' + E(v) + '">' : x.kind === 'short' ? (window.BVT && BVT.answerHtml ? '<div class="small">' + BVT.answerHtml(v) + '</div>' : '<p class="small" style="white-space:pre-wrap">' + E(v) + '</p>') : '<p class="small">' + E((x.options || [])[v]) + '</p>') +
           (show && d.comment ? '<div class="fb tch"><h4>Teacher comment</h4>' + E(d.comment) + '</div>' : '') + (show && d.explanation ? '<p class="small fb ai">' + E(d.explanation) + '</p>' : '') + '</article>'; }).join('') + '</section>';
     window.scrollTo(0, 0);
   }
