@@ -216,12 +216,16 @@
           MODE[x.question_id] = md;
           return '<fieldset class="q" data-id="' + x.question_id + '"><legend>' + (/^\d+\s*(\([a-z]\)|\.\s)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + T.rich(x.prompt, true) + ' <span class="pill">' + x.marks + ' mark' + (x.marks > 1 ? 's' : '') + '</span></legend>' +
             (x.image_url && md !== 'annotate' ? '<img src="' + E(x.image_url) + '" alt="Diagram for question ' + (i + 1) + '" style="max-width:100%;max-height:420px;border-radius:8px">' : '') +
-            (drawn ? '<div data-pad="' + x.question_id + '"></div>' :
+            (window.BVQT && BVQT.has(x.kind) ? '<div data-qt="' + x.question_id + '"></div>' : drawn ? '<div data-pad="' + x.question_id + '"></div>' :
              x.kind !== 'short' && md === 'dropdown' ? '<select class="qdrop" name="' + name + '"><option value="">Choose an answer…</option>' + opts.map(function (o, j) { return '<option value="' + j + '"' + (String(v) === String(j) ? ' selected' : '') + '>' + 'ABCDEFGH'.charAt(j) + '. ' + E(o) + '</option>'; }).join('') + '</select>' :
              x.kind === 'short' ? '<textarea name="' + name + '" rows="' + (x.marks >= 6 ? 12 : x.marks >= 3 ? 7 : 3) + '" placeholder="Type your answer' + (x.marks >= 3 ? ' (worth ' + x.marks + ' marks: give ' + x.marks + ' clear points)' : '') + '">' + E(v || '') + '</textarea>' :
               opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"' + (String(v) === String(j) ? ' checked' : '') + '> <b>' + 'ABCDEFGH'.charAt(j) + '.</b> ' + E(o) + '</label>'; }).join('')) + '</fieldset>';
         }).join('') + '<div class="acts"><button class="btn main" type="submit">Submit answers</button><a class="btn" href="#">Save and leave</a></div><p class="msg" id="m" role="alert"></p></form>';
-      var f = app.querySelector('#qf'), pads = {};
+      var f = app.querySelector('#qf'), pads = {}, QT = {};
+      qs.forEach(function (x) {   // the ten automatically marked kinds (site_assets/qtypes.js): the answer is kept as a JSON string
+        var hq = f.querySelector('[data-qt="' + x.question_id + '"]'); if (!hq) return; var sv = saved[x.question_id];
+        QT[x.question_id] = sv == null ? '' : typeof sv === 'string' ? sv : JSON.stringify(sv);
+        hq.appendChild(BVQT.student(x.kind, x.options, QT[x.question_id], function (val) { QT[x.question_id] = val; keep(); push(); })); });
       qs.forEach(function (x) {   // a table tool under any written answer that asks for a table: the table goes into the answer
         var ta = f.querySelector('textarea[name="q-' + x.question_id + '"]'); if (!ta || !T.tableTool || T.needs(T.text(x.prompt)).indexOf('table') < 0) return;
         var b = document.createElement('button'), w = null; b.type = 'button'; b.className = 'btn sm'; b.textContent = '▦ Table tool'; b.style.margin = '6px 0';
@@ -229,6 +233,7 @@
         ta.parentNode.insertBefore(b, ta.nextSibling); });
       qs.forEach(function (x) { var h = f.querySelector('[data-pad="' + x.question_id + '"]'); if (h) pads[x.question_id] = T.pad(h, { mode: MODE[x.question_id] || T.parse(x.prompt).mode, x: T.parse(x.prompt).x, y: T.parse(x.prompt).y, image: x.image_url, value: saved[x.question_id], onchange: function () { keep(); push(); } }); });
       function collect() { var g = {}; qs.forEach(function (x) {
+        if (QT[x.question_id] != null) { if (QT[x.question_id] !== '') g[x.question_id] = QT[x.question_id]; return; }
         if (pads[x.question_id]) { var d = pads[x.question_id].get(); if (d) g[x.question_id] = d; return; }
         var el = f.querySelector('select[name="q-' + x.question_id + '"]') || f.querySelector('[name="q-' + x.question_id + '"]' + (x.kind === 'short' ? '' : ':checked')); if (el && el.value !== '') g[x.question_id] = x.kind === 'short' ? el.value : +el.value; }); return g; }
       var kt = null; function keep() { clearTimeout(kt); kt = setTimeout(function () { try { localStorage.setItem(key(attempt), JSON.stringify(collect())); } catch (e) {} count(); }, 400); }
@@ -287,7 +292,7 @@
         (hide ? '' : qs.map(function (x, i) { var d = by[x.question_id] || {}, given = (a.answers || {})[x.question_id];
           var ok = d.got != null && +d.got === +d.max, part = d.got != null && +d.got > 0 && !ok;
           return '<article class="q ' + (d.got == null ? '' : ok ? 'good' : part ? 'part' : 'bad') + '"><div>' + (/^\d+\s*(\([a-z]\)|\.\s)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + T.rich(x.prompt, true) + ' <span class="pill">' + (d.got == null ? 'to be marked' : E(d.got) + ' / ' + E(d.max)) + '</span></div>' +
-            '<p class="small"><b>Your answer:</b> ' + (given == null || given === '' ? '<i>no answer</i>' : T.isPic(given) ? '<br><img class="hw" alt="Your drawing" src="' + E(given) + '" style="max-width:100%;border:1px solid var(--line);border-radius:8px">' : x.kind === 'short' ? E(given) : 'ABCDEFGH'.charAt(given) + '. ' + E((x.options || [])[given])) + '</p>' +
+            '<p class="small"><b>Your answer:</b> ' + (given == null || given === '' ? '<i>no answer</i>' : T.isPic(given) ? '<br><img class="hw" alt="Your drawing" src="' + E(given) + '" style="max-width:100%;border:1px solid var(--line);border-radius:8px">' : x.kind === 'short' ? E(given) : window.BVQT && BVQT.has(x.kind) ? E(BVQT.pretty(x.kind, x.options, given)) : 'ABCDEFGH'.charAt(given) + '. ' + E((x.options || [])[given])) + '</p>' +
             (fb[x.question_id] && T.feedback ? T.feedback(fb[x.question_id]) :   // structured feedback (rules, AI or teacher)
               (d.explanation ? '<p class="small fb ai">' + E(d.explanation) + '</p>' : '') + (d.comment ? '<div class="fb tch"><h4>Teacher comment</h4>' + E(d.comment) + '</div>' : '')) + '</article>'; }).join(''));
       window.scrollTo(0, 0);

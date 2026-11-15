@@ -101,13 +101,20 @@
     if (!body) return '';
     return '<div class="ansbox' + (preview ? ' tview' : '') + '"><h4>' + (preview ? '👩‍🏫 Teacher view · answer' : inRepeat(cur) ? 'Check Repeat ' + REP.n : 'Answer') + '</h4>' + body + '</div>';
   }
-  var PADS = {};
+  var PADS = {}, QTV = {};
+  function mountQT(root) {   // the ten automatically marked kinds (site_assets/qtypes.js)
+    if (!window.BVQT) return;
+    root.querySelectorAll('.q[data-qt]').forEach(function (q) { var qid = q.getAttribute('data-q'), x = items.filter(function (i) { return i.question_id === qid; })[0], box = q.querySelector('[data-qtbox]'); if (!x || !box || box.firstChild) return;
+      var sc = x.section || 'Explore', v = inRepeat(sc) ? REP.ans[qid] : ans[qid]; v = v == null ? '' : typeof v === 'string' ? v : JSON.stringify(v); QTV[qid] = v;
+      box.appendChild(BVQT.student(x.kind, x.options, v, function (val) { QTV[qid] = val; dirty = true; }, { locked: !!q.getAttribute('data-locked') })); });
+  }
   function block(x) {
     if (x.kind === 'info') return '<article class="panel lread">' + (x.image_url ? '<img src="' + E(x.image_url) + '" alt="" loading="lazy" class="limg">' : '') + rich(x.prompt) +
       (window.speechSynthesis ? '<button type="button" class="btn sm" data-say="' + x.question_id + '">🔊 Listen</button>' : '') + '</article>';
     var qid = x.question_id, sc = x.section || 'Explore', rp = inRepeat(sc), v = rp ? REP.ans[qid] : ans[qid], lock = !preview && REVEALED[sc] && !rp || (rp && REP.saved);
     var head = '<p><b>' + x._n + '.</b> ' + rich(x.prompt).replace(/^<p>|<\/p>$/g, '') + (x.marks ? ' <span class="pill">' + x.marks + ' mark' + (x.marks > 1 ? 's' : '') + '</span>' : '') +
       (window.speechSynthesis ? ' <button type="button" class="btn sm" data-say="' + qid + '" aria-label="Read the question aloud">🔊</button>' : '') + '</p>' + (x.image_url ? '<img src="' + E(x.image_url) + '" alt="" loading="lazy" class="limg">' : '');
+    if (window.BVQT && BVQT.has(x.kind)) return '<div class="q' + (lock ? ' locked' : '') + '" data-q="' + qid + '" data-qt="' + x.kind + '"' + (lock ? ' data-locked="1"' : '') + '>' + head + '<div data-qtbox></div></div>' + ansBox(x);
     var md = window.BVT ? BVT.parse(x.prompt).mode : '';
     if ((x.kind === 'mcq' || x.kind === 'tf') && md === 'dropdown') return '<fieldset class="q" data-q="' + qid + '"><legend class="sr">Question ' + x._n + '</legend>' + head +
       '<select class="qdrop"' + (lock ? ' disabled' : '') + '><option value="">Choose an answer…</option>' + (x.options || []).map(function (o, j) { return '<option value="' + j + '"' + (String(v) === String(j) ? ' selected' : '') + '>' + E(o) + '</option>'; }).join('') + '</select></fieldset>' + ansBox(x);
@@ -133,7 +140,7 @@
     var rps = app.querySelector('#repsave'); if (rps) rps.onclick = function () { collect(); saveRepeat(rps); };
     var rpe = app.querySelector('#repend'); if (rpe) rpe.onclick = function () { REP = { sec: null, ans: {}, n: 0, saved: false }; draw(); };
     app.querySelectorAll('[data-say]').forEach(function (b) { b.onclick = function () { var x = items.filter(function (i) { return i.question_id === b.getAttribute('data-say'); })[0]; speak((window.BVT ? BVT.text(x.prompt) : x.prompt) + (x.options && x.options.length ? '. Options: ' + x.options.join('; ') : ''), b); }; });
-    PADS = {};
+    PADS = {}; mountQT(app);
     app.querySelectorAll('.q[data-draw]').forEach(function (q) {
       var qid = q.getAttribute('data-q'), x = items.filter(function (i) { return i.question_id === qid; })[0] || {}, pr = BVT.parse(x.prompt), src = inRepeat(steps()[step]) ? REP.ans[qid] : ans[qid];
       PADS[qid] = BVT.pad(q.querySelector('[data-pad]'), { mode: pr.mode, x: pr.x, y: pr.y, image: x.image_url, value: src, readonly: !!q.getAttribute('data-locked'), onchange: function () { dirty = true; } });
@@ -171,6 +178,7 @@
     app.querySelectorAll('.q[data-q]').forEach(function (q) {
       if (q.getAttribute('data-locked')) return;
       var qid = q.getAttribute('data-q'), r = q.querySelector('input[type=radio]:checked');
+      if (q.hasAttribute('data-qt')) { if (QTV[qid] != null && QTV[qid] !== '') tgt[qid] = QTV[qid]; return; }
       if (PADS[qid]) { if (PADS[qid].used()) tgt[qid] = PADS[qid].get(); return; }
       var dd = q.querySelector('select.qdrop'); if (dd) { if (dd.value !== '') tgt[qid] = +dd.value; return; }
       if (q.querySelector('input[type=radio]')) { if (r) tgt[qid] = +r.value; return; }
