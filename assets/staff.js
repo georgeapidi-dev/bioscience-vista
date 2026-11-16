@@ -644,6 +644,7 @@
           return '<label class="chk"><input type="checkbox" data-pg="' + E(pg) + '"' + (on ? ' checked' : '') + '> ' + E(pg) + '</label>'; }).join('') + '</div>' +
         '<div class="acts"><button type="button" class="btn sm" id="pgsave">Save</button></div></section>';
       body.innerHTML = html; wireFilters(body, state);
+      if (BV.findBox && list.length > 3) BV.findBox(body, 'details.panel[data-k]', 'div[style*="border-left:5px"]', 'Find work you set…');
       body.querySelector('#anew').onclick = function () { assignForm(body.querySelector('#aform'), c, kids, [], function () { state.reload(); }); };
       body.querySelectorAll('[data-adel]').forEach(function (b) { b.onclick = function () {
         if (!confirm('Remove this work from every student\'s to-do list?')) return;
@@ -1133,6 +1134,7 @@
           return '<tr><td><a href="/build/#edit/' + q.id + '" title="Edit the questions in the builder">' + E(q.title) + '</a> <a class="small" href="#quizzes/' + q.id + '" title="Dates, classes, results and exam security">⚙</a></td>' + (any ? '<td>' + (sOf(q) ? BV.subj.tag(sOf(q)) : mypQuiz(q) ? '<span class="small muted">not set</span>' : '') + '</td>' : '') + '<td>' + (q.category === 'exam' ? '🧪 Exam' : '📝 Quiz') + '</td><td>' + q.quiz_questions.length + '</td><td class="small">' + E(q.quiz_classes.map(function (c) { return cn[c.class_id] || '…'; }).join(', ') || '–') + '</td><td class="small">' + E(S.when(q.due_at) || '–') + '</td><td class="small">' + (q.show_results ? 'shown at once' : 'after you release') + '</td><td>' + (q.published ? '<span class="pill">Published</span>' : 'Draft') + '</td><td><a class="btn sm" href="#quizzes/' + q.id + '/preview">👁 Preview</a> <button type="button" class="btn sm" data-ms="' + q.id + '">📄 Mark scheme</button>' + (ME.admin ? S.del('quiz', q.id, q.title) : '') + '</td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">' + (pick ? 'No ' + E(pick) + ' quizzes or exams yet.' : 'No quizzes yet. Import a question paper or make one from scratch.') + '</p>');
       wireMS(p);
       p.querySelectorAll('[data-qs]').forEach(function (b) { b.onclick = function () { quizzes.pick = b.getAttribute('data-qs'); quizzes(p, args); }; });
+      if (BV.findBox) BV.findBox(p, 'table.marks tr:not(:first-child)', null, 'Find a quiz or exam…');
     });
   }
 
@@ -1545,6 +1547,7 @@
         ((r.data || []).length ? '<div class="tablewrap"><table class="marks"><tr><th>Lesson</th><th>Items</th><th>Classes</th><th>Status</th><th></th></tr>' + r.data.map(function (q) {
           return '<tr><td><a href="/build/#edit/' + q.id + '">' + E(q.title) + '</a></td><td>' + q.quiz_questions.length + '</td><td class="small">' + E(q.quiz_classes.map(function (c) { return cn[c.class_id] || '…'; }).join(', ') || '–') + '</td><td>' + (q.published ? '<span class="pill">Published</span>' : 'Draft') + '</td>' +
             '<td><a class="small" href="/lesson/#' + q.id + '" target="_blank" rel="noopener">Preview ↗</a> <button type="button" class="btn sm" data-html="' + q.id + '" title="Save this lesson as one HTML file that opens in any browser">⬇ HTML file</button>' + (ME.admin ? S.del('quiz', q.id, q.title) : '') + '</td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">No interactive lessons yet.</p>');
+      if (BV.findBox) BV.findBox(p, 'table.marks tr:not(:first-child)', null, 'Find a lesson…');
       p.querySelectorAll('[data-html]').forEach(function (b) { b.onclick = function () { b.disabled = true; lessonHtmlFile(b.getAttribute('data-html')).then(function () { b.disabled = false; toast('HTML file saved to your downloads'); }, function (e) { b.disabled = false; toast(S.nice(e), true); }); }; });
     });
   }
