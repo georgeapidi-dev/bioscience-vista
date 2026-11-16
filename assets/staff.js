@@ -400,7 +400,8 @@
     S.db.rpc('bin_item', { kind: 'class', item: id }).then(function (r) { if (ok(r, 'Class moved to the 🗑 Bin')) refs().then(function () { (TEACH ? teachClasses : classes)(p); }); });
   }
   function classes(p, args) {
-    if (args && args[0]) return refs().then(function () { classPage(p, args[0], args[1]); });
+    if (args && args[0] && args[1] === 'add') { TC.cur = args[0]; TC.tab = 'materials'; TC.madd = true; }   // #classes/<id>/add: straight to "Add from main site"
+    else if (args && args[0]) return refs().then(function () { classPage(p, args[0], args[1]); });
     refs().then(function () {
       p.innerHTML = '<section class="panel"><h3>Class pages</h3><p class="small muted">Open a class to see its quizzes, exams and interactive lessons, and who has and has not submitted. The page updates itself while you watch.</p>' +
         (CLASSES.length ? '<div class="cgrid">' + CLASSES.map(function (c) { return '<a class="ccard" href="#classes/' + c.id + '"><b>' + E(c.name) + '</b><span class="small muted">' + E(c.programme || '') + '</span><span class="small" data-n="' + c.id + '">…</span></a>'; }).join('') + '</div>' : '<p class="emptybox">No classes yet.</p>') + '</section>' +
@@ -465,7 +466,7 @@
     try { state.lesson = sessionStorage.getItem('bv-cl-' + cid) || null; } catch (e) {}
     p.innerHTML = '<p class="small"><a href="#classes">← All classes</a></p><div class="row2' + ' cband" style="--k:' + hue(c.id) + '"><div><p class="label">' + E(c.programme || 'Class') + '</p><h2 style="margin:0">' + E(c.name) + '</h2></div>' +
       '<a class="btn main sm" href="/check/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '" style="--c:#7c3aed" title="Send one question to this class and watch the answers arrive">⚡ Live Check</a>' + '<a class="btn main sm" href="/time/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '" style="--c:#0ea5e9;background:#0284c7;border-color:#0284c7" title="The time each student spent on each task, and the time allowed">⏱ Time on tasks</a>' + '<div class="small muted" style="text-align:right">' + (TEACH ? '' : 'Join code <b class="code">' + E(c.join_code) + '</b><br>') + '<label class="chk" style="display:inline-flex"><input type="checkbox" id="lv" checked> Live: update every 15 seconds</label> <span id="stamp"></span></div></div>' +
-      '<nav class="tabs" aria-label="Class sections"' + ' data-cnav' + '><a href="#classes/' + cid + '/quizzes" aria-selected="' + (sub === 'quizzes') + '">📝 Quizzes and exams</a><a href="#classes/' + cid + '/lessons" aria-selected="' + (sub === 'lessons') + '">🧪 Interactive lessons</a><a href="#classes/' + cid + '/todo" aria-selected="' + (sub === 'todo') + '">📌 To-do list</a><a href="#classes/' + cid + '/register" aria-selected="' + (sub === 'register') + '">🗒 Register</a><a href="#classes/' + cid + '/activity" aria-selected="' + (sub === 'activity') + '">👀 Activity</a><a href="' + '/board/?class=' + cid + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a><a href="/live/?class=' + cid + '">🎥 Live lessons</a><a href="#classes/' + cid + '/analysis" aria-selected="' + (sub === 'analysis') + '">📊 Analysis</a><a href="#classes/' + cid + '/news" aria-selected="' + (sub === 'news') + '">📣 Announcements</a></nav>' +
+      '<nav class="tabs" aria-label="Class sections"' + ' data-cnav' + '><a href="#classes/' + cid + '/add" style="--k:#0d9488;font-weight:800">➕ Add lessons from main site</a><a href="#classes/' + cid + '/quizzes" aria-selected="' + (sub === 'quizzes') + '">📝 Quizzes and exams</a><a href="#classes/' + cid + '/lessons" aria-selected="' + (sub === 'lessons') + '">🧪 Interactive lessons</a><a href="#classes/' + cid + '/todo" aria-selected="' + (sub === 'todo') + '">📌 To-do list</a><a href="#classes/' + cid + '/register" aria-selected="' + (sub === 'register') + '">🗒 Register</a><a href="#classes/' + cid + '/activity" aria-selected="' + (sub === 'activity') + '">👀 Activity</a><a href="' + '/board/?class=' + cid + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a><a href="/live/?class=' + cid + '">🎥 Live lessons</a><a href="#classes/' + cid + '/analysis" aria-selected="' + (sub === 'analysis') + '">📊 Analysis</a><a href="#classes/' + cid + '/news" aria-selected="' + (sub === 'news') + '">📣 Announcements</a></nav>' +
       '<div id="cbody"><p class="muted">Loading…</p></div>';
     var body = p.querySelector('#cbody'), busy = false;
     { var CH = { quizzes: '#ca8a04', lessons: '#0d9488', todo: '#7c3aed', register: '#059669', activity: '#db2777', analysis: '#2563eb', news: '#ea580c' };
@@ -1962,7 +1963,7 @@
           (!CLASSES.length ? '<p class="panel tint">Start by <a href="#classes">creating a class</a>: choose the course you teach and its BioscienceVista lessons and quizzes are added for you.</p>' : '') +
           (nWait ? '<p class="panel tint"><b>' + nWait + ' student' + (nWait > 1 ? 's are' : ' is') + ' asking to join your classes.</b> <a class="btn main sm" href="#approvals">Review requests</a></p>' : '') +
           (CLASSES.length ? '<h3>🏫 My classes</h3><div class="ccards">' + CLASSES.map(function (c) { var k = per[c.id] || { ok: 0, wait: 0 };
-            return '<div class="ccard2" style="--k:' + hue(c.id) + '"><a href="#classes/' + c.id + '"><b>' + E(c.name) + '</b></a><span class="small">👥 ' + k.ok + ' student' + (k.ok === 1 ? '' : 's') + (k.wait ? ' · 🙋 ' + k.wait + ' waiting' : '') + '</span><span class="cc-main"><a href="#classes/' + c.id + '">Open class →</a><a href="#classes/' + c.id + '/todo">📌 Set work</a></span>' +
+            return '<div class="ccard2" style="--k:' + hue(c.id) + '"><a href="#classes/' + c.id + '"><b>' + E(c.name) + '</b></a><span class="small">👥 ' + k.ok + ' student' + (k.ok === 1 ? '' : 's') + (k.wait ? ' · 🙋 ' + k.wait + ' waiting' : '') + '</span><span class="cc-main"><a href="#classes/' + c.id + '">Open class →</a><a href="#classes/' + c.id + '/todo">📌 Set work</a><a href="#classes/' + c.id + '/add">➕ Add lessons</a></span>' +
               '<details class="cc-more"><summary>More</summary><span><a href="#classes/' + c.id + '/lessons">🧪 Lessons</a><a href="#classes/' + c.id + '/quizzes">📝 Quizzes</a><a href="#classes/' + c.id + '/register">🗒 Register</a><a href="#classes/' + c.id + '/activity">👀 Activity</a><a href="' + '/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a><a href="/live/?class=' + c.id + '">🎥 Live</a></span></details></div>'; }).join('') + '</div>' : '') +
           '<div class="two"><section class="panel"><h3>Quick start</h3><p class="qlinks"><a style="--k:#059669" href="#classes">＋ New class</a><a style="--k:#ea580c" href="#approvals">🙋 Join requests</a><a style="--k:#dc2626" href="#marking">✍️ Marking</a><a style="--k:#ca8a04" href="#quizzes/new">📝 New quiz</a><a style="--k:#0d9488" href="/build/#new/lesson">✨ Build a lesson</a></p></section>' +
           '<section class="panel"><h3>Latest results</h3>' + (res.length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Task</th><th>Score</th></tr>' + res.map(function (r) { return '<tr><td>' + E(nm[r.student_id] || '–') + '</td><td>' + E(r.title) + '</td><td>' + E(r.score) + '/' + E(r.max_score) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="small muted">No results yet.</p>') + '</section></div>' + (ME.admin ? '' : '<section class="panel" id="rvbox"></section>');
@@ -2037,7 +2038,8 @@
   }
   function courseList() { return COURSES ? Promise.resolve(COURSES) : S.db.rpc('course_list').then(function (r) { COURSES = r.data || []; return COURSES; }); }
   function teachClasses(p, args) {
-    if (args && args[0]) return refs().then(function () { classPage(p, args[0], args[1]); });
+    if (args && args[0] && args[1] === 'add') { TC.cur = args[0]; TC.tab = 'materials'; TC.madd = true; }   // #classes/<id>/add: straight to "Add from main site"
+    else if (args && args[0]) return refs().then(function () { classPage(p, args[0], args[1]); });
     refs().then(function () {
       if (!TC.cur || !CLASSES.some(function (c) { return c.id === TC.cur; })) TC.cur = CLASSES[0] ? CLASSES[0].id : null;
       var c = CLASSES.filter(function (x) { return x.id === TC.cur; })[0];
@@ -2055,7 +2057,7 @@
       if (p.querySelector('#newc')) p.querySelector('#newc').onclick = function () { classForm(p.querySelector('#newbox'), null, p); };
       p.querySelector('#chs').onclick = function () { changeSchool(p); };
       p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { TC.cur = b.getAttribute('data-c'); TC.tab = 'students'; teachClasses(p); }; });
-      if (c) { classBox(p.querySelector('#cbox'), c, p); lessonRequests(c, p); }
+      if (c) { classBox(p.querySelector('#cbox'), c, p); lessonRequests(c, p); if (args && args[1] === 'add') setTimeout(function () { var tb = p.querySelector('#tab'); if (tb) tb.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 400); }
     });
   }
   function changeSchool(p) {
