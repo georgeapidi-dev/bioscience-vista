@@ -4,8 +4,8 @@
   function E(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
   /* answer style is kept with the question text as a last line such as [[answer:graph|Temperature / °C|Rate / s⁻¹]] */
-  var MARK = /\n?\[\[answer:(dropdown|graph|draw|annotate)((?:\|[^\]|]*)*)\]\]\s*$/;
-  T.MODES = { dropdown: 'Drop-down list', graph: 'Draw a graph', draw: 'Draw a diagram', annotate: 'Label / annotate the picture' };
+  var MARK = /\n?\[\[answer:(dropdown|graph|draw|annotate|audio|video|file)((?:\|[^\]|]*)*)\]\]\s*$/;
+  T.MODES = { dropdown: 'Drop-down list', graph: 'Draw a graph', draw: 'Draw a diagram', annotate: 'Label / annotate the picture', audio: 'Record a spoken answer', video: 'Record a video answer', file: 'Upload a file' };
   /* pictures, video, audio, graphs and drawings are kept with the question text as lines such as [[media:%7B%22t%22...%7D]] */
   var MEDIA = /^\[\[media:([^\]]+)\]\]$/;
   function pullMedia(text) { var media = [], keep = String(text).split('\n').filter(function (l) { var m = MEDIA.exec(l.trim()); if (!m) return true; try { media.push(JSON.parse(decodeURIComponent(m[1]))); } catch (e) {} return false; }); return { text: keep.join('\n').replace(/\s+$/, ''), media: media }; }
@@ -25,7 +25,8 @@
   T.text = function (prompt) { return T.parse(prompt).text; };
 
   /* question text → HTML: **bold**, line breaks and tables written as | a | b | rows */
-  function fmt(s) { return E(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\^(\S+?)\^/g, '<sup>$1</sup>').replace(/~(\S+?)~/g, '<sub>$1</sub>'); }
+  function fmt(s) { return E(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/__(\S(?:.*?\S)?)__/g, '<u>$1</u>').replace(/(^|[^*\w])\*(?![\s*])([^*\n]*?[^\s*])\*(?![\w*])/g, '$1<i>$2</i>').replace(/\^(\S+?)\^/g, '<sup>$1</sup>').replace(/~(\S+?)~/g, '<sub>$1</sub>'); }
+  T.fmt = fmt;   /* **bold**, *italic*, __underline__, ^superscript^, ~subscript~ */
   function isRow(l) { return /^\s*\|.*\|\s*$/.test(l); }
   function cells(l) { return l.trim().replace(/^\||\|$/g, '').split('|').map(function (c) { return c.trim(); }); }
   T.table = function (lines) {
@@ -557,4 +558,136 @@
   if (!document.getElementById('bvk-css')) { var st = document.createElement('style'); st.id = 'bvk-css';
     st.textContent = '.bvk-bar{margin:6px 0 2px;min-width:0;max-width:100%}.bvk{max-width:100%;box-sizing:border-box;overflow-x:auto}.bvk-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.bvk-row .bvk-sug{border-color:#7c3aed;background:#f5f3ff;color:#5b21b6;font-weight:700}.bvk{border:1px solid var(--line,#cbd5e1);border-radius:12px;padding:8px;background:var(--card,#fff)}.bvk-tabs{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 6px}.bvk-tabs button{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:3px 10px;font:inherit;font-size:.85rem;cursor:pointer}.bvk-tabs button[aria-pressed=true]{background:#4f46e5;color:#fff;border-color:#4f46e5}.bvk-keys{display:flex;flex-wrap:wrap;gap:4px}.bvk-keys button{min-width:2.4em;padding:4px 8px;font-size:1.08rem!important;line-height:1.3;color:#172033;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;font:inherit;cursor:pointer}.bvk-keys button:hover,.bvk-keys button:focus-visible{background:#eef2ff;border-color:#4f46e5}';
     document.head.appendChild(st); }
+})();
+
+/* Assessment Studio additions (Nov 2026)
+   - BVT.files(v) / BVT.fileToken(f)   recorded or uploaded answers travel inside the answer as [[file:<path>|<name>|<type>]] lines.
+     The files sit in the PRIVATE bucket "student-responses" (migration 049): only the student, their teachers, parents and the admin
+     can open them, through short-lived signed links. Wherever an answer is shown (BVT.answerHtml) the file plays or opens in place.
+   - BVT.responder(holder, {mode:'audio'|'video'|'file', value, quiz, onchange}) the student's recorder / uploader; .get() gives the answer
+   - BVT.richBar(ta)   the question editor's toolbar: bold, italic, underline, superscript, subscript, lists, symbols, table,
+                       chemical equation and equation tidying, undo and redo. Formatting is kept as the site's light mark-up. */
+(function () {
+  var T = window.BVT; if (!T || T.responder) return;
+  var E = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var FILE = /\n?\[\[file:([^|\]]+)\|([^|\]]*)\|([^|\]]*)\]\]/g, BUCKET = 'student-responses';
+  T.files = function (v) { var out = [], m; FILE.lastIndex = 0; while ((m = FILE.exec(String(v == null ? '' : v)))) out.push({ path: m[1], name: m[2], type: m[3] }); return out; };
+  T.fileToken = function (f) { var c = function (x) { return String(x || '').replace(/[|\]\[\n]/g, ' ').slice(0, 120); }; return '[[file:' + c(f.path) + '|' + c(f.name) + '|' + c(f.type) + ']]'; };
+  T.stripFiles = function (v) { return String(v == null ? '' : v).replace(FILE, '').replace(/\s+$/, ''); };
+  var baseHtml = T.answerHtml, baseText = T.answerText;
+  if (baseHtml) T.answerHtml = function (v) { var f = T.files(v); if (!f.length) return baseHtml(v); var rest = T.stripFiles(v);
+    return (rest.trim() ? baseHtml(rest) : '') + f.map(function (x) { return '<div class="bv-file" data-bvfile="' + E(x.path) + '" data-type="' + E(x.type) + '" style="margin:.4em 0"><span class="small muted">' + (/^audio/.test(x.type) ? '🎙' : /^video/.test(x.type) ? '🎬' : '📎') + ' ' + E(x.name || 'Answer file') + ' (opening…)</span></div>'; }).join(''); };
+  if (baseText) T.answerText = function (v) { return baseText(T.stripFiles(v)); };
+  /* open every file answer on the page with a signed link (teachers' marking screens, results, the student's own review) */
+  function resolve(root) {
+    var S = window.BVS; if (!S || !S.db || !S.db.storage) return;
+    [].forEach.call((root || document).querySelectorAll('[data-bvfile]:not([data-done])'), function (el) {
+      el.setAttribute('data-done', '1'); var path = el.getAttribute('data-bvfile'), type = el.getAttribute('data-type') || '', name = (el.textContent || '').replace(/^\S+\s/, '').replace(/ \(opening…\)$/, '');
+      S.db.storage.from(BUCKET).createSignedUrl(path, 3600).then(function (r) {
+        if (!r || r.error || !r.data) { el.innerHTML = '<span class="small muted">📎 ' + E(name) + ': this file could not be opened (' + E((r && r.error && r.error.message) || 'no access') + ').</span>'; return; }
+        var u = r.data.signedUrl;
+        el.innerHTML = /^audio/.test(type) ? '<audio controls preload="metadata" src="' + E(u) + '" style="max-width:100%"></audio>' : /^video/.test(type) ? '<video controls preload="metadata" src="' + E(u) + '" style="max-width:100%;max-height:360px;border-radius:8px"></video>' :
+          /^image/.test(type) ? '<a href="' + E(u) + '" target="_blank" rel="noopener"><img src="' + E(u) + '" alt="' + E(name) + '" style="max-width:100%;max-height:360px;border-radius:8px"></a>' : '';
+        el.insertAdjacentHTML('beforeend', '<div class="small"><a href="' + E(u) + '" target="_blank" rel="noopener" download="' + E(name) + '">📎 ' + E(name || 'Open the file') + ' ↗</a></div>');
+      });
+    });
+  }
+  T.resolveFiles = resolve;
+  if (typeof MutationObserver !== 'undefined') { var mo = new MutationObserver(function () { clearTimeout(mo.t); mo.t = setTimeout(function () { resolve(document); }, 120); });
+    var go = function () { if (document.body) { mo.observe(document.body, { childList: true, subtree: true }); resolve(document); } }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }
+
+  /* ---------------------------------------------------------------- the student's recorder / uploader */
+  var NEED = { audio: 'Record your spoken answer (or upload a sound file).', video: 'Record a short video answer (or upload a video file).', file: 'Upload your work: a document, PDF, spreadsheet, photo, sound or video file.' };
+  T.responder = function (holder, o) {
+    o = o || {}; var mode = o.mode || 'file', files = T.files(o.value), note = T.stripFiles(o.value), rec = null, chunks = [], stream = null, busy = false;
+    var box = document.createElement('div'); box.className = 'bv-resp'; box.style.cssText = 'display:grid;gap:8px;border:1px solid var(--line,#dde3ea);border-radius:12px;padding:10px;background:var(--card,#fff)';
+    holder.appendChild(box);
+    function changed() { if (o.onchange) o.onchange(); }
+    function uid() { var S = window.BVS; return S.db.auth.getSession().then(function (r) { var u = r && r.data && r.data.session && r.data.session.user; if (!u) throw new Error('Please sign in again.'); return u.id; }); }
+    function upload(blob, name) {
+      var S = window.BVS; if (!S || !S.db) return Promise.reject(new Error('Not signed in.'));
+      if (blob.size > 50 * 1048576) return Promise.reject(new Error('The file is larger than 50 MB.'));
+      var safe = String(name || 'answer').replace(/[^A-Za-z0-9._-]+/g, '-').slice(-80);
+      return uid().then(function (id) { var path = id + '/' + (o.quiz || 'work') + '/' + Date.now() + '-' + safe;
+        return S.db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type || 'application/octet-stream', upsert: false }).then(function (r) { if (r.error) throw r.error; return { path: path, name: name, type: blob.type || 'application/octet-stream' }; }); });
+    }
+    function draw(msg) {
+      var canRec = (mode === 'audio' || mode === 'video') && navigator.mediaDevices && window.MediaRecorder;
+      box.innerHTML = '<p class="small muted" style="margin:0">' + (mode === 'audio' ? '🎙 ' : mode === 'video' ? '🎬 ' : '📎 ') + NEED[mode] + '</p>' +
+        '<div class="acts" style="display:flex;gap:8px;flex-wrap:wrap">' + (canRec ? '<button type="button" class="btn sm" data-rec>' + (rec ? '⏹ Stop recording' : '⏺ Record') + '</button>' : '') +
+        '<label class="btn sm" style="cursor:pointer">⬆ Upload a file<input type="file" data-up hidden accept="' + (mode === 'audio' ? 'audio/*' : mode === 'video' ? 'video/*' : '') + '"></label></div>' +
+        (rec ? '<div data-live></div><p class="small" style="color:#b91c1c;margin:0">● Recording…</p>' : '') +
+        '<div data-list>' + files.map(function (f, i) { return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="bv-file" data-bvfile="' + E(f.path) + '" data-type="' + E(f.type) + '" style="flex:1;min-width:200px"><span class="small muted">' + E(f.name) + ' (opening…)</span></div><button type="button" class="btn sm" data-del="' + i + '" aria-label="Remove ' + E(f.name) + '">✕ Remove</button></div>'; }).join('') + '</div>' +
+        (msg ? '<p class="small" role="status" style="margin:0">' + E(msg) + '</p>' : '');
+      var up = box.querySelector('[data-up]'); if (up) up.onchange = function () { var f = up.files && up.files[0]; if (!f || busy) return; busy = true; draw('Uploading ' + f.name + '…');
+        upload(f, f.name).then(function (x) { files.push(x); busy = false; draw('Uploaded.'); changed(); }, function (e) { busy = false; draw('Upload failed: ' + (e.message || e)); }); };
+      box.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { files.splice(+b.getAttribute('data-del'), 1); draw(); changed(); }; });
+      var rb = box.querySelector('[data-rec]'); if (rb) rb.onclick = function () { if (rec) { rec.stop(); return; }
+        navigator.mediaDevices.getUserMedia(mode === 'video' ? { audio: true, video: { width: 640, height: 480 } } : { audio: true }).then(function (st) {
+          stream = st; chunks = []; rec = new MediaRecorder(st); rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+          rec.onstop = function () { var type = (chunks[0] && chunks[0].type) || (mode === 'video' ? 'video/webm' : 'audio/webm'), blob = new Blob(chunks, { type: type.split(';')[0] }); stream.getTracks().forEach(function (t) { t.stop(); }); rec = null;
+            var name = (mode === 'video' ? 'video-answer' : 'spoken-answer') + '.' + (/mp4/.test(type) ? 'mp4' : /ogg/.test(type) ? 'ogg' : 'webm'); busy = true; draw('Saving your recording…');
+            upload(blob, name).then(function (x) { files.push(x); busy = false; draw('Recording saved.'); changed(); }, function (e) { busy = false; draw('The recording could not be saved: ' + (e.message || e)); }); };
+          rec.start(); draw(); if (mode === 'video') { var v = document.createElement('video'); v.muted = true; v.autoplay = true; v.playsInline = true; v.style.cssText = 'max-width:100%;max-height:240px;border-radius:8px'; v.srcObject = st; box.querySelector('[data-live]').appendChild(v); }
+        }, function (e) { draw('The ' + (mode === 'video' ? 'camera' : 'microphone') + ' could not be used (' + (e.message || e.name || 'not allowed') + '). Upload a file instead.'); }); };
+      resolve(box);
+    }
+    draw();
+    return { get: function () { var t = String(note || '').trim(); return (t ? t + '\n' : '') + files.map(T.fileToken).join('\n'); }, files: function () { return files.slice(); } };
+  };
+
+  /* ---------------------------------------------------------------- chemistry and equation tidying */
+  var SUB = { 0: '₀', 1: '₁', 2: '₂', 3: '₃', 4: '₄', 5: '₅', 6: '₆', 7: '₇', 8: '₈', 9: '₉', '+': '₊', '-': '₋', '(': '₍', ')': '₎' }, SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹', '+': '⁺', '-': '⁻', '(': '⁽', ')': '⁾', n: 'ⁿ' };
+  var map = function (t, m) { return String(t).split('').map(function (c) { return m[c] || c; }).join(''); };
+  /* "6CO2 + 6H2O -> C6H12O6 + 6O2" → "6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂"; "Fe3+" → "Fe³⁺"; "SO4^2-" → "SO₄²⁻" */
+  T.chem = function (t) {
+    return String(t).replace(/<=>|<->/g, '⇌').replace(/-->|->|=>/g, '→').replace(/\^([0-9]*[+-])/g, function (m, c) { return map(c, SUP); })
+      .replace(/([A-Z][a-z]?)(\d?)([+-])(?=[\s,;.)]|$)/g, function (m, el, n, s) { return el + map(n + s, SUP); })   /* ions first: Fe3+ → Fe³⁺, Cl- → Cl⁻ */
+      .replace(/([A-Z][a-z]?|\))(\d+)/g, function (m, el, n) { return el + map(n, SUB); });
+  };
+  /* "x^2", "10^-3", "x_1", "+-", "sqrt(", "<=", ">=", "!=" → x², 10⁻³, x₁, ±, √(, ≤, ≥, ≠ */
+  T.uni = function (t) {
+    return String(t).replace(/\^\(?(-?[0-9n+]+)\)?/g, function (m, c) { return map(c, SUP); }).replace(/_\(?([0-9+-]+)\)?/g, function (m, c) { return map(c, SUB); })
+      .replace(/\+-|\+\/-/g, '±').replace(/sqrt\s*\(/g, '√(').replace(/<=/g, '≤').replace(/>=/g, '≥').replace(/!=/g, '≠').replace(/\bdelta\b/gi, 'Δ').replace(/\bchi2\b|\bchi\^2\b/gi, 'χ²').replace(/\bmu\b/g, 'μ').replace(/(\d)\s*x\s*10/g, '$1 × 10');
+  };
+
+  /* ---------------------------------------------------------------- the question editor's toolbar */
+  T.richBar = function (ta, o) {
+    if (!ta || ta._bvRich) return; ta._bvRich = true; o = o || {};
+    var hist = [ta.value], at = 0, lock = false, bar = document.createElement('div');
+    bar.className = 'bv-rich'; bar.setAttribute('role', 'toolbar'); bar.setAttribute('aria-label', 'Formatting');
+    bar.style.cssText = 'display:flex;flex-wrap:wrap;gap:2px;padding:4px;border:1px solid #cbd5e1;border-bottom:0;border-radius:10px 10px 0 0;background:#f8fafc';
+    var B = [['B', 'Bold', '**', '**', 'font-weight:900'], ['I', 'Italic', '*', '*', 'font-style:italic'], ['U', 'Underline', '__', '__', 'text-decoration:underline'], ['x²', 'Superscript', '^', '^'], ['x₂', 'Subscript', '~', '~'],
+      ['•', 'Bulleted list', 'list'], ['1.', 'Numbered list', 'olist'], ['|', '', 'sep'], ['⚗', 'Chemical equation: tidy the selection (H2O → H₂O, -> → →)', 'chem'], ['∑', 'Equation: tidy the selection (x^2 → x², +- → ±, <= → ≤)', 'eq'], ['Tx', 'Clear formatting', 'clear'], ['|', '', 'sep'], ['↶', 'Undo', 'undo'], ['↷', 'Redo', 'redo']];
+    function fire() { try { ta.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {} }
+    function snap() { if (lock) return; if (hist[at] === ta.value) return; hist = hist.slice(0, at + 1); hist.push(ta.value); if (hist.length > 80) hist.shift(); at = hist.length - 1; }
+    function put(v, s, e) { ta.value = v; ta.focus(); try { ta.setSelectionRange(s, e); } catch (x) {} snap(); fire(); }
+    function wrap(a, b) { var s = ta.selectionStart, e = ta.selectionEnd, v = ta.value, sel = v.slice(s, e) || 'text'; put(v.slice(0, s) + a + sel + b + v.slice(e), s + a.length, s + a.length + sel.length); }
+    function lines(fn) { var v = ta.value, s = v.lastIndexOf('\n', ta.selectionStart - 1) + 1, e = v.indexOf('\n', ta.selectionEnd); if (e < 0) e = v.length; var block = v.slice(s, e).split('\n').map(fn).join('\n'); put(v.slice(0, s) + block + v.slice(e), s, s + block.length); }
+    function sel(fn) { var s = ta.selectionStart, e = ta.selectionEnd, v = ta.value; if (s === e) { s = v.lastIndexOf('\n', s - 1) + 1; e = v.indexOf('\n', e); if (e < 0) e = v.length; } var t = fn(v.slice(s, e)); put(v.slice(0, s) + t + v.slice(e), s, s + t.length); }
+    B.forEach(function (b) {
+      if (b[2] === 'sep') { var sp = document.createElement('span'); sp.style.cssText = 'width:1px;background:#cbd5e1;margin:2px 4px'; bar.appendChild(sp); return; }
+      var btn = document.createElement('button'); btn.type = 'button'; btn.textContent = b[0]; btn.title = b[1]; btn.setAttribute('aria-label', b[1]);
+      btn.style.cssText = 'all:unset;cursor:pointer;min-width:26px;text-align:center;padding:3px 6px;border-radius:6px;font:700 13px system-ui;color:#1e293b;' + (b[4] || '');
+      btn.onmouseenter = function () { btn.style.background = '#e0e7ff'; }; btn.onmouseleave = function () { btn.style.background = ''; };
+      btn.onmousedown = function (e) { e.preventDefault(); };
+      btn.onclick = function () {
+        var k = b[2];
+        if (k === 'list') return lines(function (l) { return /^• /.test(l) ? l.slice(2) : '• ' + l; });
+        if (k === 'olist') { var n = 0; return lines(function (l) { return /^\d+\. /.test(l) ? l.replace(/^\d+\. /, '') : (++n) + '. ' + l; }); }
+        if (k === 'chem') return sel(T.chem); if (k === 'eq') return sel(T.uni);
+        if (k === 'clear') return sel(function (t) { return t.replace(/\*\*|__|\^|~/g, '').replace(/(^|\s)\*(\S)/g, '$1$2').replace(/(\S)\*(\s|$)/g, '$1$2'); });
+        if (k === 'undo') { if (at > 0) { lock = true; at--; ta.value = hist[at]; fire(); lock = false; } return; }
+        if (k === 'redo') { if (at < hist.length - 1) { lock = true; at++; ta.value = hist[at]; fire(); lock = false; } return; }
+        wrap(b[2], b[3]);
+      };
+      bar.appendChild(btn);
+    });
+    ta.addEventListener('input', function () { clearTimeout(ta._bvSnap); ta._bvSnap = setTimeout(snap, 350); });
+    ta.addEventListener('keydown', function (e) { if (!(e.ctrlKey || e.metaKey)) return; var k = e.key.toLowerCase(); if (k === 'b') { e.preventDefault(); wrap('**', '**'); } else if (k === 'i') { e.preventDefault(); wrap('*', '*'); } else if (k === 'u') { e.preventDefault(); wrap('__', '__'); } });
+    ta.style.borderTopLeftRadius = ta.style.borderTopRightRadius = '0';
+    ta.parentNode.insertBefore(bar, ta);
+    if (T.writeBar) T.writeBar(ta, { table: true });
+    return bar;
+  };
 })();

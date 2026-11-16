@@ -214,11 +214,13 @@
       var secs = qs.length ? qs[0].seconds_left : null, MODE = {};
       app.innerHTML = '<form id="qf" class="grp"><div class="row2 sticky-top"><div><p class="label">' + E(q.title) + '</p><b id="cnt"></b></div>' + '<span class="timer" id="tm" role="timer" aria-live="off"></span></div>' +
         qs.map(function (x, i) {
-          var name = 'q-' + x.question_id, opts = x.options || [], v = saved[x.question_id], md = T.parse(x.prompt).mode || (x.kind === 'short' && T.detect ? T.detect(T.text(x.prompt)) : ''), drawn = x.kind === 'short' && /^(graph|draw|annotate)$/.test(md);   /* a question that asks only for a graph or a drawing gets the tool as its answer, even when no answer style was set */
+          var name = 'q-' + x.question_id, opts = x.options || [], v = saved[x.question_id], md = T.parse(x.prompt).mode || (x.kind === 'short' && T.detect ? T.detect(T.text(x.prompt)) : ''), drawn = x.kind === 'short' && /^(graph|draw|annotate)$/.test(md), resp = x.kind === 'short' && /^(audio|video|file)$/.test(md), mt = x.meta || {};
+          var secH = x.section && x.section !== (qs[i - 1] || {}).section && !/^(Question|Explore|Test|Explain|Challenge|Reflect)$/.test(x.section) ? '<h3 class="sec-h" style="margin:18px 0 6px">' + E(x.section) + '</h3>' : '';   /* examination sections (Assessment Studio) */   /* a question that asks only for a graph or a drawing gets the tool as its answer, even when no answer style was set */
           MODE[x.question_id] = md;
-          return '<fieldset class="q" data-id="' + x.question_id + '"><legend>' + (/^\d+\s*(\([a-z]\)|\.\s)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + T.rich(x.prompt, true) + ' <span class="pill">' + x.marks + ' mark' + (x.marks > 1 ? 's' : '') + '</span></legend>' +
+          if (x.kind === 'info') return secH + '<div class="q panel tint" data-info="' + x.question_id + '">' + T.rich(x.prompt) + (x.image_url ? '<img src="' + E(x.image_url) + '" alt="" style="max-width:100%;max-height:420px;border-radius:8px">' : '') + '</div>';   /* a passage, diagram or data shared by the questions after it */
+          return secH + '<fieldset class="q" data-id="' + x.question_id + '"><legend>' + ('label' in mt ? (mt.label ? '<b>' + E(mt.label) + '</b> ' : '') : /^\d+\s*(\([a-z]\)|\.\s)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + T.rich(x.prompt, true) + ' <span class="pill">' + x.marks + ' mark' + (x.marks > 1 ? 's' : '') + '</span></legend>' +
             (x.image_url && md !== 'annotate' ? '<img src="' + E(x.image_url) + '" alt="Diagram for question ' + (i + 1) + '" style="max-width:100%;max-height:420px;border-radius:8px">' : '') +
-            (window.BVQT && BVQT.has(x.kind) ? '<div data-qt="' + x.question_id + '"></div>' : drawn ? '<div data-pad="' + x.question_id + '"></div>' :
+            (window.BVQT && BVQT.has(x.kind) ? '<div data-qt="' + x.question_id + '"></div>' : drawn ? '<div data-pad="' + x.question_id + '"></div>' : resp && T.responder ? '<div data-resp="' + x.question_id + '"></div>' :
              x.kind !== 'short' && md === 'dropdown' ? '<select class="qdrop" name="' + name + '"><option value="">Choose an answer…</option>' + opts.map(function (o, j) { return '<option value="' + j + '"' + (String(v) === String(j) ? ' selected' : '') + '>' + 'ABCDEFGH'.charAt(j) + '. ' + E(o) + '</option>'; }).join('') + '</select>' :
              x.kind === 'short' ? '<textarea name="' + name + '" rows="' + (x.marks >= 6 ? 12 : x.marks >= 3 ? 7 : 3) + '" placeholder="Type your answer' + (x.marks >= 3 ? ' (worth ' + x.marks + ' marks: give ' + x.marks + ' clear points)' : '') + '">' + E(T.splitAns ? T.splitAns(v).text : v || '') + '</textarea>' :
               opts.map(function (o, j) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + j + '"' + (String(v) === String(j) ? ' checked' : '') + '> <b>' + 'ABCDEFGH'.charAt(j) + '.</b> ' + (T.opt ? T.opt(o) : E(o)) + '</label>'; }).join('')) + '</fieldset>';
@@ -232,12 +234,14 @@
         var ta = f.querySelector('textarea[name="q-' + x.question_id + '"]'); if (!ta || !T.answerTools) return;
         T.answerTools(ta, T.text(x.prompt), { pics: T.splitAns(saved[x.question_id]).pics, onchange: function () { keep(); push(); } }); });
       qs.forEach(function (x) { var h = f.querySelector('[data-pad="' + x.question_id + '"]'); if (h) pads[x.question_id] = T.pad(h, { mode: MODE[x.question_id] || T.parse(x.prompt).mode, x: T.parse(x.prompt).x, y: T.parse(x.prompt).y, image: x.image_url, value: saved[x.question_id], onchange: function () { keep(); push(); } }); });
+      var resps = {}; qs.forEach(function (x) { var h = f.querySelector('[data-resp="' + x.question_id + '"]'); if (h) resps[x.question_id] = T.responder(h, { mode: MODE[x.question_id], value: saved[x.question_id], quiz: q.id, onchange: function () { keep(); push(true); } }); });
       function collect() { var g = {}; qs.forEach(function (x) {
+        if (resps[x.question_id]) { var rv = resps[x.question_id].get(); if (rv) g[x.question_id] = rv; return; }
         if (QT[x.question_id] != null) { if (QT[x.question_id] !== '') g[x.question_id] = QT[x.question_id]; return; }
         if (pads[x.question_id]) { var d = pads[x.question_id].get(); if (d) g[x.question_id] = d; return; }
         var el = f.querySelector('select[name="q-' + x.question_id + '"]') || f.querySelector('[name="q-' + x.question_id + '"]' + (x.kind === 'short' ? '' : ':checked')); var val = el && x.kind === 'short' && T.answerValue ? T.answerValue(el) : el && el.value; if (el && val !== '') g[x.question_id] = x.kind === 'short' ? val : +val; }); return g; }
       var kt = null; function keep() { clearTimeout(kt); kt = setTimeout(function () { try { localStorage.setItem(key(attempt), JSON.stringify(collect())); } catch (e) {} count(); }, 400); }
-      function count() { var c = app.querySelector('#cnt'); if (!c || sent) return; c.textContent = Object.keys(collect()).length + ' of ' + qs.length + ' answered'; }
+      function count() { var c = app.querySelector('#cnt'); if (!c || sent) return; c.textContent = Object.keys(collect()).length + ' of ' + qs.filter(function (x) { return x.kind !== 'info'; }).length + ' answered'; }
       var pt = null, lastSent = null;   // teacher's live view: answers go to the server every few seconds, plus a heartbeat
       function push(now) { clearTimeout(pt); pt = setTimeout(function () { if (sent) return; var g = collect(), js = JSON.stringify(g);
         S.db.rpc('save_quiz_progress', { attempt: attempt, given: js === lastSent ? null : g }).then(function (r) { if (!r.error) lastSent = js; }, function () {}); }, now ? 0 : 3000); }
@@ -250,7 +254,7 @@
       var sent = false;
       GUARD = watch(q, attempt, f, row, function () { submit(true, 'left'); });
       function submit(auto, why) {
-        if (sent) return; var g = collect(), miss = qs.length - Object.keys(g).length;
+        if (sent) return; var g = collect(), miss = qs.filter(function (x) { return x.kind !== 'info'; }).length - Object.keys(g).length;
         if (!auto && miss && !confirmInline(miss)) return;
         sent = true; clearInterval(timer); clearInterval(beat); clearTimeout(pt); if (TM) { TM.stop(); TM = null; } if (GUARD) GUARD.off(); app.querySelector('#m').className = 'msg'; app.querySelector('#m').textContent = why === 'left' ? 'Handing in because you left the ' + NOUN + ' too many times…' : auto ? 'Time is up. Submitting…' : 'Submitting…';
         S.db.rpc('submit_quiz', { attempt: attempt, given: g }).then(function (res) {
@@ -291,7 +295,9 @@
         '<div class="acts"><a class="btn sm" href="' + BACK + '">All ' + NOUN + 's</a><a class="btn sm" href="/dashboard/">My dashboard</a>' + (canRetry ? '<a class="btn main sm" href="?again=1#' + q.id + '">Try again</a>' : '') + (inSEB() ? '<a class="btn main sm" href="/?seb=quit">Close Safe Exam Browser</a>' : '') + '</div></section>' +
         (hide ? '' : qs.map(function (x, i) { var d = by[x.question_id] || {}, given = (a.answers || {})[x.question_id];
           var ok = d.got != null && +d.got === +d.max, part = d.got != null && +d.got > 0 && !ok;
-          return '<article class="q ' + (d.got == null ? '' : ok ? 'good' : part ? 'part' : 'bad') + '"><div>' + (/^\d+\s*(\([a-z]\)|\.\s)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + T.rich(x.prompt, true) + ' <span class="pill">' + (d.got == null ? 'to be marked' : E(d.got) + ' / ' + E(d.max)) + '</span></div>' +
+          if (x.kind === 'info') return '<div class="q panel tint">' + T.rich(x.prompt) + (x.image_url ? '<img src="' + E(x.image_url) + '" alt="" style="max-width:100%;max-height:360px;border-radius:8px">' : '') + '</div>';
+          var mt = x.meta || {};
+          return '<article class="q ' + (d.got == null ? '' : ok ? 'good' : part ? 'part' : 'bad') + '"><div>' + ('label' in mt ? (mt.label ? '<b>' + E(mt.label) + '</b> ' : '') : /^\d+\s*(\([a-z]\)|\.\s)/i.test(x.prompt || '') ? '' : '<b>' + (i + 1) + '.</b> ') + T.rich(x.prompt, true) + ' <span class="pill">' + (d.got == null ? 'to be marked' : E(d.got) + ' / ' + E(d.max)) + '</span></div>' +
             '<p class="small"><b>Your answer:</b> ' + (given == null || given === '' ? '<i>no answer</i>' : T.isPic(given) ? '<br><img class="hw" alt="Your drawing" src="' + E(given) + '" style="max-width:100%;border:1px solid var(--line);border-radius:8px">' : x.kind === 'short' ? (T.answerHtml ? T.answerHtml(given) : E(given)) : window.BVQT && BVQT.has(x.kind) ? E(BVQT.pretty(x.kind, x.options, given)) : 'ABCDEFGH'.charAt(given) + '. ' + E((x.options || [])[given])) + '</p>' +
             (fb[x.question_id] && T.feedback ? T.feedback(fb[x.question_id]) :   // structured feedback (rules, AI or teacher)
               (d.explanation ? '<p class="small fb ai">' + E(d.explanation) + '</p>' : '') + (d.comment ? '<div class="fb tch"><h4>Teacher comment</h4>' + E(d.comment) + '</div>' : '')) + '</article>'; }).join(''));

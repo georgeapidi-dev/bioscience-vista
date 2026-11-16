@@ -1,11 +1,20 @@
-/* BioscienceVista · Builder (/build/). One place to build exam-style question sets, examinations and interactive lessons.
-   Layout: question list on the left, the question being edited in the middle, settings and a live student preview on the right.
-   Saving always shows the whole item as a student will see it first ("preview before saving").
-   Everything a teacher builds goes into "My assessments and lessons" and can be added to the teacher's own classes.
-   Only the admin can put an item on the main site (quizzes.main_site, migration 038; the database refuses it for anyone else).
-   Lessons open at once as live interactive lessons at /lesson/#id (six inquiry steps, read-aloud, timer, answers after each step).
-   Question kinds: mcq, tf, short (written; also essay with a rubric, graph, drawing, label-the-picture), info, and the ten kinds in
-   site_assets/qtypes.js (multi, match, order, classify, gaps, cloze, number, table, label, hotspot), which need migration 038. */
+/* BioScience Vista Assessment Studio (/build/). Create, edit, preview, publish and analyse assessments and interactive lessons.
+   Dashboard: My assessments, drafts, published, archived, shared with me, the assessment library; search, filters, sorting,
+     duplicate (studio_duplicate), archive / restore, delete (to the Bin), import (PDF / Word question papers, or a .json export).
+   Create: a four-step wizard (details · marking: points, MYP criteria, MYP levels, IB DP, Cambridge · delivery · save and open).
+   Editor, three panels: navigation (sections, 1 · 1(a) · 1(a)(i) numbering, marks, drag-and-drop order, add question / section /
+     content) · the question workspace (rich-text toolbar, pictures, BioScience Vista diagrams, media, answer key and mark scheme)
+     · settings (question: type, marks or marks per MYP criterion, difficulty, numbering, command term, topic, subtopic,
+     curriculum alignment, tags, teacher explanation, student feedback, AI; assessment; live preview). Autosave to this device at
+     once and to the account every 20 seconds; manual save; preview as a student, as a timed examination, or as a printable paper
+     (with or without the mark scheme); 🚀 publish to classes and individual students with opening and closing dates and a link;
+     📊 results: students, questions, topics, criteria and MYP levels, CSV.
+   Question kinds: mcq, tf, short (written; also essay with a rubric, graph, drawing, annotate, and the recorded / uploaded answers
+   audio, video and file: answer styles of a written question, marked by the teacher), info (content; a "group" is an info item
+   that carries a number and is followed by its sub-questions), and the kinds in site_assets/qtypes.js (multi, match, order,
+   classify, gaps, cloze, number, table, label, labelfill, hotspot) marked by the server (migrations 038 and 049).
+   Science tools (site_assets/scitools.js): magnification, statistics, chi-squared, enzyme data, variables, error bars,
+   percentage change, scientific notation and balancing equations; the BioScience Vista diagram library. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), QT = window.BVQT, T = window.BVT;
   var ME, IS_ADMIN = false, HAS_MAIN = true, MYCLASSES = [], ST = null, SEL = 0;
@@ -16,8 +25,17 @@
     ['Choice', [['mcq', '🔘', 'Multiple choice'], ['tf', '✅', 'True or false'], ['multi', '☑️', 'Several correct answers'], ['match', '🔗', 'Match the pairs'], ['order', '🔢', 'Put in order'], ['classify', '🗂️', 'Sort into groups']]],
     ['Fill in', [['gaps', '✍️', 'Fill in the gaps'], ['cloze', '🔽', 'Drop-down in a sentence'], ['number', '🔟', 'Number with unit'], ['table', '▦', 'Complete a table']]],
     ['Written', [['short', '📝', 'Written answer'], ['essay', '📜', 'Extended answer with rubric'], ['graph', '📈', 'Draw a graph'], ['draw', '✏️', 'Draw a diagram'], ['annotate', '🖊️', 'Annotate a picture']]],
-    ['Diagram', [['label', '🏷️', 'Label a diagram'], ['hotspot', '🎯', 'Click the correct part']]],
-    ['Content', [['info', '📖', 'Text, picture or video']]]];
+    ['Diagram', [['label', '🏷️', 'Drag labels onto a diagram'], ['labelfill', '⌨️', 'Type labels on a diagram'], ['hotspot', '🎯', 'Click the correct part']]],
+    ['Response', [['audio', '🎙️', 'Spoken (audio) answer'], ['video', '🎬', 'Video answer'], ['upload', '📎', 'File upload']]],
+    ['Content', [['group', '🧩', 'Group: passage, diagram or data with sub-questions'], ['info', '📖', 'Text, picture or video']]]];
+  var RESP = { audio: 'audio', video: 'video', upload: 'file' };   // builder kind → answer style of a written question (marked by the teacher)
+  var PROGS = ['IB MYP', 'IB DP', 'Cambridge IGCSE', 'Cambridge A Level'];
+  var GRADES = { 'IB MYP': ['MYP 1 (Grade 6)', 'MYP 2 (Grade 7)', 'MYP 3 (Grade 8)', 'MYP 4 (Grade 9)', 'MYP 5 (Grade 10)'], 'IB DP': ['DP 1 (Grade 11)', 'DP 2 (Grade 12)'], 'Cambridge IGCSE': ['Year 10', 'Year 11'], 'Cambridge A Level': ['AS (Year 12)', 'A2 (Year 13)'] };
+  var SUBJECTS = ['Biology', 'Chemistry', 'Physics', 'Sciences (integrated)', 'Environmental Systems and Societies', 'Mathematics'];
+  var MARKING = [['points', 'Points-based marking'], ['myp_criteria', 'MYP criteria A–D (marks per criterion)'], ['myp_levels', 'MYP achievement levels (0–8 per criterion)'], ['dp', 'IB DP examination-style (mark scheme)'], ['cambridge', 'Cambridge examination marking (mark scheme)']];
+  var PURPOSE = [['practice', 'Practice'], ['formative', 'Formative'], ['summative', 'Summative']];
+  var COMMANDS = ['Analyse', 'Annotate', 'Apply', 'Calculate', 'Classify', 'Comment', 'Compare', 'Compare and contrast', 'Construct', 'Contrast', 'Deduce', 'Define', 'Demonstrate', 'Describe', 'Design', 'Determine', 'Discuss', 'Distinguish', 'Draw', 'Estimate', 'Evaluate', 'Explain', 'Formulate', 'Identify', 'Interpret', 'Investigate', 'Justify', 'Label', 'List', 'Measure', 'Outline', 'Predict', 'Present', 'Sketch', 'Solve', 'State', 'Suggest', 'Summarize', 'To what extent'];
+  var CRIT = { A: 'Knowing and understanding', B: 'Inquiring and designing', C: 'Processing and evaluating', D: 'Reflecting on the impacts of science' };
   var KN = {}; KINDS.forEach(function (g) { g[1].forEach(function (k) { KN[k[0]] = k; }); });
   var CSS = '.bd{display:grid;grid-template-columns:250px minmax(0,1fr) 360px;gap:14px;align-items:start}@media (max-width:1100px){.bd{grid-template-columns:1fr}}' +
     '.bd-col{background:var(--card,#fff);border:1px solid var(--line,#dde3ea);border-radius:16px;padding:12px;min-width:0}.bd-col h3{margin:2px 0 10px;font-size:1rem}' +
@@ -39,7 +57,32 @@
     '.bd-kinds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}.bd-kinds button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:2px;place-items:center;text-align:center;padding:10px;border:2px solid #e2e8f0;border-radius:14px;background:var(--card,#fff);font-weight:700}.bd-kinds button span{font-size:1.5rem}.bd-kinds button[aria-checked=true]{border-color:#4f46e5;background:#eef2ff;color:#312e81}.bd-kinds button:focus-visible{outline:3px solid #a5b4fc}@media (max-width:520px){.bd-kinds{grid-template-columns:1fr}}' +
     '.bd-more{border:1px dashed #cbd5e1;border-radius:12px;padding:6px 10px;margin:8px 0;background:#fafbff}.bd-more>summary{cursor:pointer;font-size:.86rem;color:#475569;font-weight:600}.bd-more[open]>summary{margin-bottom:8px}' +
     '.bd-lib{display:grid;gap:10px}.bd-card{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border:1px solid var(--line,#dde3ea);border-left:6px solid var(--k);border-radius:14px;padding:10px 12px;background:var(--card,#fff)}.bd-card h4{margin:0}.bd-card .acts{display:flex;gap:6px;flex-wrap:wrap}@media (max-width:640px){.bd-card{grid-template-columns:1fr}}';
-  var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
+  /* Assessment Studio look: dashboard, wizard, tabs, numbering, print */
+  var CSS2 = '.as-band{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 14px}.as-band h2{margin:0;font-size:1.5rem}.as-band .lab{font:800 .72rem system-ui;letter-spacing:.08em;text-transform:uppercase;color:#0e7490}' +
+    '.as-shell{display:grid;grid-template-columns:210px minmax(0,1fr);gap:16px}@media (max-width:900px){.as-shell{grid-template-columns:1fr}}.as-side{display:grid;gap:2px;align-content:start}.as-side a{display:flex;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;color:inherit;text-decoration:none;font-weight:600}.as-side a[aria-current=true]{background:#ecfeff;color:#0e7490}.as-side a:hover{background:#f1f5f9}.as-side .n{margin-left:auto;font-size:.78rem;color:#64748b}' +
+    '.as-create{position:relative;display:inline-block}.as-menu{position:absolute;z-index:50;top:100%;left:0;margin-top:6px;background:var(--card,#fff);border:1px solid var(--line,#dde3ea);border-radius:12px;box-shadow:0 12px 30px rgba(15,23,42,.18);padding:6px;min-width:250px;display:grid}.as-menu[hidden]{display:none}.as-menu a,.as-menu button{all:unset;cursor:pointer;display:flex;gap:8px;padding:9px 10px;border-radius:8px}.as-menu a:hover,.as-menu button:hover,.as-menu a:focus-visible,.as-menu button:focus-visible{background:#ecfeff}' +
+    '.as-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.as-tools input[type=search],.as-tools select{font:inherit;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#172033}.as-tools input[type=search]{flex:1;min-width:200px}' +
+    '.as-tbl{width:100%;border-collapse:separate;border-spacing:0 6px}.as-tbl th{font:700 .75rem system-ui;text-transform:uppercase;letter-spacing:.05em;color:#64748b;text-align:left;padding:4px 8px;cursor:pointer;white-space:nowrap}.as-tbl td{background:var(--card,#fff);padding:10px 8px;border-top:1px solid var(--line,#e2e8f0);border-bottom:1px solid var(--line,#e2e8f0);vertical-align:middle;font-size:.9rem}.as-tbl td:first-child{border-left:1px solid var(--line,#e2e8f0);border-radius:12px 0 0 12px}.as-tbl td:last-child{border-right:1px solid var(--line,#e2e8f0);border-radius:0 12px 12px 0}' +
+    '.as-tbl td b{display:block}.as-st{display:inline-block;padding:2px 9px;border-radius:999px;font:700 .75rem system-ui}.as-st.pub{background:#dcfce7;color:#166534}.as-st.dr{background:#fef9c3;color:#854d0e}.as-st.ar{background:#e2e8f0;color:#334155}.as-st.sh{background:#e0e7ff;color:#3730a3}@media (max-width:900px){.as-tbl thead{display:none}.as-tbl tr{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line,#e2e8f0);border-radius:12px;margin:8px 0;padding:6px;background:var(--card,#fff)}.as-tbl td{border:0!important;border-radius:0!important;padding:4px 6px}.as-tbl td:first-child{grid-column:1/-1}.as-tbl td[data-l]::before{content:attr(data-l) ": ";color:#64748b;font-size:.75rem;text-transform:capitalize}}' +
+    '.as-kebab{position:relative}.as-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:0 0 14px}.as-stat{border:1px solid var(--line,#e2e8f0);border-radius:14px;padding:10px 12px;background:var(--card,#fff)}.as-stat b{display:block;font-size:1.4rem}.as-stat span{font-size:.8rem;color:#64748b}' +
+    '.wz{max-width:880px;margin:0 auto}.wz-steps{display:flex;gap:6px;margin:0 0 16px;flex-wrap:wrap}.wz-steps span{flex:1;min-width:130px;padding:8px 10px;border-radius:10px;background:#f1f5f9;font-weight:700;font-size:.85rem;color:#64748b}.wz-steps span[aria-current=step]{background:#0e7490;color:#fff}.wz-steps span.done{background:#cffafe;color:#155e75}' +
+    '.wz-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin:4px 0 12px}.wz-cards label{display:flex;gap:8px;align-items:flex-start;border:2px solid #e2e8f0;border-radius:12px;padding:10px;cursor:pointer;background:var(--card,#fff)}.wz-cards label:has(input:checked){border-color:#0e7490;background:#ecfeff}.wz-cards small{display:block;color:#64748b}' +
+    '.as-rtabs{display:flex;gap:4px;margin:-2px 0 10px;border-bottom:1px solid var(--line,#e2e8f0)}.as-rtabs button{all:unset;cursor:pointer;padding:7px 10px;font-weight:700;font-size:.88rem;color:#64748b;border-bottom:3px solid transparent}.as-rtabs button[aria-selected=true]{color:#0e7490;border-color:#0e7490}' +
+    '.bd-sec{display:flex;justify-content:space-between;align-items:center;gap:6px;font:800 .75rem system-ui;letter-spacing:.05em;text-transform:uppercase;color:#0e7490;margin:10px 2px 2px;cursor:pointer}.bd-sec .m{color:#64748b;font-weight:700;text-transform:none;letter-spacing:0}' +
+    '.bd-it.l1{margin-left:16px}.bd-it.l2{margin-left:32px}.bd-it .n.lab{width:auto;min-width:24px;padding:0 6px;border-radius:12px}.bd-it.grp .n{background:#0e7490}.bd-it.drop-before{box-shadow:0 -3px 0 #0e7490}.bd-it[draggable=true]{cursor:grab}' +
+    '.as-save{font-size:.82rem;color:#64748b}.as-save.dirty{color:#b45309}.as-save.ok{color:#15803d}.as-chips{display:flex;gap:4px;flex-wrap:wrap}.as-chips span{background:#ecfeff;color:#155e75;border-radius:999px;padding:2px 8px;font-size:.8rem}.as-chips button{all:unset;cursor:pointer;margin-left:4px;color:#b91c1c}' +
+    '.as-crit{display:flex;gap:6px;flex-wrap:wrap}.as-crit label{display:flex;gap:4px;align-items:center;border:1px solid #cbd5e1;border-radius:10px;padding:4px 6px}.as-crit input[type=number]{width:52px;font:inherit;padding:3px 5px;border:1px solid #cbd5e1;border-radius:8px}' +
+    '.as-sw{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line,#eef2f7)}.as-sw b{display:block;font-size:.9rem}.as-sw small{color:#64748b}.as-sw input{width:40px;height:22px;accent-color:#0e7490}' +
+    '.ex-paper{max-width:820px;margin:0 auto;background:#fff;color:#111;font-family:Georgia,"Times New Roman",serif;padding:28px 34px;border-radius:6px}.ex-paper h1{font-size:1.35rem;text-align:center;margin:0}.ex-paper .meta{text-align:center;margin:4px 0 14px;font-size:.95rem}.ex-paper .ins{border:1px solid #111;padding:8px 12px;margin:0 0 14px;font-size:.92rem}' +
+    '.ex-q{display:grid;grid-template-columns:56px 1fr 46px;gap:6px;margin:10px 0;break-inside:avoid}.ex-q .no{font-weight:700}.ex-q .mk{text-align:right;font-weight:700}.ex-lines div{border-bottom:1px dotted #555;height:26px}.ex-sec{font-weight:700;font-size:1.05rem;margin:18px 0 6px;border-bottom:2px solid #111;padding-bottom:3px}.ex-opt{margin:2px 0 2px 6px}.ex-box{border:1px solid #555;height:180px;margin:6px 0}.ex-ms{background:#f1f5f9;border-left:4px solid #0e7490;padding:6px 10px;margin:4px 0 0;font-family:system-ui;font-size:.85rem}' +
+    '@media print{body *{visibility:hidden!important}.ex-print,.ex-print *{visibility:visible!important}.ex-print{position:absolute;left:0;top:0;width:100%}.ex-print .noprint{display:none!important}.ex-paper{padding:0}}' +
+    '.ex-run{max-width:900px;margin:0 auto}.ex-nav{display:flex;gap:4px;flex-wrap:wrap;margin:8px 0}.ex-nav button{all:unset;cursor:pointer;min-width:28px;text-align:center;padding:4px 6px;border-radius:8px;border:1px solid #cbd5e1;font-size:.82rem}.ex-nav button[aria-current=true]{background:#0e7490;color:#fff;border-color:#0e7490}.ex-nav button.ans{background:#dcfce7}' +
+    '.rs-bar{height:10px;border-radius:6px;background:#e2e8f0;overflow:hidden;min-width:80px}.rs-bar i{display:block;height:100%;background:#0e7490}' +
+    'main.wrap,.wrap{max-width:min(1480px,100%)}.as-tools select,.as-tools input[type=search]{width:auto;min-width:0;padding:8px 10px}.as-tools select{flex:0 1 auto;max-width:200px}.as-side a{font-size:.92rem}.as-tblw{overflow-x:auto}.as-tbl td:first-child{min-width:230px}.as-tbl td{line-height:1.35}' +
+    '.bd-f input,.bd-f select,.bd-f textarea{padding:8px 10px}.as-crit input[type=number]{width:58px!important}.as-chips+input{margin-top:4px}.as-rtabs+div .bd-row>.bd-f{min-width:110px}';
+  var st = document.createElement('style'); st.textContent = CSS + CSS2; document.head.appendChild(st);
+  document.title = 'Assessment Studio · BioScience Vista';
+  if (!window.BVSCI && !document.querySelector('script[src*="scitools.js"]')) { var sci = document.createElement('script'); sci.src = '/assets/scitools.js?v=' + (window.BV_VER || '1'); sci.defer = true; document.head.appendChild(sci); }   // pages built before the studio do not list it
   var missing038 = function (e) { return /main_site|questions_kind_check|violates check constraint|answers_teacher|row-level security/.test(String(e && (e.message || e.details) || e)); };
 
   S.guard(app, { school: true, anyone: true }).then(function (m) {
@@ -51,102 +94,285 @@
 
   function route() {
     var h = location.hash.replace(/^#/, '').split('/');
-    if (h[0] === 'new') return start(CAT[h[1]] ? h[1] : 'quiz');
+    if (h[0] === 'new' && h[2] === 'blank') return start(CAT[h[1]] ? h[1] : 'quiz', true);
+    if (h[0] === 'new' && h[2] === 'ai') return start(CAT[h[1]] ? h[1] : 'quiz');
+    if (h[0] === 'new' && h[2] === 'bank') { start(CAT[h[1]] ? h[1] : 'quiz', true); return bankDialog(); }
+    if (h[0] === 'new') return wizard(CAT[h[1]] ? h[1] : 'exam');
     if (h[0] === 'import') { start('exam', true); return quick(false, 'import'); }
     if (h[0] === 'edit' && /^[0-9a-f-]{36}$/.test(h[1] || '')) return load(h[1]);
-    library();
+    if (h[0] === 'results' && /^[0-9a-f-]{36}$/.test(h[1] || '')) return results(h[1]);
+    studio(VIEWS[h[0]] ? h[0] : 'my');
   }
 
-  /* ================================================================ My assessments and lessons */
-  var FILTER = '';
-  function library() {
-    app.innerHTML = '<p class="muted">Loading your work…</p>';
-    var cols = 'id,title,category,published,created_at,created_by,main_site, quiz_classes(class_id), quiz_questions(question_id)';
-    var q = S.db.from('quizzes').select(cols).order('created_at', { ascending: false }); if (!IS_ADMIN) q = q.eq('created_by', ME.user.id);
-    q.then(function (r) {
-      if (r.error && /main_site/.test(r.error.message || '')) { HAS_MAIN = false; q = S.db.from('quizzes').select(cols.replace(',main_site', '')).order('created_at', { ascending: false }); if (!IS_ADMIN) q = q.eq('created_by', ME.user.id); return q; }
-      return r; }).then(function (r) {
-      var rows = (r.data || []).filter(function (x) { return CAT[x.category] && !(/^Practice: /.test(x.title || '') && !(x.quiz_classes || []).length && x.created_by !== ME.user.id); }), mine = rows.filter(function (x) { return x.created_by === ME.user.id; }), cn = {}; MYCLASSES.forEach(function (c) { cn[c.id] = c.name; });
-      var shown = (IS_ADMIN && FILTER === 'main' ? rows.filter(function (x) { return x.main_site; }) : IS_ADMIN && FILTER === 'others' ? rows.filter(function (x) { return x.created_by !== ME.user.id; }) : mine).filter(function (x) { return !FILTER || FILTER === 'main' || FILTER === 'others' || x.category === FILTER; });
-      app.innerHTML = '<div class="row2 cband" style="--k:#4f46e5"><div><p class="label">Builder</p><h2 style="margin:0">🧰 My assessments and lessons</h2></div></div>' +
-        '<div class="bd-start"><section><h3>Create</h3><div class="bd-tiles">' +
-          '<a class="bd-tile" style="--k:#7c3aed" href="#new/quiz"><span class="ic" aria-hidden="true">📝</span><b>Exam-style questions</b><span>A practice set for a topic</span></a>' +
-          '<a class="bd-tile" style="--k:#db2777" href="#new/exam"><span class="ic" aria-hidden="true">🎓</span><b>Examination</b><span>Timed papers, one attempt</span></a>' +
-          '<a class="bd-tile" style="--k:#0d9488" href="#new/lesson"><span class="ic" aria-hidden="true">🧪</span><b>Interactive lesson</b><span>Six inquiry steps with questions</span></a>' + '</div></section>' +
-          '<section><h3>Bring in questions</h3><div class="bd-tiles">' +
-          '<a class="bd-tile" style="--k:#ea580c" href="#import"><span class="ic" aria-hidden="true">📄</span><b>Import a question paper</b><span>PDF or Word, with its mark scheme</span></a>' +
-          '<a class="bd-tile" style="--k:#0ea5e9" href="#" id=\"gentop\"><span class="ic" aria-hidden="true">🎯</span><b>Generate from topics</b><span>Pick topics from the question bank</span></a>' +
-          '<a class="bd-tile" style="--k:#9333ea" href="/practice/#mine"><span class="ic" aria-hidden="true">🃏</span><b>Revision questions</b><span>Flashcards and quick checks</span></a>' + '</div></section></div>' +
-        '<nav class="tabs" aria-label="Show">' + [['', 'All mine'], ['quiz', '📝 Question sets'], ['exam', '🎓 Examinations'], ['lesson', '🧪 Lessons']].concat(IS_ADMIN ? [['main', '🌐 On the main site'], ['others', '👥 Other teachers\' work']] : []).map(function (t) { return '<a href="#" data-f="' + t[0] + '" aria-selected="' + (FILTER === t[0]) + '">' + t[1] + '</a>'; }).join('') + '</nav>' +
-        '<p class="small muted">' + (IS_ADMIN ? 'You are the admin: tick <b>On the main site</b> to make an item part of the main site, where every teacher can find it and add it to their classes.' : 'What you build stays in your library and in the classes you add it to. Only the admin can put it on the main site.') + '</p>' +
-        '<div class="bd-lib">' + (shown.length ? shown.map(function (x) { var K = CAT[x.category];
-          return '<article class="bd-card" style="--k:' + K[2] + '"><span style="font-size:1.6rem" aria-hidden="true">' + K[0] + '</span><div><h4>' + E(x.title) + '</h4><span class="small muted">' + K[1] + ' · ' + x.quiz_questions.length + ' item' + (x.quiz_questions.length === 1 ? '' : 's') +
-            ' · ' + (x.quiz_classes.length ? 'in ' + E(x.quiz_classes.map(function (c) { return cn[c.class_id] || 'a class'; }).join(', ')) : 'not in a class yet') + (x.main_site ? ' · <b style="color:#4338ca">🌐 main site</b>' : '') + '</span></div>' +
-            '<div class="acts">' + (x.created_by === ME.user.id || IS_ADMIN ? '<a class="btn sm main" href="#edit/' + x.id + '">✏️ Edit</a>' : '') + '<a class="btn sm" href="' + (x.category === 'lesson' ? '/lesson/#' : x.category === 'exam' ? '/exams/#' : '/quizzes/#') + x.id + '" target="_blank" rel="noopener">👁 Open ↗</a>' +
-            (IS_ADMIN && HAS_MAIN ? '<label class="chk small"><input type="checkbox" data-main="' + x.id + '"' + (x.main_site ? ' checked' : '') + '> On the main site</label>' : '') + '</div></article>'; }).join('') :
-          '<p class="emptybox">Nothing here yet. Use the buttons above to build your first ' + (FILTER === 'lesson' ? 'lesson' : FILTER === 'exam' ? 'examination' : 'question set or lesson') + '.</p>') + '</div>';
-      app.querySelectorAll('[data-f]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); FILTER = a.getAttribute('data-f'); library(); }; });
-      var gt = app.querySelector('#gentop'); if (gt) gt.onclick = function (e) { e.preventDefault(); generateDialog(); };
-      app.querySelectorAll('[data-main]').forEach(function (c) { c.onchange = function () { var on = c.checked; S.db.from('quizzes').update({ main_site: on, published: on ? true : undefined }).eq('id', c.getAttribute('data-main')).then(function (r) { if (r.error) { c.checked = !on; c.parentNode.title = S.nice(r.error); c.parentNode.style.color = '#b91c1c'; } }); }; });
+  /* ================================================================ Assessment Studio dashboard
+     My assessments · Drafts · Published · Archived · Shared (other teachers' assessments set for my classes) · Library (the main site)
+     Each row: title, programme, subject, grade, total marks, questions, created, last modified, status, classes; search, filters,
+     sorting, duplicate (studio_duplicate, migration 049), archive / restore, delete (to the Bin for 30 days: bin_item). */
+  var VIEWS = { my: ['🗂️', 'My assessments'], drafts: ['📝', 'Draft assessments'], published: ['✅', 'Published assessments'], archived: ['🗄️', 'Archived assessments'], shared: ['🤝', 'Shared with me'], library: ['🏛️', 'Assessment library'] };
+  var DF = { q: '', prog: '', subj: '', grade: '', cat: '', purpose: '', sort: 'mod' };
+  function statusOf(x) { var m = x.meta || {}; if (m.archived) return 'archived'; if (x.published || (x.quiz_classes || []).some(function (c) { return c.published !== false; })) return 'published'; return 'draft'; }
+  function marksOf(x) { return (x.quiz_questions || []).reduce(function (a, r) { return a + (r.questions && r.questions.kind !== 'info' ? +r.questions.marks || 0 : 0); }, 0); }
+  function countOf(x) { return (x.quiz_questions || []).filter(function (r) { return r.questions && r.questions.kind !== 'info'; }).length; }
+  function day(t) { if (!t) return '–'; var d = new Date(t); return isNaN(d) ? '–' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }); }
+  function studio(view) {
+    app.innerHTML = '<p class="muted">Loading the Assessment Studio…</p>';
+    var cols = 'id,title,category,published,created_at,created_by,main_site,meta,opens_at,due_at,time_limit_minutes,subject,deleted_at, quiz_classes(class_id,published), quiz_questions(question_id, questions(marks,kind))';
+    var mineQ = S.db.from('quizzes').select(cols).eq('created_by', ME.user.id).is('deleted_at', null).order('created_at', { ascending: false });
+    var libQ = view === 'library' ? S.db.from('quizzes').select(cols).eq('main_site', true).eq('published', true).is('deleted_at', null).order('created_at', { ascending: false }).limit(300) : Promise.resolve({ data: [] });
+    var sharedQ = view === 'shared' && MYCLASSES.length ? S.db.from('quiz_classes').select('quiz_id').in('class_id', MYCLASSES.map(function (c) { return c.id; })).then(function (r) {
+      var ids = (r.data || []).map(function (x) { return x.quiz_id; }); return ids.length ? S.db.from('quizzes').select(cols).in('id', ids.slice(0, 300)).neq('created_by', ME.user.id).is('deleted_at', null) : { data: [] }; }) : Promise.resolve({ data: [] });
+    Promise.all([mineQ, libQ, sharedQ]).then(function (rr) {
+      if (rr[0].error && /meta/.test(rr[0].error.message || '')) { app.innerHTML = '<p class="msg">The Assessment Studio needs the database update 049. Ask the admin to run supabase/migrations/049_assessment_studio.sql.</p>'; return; }
+      var mine = (rr[0].data || []).filter(function (x) { return CAT[x.category] && !(/^Practice: /.test(x.title || '') && !(x.quiz_classes || []).length); });
+      var counts = { my: 0, drafts: 0, published: 0, archived: 0 }; mine.forEach(function (x) { var s = statusOf(x); if (s !== 'archived') counts.my++; counts[s === 'draft' ? 'drafts' : s]++; });
+      var rows = view === 'library' ? (rr[1].data || []) : view === 'shared' ? (rr[2].data || []) : mine.filter(function (x) { var s = statusOf(x); return view === 'my' ? s !== 'archived' : view === 'drafts' ? s === 'draft' : view === 'published' ? s === 'published' : s === 'archived'; });
+      var cn = {}; MYCLASSES.forEach(function (c) { cn[c.id] = c.name; });
+      var t = DF.q.trim().toLowerCase(), list = rows.filter(function (x) { var m = x.meta || {};
+        return (!t || [x.title, m.description, m.unit, m.subject || x.subject, m.programme, m.grade].join(' ').toLowerCase().indexOf(t) >= 0) && (!DF.prog || m.programme === DF.prog) && (!DF.subj || (m.subject || x.subject) === DF.subj) && (!DF.grade || m.grade === DF.grade) && (!DF.cat || x.category === DF.cat) && (!DF.purpose || (m.delivery || {}).purpose === DF.purpose); });
+      var key = { mod: function (x) { return -(Date.parse((x.meta || {}).updated_at || x.created_at) || 0); }, created: function (x) { return -(Date.parse(x.created_at) || 0); }, title: function (x) { return String(x.title || '').toLowerCase(); }, marks: function (x) { return -marksOf(x); }, qs: function (x) { return -countOf(x); } }[DF.sort] || function () { return 0; };
+      list.sort(function (a, b) { var ka = key(a), kb = key(b); return ka < kb ? -1 : ka > kb ? 1 : 0; });
+      var opt = function (arr, cur, all) { return '<option value="">' + all + '</option>' + arr.map(function (v) { var val = Array.isArray(v) ? v[0] : v, lab = Array.isArray(v) ? v[1] : v; return '<option value="' + E(val) + '"' + (cur === val ? ' selected' : '') + '>' + E(lab) + '</option>'; }).join(''); };
+      var allGrades = []; PROGS.forEach(function (p) { allGrades = allGrades.concat(GRADES[p]); });
+      app.innerHTML = '<div class="as-band"><div><p class="lab">BioScience Vista</p><h2>🧬 Assessment Studio</h2></div><div class="acts" style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<div class="as-create"><button class="btn main" type="button" id="cr" aria-haspopup="true" aria-expanded="false">＋ Create assessment ▾</button><div class="as-menu" id="crm" hidden role="menu">' +
+            '<a role="menuitem" href="#new/exam">📄 Create from scratch <span class="small muted">(step-by-step)</span></a><a role="menuitem" href="#new/exam/ai">✨ Generate with AI</a><a role="menuitem" href="#import">📥 Import a question paper (PDF / Word)</a>' +
+            '<button role="menuitem" type="button" id="cr-json">🧾 Import a BioScience Vista file (.json)</button><a role="menuitem" href="#library">🏛️ Use from the library</a><a role="menuitem" href="#new/lesson/blank">🧪 Interactive lesson</a></div></div>' +
+          '<a class="btn" href="#new/quiz/bank">📚 Question bank</a><a class="btn" href="/teach/#quizzes">🖊 Marking</a></div></div>' +
+        '<div class="as-stats"><div class="as-stat"><b>' + counts.my + '</b><span>Active assessments</span></div><div class="as-stat"><b>' + counts.drafts + '</b><span>Drafts</span></div><div class="as-stat"><b>' + counts.published + '</b><span>Published</span></div><div class="as-stat"><b>' + mine.reduce(function (a, x) { return a + countOf(x); }, 0) + '</b><span>Questions written</span></div></div>' +
+        '<div class="as-shell"><nav class="as-side" aria-label="Assessments">' + Object.keys(VIEWS).map(function (k) { return '<a href="#' + k + '" aria-current="' + (k === view) + '"><span aria-hidden="true">' + VIEWS[k][0] + '</span>' + VIEWS[k][1] + (counts[k] != null ? '<span class="n">' + counts[k] + '</span>' : '') + '</a>'; }).join('') +
+          '<a href="#new/quiz/bank"><span aria-hidden="true">📚</span>Question bank</a><a href="#import"><span aria-hidden="true">📥</span>Import assessment</a></nav>' +
+        '<section aria-label="' + E(VIEWS[view][1]) + '"><h3 style="margin:0 0 8px">' + VIEWS[view][0] + ' ' + VIEWS[view][1] + ' <span class="small muted">(' + list.length + ')</span></h3>' +
+          '<div class="as-tools"><input type="search" id="fq" placeholder="Search titles, units, subjects…" aria-label="Search" value="' + E(DF.q) + '">' +
+          '<select id="fp" aria-label="Programme">' + opt(PROGS, DF.prog, 'All programmes') + '</select><select id="fs" aria-label="Subject">' + opt(SUBJECTS, DF.subj, 'All subjects') + '</select><select id="fg" aria-label="Grade">' + opt(DF.prog ? GRADES[DF.prog] : allGrades, DF.grade, 'All grades') + '</select>' +
+          '<select id="fc" aria-label="Type">' + opt(Object.keys(CAT).map(function (c) { return [c, CAT[c][1]]; }), DF.cat, 'All types') + '</select><select id="fu" aria-label="Purpose">' + opt(PURPOSE, DF.purpose, 'Any purpose') + '</select>' +
+          '<select id="fo" aria-label="Sort by">' + [['mod', 'Last modified'], ['created', 'Newest'], ['title', 'Title A–Z'], ['marks', 'Most marks'], ['qs', 'Most questions']].map(function (o) { return '<option value="' + o[0] + '"' + (DF.sort === o[0] ? ' selected' : '') + '>Sort: ' + o[1] + '</option>'; }).join('') + '</select></div>' +
+          (list.length ? '<div class="as-tblw"><table class="as-tbl"><thead><tr><th data-s="title">Assessment</th><th>Programme</th><th>Subject</th><th>Grade</th><th data-s="marks">Marks</th><th data-s="qs">Questions</th><th data-s="created">Created</th><th data-s="mod">Modified</th><th>Status</th><th>Classes</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody>' +
+            list.map(function (x) { var m = x.meta || {}, K = CAT[x.category] || CAT.quiz, st = statusOf(x), own = x.created_by === ME.user.id, cls = (x.quiz_classes || []).map(function (c) { return cn[c.class_id]; }).filter(Boolean);
+              var url = (x.category === 'lesson' ? '/lesson/#' : x.category === 'exam' ? '/exams/#' : '/quizzes/#') + x.id;
+              return '<tr><td><b>' + K[0] + ' ' + E(x.title) + '</b><span class="small muted">' + E(K[1]) + (m.unit ? ' · ' + E(m.unit) : '') + ((m.delivery || {}).purpose ? ' · ' + E((m.delivery || {}).purpose) : '') + (x.main_site ? ' · 🌐 main site' : '') + '</span></td>' +
+                '<td>' + E(m.programme || '–') + '</td><td>' + E(m.subject || x.subject || '–') + '</td><td>' + E(m.grade || '–') + '</td><td>' + marksOf(x) + '</td><td>' + countOf(x) + '</td><td>' + day(x.created_at) + '</td><td>' + day(m.updated_at || x.created_at) + '</td>' +
+                '<td><span class="as-st ' + ({ published: 'pub', draft: 'dr', archived: 'ar' }[st]) + '">' + ({ published: 'Published', draft: 'Draft', archived: 'Archived' }[st]) + '</span>' + (view === 'shared' || view === 'library' && !own ? ' <span class="as-st sh">Shared</span>' : '') + '</td>' +
+                '<td>' + (cls.length ? E(cls.join(', ')) : x.quiz_classes && x.quiz_classes.length ? x.quiz_classes.length + ' class' + (x.quiz_classes.length > 1 ? 'es' : '') : '–') + '</td>' +
+                '<td style="white-space:nowrap">' + (own || IS_ADMIN ? '<a class="btn sm main" href="#edit/' + x.id + '">✏️ Edit</a> ' : '') + '<details class="as-kebab" style="display:inline-block"><summary class="btn sm" aria-label="More actions for ' + E(x.title) + '">⋯</summary><div class="as-menu">' +
+                  '<a href="' + url + '" target="_blank" rel="noopener">👁 Student view ↗</a>' + (own || IS_ADMIN ? '<a href="#results/' + x.id + '">📊 Results and analytics</a>' : '') + '<button type="button" data-dup="' + x.id + '">⧉ Duplicate' + (own ? '' : ' to my assessments') + '</button>' +
+                  (own ? (st === 'archived' ? '<button type="button" data-arch="' + x.id + '" data-on="0">♻️ Restore</button>' : '<button type="button" data-arch="' + x.id + '" data-on="1">🗄️ Archive</button>') + '<button type="button" data-del="' + x.id + '" style="color:#b91c1c">🗑 Delete</button>' : '') +
+                  (IS_ADMIN && HAS_MAIN ? '<button type="button" data-main="' + x.id + '" data-on="' + (x.main_site ? 0 : 1) + '">' + (x.main_site ? '🌐 Remove from the main site' : '🌐 Put on the main site') + '</button>' : '') + '</div></details></td></tr>'; }).join('') + '</tbody></table></div>' :
+            '<p class="emptybox">' + (view === 'library' ? 'Nothing in the library matches.' : view === 'shared' ? 'No other teacher has set an assessment for your classes.' : 'Nothing here yet. Use <b>＋ Create assessment</b> to build your first one.') + '</p>') +
+        '</section></div><input type="file" id="jsonf" accept=".json,application/json" hidden>';
+      app.querySelectorAll('.as-tbl').forEach(function (t) { var hs = [].map.call(t.querySelectorAll('thead th'), function (th) { return th.textContent; }); t.querySelectorAll('tbody tr').forEach(function (tr) { [].forEach.call(tr.children, function (td, i) { if (i > 0 && hs[i]) td.setAttribute('data-l', hs[i]); }); }); });   // labels for the phone layout
+      var cr = app.querySelector('#cr'), crm = app.querySelector('#crm');
+      cr.onclick = function (e) { e.stopPropagation(); crm.hidden = !crm.hidden; cr.setAttribute('aria-expanded', !crm.hidden); };
+      document.addEventListener('click', function off() { crm.hidden = true; document.removeEventListener('click', off); });
+      app.querySelector('#cr-json').onclick = function () { app.querySelector('#jsonf').click(); };
+      app.querySelector('#jsonf').onchange = function () { var f = this.files[0]; if (f) importJson(f); };
+      var refilter = function () { DF.q = app.querySelector('#fq').value; DF.prog = app.querySelector('#fp').value; DF.subj = app.querySelector('#fs').value; DF.grade = app.querySelector('#fg').value; DF.cat = app.querySelector('#fc').value; DF.purpose = app.querySelector('#fu').value; DF.sort = app.querySelector('#fo').value; studio(view); };
+      ['#fp', '#fs', '#fg', '#fc', '#fu', '#fo'].forEach(function (sel) { app.querySelector(sel).onchange = refilter; });
+      var fq = app.querySelector('#fq'); fq.oninput = function () { clearTimeout(fq.t); fq.t = setTimeout(function () { var pos = fq.selectionStart; refilter(); var n = app.querySelector('#fq'); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} }, 350); };
+      app.querySelectorAll('th[data-s]').forEach(function (th) { th.onclick = function () { DF.sort = th.getAttribute('data-s'); studio(view); }; });
+      app.querySelectorAll('[data-dup]').forEach(function (b) { b.onclick = function () { b.disabled = true; S.db.rpc('studio_duplicate', { qid: b.getAttribute('data-dup') }).then(function (r) { if (r.error) { toast('⚠ ' + S.nice(r.error)); b.disabled = false; return; } toast('Copied. Opening the copy…'); location.hash = 'edit/' + r.data; }); }; });
+      app.querySelectorAll('[data-arch]').forEach(function (b) { b.onclick = function () { var x = rows.filter(function (y) { return y.id === b.getAttribute('data-arch'); })[0], on = b.getAttribute('data-on') === '1', m = Object.assign({}, x.meta || {}); if (on) { m.archived = true; m.archived_at = new Date().toISOString(); } else { delete m.archived; delete m.archived_at; }
+        S.db.from('quizzes').update({ meta: m }).eq('id', x.id).then(function (r) { if (r.error) return toast('⚠ ' + S.nice(r.error)); toast(on ? 'Archived. Find it under 🗄️ Archived assessments.' : 'Restored.'); studio(view); }); }; });
+      app.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = '🗑 Click again to delete'; return; }
+        S.db.rpc('bin_item', { kind: 'quiz', item: b.getAttribute('data-del') }).then(function (r) { if (r.error) return toast('⚠ ' + S.nice(r.error)); toast('Moved to the 🗑 Bin: restore it from My classes → Bin within 30 days.'); studio(view); }); }; });
+      app.querySelectorAll('[data-main]').forEach(function (b) { b.onclick = function () { var on = b.getAttribute('data-on') === '1'; S.db.from('quizzes').update({ main_site: on, published: on ? true : undefined }).eq('id', b.getAttribute('data-main')).then(function (r) { if (r.error) return toast('⚠ ' + S.nice(r.error)); toast(on ? 'On the main site.' : 'Taken off the main site.'); studio(view); }); }; });
     });
   }
+  function toast(msg) { var t = document.createElement('div'); t.className = 'bd-toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3800); }
+
+  /* ================================================================ Create assessment: a four-step wizard
+     1 details · 2 marking (rubric) · 3 delivery · 4 save and open the editor */
+  function wizard(cat) {
+    var W = { cat: cat === 'lesson' ? 'lesson' : cat, title: '', meta: { description: '', programme: '', subject: '', grade: '', unit: '', marking: 'points', delivery: { mode: 'online', timed: cat === 'exam', purpose: cat === 'exam' ? 'summative' : 'formative' } }, instructions: '', time: cat === 'exam' ? 60 : '', step: 1 };
+    try { var last = JSON.parse(localStorage.getItem('bv-studio-last') || 'null'); if (last) { W.meta.programme = last.programme || ''; W.meta.subject = last.subject || ''; W.meta.grade = last.grade || ''; } } catch (e) {}
+    function draw() {
+      var m = W.meta, d = m.delivery, steps = ['Assessment details', 'Marking', 'Delivery', 'Save and open'];
+      var body = '';
+      if (W.step === 1) body = field('Assessment title', '<input id="w-t" value="' + E(W.title) + '" placeholder="e.g. Grade 10 Biology · Enzymes · Unit test" required>') +
+        field('Description (for you and other teachers)', '<textarea id="w-d" rows="2">' + E(m.description) + '</textarea>') + field('Instructions for students', '<textarea id="w-i" rows="3" placeholder="Answer all questions. Write your answers in the spaces provided. Calculators may be used.">' + E(W.instructions) + '</textarea>') +
+        '<div class="bd-row">' + field('Programme', '<select id="w-p"><option value="">Choose…</option>' + PROGS.map(function (p) { return '<option' + (m.programme === p ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select>') +
+          field('Subject', '<select id="w-s"><option value="">Choose…</option>' + SUBJECTS.map(function (p) { return '<option' + (m.subject === p ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select>') +
+          field('Grade / year', '<select id="w-g"><option value="">Choose…</option>' + (GRADES[m.programme] || []).map(function (p) { return '<option' + (m.grade === p ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select>') + '</div>' +
+        '<div class="bd-row">' + field('Unit / topic', '<input id="w-u" value="' + E(m.unit) + '" placeholder="e.g. Enzymes and metabolism">') + field('Duration (minutes)', '<input id="w-m" type="number" min="1" max="600" value="' + E(W.time) + '" placeholder="no limit">') +
+          field('Type', '<select id="w-c">' + ['exam', 'quiz', 'lesson'].map(function (c) { return '<option value="' + c + '"' + (W.cat === c ? ' selected' : '') + '>' + CAT[c][0] + ' ' + CAT[c][1] + '</option>'; }).join('') + '</select>') + '</div>';
+      if (W.step === 2) body = '<p class="small muted">How the assessment is marked. You can change this later in the editor.</p><div class="wz-cards" role="radiogroup">' + MARKING.map(function (k) {
+          var about = { points: 'Each question has a number of marks; scores add up to a total.', myp_criteria: 'Each question earns marks against MYP criteria A, B, C and D; totals are shown per criterion.', myp_levels: 'Criterion totals are converted to MYP achievement levels 0–8 for each criterion.', dp: 'Paper-style marks with a mark scheme for every question (M1, A1, OWTTE…).', cambridge: 'Cambridge-style marks with a mark scheme and accepted alternatives.' }[k[0]];
+          return '<label><input type="radio" name="w-k" value="' + k[0] + '"' + (m.marking === k[0] ? ' checked' : '') + '><span><b>' + k[1] + '</b><small>' + about + '</small></span></label>'; }).join('') + '</div>' +
+        (/^myp_/.test(m.marking) ? '<fieldset><legend>Criteria assessed</legend>' + Object.keys(CRIT).map(function (c) { return '<label class="chk"><input type="checkbox" name="w-cr" value="' + c + '"' + ((m.criteria || ['A', 'B', 'C', 'D']).indexOf(c) >= 0 ? ' checked' : '') + '> ' + c + ': ' + CRIT[c] + '</label>'; }).join('') + '</fieldset>' : '');
+      if (W.step === 3) body = '<fieldset><legend>How students take it</legend><div class="wz-cards">' + [['online', '💻 Online assessment', 'Students answer on BioScience Vista; objective questions are marked automatically.'], ['paper', '🖨 Printable examination', 'A clean paper with numbering, marks and answer lines; enter marks afterwards.']].map(function (o) { return '<label><input type="radio" name="w-mode" value="' + o[0] + '"' + (d.mode === o[0] ? ' checked' : '') + '><span><b>' + o[1] + '</b><small>' + o[2] + '</small></span></label>'; }).join('') + '</div></fieldset>' +
+        '<fieldset><legend>Purpose</legend><div class="wz-cards">' + PURPOSE.map(function (o) { return '<label><input type="radio" name="w-pu" value="' + o[0] + '"' + (d.purpose === o[0] ? ' checked' : '') + '><span><b>' + o[1] + '</b><small>' + { practice: 'Unlimited tries, answers shown straight away.', formative: 'Feedback to guide learning; scores shown after handing in.', summative: 'One attempt, you release the results.' }[o[0]] + '</small></span></label>'; }).join('') + '</div></fieldset>' +
+        '<label class="chk"><input type="checkbox" id="w-tm"' + (d.timed ? ' checked' : '') + '> ⏱ Timed assessment' + (W.time ? ' (' + E(W.time) + ' minutes)' : ' (set the duration in step 1)') + '</label>';
+      if (W.step === 4) body = '<div class="panel tint"><p><b>' + E(W.title || 'Untitled') + '</b></p><p class="small">' + [m.programme, m.subject, m.grade, m.unit].filter(Boolean).map(E).join(' · ') + '</p><p class="small">' + E((MARKING.filter(function (k) { return k[0] === m.marking; })[0] || [])[1]) + ' · ' + (d.mode === 'paper' ? 'Printable examination' : 'Online assessment') + ' · ' + E(d.purpose) + (d.timed && W.time ? ' · timed, ' + E(W.time) + ' min' : '') + '</p></div>' +
+        '<p>How do you want to start?</p><div class="wz-cards"><label><input type="radio" name="w-go" value="blank" checked><span><b>✏️ Blank: build it myself</b><small>Opens the three-panel editor with Section A ready.</small></span></label><label><input type="radio" name="w-go" value="ai"><span><b>✨ Generate questions with AI</b><small>From a topic, notes, a PDF or images; edit everything before saving.</small></span></label><label><input type="radio" name="w-go" value="bank"><span><b>📚 From the question bank</b><small>Pick questions from the BioScience Vista bank and your own.</small></span></label><label><input type="radio" name="w-go" value="sci"><span><b>🔬 Science data tools</b><small>Chi-squared, statistics, microscopy, enzyme data, variables…</small></span></label></div>';
+      app.innerHTML = '<div class="wz"><p class="label"><a href="#">← Assessment Studio</a></p><h2>Create assessment</h2><div class="wz-steps">' + steps.map(function (s, i) { return '<span' + (W.step === i + 1 ? ' aria-current="step"' : W.step > i + 1 ? ' class="done"' : '') + '>' + (i + 1) + '. ' + s + '</span>'; }).join('') + '</div>' +
+        '<form id="wf" class="panel">' + body + '<p class="msg" id="wm" role="alert"></p><div class="acts" style="display:flex;justify-content:space-between;gap:8px"><button class="btn" type="button" id="wb"' + (W.step === 1 ? ' disabled' : '') + '>← Back</button><button class="btn main" type="submit">' + (W.step === 4 ? 'Save and open the editor →' : 'Next →') + '</button></div></form></div>';
+      var f = app.querySelector('#wf'), val = function (id) { var el = f.querySelector(id); return el ? el.value : null; };
+      if (W.step === 1) { f.querySelector('#w-p').onchange = function () { read(); m.grade = ''; draw(); }; f.querySelector('#w-t').focus(); }
+      if (W.step === 2) f.querySelectorAll('[name=w-k]').forEach(function (r) { r.onchange = function () { read(); draw(); }; });
+      function read() {
+        if (W.step === 1) { W.title = val('#w-t'); m.description = val('#w-d'); W.instructions = val('#w-i'); m.programme = val('#w-p'); m.subject = val('#w-s'); m.grade = val('#w-g') || ''; m.unit = val('#w-u'); W.time = val('#w-m'); W.cat = val('#w-c'); }
+        if (W.step === 2) { var k = f.querySelector('[name=w-k]:checked'); if (k) m.marking = k.value; var cr = f.querySelectorAll('[name=w-cr]'); if (cr.length) m.criteria = [].filter.call(cr, function (c) { return c.checked; }).map(function (c) { return c.value; }); }
+        if (W.step === 3) { d.mode = (f.querySelector('[name=w-mode]:checked') || {}).value || 'online'; d.purpose = (f.querySelector('[name=w-pu]:checked') || {}).value || 'formative'; d.timed = f.querySelector('#w-tm').checked; }
+      }
+      f.querySelector('#wb').onclick = function () { read(); W.step--; draw(); };
+      f.onsubmit = function (e) { e.preventDefault(); read();
+        if (W.step === 1 && !W.title.trim()) { f.querySelector('#wm').textContent = 'Give the assessment a title.'; return; }
+        if (W.step < 4) { W.step++; draw(); return; }
+        var go = (f.querySelector('[name=w-go]:checked') || {}).value || 'blank';
+        try { localStorage.setItem('bv-studio-last', JSON.stringify({ programme: m.programme, subject: m.subject, grade: m.grade })); } catch (x) {}
+        start(W.cat, true);
+        ST.title = W.title.trim(); ST.instructions = W.instructions || ''; ST.time = d.timed ? W.time : ''; ST.meta = JSON.parse(JSON.stringify(m)); ST.subject = /^(Biology|Chemistry|Physics)$/.test(m.subject) && m.programme === 'IB MYP' ? m.subject : '';
+        ST.attempts = d.purpose === 'practice' ? 5 : d.purpose === 'summative' ? 1 : 2; ST.show = d.purpose !== 'summative';
+        if (W.cat !== 'lesson') ST.questions.forEach(function (q) { q.section = 'Section A'; });
+        GEN.objectives = [m.unit, m.description].filter(Boolean).join('. '); var lv = levelFor(m); if (lv) GEN.level = lv;
+        ST.changed = true; draw0();
+        if (go === 'ai') quick(false); else if (go === 'bank') bankDialog(); else if (go === 'sci') sciDialog();
+        save(true).then(function (id) { history.replaceState(null, '', '#edit/' + id); stamp('ok', 'Saved as a draft · questions save as you write them'); }, function (e) { stamp('dirty', 'Not saved yet: ' + S.nice(e)); });
+      };
+    }
+    draw();
+  }
+  function levelFor(m) { var g = m.grade || ''; if (m.programme === 'IB MYP') { var n = /MYP (\d)/.exec(g); return n ? LEVELS[+n[1] - 1] : ''; } if (m.programme === 'IB DP') return 'IB Diploma HL'; if (m.programme === 'Cambridge IGCSE') return 'IGCSE Extended'; if (m.programme === 'Cambridge A Level') return /AS/.test(g) ? 'AS Level' : 'A Level'; return ''; }
 
   /* ================================================================ the item being built */
   function newQ(kind, section) {
-    var q = { id: null, kind: kind, prompt: '', marks: kind === 'info' ? 0 : kind === 'essay' ? 6 : 1, section: section || 'Explore', image: '', options: kind === 'tf' ? ['True', 'False'] : kind === 'mcq' ? ['', '', '', ''] : [], correct: kind === 'tf' ? 0 : -1,
-      model: '', points: '', rubric: '', explanation: '', axes: 'x,y', media: [], crit: '', diff: '' };
-    if (QT && QT.has(kind)) q.draft = QT.blank(kind);
+    var grp = kind === 'group', k = grp ? 'info' : kind;
+    var q = { id: null, kind: k, prompt: '', marks: k === 'info' ? 0 : k === 'essay' ? 6 : RESP[k] ? 4 : 1, section: section || (ST && ST.cat === 'lesson' ? 'Explore' : 'Section A'), image: '', options: k === 'tf' ? ['True', 'False'] : k === 'mcq' ? ['', '', '', ''] : [], correct: k === 'tf' ? 0 : -1,
+      model: '', points: '', rubric: '', explanation: '', feedback: '', axes: 'x,y', media: [], crit: '', diff: '', qm: { topic: '', subtopic: '', command: '', curriculum: '', tags: [], level: 0, crit: {} } };
+    if (grp) { q.qm.group = true; q.prompt = ''; }
+    if (QT && QT.has(k)) q.draft = QT.blank(k);
     return q;
   }
   function start(cat, quiet) {
-    ST = { id: null, cat: cat, title: '', instructions: '', subject: '', time: '', attempts: cat === 'lesson' ? 3 : cat === 'exam' ? 1 : 2, show: cat !== 'exam', main: false, classes: [], questions: [newQ(cat === 'lesson' ? 'info' : 'mcq', cat === 'lesson' ? 'Question' : 'Section A')], changed: false };
+    ST = { id: null, cat: cat, title: '', instructions: '', subject: '', time: '', attempts: cat === 'lesson' ? 3 : cat === 'exam' ? 1 : 2, show: cat !== 'exam', main: false, classes: [], pub: {}, students: [], opens: '', due: '', meta: { marking: 'points', delivery: { mode: 'online', purpose: cat === 'exam' ? 'summative' : 'formative' } }, questions: [], changed: false, ver: 0 };
+    ST.questions = [newQ(cat === 'lesson' ? 'info' : 'mcq', cat === 'lesson' ? 'Question' : 'Section A')];
     SEL = 0; draw(); if (!quiet) quick();   // a new item starts with "Build it for me" (or a blank page)
   }
+  function draw0() { draw(); }
+  function local(id) { return 'bv-studio-draft-' + (id || 'new'); }
   function load(id) {
     app.innerHTML = '<p class="muted">Opening…</p>';
-    Promise.all([S.db.from('quizzes').select('*').eq('id', id).maybeSingle(), S.db.from('quiz_classes').select('class_id').eq('quiz_id', id),
-      S.db.from('quiz_questions').select('position, questions(*, question_answers(*))').eq('quiz_id', id).order('position')]).then(function (x) {
-      var q = x[0].data; if (!q) { app.innerHTML = '<p class="msg">This item was not found, or it is not yours to edit.</p><p><a class="btn" href="#">Back to my library</a></p>'; return; }
-      if (q.created_by !== ME.user.id && !IS_ADMIN) { app.innerHTML = '<p class="msg">Only the teacher who made this item can edit it.</p><p><a class="btn" href="#">Back to my library</a></p>'; return; }
+    Promise.all([S.db.from('quizzes').select('*').eq('id', id).maybeSingle(), S.db.from('quiz_classes').select('class_id,published').eq('quiz_id', id),
+      S.db.from('quiz_questions').select('position, questions(*, question_answers(*))').eq('quiz_id', id).order('position'), S.db.from('quiz_students').select('student_id').eq('quiz_id', id)]).then(function (x) {
+      var q = x[0].data; if (!q) { app.innerHTML = '<p class="msg">This assessment was not found, or it is not yours to edit.</p><p><a class="btn" href="#">Back to the Assessment Studio</a></p>'; return; }
+      if (q.created_by !== ME.user.id && !IS_ADMIN) { app.innerHTML = '<p class="msg">Only the teacher who made this assessment can edit it. Use ⧉ Duplicate in the Assessment Studio to make your own copy.</p><p><a class="btn" href="#">Back to the Assessment Studio</a></p>'; return; }
       HAS_MAIN = 'main_site' in q;
+      var pub = {}; (x[1].data || []).forEach(function (c) { pub[c.class_id] = c.published !== false; });
       ST = { id: q.id, cat: CAT[q.category] ? q.category : 'quiz', title: q.title || '', instructions: q.instructions || '', subject: q.subject || '', time: q.time_limit_minutes || '', attempts: q.max_attempts || 1, show: !!q.show_results, main: !!q.main_site,
-        classes: (x[1].data || []).map(function (c) { return c.class_id; }), questions: [], changed: false, removed: [] };
+        classes: (x[1].data || []).map(function (c) { return c.class_id; }), pub: pub, students: ((x[3] && x[3].data) || []).map(function (s) { return s.student_id; }), opens: q.opens_at || '', due: q.due_at || '', published: !!q.published,
+        meta: q.meta || {}, questions: [], changed: false, removed: [], ver: 0 };
+      if (!ST.meta.delivery) ST.meta.delivery = { mode: 'online', purpose: ST.cat === 'exam' ? 'summative' : 'formative' }; if (!ST.meta.marking) ST.meta.marking = 'points';
       ST.questions = (x[2].data || []).map(function (z) { return fromRow(z.questions || {}); });
-      if (!ST.questions.length) ST.questions.push(newQ(ST.cat === 'lesson' ? 'info' : 'mcq', ST.cat === 'lesson' ? 'Question' : ''));
-      SEL = 0; draw();
+      if (!ST.questions.length) ST.questions.push(newQ(ST.cat === 'lesson' ? 'info' : 'mcq', ST.cat === 'lesson' ? 'Question' : 'Section A'));
+      SEL = 0; draw(); stamp('ok', 'All changes saved');
+      var dr = null; try { dr = JSON.parse(localStorage.getItem(local(id)) || 'null'); } catch (e) {}
+      if (dr && dr.at && dr.st && Date.parse(dr.at) > Date.parse((ST.meta.updated_at || 0)) + 2000) {
+        var bar = document.createElement('div'); bar.className = 'bd-warn'; bar.style.margin = '0 0 10px'; bar.innerHTML = '💾 There are changes on this device from ' + E(new Date(dr.at).toLocaleString()) + ' that were not saved to your account. <button class="btn sm" type="button" data-r>Restore them</button> <button class="btn sm" type="button" data-d>Discard</button>';
+        app.insertBefore(bar, app.firstChild.nextSibling);
+        bar.querySelector('[data-r]').onclick = function () { var keepId = ST.id; ST = dr.st; ST.id = keepId; ST.changed = true; SEL = 0; draw(); stamp('dirty', 'Restored: saving…'); autosave(true); };
+        bar.querySelector('[data-d]').onclick = function () { try { localStorage.removeItem(local(id)); } catch (e) {} bar.remove(); };
+      }
       var tu = null; try { tu = JSON.parse(sessionStorage.getItem('bv-topup') || 'null'); sessionStorage.removeItem('bv-topup'); } catch (e) {}
       if (tu && tu.id === ST.id && tu.n > 0) { GEN.count = tu.n; GEN.types = tu.types; if (tu.crit) GEN.criteria = [tu.crit]; GEN.objectives = 'Questions on: ' + tu.title; genDialog(true, 'The question bank had ' + tu.n + ' fewer questions than you asked for. Build the rest with ✨ AI on the same topics?'); }
     });
   }
 
+  /* ================================================================ numbering: 1 · 1(a) · 1(a)(i); a group (shared passage, diagram or data) takes the number */
+  var ROMAN = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii'];
+  function numbering() {
+    var n = 0, a = 0, r = 0, out = [], top = [];
+    ST.questions.forEach(function (q, i) {
+      var lv = ST.cat === 'lesson' ? 0 : +((q.qm || {}).level) || 0;
+      if (q.kind === 'info') { if ((q.qm || {}).group && ST.cat !== 'lesson') { n++; a = 0; r = 0; out[i] = String(n); top[i] = n; } else { out[i] = ''; top[i] = n; } return; }
+      if (lv <= 0) { n++; a = 0; r = 0; out[i] = String(n); }
+      else if (lv === 1) { if (!n) n = 1; a++; r = 0; out[i] = n + '(' + String.fromCharCode(96 + Math.min(a, 26)) + ')'; }
+      else { if (!n) n = 1; if (!a) a = 1; r++; out[i] = n + '(' + String.fromCharCode(96 + Math.min(a, 26)) + ')(' + (ROMAN[r - 1] || r) + ')'; }
+      top[i] = n;
+    });
+    return { label: out, top: top };
+  }
+  function totals() {
+    var nb = numbering(), byTop = {}, bySec = {}, crit = { A: 0, B: 0, C: 0, D: 0 }, all = 0;
+    ST.questions.forEach(function (q, i) { if (q.kind === 'info') return; var m = +q.marks || 0; all += m; byTop[nb.top[i]] = (byTop[nb.top[i]] || 0) + m; bySec[q.section || ''] = (bySec[q.section || ''] || 0) + m;
+      var c = (q.qm || {}).crit || {}; if (Object.keys(c).length) Object.keys(c).forEach(function (k) { crit[k] = (crit[k] || 0) + (+c[k] || 0); }); else if (q.crit) crit[q.crit] += m; });
+    return { nb: nb, byTop: byTop, bySec: bySec, crit: crit, all: all };
+  }
+
   /* ================================================================ the three panels */
+  var RT = 'q';   // right panel tab: q question settings · a assessment settings · p live preview
   function draw() {
     var K = CAT[ST.cat];
-    app.innerHTML = '<div class="bd-top"><div><p class="label"><a href="#">← My assessments and lessons</a></p><h2>' + K[0] + ' ' + (ST.id ? 'Edit' : 'New') + ' ' + K[1].toLowerCase() + '</h2></div>' +
-      '<div class="acts"><button class="btn" type="button" id="gen" style="background:linear-gradient(120deg,#7c3aed,#db2777);color:#fff;border-color:transparent">✨ Add questions</button><button class="btn" type="button" id="bank" style="background:linear-gradient(120deg,#0ea5e9,#22c55e);color:#fff;border-color:transparent">📚 Question bank</button><button class="btn" type="button" id="pvall">👁 Preview as a student</button><button class="btn main" type="button" id="save">💾 Preview and save</button></div></div>' +
-      '<div class="bd"><aside class="bd-col" aria-label="Questions"><h3>Items <span class="small muted" id="tot"></span></h3><div class="bd-list" id="list"></div>' +
-      '<h3 style="margin-top:14px">＋ Add</h3><div class="bd-pal">' + KINDS.map(function (g, gi) { return '<details' + (gi === 0 ? ' open' : '') + '><summary>' + g[0] + '</summary>' + g[1].map(function (k) { return '<button type="button" data-add="' + k[0] + '">' + k[1] + ' ' + k[2] + '</button>'; }).join('') + '</details>'; }).join('') + '</div></aside>' +
-      '<section class="bd-col" aria-label="Edit the item" id="ed"></section>' +
-      '<aside class="bd-col" aria-label="Settings and preview"><h3>⚙️ Settings</h3><div id="set"></div><h3 style="margin-top:14px">👁 What the student sees</h3><div class="bd-pv" id="pv"></div></aside></div>';
-    app.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = function () { var cur = ST.questions[SEL] || {}; ST.questions.splice(SEL + 1, 0, newQ(b.getAttribute('data-add'), cur.section || (ST.cat === 'lesson' ? 'Explore' : ''))); SEL++; ST.changed = true; list(); editor(); preview(); }; });
-    app.querySelector('#pvall').onclick = function () { overlay(false); };
-    app.querySelector('#gen').onclick = function () { quick(!blankItems()); }; app.querySelector('#bank').onclick = bankDialog;
-    app.querySelector('#save').onclick = function () { overlay(true); };
-    settings(); list(); editor(); preview();
+    app.innerHTML = '<div class="bd-top"><div style="min-width:0"><p class="label"><a href="#">← Assessment Studio</a> · <span id="stamp" class="as-save">' + (ST.id ? '' : 'Not saved yet') + '</span></p><h2 style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + K[0] + ' ' + E(ST.title || (ST.id ? 'Edit' : 'New') + ' ' + K[1].toLowerCase()) + '</h2>' +
+        '<p class="small muted" style="margin:2px 0 0">' + E([ST.meta.programme, ST.meta.subject, ST.meta.grade, ST.meta.unit].filter(Boolean).join(' · ')) + '</p></div>' +
+      '<div class="acts" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" type="button" id="gen" style="background:linear-gradient(120deg,#7c3aed,#db2777);color:#fff;border-color:transparent">✨ AI questions</button><button class="btn" type="button" id="bank">📚 Bank</button><button class="btn" type="button" id="sci">🔬 Science tools</button>' +
+        '<div class="as-create"><button class="btn" type="button" id="pvb" aria-haspopup="true">👁 Preview ▾</button><div class="as-menu" id="pvm" hidden role="menu"><button type="button" role="menuitem" data-pv="student">🎒 Student view (check answers)</button><button type="button" role="menuitem" data-pv="exam">⏱ Examination preview</button><button type="button" role="menuitem" data-pv="print">🖨 Printable view</button><button type="button" role="menuitem" data-pv="ms">🖨 Printable with mark scheme</button><button type="button" role="menuitem" data-pv="json">🧾 Export questions (.json)</button></div></div>' +
+        (ST.id ? '<a class="btn" href="#results/' + ST.id + '">📊 Results</a>' : '') + '<button class="btn" type="button" id="pub">🚀 Publish</button><button class="btn main" type="button" id="save">💾 Save</button></div></div>' +
+      '<div class="bd"><aside class="bd-col" aria-label="Assessment navigation"><h3>Questions <span class="small muted" id="tot"></span></h3><div class="bd-list" id="list"></div>' +
+      '<div class="acts" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px"><button class="btn sm" type="button" id="addq">＋ Question</button>' + (ST.cat === 'lesson' ? '' : '<button class="btn sm" type="button" id="adds">＋ Section</button>') + '<button class="btn sm" type="button" id="addc">＋ Content</button></div>' +
+      '<h3 style="margin-top:14px">＋ Question types</h3><div class="bd-pal" id="pal">' + KINDS.map(function (g, gi) { return '<details' + (gi === 0 ? ' open' : '') + '><summary>' + g[0] + '</summary>' + g[1].map(function (k) { return '<button type="button" data-add="' + k[0] + '">' + k[1] + ' ' + k[2] + '</button>'; }).join('') + '</details>'; }).join('') + '</div></aside>' +
+      '<section class="bd-col" aria-label="Question workspace" id="ed"></section>' +
+      '<aside class="bd-col" aria-label="Settings"><div class="as-rtabs" role="tablist">' + [['q', '⚙️ Question'], ['a', '📋 Assessment'], ['p', '👁 Preview']].map(function (t) { return '<button type="button" role="tab" data-rt="' + t[0] + '" aria-selected="' + (RT === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div><div id="rt"></div></aside></div>';
+    app.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = function () { addKind(b.getAttribute('data-add')); }; });
+    app.querySelector('#addq').onclick = function () { var p = app.querySelector('#pal details'); p.open = true; p.scrollIntoView({ block: 'nearest' }); p.querySelector('button').focus(); };
+    app.querySelector('#addc').onclick = function () { addKind('info'); };
+    var as = app.querySelector('#adds'); if (as) as.onclick = function () { var used = {}; ST.questions.forEach(function (q) { used[q.section] = 1; }); var next = 'Section ' + 'ABCDEFGHIJ'.charAt(Object.keys(used).filter(function (s) { return /^Section [A-J]/.test(s); }).length);
+      var name = prompt('Name of the new section (e.g. "Section B: Structured questions")', next); if (!name) return; var q = newQ('short', name.trim()); ST.questions.push(q); SEL = ST.questions.length - 1; touch(true); };
+    var pvb = app.querySelector('#pvb'), pvm = app.querySelector('#pvm'); pvb.onclick = function (e) { e.stopPropagation(); pvm.hidden = !pvm.hidden; };
+    document.addEventListener('click', function off() { if (pvm) pvm.hidden = true; document.removeEventListener('click', off); });
+    app.querySelectorAll('[data-pv]').forEach(function (b) { b.onclick = function () { var m = b.getAttribute('data-pv'); pvm.hidden = true; if (m === 'student') overlay(false); else if (m === 'exam') examPreview(); else if (m === 'json') exportJson(); else printView(m === 'ms'); }; });
+    app.querySelector('#gen').onclick = function () { quick(!blankItems()); }; app.querySelector('#bank').onclick = bankDialog; app.querySelector('#sci').onclick = sciDialog;
+    app.querySelector('#save').onclick = function () { saveNow(); };
+    app.querySelector('#pub').onclick = publishDialog;
+    app.querySelectorAll('[data-rt]').forEach(function (b) { b.onclick = function () { RT = b.getAttribute('data-rt'); app.querySelectorAll('[data-rt]').forEach(function (x) { x.setAttribute('aria-selected', x === b); }); right(); }; });
+    list(); editor(); right();
   }
-  function label(q) { var t = q.kind === 'info' ? (q.prompt || 'Text, picture or video') : (q.prompt || ''); t = T ? T.text(t) : t; return t.replace(/\s+/g, ' ').trim().slice(0, 60) || '(no question yet)'; }
+  function right() { var box = app.querySelector('#rt'); if (!box) return; if (RT === 'a') { box.innerHTML = '<div id="set"></div>'; settings(); } else if (RT === 'p') { box.innerHTML = '<p class="small muted">What the student sees for this question:</p><div class="bd-pv" id="pv"></div><p style="margin-top:10px"><button class="btn sm" type="button" id="pvall">👁 Preview the whole assessment</button></p>'; preview(); box.querySelector('#pvall').onclick = function () { overlay(false); }; } else qsettings(box); }
+  function addKind(kind) {
+    var cur = ST.questions[SEL] || {}, sec = cur.section || (ST.cat === 'lesson' ? 'Explore' : 'Section A'), lv = cur.qm ? (cur.kind === 'info' && cur.qm.group ? 1 : +cur.qm.level || 0) : 0;
+    var q = newQ(kind, sec); if (q.kind !== 'info') q.qm.level = lv; var add = [q];
+    if (kind === 'group') { var s = newQ('short', sec); s.qm.level = 1; s.marks = 2; add.push(s); }
+    ST.questions.splice.apply(ST.questions, [SEL + 1, 0].concat(add)); SEL++; touch(true);
+  }
+  function label(q) { var t = q.kind === 'info' ? (q.prompt || ((q.qm || {}).group ? 'Shared passage, diagram or data' : 'Text, picture or video')) : (q.prompt || ''); t = T ? T.text(t) : t; return t.replace(/\s+/g, ' ').trim().slice(0, 60) || '(no question yet)'; }
   function list() {
-    var box = app.querySelector('#list'), h = '', last = null, n = 0;
+    var box = app.querySelector('#list'); if (!box) return; var h = '', last = null, tt = totals(), nb = tt.nb;
     ST.questions.forEach(function (q, i) {
-      if (ST.cat === 'lesson' && q.section !== last) { last = q.section; h += '<p class="bd-step">' + E(q.section || 'Explore') + '</p>'; }
-      if (q.kind !== 'info') n++;
-      h += '<button type="button" class="bd-it" data-i="' + i + '" aria-current="' + (i === SEL) + '"><span class="n">' + (q.kind === 'info' ? 'i' : n) + '</span><span><span class="t">' + KN[q.kind][1] + ' ' + E(label(q)) + '</span><br><span class="m">' + (q.ai ? '<b style="color:#b45309">🔎 check me</b> · ' : '') + KN[q.kind][2] + (q.marks ? ' · ' + q.marks + ' mark' + (q.marks > 1 ? 's' : '') : '') + '</span></span><span aria-hidden="true">›</span></button>';
+      if (q.section !== last) { last = q.section; h += ST.cat === 'lesson' ? '<p class="bd-step">' + E(q.section || 'Explore') + '</p>' : '<p class="bd-sec" data-sec="' + E(q.section || '') + '" title="Click to rename this section"><span>' + E(q.section || 'No section') + '</span><span class="m">' + (tt.bySec[q.section || ''] || 0) + ' marks</span></p>'; }
+      var lv = q.kind === 'info' ? 0 : +((q.qm || {}).level) || 0, grp = q.kind === 'info' && (q.qm || {}).group, kn = grp ? KN.group : KN[q.kind] || KN.short, lab = nb.label[i];
+      h += '<button type="button" draggable="true" class="bd-it l' + Math.min(lv, 2) + (grp ? ' grp' : '') + '" data-i="' + i + '" aria-current="' + (i === SEL) + '"><span class="n' + (lab.length > 2 ? ' lab' : '') + '">' + (lab || 'i') + '</span><span><span class="t">' + kn[1] + ' ' + E(label(q)) + '</span><br><span class="m">' +
+        (q.kind === 'info' ? (grp ? 'Group · ' + (tt.byTop[nb.top[i]] || 0) + ' marks' : 'Content') : (q.marks || 0) + ' mark' + (+q.marks === 1 ? '' : 's') + critLine(q) + ((q.qm || {}).command ? ' · ' + E(q.qm.command) : '')) + (q.ai ? ' · 🔎 check' : '') + '</span></span><span class="m" aria-hidden="true">⠿</span></button>';
     });
     box.innerHTML = h;
-    var total = ST.questions.reduce(function (a, q) { return a + (+q.marks || 0); }, 0); app.querySelector('#tot').textContent = '(' + ST.questions.length + ', ' + total + ' marks)';
-    box.querySelectorAll('[data-i]').forEach(function (b) { b.onclick = function () { SEL = +b.getAttribute('data-i'); if (ST.questions[SEL]) ST.questions[SEL].ai = false; list(); editor(); preview(); }; });
+    var t = app.querySelector('#tot'); if (t) t.textContent = '(' + ST.questions.filter(function (q) { return q.kind !== 'info'; }).length + ' · ' + tt.all + ' marks' + (/^myp_/.test(ST.meta.marking) && ['A', 'B', 'C', 'D'].some(function (c) { return tt.crit[c]; }) ? ' · ' + ['A', 'B', 'C', 'D'].filter(function (c) { return tt.crit[c]; }).map(function (c) { return c + ' ' + tt.crit[c]; }).join(' ') : '') + ')';
+    box.querySelectorAll('[data-i]').forEach(function (b) {
+      b.onclick = function () { SEL = +b.getAttribute('data-i'); if (ST.questions[SEL]) ST.questions[SEL].ai = false; list(); editor(); right(); };
+      b.addEventListener('dragstart', function (e) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', b.getAttribute('data-i')); });
+      b.addEventListener('dragover', function (e) { e.preventDefault(); b.classList.add('drop-before'); });
+      b.addEventListener('dragleave', function () { b.classList.remove('drop-before'); });
+      b.addEventListener('drop', function (e) { e.preventDefault(); b.classList.remove('drop-before'); var from = +e.dataTransfer.getData('text/plain'), to = +b.getAttribute('data-i'); if (isNaN(from) || from === to) return;
+        var q = ST.questions.splice(from, 1)[0]; if (from < to) to--; q.section = ST.questions[to] ? ST.questions[to].section : q.section; ST.questions.splice(to, 0, q); SEL = to; touch(true); });
+    });
+    box.querySelectorAll('[data-sec]').forEach(function (p) { p.onclick = function () { var old = p.getAttribute('data-sec'), name = prompt('Rename the section', old); if (name == null || !name.trim()) return; ST.questions.forEach(function (q) { if ((q.section || '') === old) q.section = name.trim(); }); touch(true); }; });
   }
-  function touch() { ST.changed = true; clearTimeout(touch.t); touch.t = setTimeout(function () { list(); preview(); }, 250); }
+  function critLine(q) { var c = (q.qm || {}).crit || {}, ks = Object.keys(c).filter(function (k) { return +c[k] > 0; }); return ks.length ? ' · ' + ks.map(function (k) { return k + c[k]; }).join(' ') : q.crit ? ' · ' + q.crit : ''; }
+  /* every change: redraw the list and preview soon; keep a copy on this device at once; autosave to the account every few seconds */
+  function touch(all) { ST.changed = true; ST.ver = (ST.ver || 0) + 1; stamp('dirty', 'Unsaved changes…'); clearTimeout(touch.t); if (all) { list(); editor(); right(); } else touch.t = setTimeout(function () { list(); if (RT === 'p') preview(); }, 250);
+    clearTimeout(touch.l); touch.l = setTimeout(keepLocal, 600); }
+  function keepLocal() { if (!ST) return; try { localStorage.setItem(local(ST.id), JSON.stringify({ at: new Date().toISOString(), st: ST })); } catch (e) {} }
+  function stamp(cls, text) { var s = document.getElementById('stamp'); if (s) { s.className = 'as-save ' + (cls || ''); s.textContent = (cls === 'ok' ? '✓ ' : cls === 'dirty' ? '● ' : '') + text; } }
+  var SAVING = false;
+  function autosave(force) {
+    if (!ST || SAVING || !ST.changed || !ME) return;
+    if (!ST.title.trim() || check().length) { if (force) stamp('dirty', 'Not saved: ' + (check()[0] || '')); else stamp('dirty', 'Unsaved: finish the question to autosave'); return; }
+    SAVING = true; var ver = ST.ver; stamp('', 'Saving…');
+    save().then(function (id) { SAVING = false; if (ST.ver === ver) ST.changed = false; try { localStorage.removeItem(local(null)); localStorage.removeItem(local(id)); } catch (e) {} if (location.hash !== '#edit/' + id && /^#?(new|import)/.test(location.hash)) history.replaceState(null, '', '#edit/' + id); stamp('ok', 'All changes saved ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })); },
+      function (e) { SAVING = false; stamp('dirty', 'Autosave failed: ' + S.nice(e) + ' (kept on this device)'); });
+  }
+  setInterval(function () { if (ST && ST.changed && /^#?(edit|new)/.test(location.hash || '#new')) autosave(false); }, 20000);
+  function saveNow() {
+    autoFix(); list(); editor(); right(); var p = check();
+    if (p.length) { overlay(true); return; }   // something is missing: the preview lists what to fix
+    ST.changed = true; SAVING = false; autosave(true);
+  }
 
   function pic(o) { return T && T.optPic ? T.optPic(o) : null; }
   function field(lab, html, hint) { return '<label class="bd-f"><span>' + lab + '</span>' + html + (hint ? '<small>' + hint + '</small>' : '') + '</label>'; }
@@ -162,21 +388,81 @@
     var empty = [].slice.call(box.querySelectorAll('.bd-row')).filter(function (r) { return !r.children.length && r !== holder; }); empty.forEach(function (r) { r.remove(); });
   }
   function settings() {
-    var box = app.querySelector('#set'), K = CAT[ST.cat];
-    box.innerHTML = field('Title', '<input id="s-t" value="' + E(ST.title) + '" placeholder="' + (ST.cat === 'lesson' ? 'e.g. Photosynthesis: how plants make food' : 'e.g. Grade 10 · Physics · Electromagnetism') + '">') +
-      field('Instructions for students', '<textarea id="s-i" rows="2">' + E(ST.instructions) + '</textarea>') +
+    var box = app.querySelector('#set'); if (!box) return; var m = ST.meta, d = m.delivery || (m.delivery = {});
+    box.innerHTML = field('Title', '<input id="s-t" value="' + E(ST.title) + '" placeholder="' + (ST.cat === 'lesson' ? 'e.g. Photosynthesis: how plants make food' : 'e.g. Grade 10 · Biology · Enzymes') + '">') +
+      field('Description', '<textarea id="s-d" rows="2">' + E(m.description || '') + '</textarea>') +
+      field('Instructions for students', '<textarea id="s-i" rows="3">' + E(ST.instructions) + '</textarea>') +
+      '<div class="bd-row">' + field('Programme', '<select id="s-p"><option value="">—</option>' + PROGS.map(function (p) { return '<option' + (m.programme === p ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select>') +
+        field('Subject', '<select id="s-su"><option value="">—</option>' + SUBJECTS.map(function (p) { return '<option' + (m.subject === p ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select>') + '</div>' +
+      '<div class="bd-row">' + field('Grade / year', '<select id="s-g"><option value="">—</option>' + (GRADES[m.programme] || []).map(function (p) { return '<option' + (m.grade === p ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select>') + field('Unit / topic', '<input id="s-u" value="' + E(m.unit || '') + '">') + '</div>' +
       '<div class="bd-row">' + field('Type', '<select id="s-c">' + Object.keys(CAT).map(function (c) { return '<option value="' + c + '"' + (ST.cat === c ? ' selected' : '') + '>' + CAT[c][0] + ' ' + CAT[c][1] + '</option>'; }).join('') + '</select>') +
-      field('Subject (Grades 6 to 10)', '<select id="s-s"><option value="">Not Grade 6 to 10 science</option>' + ['Biology', 'Chemistry', 'Physics'].map(function (x) { return '<option' + (ST.subject === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select>') + '</div>' +
-      '<div class="bd-row">' + field('Time (minutes)', '<input id="s-m" type="number" min="1" max="600" value="' + E(ST.time) + '" placeholder="standard">', ST.cat === 'exam' ? 'Handed in at zero.' : 'Warns at zero; extra time is recorded.') + field('Attempts', '<input id="s-a" type="number" min="1" max="10" value="' + E(ST.attempts) + '">') + '</div>' +
+        field('Marking', '<select id="s-k">' + MARKING.map(function (k) { return '<option value="' + k[0] + '"' + (m.marking === k[0] ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select>') + '</div>' +
+      '<div class="bd-row">' + field('Delivery', '<select id="s-dm"><option value="online"' + (d.mode !== 'paper' ? ' selected' : '') + '>💻 Online</option><option value="paper"' + (d.mode === 'paper' ? ' selected' : '') + '>🖨 Printable examination</option></select>') +
+        field('Purpose', '<select id="s-pu">' + PURPOSE.map(function (p) { return '<option value="' + p[0] + '"' + (d.purpose === p[0] ? ' selected' : '') + '>' + p[1] + '</option>'; }).join('') + '</select>') + '</div>' +
+      '<div class="bd-row">' + field('Time limit (minutes)', '<input id="s-m" type="number" min="1" max="600" value="' + E(ST.time) + '" placeholder="none">', ST.cat === 'exam' ? 'Handed in at zero.' : 'Warns at zero; extra time is recorded.') + field('Attempts', '<input id="s-a" type="number" min="1" max="20" value="' + E(ST.attempts) + '">') + '</div>' +
       (ST.cat === 'lesson' ? '' : '<label class="chk"><input type="checkbox" id="s-r"' + (ST.show ? ' checked' : '') + '> Show scores straight after handing in (otherwise you release them)</label>') +
-      '<fieldset style="margin-top:10px"><legend>Add to my classes</legend>' + (MYCLASSES.length ? MYCLASSES.map(function (c) { return '<label class="chk"><input type="checkbox" name="cl" value="' + c.id + '"' + (ST.classes.indexOf(c.id) >= 0 ? ' checked' : '') + '> ' + E(c.name) + '</label>'; }).join('') : '<p class="small muted">You have no classes yet. It stays in your library until you add it to a class.</p>') + '</fieldset>' +
+      field('Subject for Grades 6 to 10 science lists (MYP)', '<select id="s-s"><option value="">Not Grade 6 to 10 science</option>' + ['Biology', 'Chemistry', 'Physics'].map(function (x) { return '<option' + (ST.subject === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select>') +
+      (/^myp_/.test(m.marking) ? critSummary() : '') +
+      '<p class="small" style="margin-top:10px"><button class="btn sm" type="button" id="s-pub">🚀 Classes, dates and access link…</button></p>' +
       (IS_ADMIN && HAS_MAIN ? '<label class="chk" style="margin-top:8px"><input type="checkbox" id="s-main"' + (ST.main ? ' checked' : '') + '> 🌐 On the main site (admin only): every teacher can find it and add it to their classes</label>' : '');
-    tuck(box, ['#s-i', '#s-s', '#s-m', '#s-a', '#s-r'], 'More settings: ' + E(settingsLine()), 'set');
-    var on = function (sel, fn) { var el = box.querySelector(sel); if (el) el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', function () { fn(el); ST.changed = true; }); };
-    on('#s-t', function (el) { ST.title = el.value; }); on('#s-i', function (el) { ST.instructions = el.value; }); on('#s-s', function (el) { ST.subject = el.value; });
-    on('#s-m', function (el) { ST.time = el.value; }); on('#s-a', function (el) { ST.attempts = el.value; }); on('#s-r', function (el) { ST.show = el.checked; }); on('#s-main', function (el) { ST.main = el.checked; });
-    on('#s-c', function (el) { var was = ST.cat; ST.cat = el.value; if ((was === 'lesson') !== (ST.cat === 'lesson')) ST.questions.forEach(function (q) { q.section = ST.cat === 'lesson' ? (STEPS.indexOf(q.section) >= 0 ? q.section : 'Explore') : ''; }); draw(); });
-    box.querySelectorAll('[name=cl]').forEach(function (c) { c.onchange = function () { ST.classes = [].map.call(box.querySelectorAll('[name=cl]:checked'), function (x) { return x.value; }); ST.changed = true; }; });
+    var on = function (sel, fn) { var el = box.querySelector(sel); if (el) el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', function () { fn(el); touch(); }); };
+    on('#s-t', function (el) { ST.title = el.value; }); on('#s-i', function (el) { ST.instructions = el.value; }); on('#s-s', function (el) { ST.subject = el.value; }); on('#s-d', function (el) { m.description = el.value; });
+    on('#s-p', function (el) { m.programme = el.value; m.grade = ''; settings(); }); on('#s-su', function (el) { m.subject = el.value; }); on('#s-g', function (el) { m.grade = el.value; }); on('#s-u', function (el) { m.unit = el.value; });
+    on('#s-k', function (el) { m.marking = el.value; list(); settings(); if (RT === 'q') right(); }); on('#s-dm', function (el) { d.mode = el.value; }); on('#s-pu', function (el) { d.purpose = el.value; });
+    on('#s-m', function (el) { ST.time = el.value; d.timed = !!+el.value; }); on('#s-a', function (el) { ST.attempts = el.value; }); on('#s-r', function (el) { ST.show = el.checked; }); on('#s-main', function (el) { ST.main = el.checked; });
+    on('#s-c', function (el) { var was = ST.cat; ST.cat = el.value; if ((was === 'lesson') !== (ST.cat === 'lesson')) ST.questions.forEach(function (q) { q.section = ST.cat === 'lesson' ? (STEPS.indexOf(q.section) >= 0 ? q.section : 'Explore') : 'Section A'; }); draw(); });
+    box.querySelector('#s-pub').onclick = publishDialog;
+  }
+  function critSummary() { var t = totals().crit; return '<div class="panel tint small" style="margin-top:8px"><b>Criterion totals</b><br>' + ['A', 'B', 'C', 'D'].map(function (c) { return c + ' (' + CRIT[c] + '): <b>' + (t[c] || 0) + '</b>'; }).join('<br>') + (ST.meta.marking === 'myp_levels' ? '<br><span class="muted">Each criterion total is converted to an achievement level 0–8 in the results.</span>' : '') + '</div>'; }
+
+  /* ================================================================ right panel: the selected question's settings */
+  function qsettings(box) {
+    var q = ST.questions[SEL]; if (!q) { box.innerHTML = '<p class="muted">Choose a question on the left.</p>'; return; }
+    var qm = q.qm = q.qm || { tags: [], crit: {} }; qm.tags = qm.tags || []; qm.crit = qm.crit || {};
+    var critMode = /^myp_/.test(ST.meta.marking), info = q.kind === 'info', curKind = info && qm.group ? 'group' : q.kind;
+    var h = field('Question type', '<select id="r-k">' + KINDS.map(function (g) { return '<optgroup label="' + g[0] + '">' + g[1].map(function (k) { return '<option value="' + k[0] + '"' + (curKind === k[0] ? ' selected' : '') + '>' + k[1] + ' ' + k[2] + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select>');
+    if (!info) {
+      h += critMode ? '<div class="bd-f"><span>Marks per criterion</span><div class="as-crit">' + ['A', 'B', 'C', 'D'].map(function (c) { var v = qm.crit[c]; return '<label title="' + CRIT[c] + '"><input type="checkbox" data-cc="' + c + '"' + (v != null ? ' checked' : '') + '> ' + c + ' <input type="number" min="0" max="20" step="0.5" data-cv="' + c + '" value="' + (v == null ? '' : v) + '" placeholder="pts"' + (v == null ? ' disabled' : '') + '></label>'; }).join('') + '</div><small>Total: ' + (q.marks || 0) + ' marks</small></div>'
+        : '<div class="bd-row">' + field('Marks', '<input id="r-mk" type="number" min="0" max="50" step="0.5" value="' + E(q.marks) + '">') + field('MYP criterion', '<select id="r-cr"><option value="">—</option>' + ['A', 'B', 'C', 'D'].map(function (c) { return '<option' + (q.crit === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select>') + '</div>';
+      h += '<div class="bd-row">' + field('Difficulty', '<select id="r-df"><option value="">—</option>' + DIFF.map(function (d, i) { return '<option value="' + (i + 1) + '"' + (+q.diff === i + 1 ? ' selected' : '') + '>' + d + '</option>'; }).join('') + '</select>') +
+        (ST.cat === 'lesson' ? '' : field('Numbering', '<select id="r-lv">' + [['0', 'Main question (1)'], ['1', 'Sub-question (a)'], ['2', 'Sub-part (i)']].map(function (o) { return '<option value="' + o[0] + '"' + (String(+qm.level || 0) === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>')) + '</div>' +
+        field('Command term', '<input id="r-ct" list="r-cts" value="' + E(qm.command || '') + '" placeholder="e.g. Explain"><datalist id="r-cts">' + COMMANDS.map(function (c) { return '<option value="' + c + '">'; }).join('') + '</datalist>');
+    }
+    h += '<div class="bd-row">' + field('Topic', '<input id="r-tp" value="' + E(qm.topic || '') + '" placeholder="e.g. Enzymes">') + field('Subtopic', '<input id="r-st" value="' + E(qm.subtopic || '') + '" placeholder="e.g. Denaturation">') + '</div>' +
+      field('Curriculum alignment', '<input id="r-cu" value="' + E(qm.curriculum || '') + '" placeholder="e.g. IB DP C1.1.10 · MYP criterion A · IGCSE 5.1">') +
+      (ST.cat === 'lesson' ? field('Lesson step', '<select id="r-sec">' + STEPS.map(function (s) { return '<option' + (q.section === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>') : field('Section', '<input id="r-sec" list="r-secs" value="' + E(q.section || '') + '"><datalist id="r-secs">' + uniq(ST.questions.map(function (x) { return x.section; }).concat(['Section A: Multiple choice', 'Section B: Structured questions', 'Section C: Data-based questions', 'Section D: Extended response'])).map(function (s) { return '<option value="' + E(s) + '">'; }).join('') + '</datalist>')) +
+      '<div class="bd-f"><span>Tags</span><div class="as-chips" id="r-tags">' + qm.tags.map(function (t, i) { return '<span>' + E(t) + '<button type="button" data-tx="' + i + '" aria-label="Remove tag ' + E(t) + '">✕</button></span>'; }).join('') + '</div><input id="r-tag" placeholder="Type a tag and press Enter"></div>';
+    if (!info) h += '<div class="as-sw"><span><b>Teacher explanation</b><small>Shown to students after grading</small></span><input type="checkbox" id="r-exs"' + (q.explanation ? ' checked' : '') + ' aria-label="Include a teacher explanation"></div><div id="r-exw"' + (q.explanation ? '' : ' hidden') + '>' + field('', '<textarea id="r-ex" rows="3" aria-label="Teacher explanation">' + E(q.explanation) + '</textarea>') + '</div>' +
+      '<div class="as-sw"><span><b>Student feedback</b><small>How to improve: shown with the student\'s marked answer</small></span><input type="checkbox" id="r-fbs"' + (q.feedback ? ' checked' : '') + ' aria-label="Include student feedback"></div><div id="r-fbw"' + (q.feedback ? '' : ' hidden') + '>' + field('', '<textarea id="r-fb" rows="2" aria-label="Student feedback">' + E(q.feedback) + '</textarea>') + '</div>' +
+      '<div class="as-sw"><span><b>Mark scheme</b><small>Only visible to teachers</small></span><button class="btn sm" type="button" id="r-ms">Edit in the workspace ↓</button></div>' +
+      '<div class="as-sw"><span><b>✨ AI for this question</b><small>Rewrite, change difficulty, write the mark scheme…</small></span><button class="btn sm" type="button" id="r-ai">Open</button></div>';
+    h += '<p class="small" style="margin-top:10px"><button class="btn sm" type="button" id="r-sub">＋ Sub-question</button> <button class="btn sm" type="button" id="r-bank">💾 Saved to your question bank on save</button></p>';
+    box.innerHTML = h;
+    var bind = function (sel, fn, ev) { var el = box.querySelector(sel); if (el) el.addEventListener(ev || (el.tagName === 'SELECT' || el.type === 'checkbox' ? 'change' : 'input'), function () { fn(el.type === 'checkbox' ? el.checked : el.value, el); touch(); }); };
+    bind('#r-k', function (v) { changeKind(q, v); touch(true); });
+    bind('#r-mk', function (v) { q.marks = Math.max(0, +v || 0); }); bind('#r-cr', function (v) { q.crit = v; }); bind('#r-df', function (v) { q.diff = v; });
+    bind('#r-lv', function (v) { qm.level = +v || 0; list(); }); bind('#r-ct', function (v) { qm.command = v.trim(); }); bind('#r-tp', function (v) { qm.topic = v; }); bind('#r-st', function (v) { qm.subtopic = v; }); bind('#r-cu', function (v) { qm.curriculum = v; });
+    bind('#r-sec', function (v) { q.section = v; }, 'change'); bind('#r-ex', function (v) { q.explanation = v; }); bind('#r-fb', function (v) { q.feedback = v; });
+    bind('#r-exs', function (v) { box.querySelector('#r-exw').hidden = !v; if (!v) q.explanation = ''; else box.querySelector('#r-ex').focus(); });
+    bind('#r-fbs', function (v) { box.querySelector('#r-fbw').hidden = !v; if (!v) q.feedback = ''; else box.querySelector('#r-fb').focus(); });
+    box.querySelectorAll('[data-cc]').forEach(function (c) { c.onchange = function () { var k = c.getAttribute('data-cc'), inp = box.querySelector('[data-cv="' + k + '"]'); inp.disabled = !c.checked; if (c.checked) { qm.crit[k] = +inp.value || 1; inp.value = qm.crit[k]; } else delete qm.crit[k]; critSync(q); touch(); right(); }; });
+    box.querySelectorAll('[data-cv]').forEach(function (inp) { inp.oninput = function () { qm.crit[inp.getAttribute('data-cv')] = Math.max(0, +inp.value || 0); critSync(q); touch(); }; });
+    var tg = box.querySelector('#r-tag'); tg.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); var v = tg.value.trim().replace(/,$/, ''); if (v && qm.tags.indexOf(v) < 0) qm.tags.push(v); tg.value = ''; touch(); qsettings(box); box.querySelector('#r-tag').focus(); } };
+    box.querySelectorAll('[data-tx]').forEach(function (b) { b.onclick = function () { qm.tags.splice(+b.getAttribute('data-tx'), 1); touch(); qsettings(box); }; });
+    var ms = box.querySelector('#r-ms'); if (ms) ms.onclick = function () { var t = app.querySelector('#e-mo, #e-pt, #e-auto, #e-opts'); if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'center' }); var f = t.querySelector ? t.querySelector('input,textarea') || t : t; if (f.focus) f.focus(); } };
+    var ai = box.querySelector('#r-ai'); if (ai) ai.onclick = function () { aiOne(q); };
+    box.querySelector('#r-sub').onclick = function () { var s = newQ('short', q.section); s.marks = 2; s.qm.level = Math.min(2, (q.kind === 'info' ? 0 : +qm.level || 0) + 1); var at = SEL + 1; while (ST.questions[at] && ST.questions[at].kind !== 'info' && (+((ST.questions[at].qm || {}).level) || 0) > (q.kind === 'info' ? 0 : +qm.level || 0)) at++; ST.questions.splice(at, 0, s); SEL = at; touch(true); };
+    box.querySelector('#r-bank').onclick = function () { toast('Every question you save is in your question bank (📚 Bank → My questions), ready to reuse in any assessment.'); };
+  }
+  function uniq(a) { var o = []; a.forEach(function (x) { if (x && o.indexOf(x) < 0) o.push(x); }); return o; }
+  function critSync(q) { var c = q.qm.crit, ks = Object.keys(c); if (!ks.length) return; q.marks = ks.reduce(function (a, k) { return a + (+c[k] || 0); }, 0); q.crit = ks.sort(function (a, b) { return c[b] - c[a]; })[0]; }
+  /* change the type of a question, keeping what still fits */
+  function changeKind(q, kind) {
+    var n = newQ(kind, q.section); n.prompt = q.prompt; n.image = q.image; n.media = q.media; n.explanation = q.explanation; n.feedback = q.feedback; n.qm = q.qm; n.id = q.id; n.crit = q.crit; n.diff = q.diff;
+    if (n.kind !== 'info' && q.kind !== 'info') n.marks = q.marks; if (kind === 'group') n.qm.group = true; else if (n.qm) delete n.qm.group;
+    if ((kind === 'mcq' || kind === 'tf') && (q.kind === 'mcq' || q.kind === 'tf') && kind === q.kind) { n.options = q.options; n.correct = q.correct; }
+    if (/^(short|essay|graph|draw|annotate|audio|video|upload)$/.test(kind)) { n.model = q.model; n.points = q.points; n.rubric = q.rubric; }
+    ST.questions[SEL] = n;
   }
 
   function settingsLine() {
@@ -184,28 +470,26 @@
   }
   function editor() {
     var box = app.querySelector('#ed'), q = ST.questions[SEL]; if (!q) { box.innerHTML = '<p class="muted">Add an item from the list on the left.</p>'; return; }
-    var K = KN[q.kind], auto = QT && QT.has(q.kind);
-    var h = '<div class="bd-top"><h3 style="margin:0">' + K[1] + ' ' + K[2] + '</h3><div class="acts"><button type="button" class="btn sm" id="up" ' + (SEL ? '' : 'disabled') + ' aria-label="Move up">▲</button><button type="button" class="btn sm" id="dn" ' + (SEL < ST.questions.length - 1 ? '' : 'disabled') + ' aria-label="Move down">▼</button>' +
-      '<button type="button" class="btn sm" id="dup">⧉ Copy</button><button type="button" class="btn sm" id="del" style="color:#b91c1c">🗑 Remove</button></div></div>';
+    var K = q.kind === 'info' && (q.qm || {}).group ? KN.group : KN[q.kind] || KN.short, auto = QT && QT.has(q.kind), lab = numbering().label[SEL];
+    var h = '<div class="bd-top"><h3 style="margin:0">' + (lab ? '<span class="pill">' + E(lab) + '</span> ' : '') + K[1] + ' ' + K[2] + (q.kind === 'info' ? '' : ' <span class="small muted">[' + (q.marks || 0) + ']</span>') + '</h3><div class="acts"><button type="button" class="btn sm" id="up" ' + (SEL ? '' : 'disabled') + ' aria-label="Move up">▲</button><button type="button" class="btn sm" id="dn" ' + (SEL < ST.questions.length - 1 ? '' : 'disabled') + ' aria-label="Move down">▼</button>' +
+      (ST.cat === 'lesson' || q.kind === 'info' ? '' : '<button type="button" class="btn sm" id="out" aria-label="Less indented (outdent)" title="Outdent">⇤</button><button type="button" class="btn sm" id="in" aria-label="More indented: make it a sub-question" title="Indent: sub-question">⇥</button>') + '<button type="button" class="btn sm" id="dup">⧉ Copy</button><button type="button" class="btn sm" id="del" style="color:#b91c1c">🗑 Remove</button></div></div>';
     if (auto && !HAS_MAIN) h += '<p class="bd-warn">This kind of question can be built and previewed now. It can be saved once the database update for the new question types is run.</p>';
-    h += '<div class="bd-row">' + (ST.cat === 'lesson' ? field('Lesson step', '<select id="e-sec">' + STEPS.map(function (s) { return '<option' + (q.section === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>') : field('Section (optional)', '<input id="e-sec" value="' + E(q.section || '') + '" placeholder="e.g. Section A or Criterion A">')) +
-      (q.kind === 'info' ? '' : field('Marks', '<input id="e-mk" type="number" min="0" max="50" value="' + E(q.marks) + '">') +
-        field('MYP criterion', '<select id="e-cr"><option value="">—</option>' + ['A', 'B', 'C', 'D'].map(function (c) { return '<option' + (q.crit === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select>') +
-        field('Difficulty', '<select id="e-df"><option value="">—</option>' + DIFF.map(function (d, i) { return '<option value="' + (i + 1) + '"' + (+q.diff === i + 1 ? ' selected' : '') + '>' + d + '</option>'; }).join('') + '</select>')) + '</div>' +
-      field(q.kind === 'info' ? 'Text (**bold**, a line starting with • for a list, a YouTube link on its own line shows the video)' : 'Question', '<textarea id="e-p" rows="' + (q.kind === 'info' ? 7 : 3) + '">' + E(q.prompt) + '</textarea>') +
-      (q.kind === 'label' || q.kind === 'hotspot' ? '' : window.BVM ? '<div class="bd-f"><span>' + (q.kind === 'annotate' ? 'Picture students draw and write on' : 'Picture or diagram (optional)') + '</span><div id="e-img"></div></div>' : field('Picture (optional)', '<input id="e-img" type="url" value="' + E(q.image) + '" placeholder="https://… link to a picture">')) + (window.BVM ? '<div class="bd-f"><span>More pictures, video, sound, graphs from data and drawings (optional)</span><div id="e-media"></div></div>' : '');
-    if (q.kind === 'mcq' || q.kind === 'tf') h += '<fieldset><legend>Choices: tick the correct one</legend><div id="e-opts"></div>' + (q.kind === 'mcq' ? '<button type="button" class="bd-add" id="e-oadd">＋ Add a choice</button>' : '') + '</fieldset>' + field('Why the answer is correct (shown in feedback)', '<textarea id="e-ex" rows="2">' + E(q.explanation) + '</textarea>');
-    if (/^(short|essay|graph|draw|annotate)$/.test(q.kind)) {
+    h += '<p class="small muted" style="margin:0 0 6px">Marks, criteria, command term, topic and tags are in ⚙️ Question on the right.</p>' +
+      field(q.kind === 'info' ? ((q.qm || {}).group ? '🧩 Shared passage, data or instructions (students see it above the sub-questions that follow; add the diagram or graph below)' : 'Content (text; a YouTube link on its own line shows the video)') : 'Question content', '<textarea id="e-p" rows="' + (q.kind === 'info' ? 7 : 4) + '" placeholder="Write here. Tables: | a | b | rows. Formatting from the toolbar.">' + E(q.prompt) + '</textarea>') +
+      (q.kind === 'label' || q.kind === 'labelfill' || q.kind === 'hotspot' ? '' : window.BVM ? '<div class="bd-f"><span>' + (q.kind === 'annotate' ? 'Picture students draw and write on' : 'Picture or diagram (optional)') + ' <button type="button" class="btn sm" id="e-lib">🧬 BioScience Vista diagrams</button></span><div id="e-img"></div></div>' : field('Picture (optional)', '<input id="e-img" type="url" value="' + E(q.image) + '" placeholder="https://… link to a picture">')) + (window.BVM ? '<div class="bd-f"><span>More pictures, video, sound, graphs from data and drawings (optional)</span><div id="e-media"></div></div>' : '');
+    if (q.kind === 'mcq' || q.kind === 'tf') h += '<fieldset><legend>Choices: tick the correct one</legend><div id="e-opts"></div>' + (q.kind === 'mcq' ? '<button type="button" class="bd-add" id="e-oadd">＋ Add a choice</button>' : '') + '</fieldset>';
+    if (RESP[q.kind]) h += '<p class="bd-warn">' + { audio: '🎙 Students record a spoken answer in the browser (or upload a sound file).', video: '🎬 Students record a short video (or upload a video file).', upload: '📎 Students upload a document, PDF, spreadsheet, photo, sound or video file (up to 50 MB).' }[q.kind] + ' Answers are private: only the student, their teachers and parents can open them. You mark them in Marking.</p>';
+    if (/^(short|essay|graph|draw|annotate|audio|video|upload)$/.test(q.kind)) {
       if (q.kind === 'graph') h += field('Axis labels (x, y)', '<input id="e-ax" value="' + E(q.axes) + '" placeholder="Time / s, Distance / m">');
-      h += field('Model answer', '<textarea id="e-mo" rows="3">' + E(q.model) + '</textarea>', 'Students see it after they finish (lessons: after each step).') +
+      h += '<h4 style="margin:12px 0 4px">📋 Mark scheme <span class="small muted">(teachers only)</span></h4>' + field('Model answer', '<textarea id="e-mo" rows="3">' + E(q.model) + '</textarea>', 'Students see it after they finish (lessons: after each step).') +
         field('Marking points, one per line', '<textarea id="e-pt" rows="4" placeholder="Releases carbon dioxide: carbon dioxide / CO2\nIt is a greenhouse gas: greenhouse">' + E(q.points) + '</textarea>', 'Write what earns the mark, then a colon and the words that show it, separated by /. Each line is one mark. Answers the rules cannot decide go to you to mark.');
       if (q.kind === 'essay') h += field('Rubric (levels and what each needs)', '<textarea id="e-ru" rows="5" placeholder="1–2: states one relevant point\n3–4: explains with an example\n5–6: evaluates with evidence and a conclusion">' + E(q.rubric) + '</textarea>', 'You mark extended answers with this rubric; the rules only suggest a mark.');
     }
     if (auto) h += '<fieldset><legend>Answer</legend><div id="e-auto"></div><div id="e-prob" class="small" style="color:#b45309;margin-top:6px"></div></fieldset>';
     box.innerHTML = h;
-    tuck(box, ['#e-cr', '#e-df', ST.cat === 'lesson' ? null : '#e-sec', '#e-media', '#e-ex'], 'More options: section, MYP criterion, difficulty, video, sound, feedback', 'ed');
+    tuck(box, ['#e-media'], 'Video, sound, more pictures, graphs from data and drawings', 'ed');
     var bind = function (sel, fn) { var el = box.querySelector(sel); if (el) el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', function () { fn(el.value); touch(); }); };
-    bind('#e-sec', function (v) { q.section = v; }); bind('#e-cr', function (v) { q.crit = v; }); bind('#e-df', function (v) { q.diff = v; }); bind('#e-mk', function (v) { q.marks = Math.max(0, +v || 0); }); bind('#e-p', function (v) { q.prompt = v; }); bind('input#e-img', function (v) { q.image = String(v || '').trim(); if (q.kind === 'label' || q.kind === 'hotspot') { q.draft.image = q.image; editor(); } });
+    bind('#e-sec', function (v) { q.section = v; }); bind('#e-cr', function (v) { q.crit = v; }); bind('#e-df', function (v) { q.diff = v; }); bind('#e-mk', function (v) { q.marks = Math.max(0, +v || 0); }); bind('#e-p', function (v) { q.prompt = v; }); bind('input#e-img', function (v) { q.image = String(v || '').trim(); if (q.kind === 'label' || q.kind === 'labelfill' || q.kind === 'hotspot') { q.draft.image = q.image; editor(); } });
     bind('#e-ex', function (v) { q.explanation = v; }); bind('#e-mo', function (v) { q.model = v; }); bind('#e-pt', function (v) { q.points = v; }); bind('#e-ru', function (v) { q.rubric = v; }); bind('#e-ax', function (v) { q.axes = v; });
     var opts = box.querySelector('#e-opts');
     if (opts) { var drawOpts = function () { opts.innerHTML = q.options.map(function (o, j) { return '<div class="bd-opt"><input type="radio" name="e-ok" value="' + j + '"' + (q.correct === j ? ' checked' : '') + ' aria-label="Choice ' + 'ABCDEFGH'.charAt(j) + ' is correct"><b>' + 'ABCDEFGH'.charAt(j) + '</b>' + (pic(o) ? '<img src="' + E(pic(o).src) + '" alt="" style="height:44px;max-width:80px;object-fit:contain;border-radius:6px;border:1px solid #e2e8f0">' : '') + '<input type="text" data-o="' + j + '" value="' + E(pic(o) ? pic(o).text : o) + '"' + (q.kind === 'tf' ? ' readonly' : '') + ' placeholder="' + (pic(o) ? 'Words under the picture (optional)' : '') + '" aria-label="Choice ' + 'ABCDEFGH'.charAt(j) + '">' +
@@ -217,36 +501,39 @@
         opts.querySelectorAll('[data-o]').forEach(function (t) { t.oninput = function () { var j = +t.getAttribute('data-o'), pc = pic(q.options[j]); q.options[j] = pc ? '[[img:' + pc.src + ']] ' + t.value : t.value; touch(); }; });
         opts.querySelectorAll('[data-ox]').forEach(function (b) { b.onclick = function () { var j = +b.getAttribute('data-ox'); q.options.splice(j, 1); if (q.correct === j) q.correct = -1; else if (q.correct > j) q.correct--; drawOpts(); touch(); }; }); };
       drawOpts(); var oa = box.querySelector('#e-oadd'); if (oa) oa.onclick = function () { if (q.options.length < 8) { q.options.push(''); drawOpts(); } }; }
-    if (auto) { if ((q.kind === 'label' || q.kind === 'hotspot') && !q.draft.image) q.draft.image = q.image;
+    if (auto) { if ((q.kind === 'label' || q.kind === 'labelfill' || q.kind === 'hotspot') && !q.draft.image) q.draft.image = q.image;
       var prob = function () { var p = QT.problems(q.kind, q.draft); box.querySelector('#e-prob').textContent = p.length ? '⚠ ' + p.join(' ') : ''; };
-      box.querySelector('#e-auto').appendChild(QT.editor(q.kind, q.draft, function () { if (q.draft.image && (q.kind === 'label' || q.kind === 'hotspot')) q.image = q.draft.image; prob(); touch(); })); prob(); }
+      box.querySelector('#e-auto').appendChild(QT.editor(q.kind, q.draft, function () { if (q.draft.image && (q.kind === 'label' || q.kind === 'labelfill' || q.kind === 'hotspot')) q.image = q.draft.image; prob(); touch(); })); prob(); }
     if (window.BVM) BVM.editor(box.querySelector('#e-media'), q.media = q.media || [], function () { touch(); }, { uid: ME.user.id });
     var pfh = box.querySelector('div#e-img'); if (pfh && window.BVM) BVM.picField(pfh, { value: q.image || '', uid: ME.user.id, onChange: function (src) { q.image = src; touch(); } });
-    if (window.BVT && BVT.keyboard) { var pta = box.querySelector('#e-p'); if (pta) BVT.writeBar(pta, { table: true }); }
+    var pta = box.querySelector('#e-p'); if (pta && window.BVT) { if (BVT.richBar) BVT.richBar(pta); else if (BVT.writeBar) BVT.writeBar(pta, { table: true }); }
+    var lib = box.querySelector('#e-lib'); if (lib) lib.onclick = function () { if (!window.BVSCI) return toast('The diagram library did not load. Refresh the page.'); BVSCI.pickResource(function (src) { q.image = src; touch(true); }); };
+    var ib = box.querySelector('#in'), ob = box.querySelector('#out'); if (ib) ib.onclick = function () { q.qm = q.qm || {}; q.qm.level = Math.min(2, (+q.qm.level || 0) + 1); touch(true); }; if (ob) ob.onclick = function () { q.qm = q.qm || {}; q.qm.level = Math.max(0, (+q.qm.level || 0) - 1); touch(true); };
     box.querySelector('#up').onclick = function () { move(-1); }; box.querySelector('#dn').onclick = function () { move(1); };
-    box.querySelector('#dup').onclick = function () { var c = JSON.parse(JSON.stringify(q)); c.id = null; ST.questions.splice(SEL + 1, 0, c); SEL++; ST.changed = true; list(); editor(); preview(); };
-    box.querySelector('#del').onclick = function () { if (q.id) (ST.removed = ST.removed || []).push(q.id); ST.questions.splice(SEL, 1); SEL = Math.max(0, SEL - 1); ST.changed = true; list(); editor(); preview(); };
+    box.querySelector('#dup').onclick = function () { var c = JSON.parse(JSON.stringify(q)); c.id = null; ST.questions.splice(SEL + 1, 0, c); SEL++; touch(true); };
+    box.querySelector('#del').onclick = function () { if (q.id) (ST.removed = ST.removed || []).push(q.id); ST.questions.splice(SEL, 1); if (!ST.questions.length) ST.questions.push(newQ('short', 'Section A')); SEL = Math.max(0, SEL - 1); touch(true); };
   }
-  function move(d) { var j = SEL + d; if (j < 0 || j >= ST.questions.length) return; var q = ST.questions.splice(SEL, 1)[0]; ST.questions.splice(j, 0, q); SEL = j; ST.changed = true; list(); editor(); preview(); }
+  function move(d) { var j = SEL + d; if (j < 0 || j >= ST.questions.length) return; var q = ST.questions.splice(SEL, 1)[0]; ST.questions.splice(j, 0, q); SEL = j; touch(true); return; preview(); }
 
   /* ================================================================ how the student sees an item */
   function rich(t) { return T && T.rich ? T.rich(t || '') : '<p>' + E(t || '').replace(/\n/g, '<br>') + '</p>'; }
-  function promptOf(q) { if (!T) return q.prompt; var md = q.media || []; if (q.kind === 'graph') { var a = String(q.axes || '').split(','); return T.join(q.prompt, 'graph', (a[0] || 'x').trim(), (a[1] || 'y').trim(), md); } if (q.kind === 'draw' || q.kind === 'annotate') return T.join(q.prompt, q.kind, '', '', md); var pr = T.parse(q.prompt); return T.join(q.prompt, pr.mode, pr.x, pr.y, md); }
+  function promptOf(q) { if (!T) return q.prompt; var md = q.media || []; if (RESP[q.kind]) return T.join(q.prompt, RESP[q.kind], '', '', md); if (q.kind === 'graph') { var a = String(q.axes || '').split(','); return T.join(q.prompt, 'graph', (a[0] || 'x').trim(), (a[1] || 'y').trim(), md); } if (q.kind === 'draw' || q.kind === 'annotate') return T.join(q.prompt, q.kind, '', '', md); var pr = T.parse(q.prompt); return T.join(q.prompt, pr.mode, pr.x, pr.y, md); }
   function studentView(q, n, onAns) {
     var wrap = document.createElement('div'); wrap.className = 'q';
-    if (q.kind === 'info') { wrap.innerHTML = (q.image ? '<img src="' + E(q.image) + '" alt="" style="max-width:100%;border-radius:10px">' : '') + rich(promptOf(q)); return wrap; }
-    wrap.innerHTML = '<p>' + (/^\d+\s*(\([a-z]\)|\.\s)/i.test(q.prompt || '') ? '' : '<b>' + n + '.</b> ') + rich(T ? T.text(q.prompt) : q.prompt).replace(/^<p>|<\/p>$/g, '') + ' <span class="pill">' + q.marks + ' mark' + (q.marks === 1 ? '' : 's') + '</span></p>' + ((q.media || []).length && T.mediaHtml ? T.mediaHtml(q.media) : '') + (q.image && q.kind !== 'annotate' && q.kind !== 'label' && q.kind !== 'hotspot' ? '<img src="' + E(q.image) + '" alt="" style="max-width:100%;max-height:320px;border-radius:10px">' : '');
+    if (q.kind === 'info') { if ((q.qm || {}).group) wrap.style.cssText = 'border-left:5px solid #0e7490;padding-left:10px'; wrap.innerHTML = (n ? '<p><b>' + E(n) + '</b></p>' : '') + rich(promptOf(q)) + ((q.media || []).length && T.mediaHtml ? T.mediaHtml(q.media) : '') + (q.image ? '<img src="' + E(q.image) + '" alt="" style="max-width:100%;border-radius:10px">' : ''); return wrap; }
+    var lv = +((q.qm || {}).level) || 0; if (lv && ST.cat !== 'lesson') wrap.style.marginLeft = (lv * 18) + 'px';
+    wrap.innerHTML = '<p>' + (/^\d+\s*(\([a-z]\)|\.\s)/i.test(q.prompt || '') || !n ? '' : '<b>' + E(n) + (/\)$/.test(String(n)) ? '' : '.') + '</b> ') + rich(T ? T.text(q.prompt) : q.prompt).replace(/^<p>|<\/p>$/g, '') + ' <span class="pill">' + q.marks + ' mark' + (q.marks === 1 ? '' : 's') + '</span></p>' + ((q.media || []).length && T.mediaHtml ? T.mediaHtml(q.media) : '') + (q.image && q.kind !== 'annotate' && q.kind !== 'label' && q.kind !== 'hotspot' ? '<img src="' + E(q.image) + '" alt="" style="max-width:100%;max-height:320px;border-radius:10px">' : '');
     if (q.kind === 'mcq' || q.kind === 'tf') { q.options.forEach(function (o, j) { var l = document.createElement('label'); l.className = 'opt'; l.innerHTML = '<input type="radio" name="pv' + n + Math.random().toString(36).slice(2, 6) + '" value="' + j + '"> ' + (o ? (T && T.opt ? T.opt(o) : E(o)) : '(empty choice)'); l.querySelector('input').onchange = function () { onAns(j); }; wrap.appendChild(l); }); }
-    else if ((q.kind === 'label' || q.kind === 'hotspot') && !q.draft.image) { var no = document.createElement('p'); no.className = 'small muted'; no.textContent = '🖼 The picture appears here once you add it.'; wrap.appendChild(no); }
+    else if ((q.kind === 'label' || q.kind === 'labelfill' || q.kind === 'hotspot') && !q.draft.image) { var no = document.createElement('p'); no.className = 'small muted'; no.textContent = '🖼 The picture appears here once you add it.'; wrap.appendChild(no); }
     else if (QT && QT.has(q.kind)) { var p = QT.pack(q.kind, q.draft); wrap.appendChild(QT.student(q.kind, p.options, '', onAns)); }
+    else if (RESP[q.kind]) { var rp = document.createElement('div'); rp.className = 'bv-resp'; rp.style.cssText = 'border:1px dashed #94a3b8;border-radius:12px;padding:10px'; rp.innerHTML = '<p class="small muted" style="margin:0 0 6px">' + { audio: '🎙 Record your spoken answer (or upload a sound file).', video: '🎬 Record a short video answer (or upload a video file).', upload: '📎 Upload your work: a document, PDF, spreadsheet, photo, sound or video file.' }[q.kind] + '</p><span class="btn sm" aria-disabled="true">' + (q.kind === 'upload' ? '⬆ Upload a file' : '⏺ Record') + '</span> <span class="small muted">(preview: nothing is recorded or uploaded)</span>'; wrap.appendChild(rp); }
     else if (/^(graph|draw|annotate)$/.test(q.kind) && T && T.pad) { var hp = document.createElement('div'); wrap.appendChild(hp); var a = String(q.axes || '').split(','); try { T.pad(hp, { mode: q.kind, x: (a[0] || 'x').trim(), y: (a[1] || 'y').trim(), image: q.image, onchange: function () { onAns('drawn'); } }); } catch (e) {} }
     else { var ta = document.createElement('textarea'); ta.rows = q.kind === 'essay' ? 8 : q.marks >= 3 ? 5 : 3; ta.placeholder = 'Type your answer'; ta.style.cssText = 'width:100%;box-sizing:border-box;font:inherit;padding:8px;border-radius:10px;border:1px solid #cbd5e1'; ta.oninput = function () { onAns(ta.value); }; wrap.appendChild(ta); }
     return wrap;
   }
   function preview() {
     var box = app.querySelector('#pv'), q = ST.questions[SEL]; if (!box) return; box.innerHTML = ''; if (!q) return;
-    var n = ST.questions.slice(0, SEL + 1).filter(function (x) { return x.kind !== 'info'; }).length;
-    box.appendChild(studentView(q, n, function () {}));
+    box.appendChild(studentView(q, numbering().label[SEL], function () {}));
   }
   function mark(q, a) {   // the same marking the server does for the automatic kinds; written answers are marked after handing in
     if (a == null || a === '') return { got: 0, max: q.marks, text: 'No answer.' };
@@ -256,16 +543,15 @@
   }
   function overlay(saving) {
     var ov = document.createElement('div'); ov.className = 'bd-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Preview');
-    autoFix(); list(); editor(); settings();
-    var inner = document.createElement('div'), K = CAT[ST.cat], answers = {}, probs = check(); ov.appendChild(inner);
+    autoFix(); list(); editor(); right();
+    var inner = document.createElement('div'), K = CAT[ST.cat], answers = {}, probs = check(), NB = numbering().label; ov.appendChild(inner);
     inner.innerHTML = '<div class="bd-top"><div><p class="label">Preview: this is what a student sees</p><h2>' + K[0] + ' ' + E(ST.title || '(no title yet)') + '</h2></div><button class="btn" type="button" data-close>✕ Close</button></div>' + (ST.instructions ? '<p>' + E(ST.instructions) + '</p>' : '') +
       (ST.questions.some(function (q) { return q.ai; }) ? '<div class="bd-warn">🔎 ' + ST.questions.filter(function (q) { return q.ai; }).length + ' automatically built items have not been opened yet. You can save, but please check them first.</div>' : '') + (probs.length ? '<div class="bd-warn"><b>Fix these before saving:</b><ul>' + probs.map(function (p) { return '<li>' + E(p) + '</li>'; }).join('') + '</ul></div>' : '') + '<div id="ovq"></div>' +
       '<div class="acts" style="position:sticky;bottom:0;background:inherit;padding:10px 0"><button class="btn" type="button" id="ovchk">✔ Check my answers</button>' + (saving ? '<button class="btn main" type="button" id="ovsave"' + (probs.length ? ' disabled' : '') + '>💾 Looks right: save</button>' : '') + '<button class="btn" type="button" data-close>Back to editing</button><span class="msg" id="ovm" role="status"></span></div>';
     var qbox = inner.querySelector('#ovq'), n = 0, last = null;
     ST.questions.forEach(function (q, i) {
-      if (ST.cat === 'lesson' && q.section !== last) { last = q.section; var hh = document.createElement('h3'); hh.textContent = (STEPS.indexOf(q.section) + 1) + '. ' + q.section; hh.style.color = '#0d9488'; qbox.appendChild(hh); }
-      if (q.kind !== 'info') n++;
-      var v = studentView(q, n, function (a) { answers[i] = a; }); v.setAttribute('data-i', i); qbox.appendChild(v); });
+      if (q.section !== last && (ST.cat === 'lesson' || q.section)) { last = q.section; var hh = document.createElement('h3'); hh.textContent = ST.cat === 'lesson' ? (STEPS.indexOf(q.section) + 1) + '. ' + q.section : q.section; hh.style.color = '#0e7490'; qbox.appendChild(hh); }
+      var v = studentView(q, NB[i], function (a) { answers[i] = a; }); v.setAttribute('data-i', i); qbox.appendChild(v); });
     inner.querySelector('#ovchk').onclick = function () { var got = 0, max = 0;
       qbox.querySelectorAll('[data-i]').forEach(function (el) { var i = +el.getAttribute('data-i'), q = ST.questions[i]; if (q.kind === 'info') return; var r = mark(q, answers[i]), old = el.querySelector('.res'); if (old) old.remove();
         var p = document.createElement('p'); p.className = 'res ' + (r.got == null ? '' : r.got === r.max ? 'good' : 'bad'); p.textContent = (r.got == null ? '✍ ' : r.got === r.max ? '✔ ' : '✘ ') + (r.got == null ? '' : r.got + ' / ' + r.max + ' · ') + r.text; el.appendChild(p); if (r.got != null) { got += r.got; max += r.max; } });
@@ -641,11 +927,12 @@
   function fromRow(o) {   // a saved question (with its answer key) -> a builder item
     var an = o.question_answers || {}; if (Array.isArray(an)) an = an[0] || {};
     var kind = o.kind, pr = T ? T.parse(o.prompt || '') : { text: o.prompt || '', mode: '', media: [] }, md = pr.mode;
-    if (kind === 'short' && /^(graph|draw|annotate)$/.test(md)) kind = md; else if (kind === 'short' && an.rubric) kind = 'essay';
+    if (kind === 'short' && /^(graph|draw|annotate)$/.test(md)) kind = md; else if (kind === 'short' && /^(audio|video|file)$/.test(md)) kind = md === 'file' ? 'upload' : md; else if (kind === 'short' && an.rubric) kind = 'essay';
     if (!KN[kind]) kind = 'short';
     var out = { id: o.id, kind: kind, prompt: pr.text, media: pr.media || [], crit: o.criterion || '', diff: o.difficulty || '', marks: o.marks || 0, section: o.section || '', image: o.image_url || '', options: Array.isArray(o.options) ? o.options : [], correct: an.correct_option == null ? -1 : an.correct_option,
       model: an.model_answer || an.mark_scheme || '', rubric: an.rubric || '', explanation: an.explanation || '', axes: [pr.x || 'x', pr.y || 'y'].join(','), mode: md,
-      points: (Array.isArray(an.points) ? an.points : []).map(function (p) { return (p.text || '') + ((p.any || []).length ? ': ' + p.any.join(' / ') : ''); }).join('\n') };
+      points: (Array.isArray(an.points) ? an.points : []).map(function (p) { return (p.text || '') + ((p.any || []).length ? ': ' + p.any.join(' / ') : ''); }).join('\n'), feedback: an.improve || '' };
+    var om = o.meta || {}; out.qm = { topic: om.topic || '', subtopic: om.subtopic || '', command: om.command || '', curriculum: om.curriculum || '', tags: om.tags || [], level: +om.level || 0, crit: om.crit || {} }; if (om.group) out.qm.group = true;
     if (QT && QT.has(kind)) out.draft = QT.unpack(kind, o.options, an.accepted);
     if (kind === 'short' && md === 'dropdown') out.prompt = T.join(pr.text, 'dropdown', '', '', []);
     return out;
@@ -883,9 +1170,10 @@
 
   /* ================================================================ saving */
   function points(text) { return String(text || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean).map(function (l) { var i = l.indexOf(':'), t = i > 0 ? l.slice(0, i).trim() : l, w = i > 0 ? l.slice(i + 1).split('/').map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean) : [t.toLowerCase()]; return { text: t, any: w, all: [], marks: 1 }; }); }
-  function rowOf(q) {
-    var dbKind = /^(essay|graph|draw|annotate)$/.test(q.kind) ? 'short' : q.kind, r = { kind: dbKind, prompt: promptOf(q), marks: q.kind === 'info' ? 0 : +q.marks || 0, section: q.section || null, image_url: q.image || null, options: [], criterion: q.kind === 'info' ? null : q.crit || null, difficulty: q.kind === 'info' ? null : +q.diff || null },
-      a = { correct_option: null, model_answer: q.model || null, mark_scheme: q.model || null, explanation: q.explanation || null, rubric: q.rubric || null, points: null, accepted: null };
+  function rowOf(q, lab) {
+    var dbKind = /^(essay|graph|draw|annotate|audio|video|upload)$/.test(q.kind) ? 'short' : q.kind, r = { kind: dbKind, prompt: promptOf(q), marks: q.kind === 'info' ? 0 : +q.marks || 0, section: q.section || null, image_url: q.image || null, options: [], criterion: q.kind === 'info' ? null : q.crit || null, difficulty: q.kind === 'info' ? null : +q.diff || null },
+      a = { correct_option: null, model_answer: q.model || null, mark_scheme: q.model || null, explanation: q.explanation || null, rubric: q.rubric || null, points: null, accepted: null, improve: q.feedback || null };
+    var qm = q.qm || {}; r.meta = { topic: qm.topic || '', subtopic: qm.subtopic || '', command: qm.command || '', curriculum: qm.curriculum || '', tags: qm.tags || [], level: +qm.level || 0, crit: qm.crit || {}, label: lab == null ? '' : lab }; if (qm.group) r.meta.group = true; if (ST.cat === 'lesson') delete r.meta.label;
     if (q.kind === 'mcq' || q.kind === 'tf') { r.options = q.options.map(function (o) { return String(o).trim(); }).filter(function (o, j) { return o || j === q.correct; }); a.correct_option = q.correct; a.model_answer = r.options[q.correct] || null; a.mark_scheme = null; }
     else if (QT && QT.has(q.kind)) { var p = QT.pack(q.kind, q.draft); r.options = p.options; a.accepted = p.accepted; a.model_answer = p.model; a.mark_scheme = p.model; }
     else if (dbKind === 'short') { var pts = points(q.points); a.points = pts.length ? pts : null; }
@@ -900,31 +1188,35 @@
     ST.questions.forEach(function (q) {
       if (isData(q.image)) jobs.push(BVM.persist(q.image, uid).then(function (u) { q.image = u; }));
       (q.media || []).forEach(function (m) { if (isData(m.src)) jobs.push(BVM.persist(m.src, uid).then(function (u) { m.src = u; })); });
-      if (q.draft && isData(q.draft.image)) jobs.push(BVM.persist(q.draft.image, uid).then(function (u) { q.draft.image = u; if (q.kind === 'label' || q.kind === 'hotspot') q.image = u; }));
+      if (q.draft && isData(q.draft.image)) jobs.push(BVM.persist(q.draft.image, uid).then(function (u) { q.draft.image = u; if (q.kind === 'label' || q.kind === 'labelfill' || q.kind === 'hotspot') q.image = u; }));
       (q.options || []).forEach(function (o, j) { var m = /^\[\[img:(data:image\/[^\]]+)\]\]\s*([\s\S]*)$/.exec(String(o)); if (m) jobs.push(BVM.persist(m[1], uid).then(function (u) { q.options[j] = '[[img:' + u + ']] ' + m[2]; })); });
     });
     return Promise.all(jobs);
   }
-  function save() { return uploadPics().then(saveRows); }
-  function saveRows() {
-    var row = { title: ST.title.trim(), category: ST.cat, instructions: ST.instructions.trim() || null, time_limit_minutes: +ST.time || null, max_attempts: Math.max(1, +ST.attempts || 1), show_results: ST.cat === 'lesson' ? true : !!ST.show, feedback_mode: 'hybrid' };
+  function save(shell) { return shell ? saveRows(true) : uploadPics().then(function () { return saveRows(false); }); }
+  function saveRows(shell) {
+    var row = { title: ST.title.trim(), category: ST.cat, instructions: ST.instructions.trim() || null, time_limit_minutes: +ST.time || null, max_attempts: Math.max(1, +ST.attempts || 1), show_results: ST.cat === 'lesson' ? true : !!ST.show, feedback_mode: 'hybrid',
+      meta: Object.assign({}, ST.meta || {}, { updated_at: new Date().toISOString() }), opens_at: ST.opens || null, due_at: ST.due || null };
+    var NB = numbering().label;
     if (ST.subject) row.subject = ST.subject; else if (ST.id) row.subject = null;
     if (IS_ADMIN && HAS_MAIN) { row.main_site = !!ST.main; row.published = !!ST.main; } else if (!ST.id) row.published = false;
     var qid = ST.id;
     return Promise.resolve(ST.id ? S.db.from('quizzes').update(row).eq('id', ST.id).select('id').single() : S.db.from('quizzes').insert(row).select('id').single()).then(must).then(function (r) {
-      qid = r.data.id; ST.id = qid;
+      qid = r.data.id; ST.id = qid; if (shell) return qid;   // the wizard: the assessment exists at once; its questions are saved as they are written
       var ids = [], chain = Promise.resolve();
-      ST.questions.forEach(function (q, i) { chain = chain.then(function () { var x = rowOf(q);
+      ST.questions.forEach(function (q, i) { chain = chain.then(function () { var x = rowOf(q, NB[i]);
         return Promise.resolve(q.id ? S.db.from('questions').update(x.q).eq('id', q.id).select('id').single() : S.db.from('questions').insert(x.q).select('id').single()).then(must).then(function (r2) {
           q.id = r2.data.id; ids[i] = q.id; x.a.question_id = q.id; return S.db.from('question_answers').upsert(x.a, { onConflict: 'question_id' }).then(must); }); }); });
       return chain.then(function () { return S.db.from('quiz_questions').delete().eq('quiz_id', qid).then(must); })
-        .then(function () { return S.db.from('quiz_questions').insert(ids.map(function (id, k) { return { quiz_id: qid, question_id: id, position: k + 1 }; })).then(must); })
+        .then(function () { return ids.length ? S.db.from('quiz_questions').insert(ids.map(function (id, k) { return { quiz_id: qid, question_id: id, position: k + 1 }; })).then(must) : null; })
         .then(function () { var gone = (ST.removed || []).filter(function (id) { return ids.indexOf(id) < 0; }); ST.removed = []; return gone.length ? S.db.from('questions').delete().in('id', gone) : null; })
-        .then(function () { return S.db.from('quiz_classes').select('class_id').eq('quiz_id', qid); })
-        .then(function (r3) { var have = (r3.data || []).map(function (c) { return c.class_id; }), mine = MYCLASSES.map(function (c) { return c.id; }),
-            add = ST.classes.filter(function (c) { return have.indexOf(c) < 0; }), drop = have.filter(function (c) { return mine.indexOf(c) >= 0 && ST.classes.indexOf(c) < 0; });
-          return Promise.all([add.length ? S.db.from('quiz_classes').insert(add.map(function (c) { return { quiz_id: qid, class_id: c, published: true, published_at: new Date().toISOString(), published_by: ME.user.id }; })).then(must) : null,
-            drop.length ? S.db.from('quiz_classes').delete().eq('quiz_id', qid).in('class_id', drop).then(must) : null]); })
+        .then(function () { return S.db.from('quiz_classes').select('class_id,published').eq('quiz_id', qid); })
+        .then(function (r3) { var have = {}, mine = MYCLASSES.map(function (c) { return c.id; }), now = new Date().toISOString(), pubOf = function (c) { return !ST.pub || ST.pub[c] !== false; }; (r3.data || []).forEach(function (c) { have[c.class_id] = c.published !== false; });
+            var add = ST.classes.filter(function (c) { return !(c in have); }), drop = Object.keys(have).filter(function (c) { return mine.indexOf(c) >= 0 && ST.classes.indexOf(c) < 0; }), flip = ST.classes.filter(function (c) { return c in have && have[c] !== pubOf(c); });
+          return Promise.all([add.length ? S.db.from('quiz_classes').insert(add.map(function (c) { return { quiz_id: qid, class_id: c, published: pubOf(c), published_at: pubOf(c) ? now : null, published_by: ME.user.id }; })).then(must) : null,
+            drop.length ? S.db.from('quiz_classes').delete().eq('quiz_id', qid).in('class_id', drop).then(must) : null].concat(flip.map(function (c) { return S.db.from('quiz_classes').update({ published: pubOf(c), published_at: pubOf(c) ? now : null, published_by: ME.user.id }).eq('quiz_id', qid).eq('class_id', c).then(must); }))); })
+        .then(function () { if (!ST.studentsTouched) return null; ST.studentsTouched = false; return S.db.from('quiz_students').select('student_id').eq('quiz_id', qid).then(function (r4) { var have = (r4.data || []).map(function (x) { return x.student_id; }), add = (ST.students || []).filter(function (x) { return have.indexOf(x) < 0; }), drop = have.filter(function (x) { return (ST.students || []).indexOf(x) < 0; });
+            return Promise.all([add.length ? S.db.from('quiz_students').insert(add.map(function (x) { return { quiz_id: qid, student_id: x }; })).then(must) : null, drop.length ? S.db.from('quiz_students').delete().eq('quiz_id', qid).in('student_id', drop).then(must) : null]); }); })
         .then(function () {   // admin lessons on the main site also get an entry in the Learning centre (as the old lesson maker did)
           if (!(IS_ADMIN && ST.cat === 'lesson')) return qid;
           var marks = ST.questions.reduce(function (a, q) { return a + (q.kind === 'info' ? 0 : +q.marks || 0); }, 0);
@@ -941,5 +1233,239 @@
     n.querySelector('[data-x]').onclick = function () { n.remove(); }; n.querySelectorAll('a[href="#"]').forEach(function (a) { a.onclick = function () { n.remove(); }; });
     document.body.appendChild(n);
   }
-  window.addEventListener('beforeunload', function (e) { if (ST && ST.changed) { e.preventDefault(); e.returnValue = ''; } });
+
+  /* ================================================================ 🚀 Publish and deliver
+     classes (published or not, per class), individual students, opening and closing dates, time limit, attempts, results,
+     the student access link. Saved straight away. */
+  function dl(v) { if (!v) return ''; var d = new Date(v); if (isNaN(d)) return ''; var z = function (n) { return (n < 10 ? '0' : '') + n; }; return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + 'T' + z(d.getHours()) + ':' + z(d.getMinutes()); }
+  function accessUrl() { return location.origin + (ST.cat === 'lesson' ? '/lesson/#' : ST.cat === 'exam' ? '/exams/#' : '/quizzes/#') + (ST.id || ''); }
+  function publishDialog() {
+    var ov = document.createElement('div'); ov.className = 'bd-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Publish and deliver');
+    var inner = document.createElement('div'); ov.appendChild(inner); var sel = {}, pub = {}, studs = (ST.students || []).slice();
+    ST.classes.forEach(function (c) { sel[c] = true; pub[c] = !ST.pub || ST.pub[c] !== false; });
+    inner.innerHTML = '<div class="bd-top"><div><p class="label">Publishing and delivery</p><h2>🚀 ' + E(ST.title || 'Untitled') + '</h2></div><button class="btn" type="button" data-x>✕ Close</button></div>' +
+      '<fieldset><legend>Classes</legend>' + (MYCLASSES.length ? MYCLASSES.map(function (c) { return '<div class="as-sw"><label class="chk" style="margin:0"><input type="checkbox" data-c="' + c.id + '"' + (sel[c.id] ? ' checked' : '') + '> ' + E(c.name) + '</label><label class="chk small" style="margin:0"><input type="checkbox" data-p="' + c.id + '"' + (pub[c.id] ? ' checked' : '') + (sel[c.id] ? '' : ' disabled') + '> Published (students see it)</label></div>'; }).join('') : '<p class="small muted">You have no classes yet. Make one in My classes.</p>') + '</fieldset>' +
+      '<fieldset><legend>Individual students <span class="small muted" id="nst"></span></legend><input type="search" id="sq" placeholder="Find a student in your classes" aria-label="Find a student" style="width:100%;box-sizing:border-box;padding:7px 9px;border:1px solid #cbd5e1;border-radius:10px;font:inherit"><div id="sl" style="max-height:180px;overflow:auto;margin-top:6px" class="small muted">Loading your students…</div></fieldset>' +
+      '<div class="bd-row">' + field('Opens', '<input type="datetime-local" id="po" value="' + dl(ST.opens) + '">', 'Empty: open as soon as it is published.') + field('Closes / submission deadline', '<input type="datetime-local" id="pd" value="' + dl(ST.due) + '">', 'Empty: no deadline.') + '</div>' +
+      '<div class="bd-row">' + field('Time limit (minutes)', '<input type="number" id="pt" min="1" max="600" value="' + E(ST.time) + '" placeholder="none">') + field('Attempts allowed', '<input type="number" id="pa" min="1" max="20" value="' + E(ST.attempts) + '">') + '</div>' +
+      (ST.cat === 'lesson' ? '' : '<label class="chk"><input type="checkbox" id="pr"' + (ST.show ? ' checked' : '') + '> Show scores straight after handing in (otherwise release them from Marking)</label>') +
+      '<div class="bd-f"><span>Student access link</span><div style="display:flex;gap:6px"><input id="pl" readonly value="' + E(ST.id ? accessUrl() : 'Save first to get the link') + '"><button class="btn sm" type="button" id="pc"' + (ST.id ? '' : ' disabled') + '>📋 Copy</button></div><small>Students sign in and see it if it is published for their class or set for them.' + (ST.cat === 'exam' && ST.id ? ' Exam security (full screen, Safe Exam Browser) is set in <a href="/teach/#quizzes/' + ST.id + '" target="_blank" rel="noopener">My classes ↗</a>.' : '') + '</small></div>' +
+      '<p class="msg" id="pm" role="alert"></p><div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn main" type="button" id="pgo">🚀 Publish to the ticked classes</button><button class="btn" type="button" id="psave">💾 Save settings</button><button class="btn" type="button" id="poff">⏸ Unpublish everywhere</button></div>';
+    var $ = function (s) { return inner.querySelector(s); }, close = function () { ov.remove(); };
+    inner.querySelectorAll('[data-c]').forEach(function (c) { c.onchange = function () { var id = c.getAttribute('data-c'), p = inner.querySelector('[data-p="' + id + '"]'); sel[id] = c.checked; p.disabled = !c.checked; if (c.checked && !(id in pub)) { pub[id] = true; p.checked = true; } }; });
+    inner.querySelectorAll('[data-p]').forEach(function (c) { c.onchange = function () { pub[c.getAttribute('data-p')] = c.checked; }; });
+    $('[data-x]').onclick = close; ov.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    var pc = $('#pc'); if (pc) pc.onclick = function () { var i = $('#pl'); i.select(); try { navigator.clipboard.writeText(i.value).then(function () { pc.textContent = '✓ Copied'; }, function () { document.execCommand('copy'); pc.textContent = '✓ Copied'; }); } catch (e) { document.execCommand('copy'); } };
+    var ALL = [];
+    var ids = MYCLASSES.map(function (c) { return c.id; });
+    (ids.length ? Promise.all([S.db.from('enrolments').select('student_id,class_id').in('class_id', ids).eq('status', 'approved'), S.db.from('profiles').select('id,full_name,class_id').in('class_id', ids)]) : Promise.resolve([{ data: [] }, { data: [] }])).then(function (r) {
+      var who = {}, cn = {}; MYCLASSES.forEach(function (c) { cn[c.id] = c.name; });
+      (r[1].data || []).forEach(function (p) { who[p.id] = { id: p.id, name: p.full_name || 'Student', cls: cn[p.class_id] || '' }; });
+      var miss = (r[0].data || []).filter(function (e) { return !who[e.student_id]; }).map(function (e) { who[e.student_id] = { id: e.student_id, name: '', cls: cn[e.class_id] || '' }; return e.student_id; });
+      return (miss.length ? S.db.from('profiles').select('id,full_name').in('id', miss.slice(0, 500)) : Promise.resolve({ data: [] })).then(function (p2) { (p2.data || []).forEach(function (p) { who[p.id].name = p.full_name || 'Student'; }); ALL = Object.keys(who).map(function (k) { who[k].name = who[k].name || 'Student'; return who[k]; }).sort(function (a, b) { return a.name.localeCompare(b.name); }); drawS(); });
+    }, function () { $('#sl').textContent = 'Your students could not be loaded.'; });
+    function drawS() { var t = $('#sq').value.trim().toLowerCase(), l = ALL.filter(function (x) { return !t || (x.name + ' ' + x.cls).toLowerCase().indexOf(t) >= 0; });
+      $('#nst').textContent = studs.length ? '(' + studs.length + ' chosen)' : '';
+      $('#sl').innerHTML = l.length ? l.map(function (x) { return '<label class="chk" style="margin:2px 0"><input type="checkbox" data-s="' + x.id + '"' + (studs.indexOf(x.id) >= 0 ? ' checked' : '') + '> ' + E(x.name) + ' <span class="muted">' + E(x.cls) + '</span></label>'; }).join('') : 'No students found.';
+      $('#sl').querySelectorAll('[data-s]').forEach(function (c) { c.onchange = function () { var id = c.getAttribute('data-s'), k = studs.indexOf(id); if (c.checked && k < 0) studs.push(id); else if (!c.checked && k >= 0) studs.splice(k, 1); $('#nst').textContent = studs.length ? '(' + studs.length + ' chosen)' : ''; }; }); }
+    $('#sq').oninput = drawS;
+    function apply(mode) {
+      var o = $('#po').value, d = $('#pd').value; if (o && d && new Date(d) <= new Date(o)) { $('#pm').textContent = 'The closing date must be after the opening date.'; return; }
+      ST.classes = Object.keys(sel).filter(function (k) { return sel[k]; }); ST.pub = {}; ST.classes.forEach(function (c) { ST.pub[c] = mode === 'go' ? true : mode === 'off' ? false : pub[c] !== false; });
+      ST.students = studs.slice(); ST.studentsTouched = true; ST.opens = o ? new Date(o).toISOString() : ''; ST.due = d ? new Date(d).toISOString() : '';
+      ST.time = $('#pt').value; ST.attempts = $('#pa').value; var pr = $('#pr'); if (pr) ST.show = pr.checked;
+      if (mode === 'off') { ST.students = []; if (IS_ADMIN) ST.main = false; }
+      ST.changed = true; ST.ver = (ST.ver || 0) + 1; autoFix();
+      var p = check(); if (p.length) { $('#pm').textContent = 'Fix these first: ' + p.slice(0, 3).join(' · '); return; }
+      $('#pm').className = 'msg'; $('#pm').textContent = 'Saving…'; SAVING = false;
+      save().then(function (id) { ST.changed = false; $('#pm').className = 'msg ok'; $('#pm').textContent = mode === 'go' ? '✅ Published to ' + ST.classes.length + ' class' + (ST.classes.length === 1 ? '' : 'es') + (ST.students.length ? ' and ' + ST.students.length + ' student' + (ST.students.length === 1 ? '' : 's') : '') + '.' : mode === 'off' ? '⏸ Unpublished: students no longer see it.' : '✓ Saved.';
+        $('#pl').value = accessUrl(); $('#pc').disabled = false; stamp('ok', 'All changes saved'); if (location.hash !== '#edit/' + id) history.replaceState(null, '', '#edit/' + id); }, function (e) { $('#pm').textContent = S.nice(e); });
+    }
+    $('#pgo').onclick = function () { apply('go'); }; $('#psave').onclick = function () { apply('save'); }; $('#poff').onclick = function () { apply('off'); };
+    document.body.appendChild(ov); $('[data-x]').focus();
+  }
+
+  /* ================================================================ ⏱ Examination preview: one question at a time, timer, navigator */
+  function examPreview() {
+    autoFix(); var ov = document.createElement('div'); ov.className = 'bd-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Examination preview');
+    var inner = document.createElement('div'); inner.className = 'ex-run'; inner.style.maxWidth = '960px'; ov.appendChild(inner);
+    var NB = numbering().label, pages = [], answers = {}, cur = 0, left = (+ST.time || 0) * 60, tm = null;
+    ST.questions.forEach(function (q, i) {   // a page per main question; sub-questions stay with their question or group, a content block stays with the question after it
+      var lv = q.kind === 'info' ? 0 : +((q.qm || {}).level) || 0, lp = pages[pages.length - 1], loneInfo = lp && lp.items.length === 1 && ST.questions[lp.items[0]].kind === 'info' && !(ST.questions[lp.items[0]].qm || {}).group;
+      if (!lp || (lv === 0 && !(loneInfo && q.kind !== 'info'))) pages.push({ items: [] }); pages[pages.length - 1].items.push(i); });
+    function show() {
+      var pg = pages[cur], tot = totals();
+      inner.innerHTML = '<div class="bd-top"><div><p class="label">Examination preview · as students see it</p><h2>' + E(ST.title || 'Untitled') + '</h2><p class="small muted">' + tot.all + ' marks' + (ST.time ? ' · ' + E(ST.time) + ' minutes' : '') + '</p></div><div style="display:flex;gap:8px;align-items:center"><b id="tm" style="font-size:1.2rem;font-variant-numeric:tabular-nums"></b><button class="btn" type="button" data-x>✕ Close</button></div></div>' +
+        '<nav class="ex-nav" aria-label="Questions">' + pages.map(function (p, k) { var l = NB[p.items.filter(function (i) { return ST.questions[i].kind !== 'info' || NB[i]; })[0]] || (k + 1); var done = p.items.some(function (i) { return answers[i] != null && answers[i] !== ''; }); return '<button type="button" data-g="' + k + '" aria-current="' + (k === cur) + '"' + (done ? ' class="ans"' : '') + '>' + E(String(l).replace(/\(.*$/, '')) + '</button>'; }).join('') + '</nav>' +
+        (cur === 0 && ST.instructions ? '<div class="panel tint small">' + E(ST.instructions) + '</div>' : '') + '<div id="pg"></div>' +
+        '<div class="acts" style="display:flex;justify-content:space-between;margin-top:12px"><button class="btn" type="button" id="pv"' + (cur ? '' : ' disabled') + '>← Previous</button><span class="small muted">' + (cur + 1) + ' of ' + pages.length + '</span>' + (cur < pages.length - 1 ? '<button class="btn main" type="button" id="nx">Next →</button>' : '<button class="btn main" type="button" id="fin">✔ Finish and see marks</button>') + '</div>';
+      var box = inner.querySelector('#pg'); pg.items.forEach(function (i) { var q = ST.questions[i]; if (q.section && (i === 0 || ST.questions[i - 1].section !== q.section) && ST.cat !== 'lesson') { var h = document.createElement('h3'); h.textContent = q.section; h.style.color = '#0e7490'; box.appendChild(h); } box.appendChild(studentView(q, NB[i], function (a) { answers[i] = a; })); });
+      inner.querySelector('[data-x]').onclick = closeIt; inner.querySelectorAll('[data-g]').forEach(function (b) { b.onclick = function () { cur = +b.getAttribute('data-g'); show(); }; });
+      var pv = inner.querySelector('#pv'); if (pv) pv.onclick = function () { cur--; show(); }; var nx = inner.querySelector('#nx'); if (nx) nx.onclick = function () { cur++; show(); };
+      var fin = inner.querySelector('#fin'); if (fin) fin.onclick = finish; tick();
+    }
+    function tick() { var t = inner.querySelector('#tm'); if (!t) return; if (!ST.time) { t.textContent = ''; return; } var m = Math.floor(Math.max(0, left) / 60), s = Math.max(0, left) % 60; t.textContent = '⏱ ' + m + ':' + (s < 10 ? '0' : '') + s; t.style.color = left < 300 ? '#b91c1c' : ''; }
+    function finish() { clearInterval(tm); var got = 0, max = 0, rows = ST.questions.map(function (q, i) { if (q.kind === 'info') return ''; var r = mark(q, answers[i]); max += +q.marks || 0; if (r.got != null) got += r.got; return '<tr><td><b>' + E(NB[i]) + '</b></td><td>' + E(label(q)) + '</td><td>' + (r.got == null ? '✍ teacher' : r.got + ' / ' + r.max) + '</td></tr>'; }).join('');
+      inner.innerHTML = '<div class="bd-top"><h2>Preview finished</h2><button class="btn" type="button" data-x>✕ Close</button></div><p><b>Automatic marks: ' + got + ' / ' + max + '</b> (written, drawn and recorded answers are marked by the teacher).</p><table class="as-tbl"><tbody>' + rows + '</tbody></table>';
+      inner.querySelector('[data-x]').onclick = closeIt; }
+    function closeIt() { clearInterval(tm); ov.remove(); }
+    if (ST.time) tm = setInterval(function () { left--; tick(); if (left <= 0) { clearInterval(tm); finish(); } }, 1000);
+    ov.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeIt(); });
+    document.body.appendChild(ov); show(); inner.querySelector('[data-x]').focus();
+  }
+
+  /* ================================================================ 🖨 Printable examination (optionally with the mark scheme) */
+  function printView(withMs) {
+    autoFix(); var NB = numbering().label, tot = totals(), m = ST.meta || {}, last = null, h = '';
+    var lines = function (n) { var o = '<div class="ex-lines">'; for (var i = 0; i < n; i++) o += '<div></div>'; return o + '</div>'; };
+    var keyOf = function (q) { if (q.kind === 'mcq' || q.kind === 'tf') return q.correct >= 0 ? 'ABCDEFGH'.charAt(q.correct) + ': ' + (q.options[q.correct] || '') : ''; if (QT && QT.has(q.kind)) return QT.pack(q.kind, q.draft).model; return [q.model, q.points ? 'Marking points: ' + q.points.split('\n').map(function (p) { return '• ' + p.split(':')[0]; }).join(' ') : '', q.rubric ? 'Rubric: ' + q.rubric.replace(/\n/g, '; ') : ''].filter(Boolean).join('\n'); };
+    ST.questions.forEach(function (q, i) {
+      if (q.section && q.section !== last && ST.cat !== 'lesson') { last = q.section; h += '<div class="ex-sec">' + E(q.section) + ' <span style="float:right;font-weight:400">[' + (tot.bySec[q.section] || 0) + ' marks]</span></div>'; }
+      var body = rich(T ? T.text(q.prompt) : q.prompt) + ((q.media || []).filter(function (x) { return x.t === 'image'; }).map(function (x) { return '<img src="' + E(x.src) + '" alt="" style="max-width:100%;max-height:300px">'; }).join(''));
+      if (q.image && !/^(label|labelfill|hotspot)$/.test(q.kind)) body += '<img src="' + E(q.image) + '" alt="" style="max-width:100%;max-height:320px">';
+      var p = QT && QT.has(q.kind) ? QT.pack(q.kind, q.draft).options : null, a = '';
+      if (q.kind === 'mcq' || q.kind === 'tf') a = q.options.map(function (o, j) { return '<div class="ex-opt"><b>' + 'ABCDEFGH'.charAt(j) + '</b>&nbsp; ' + (T && T.opt ? T.opt(o) : E(o)) + '</div>'; }).join('');
+      else if (q.kind === 'multi') a = p.choices.map(function (c) { return '<div class="ex-opt">☐ ' + E(c) + '</div>'; }).join('') + '<p style="font-size:.85rem">Tick every correct answer.</p>';
+      else if (q.kind === 'match') a = '<table style="width:100%"><tr><td style="width:50%;vertical-align:top">' + p.left.map(function (l, k) { return (k + 1) + '. ' + E(l) + ' &nbsp;→ ______'; }).join('<br>') + '</td><td style="vertical-align:top">' + p.right.map(function (r, k) { return String.fromCharCode(65 + k) + '. ' + E(r); }).join('<br>') + '</td></tr></table>';
+      else if (q.kind === 'order') a = p.items.map(function (t) { return '<div class="ex-opt">☐ ' + E(t) + '</div>'; }).join('') + '<p style="font-size:.85rem">Number the boxes 1 to ' + p.items.length + ' in the correct order.</p>';
+      else if (q.kind === 'classify') a = '<p>Groups: <b>' + p.groups.map(E).join('</b> · <b>') + '</b></p>' + p.items.map(function (t) { return '<div class="ex-opt">' + E(t) + ' → ____________</div>'; }).join('');
+      else if (q.kind === 'gaps') a = '<p style="line-height:2">' + E(p.text).replace(/\[\[\d+\]\]/g, '______________') + '</p>';
+      else if (q.kind === 'cloze') a = '<p style="line-height:2">' + E(p.text).replace(/\[\[(\d+)\]\]/g, function (z, n) { return '( ' + (p.choices[n - 1] || []).map(E).join(' / ') + ' )'; }) + '</p>';
+      else if (q.kind === 'number') a = '<p>Answer: ____________________ ' + E(p.unit || '') + '</p>' + lines(2);
+      else if (q.kind === 'table') a = '<table class="qtable" style="width:100%;border-collapse:collapse"><tr>' + p.cols.map(function (c) { return '<th style="border:1px solid #111;padding:4px">' + E(c) + '</th>'; }).join('') + '</tr>' + p.rows.map(function (r) { return '<tr>' + r.map(function (c) { return '<td style="border:1px solid #111;padding:4px;height:26px">' + (c == null ? '' : E(c)) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>';
+      else if (/^(label|labelfill|hotspot)$/.test(q.kind)) a = '<div style="position:relative;display:inline-block;max-width:100%"><img src="' + E(p.image || q.image) + '" alt="" style="max-width:100%;max-height:360px;display:block">' + (p.spots || []).map(function (sp, k) { return '<span style="position:absolute;left:' + sp.x + '%;top:' + sp.y + '%;transform:translate(-50%,-50%);background:#fff;border:2px solid #111;border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font:700 12px system-ui">' + (k + 1) + '</span>'; }).join('') + '</div>' +
+        (q.kind === 'hotspot' ? '<p style="font-size:.85rem">Draw a circle round the correct part.</p>' : (p.spots || []).map(function (sp, k) { return '<div>' + (k + 1) + '. ____________________</div>'; }).join('') + (q.kind === 'label' ? '<p style="font-size:.85rem">Choose from: ' + p.labels.map(E).join(', ') + '</p>' : ''));
+      else if (q.kind === 'graph' || q.kind === 'draw' || q.kind === 'annotate') a = q.kind === 'annotate' && q.image ? '<img src="' + E(q.image) + '" alt="" style="max-width:100%;max-height:340px">' : '<div class="ex-box" style="' + (q.kind === 'graph' ? 'background-image:linear-gradient(#ccc 1px,transparent 1px),linear-gradient(90deg,#ccc 1px,transparent 1px);background-size:12px 12px;height:260px' : '') + '"></div>';
+      else if (RESP[q.kind]) a = '<p style="font-size:.85rem"><i>' + { audio: 'Spoken answer: recorded online.', video: 'Video answer: recorded online.', upload: 'Hand in your work as a file online or attach it to this paper.' }[q.kind] + '</i></p>';
+      else if (q.kind !== 'info') a = lines(Math.max(2, Math.round((+q.marks || 1) * (q.kind === 'essay' ? 3 : 2))));
+      var ms = withMs && q.kind !== 'info' ? keyOf(q) : '';
+      h += q.kind === 'info' ? '<div class="ex-q" style="grid-template-columns:56px 1fr 46px"><div class="no">' + E(NB[i] || '') + '</div><div>' + body + '</div><div></div></div>'
+        : '<div class="ex-q" style="padding-left:' + (Math.min(2, +((q.qm || {}).level) || 0) * 18) + 'px"><div class="no">' + E(NB[i] || '') + '</div><div>' + body + a + (ms ? '<div class="ex-ms"><b>Mark scheme:</b> ' + E(ms).replace(/\n/g, '<br>') + (q.explanation ? '<br><b>Explanation:</b> ' + E(q.explanation) : '') + '</div>' : '') + '</div><div class="mk">[' + (+q.marks || 0) + ']</div></div>';
+    });
+    var ov = document.createElement('div'); ov.className = 'bd-ov ex-print'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Printable view');
+    ov.innerHTML = '<div style="max-width:880px;background:transparent;box-shadow:none;padding:0"><div class="acts noprint" style="display:flex;gap:8px;justify-content:flex-end;margin:0 0 10px"><button class="btn main" type="button" data-p>🖨 Print or save as PDF</button><button class="btn" type="button" data-x style="background:#fff">✕ Close</button></div>' +
+      '<div class="ex-paper"><p style="text-align:center;font-size:.8rem;letter-spacing:.1em;margin:0">BIOSCIENCE VISTA' + (m.programme ? ' · ' + E(m.programme.toUpperCase()) : '') + '</p><h1>' + E(ST.title || 'Untitled') + (withMs ? ' · MARK SCHEME' : '') + '</h1><p class="meta">' + E([m.subject, m.grade, m.unit].filter(Boolean).join(' · ')) + '<br>' + (ST.time ? E(ST.time) + ' minutes · ' : '') + tot.all + ' marks</p>' +
+      (withMs ? '' : '<p>Name: ______________________________ &nbsp; Class: ____________ &nbsp; Date: ____________</p>') + (ST.instructions ? '<div class="ins"><b>Instructions</b><br>' + E(ST.instructions).replace(/\n/g, '<br>') + '</div>' : '') + h +
+      '<p style="text-align:center;margin-top:24px;font-size:.85rem">End of ' + (withMs ? 'mark scheme' : 'examination') + '</p></div></div>';
+    ov.querySelector('[data-p]').onclick = function () { window.print(); }; ov.querySelector('[data-x]').onclick = function () { ov.remove(); };
+    ov.addEventListener('keydown', function (e) { if (e.key === 'Escape') ov.remove(); });
+    document.body.appendChild(ov); ov.querySelector('[data-p]').focus();
+  }
+
+  /* ================================================================ export and import (.json) */
+  function exportJson() {
+    var data = { format: 'bioscience-vista-assessment', version: 1, exported: new Date().toISOString(), title: ST.title, category: ST.cat, instructions: ST.instructions, time: ST.time, meta: ST.meta,
+      questions: ST.questions.map(function (q) { var c = JSON.parse(JSON.stringify(q)); c.id = null; delete c.ai; return c; }) };
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' })); a.download = (ST.title || 'assessment').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').slice(0, 60) + '.bsv.json';
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000); toast('Exported: open it in any BioScience Vista account with Create → Import a BioScience Vista file.');
+  }
+  function importJson(file) {
+    var r = new FileReader(); r.onload = function () { var d; try { d = JSON.parse(r.result); } catch (e) { return toast('⚠ That file is not a BioScience Vista assessment file.'); }
+      if (!d || d.format !== 'bioscience-vista-assessment' || !Array.isArray(d.questions)) return toast('⚠ That file is not a BioScience Vista assessment file.');
+      start(CAT[d.category] ? d.category : 'exam', true); ST.title = String(d.title || 'Imported assessment').slice(0, 160) + ' (imported)'; ST.instructions = String(d.instructions || ''); ST.time = d.time || ''; ST.meta = d.meta && typeof d.meta === 'object' ? d.meta : ST.meta; delete ST.meta.archived;
+      ST.questions = d.questions.filter(function (q) { return q && KN[q.kind] || (q && q.kind === 'info'); }).map(function (q) { var n = newQ(q.kind, q.section); Object.keys(n).forEach(function (k) { if (q[k] != null) n[k] = q[k]; }); n.id = null; return n; });
+      if (!ST.questions.length) ST.questions = [newQ('short', 'Section A')]; SEL = 0; ST.changed = true; draw(); toast('Imported ' + ST.questions.length + ' items. Check them, then 💾 Save.'); };
+    r.readAsText(file);
+  }
+
+  /* ================================================================ 🔬 science tools */
+  function sciDialog() {
+    if (!window.BVSCI) return toast('The science tools did not load. Refresh the page.');
+    var ov = document.createElement('div'); ov.className = 'bd-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Science tools');
+    ov.innerHTML = '<div><div class="bd-top"><div><p class="label">Assessment Studio</p><h2>🔬 Science tools</h2><p class="small muted">Type your data: the tool works out the answers and writes the questions, ready to edit. Pictures: use 🧬 BioScience Vista diagrams in any question.</p></div><button class="btn" type="button" data-x>✕ Close</button></div>' +
+      '<div class="bd-lib">' + BVSCI.TOOLS.map(function (t) { return '<button type="button" class="bd-card" data-t="' + t.id + '" style="--k:#0e7490;text-align:left;cursor:pointer;font:inherit;color:inherit"><span style="font-size:1.4rem" aria-hidden="true">' + t.icon + '</span><div><h4>' + E(t.name) + '</h4><span class="small muted">' + E(t.about) + '</span></div><span aria-hidden="true">→</span></button>'; }).join('') + '</div></div>';
+    ov.querySelector('[data-x]').onclick = function () { ov.remove(); };
+    ov.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { ov.remove(); BVSCI.open(b.getAttribute('data-t'), insertItems); }; });
+    ov.addEventListener('keydown', function (e) { if (e.key === 'Escape') ov.remove(); });
+    document.body.appendChild(ov); ov.querySelector('[data-t]').focus();
+  }
+  function insertItems(items) {
+    var cur = ST.questions[SEL] || {}, sec = cur.section || (ST.cat === 'lesson' ? 'Challenge' : 'Section A'), made = items.map(function (it) {
+      var q = newQ(it.kind, sec); ['prompt', 'marks', 'model', 'points', 'rubric', 'explanation', 'axes', 'options', 'correct', 'image'].forEach(function (k) { if (it[k] != null) q[k] = it[k]; });
+      if (it.draft) q.draft = JSON.parse(JSON.stringify(it.draft)); q.qm = Object.assign(q.qm, it.qm || {}); if (it.qm && it.qm.group) q.qm.group = true; return q; });
+    var blank = ST.questions.length === 1 && !String(ST.questions[0].prompt || '').trim() && !ST.questions[0].id;
+    if (blank) { ST.questions = made; SEL = 0; } else { ST.questions.splice.apply(ST.questions, [SEL + 1, 0].concat(made)); SEL++; }
+    touch(true); toast('Added ' + made.length + ' item' + (made.length === 1 ? '' : 's') + '. Check the wording and marks.');
+  }
+
+  /* ================================================================ ✨ AI for one question: rewrite, harder / easier, command term, mark scheme,
+     explanation, differentiated versions. Nothing changes until the teacher accepts the AI's version. */
+  function aiShape(q) {
+    var o = { kind: /^(audio|video|upload)$/.test(q.kind) ? 'short' : q.kind, prompt: T ? T.text(q.prompt) : q.prompt, marks: +q.marks || 1, explanation: q.explanation || '' };
+    if (q.kind === 'mcq') { o.options = q.options; o.correct = q.correct; } else if (q.kind === 'tf') o.answer = q.correct === 0;
+    else if (QT && QT.has(q.kind)) { o.key = QT.pack(q.kind, q.draft).model; o.draft = q.draft; }
+    else { o.model_answer = q.model; o.points = String(q.points || '').split('\n').filter(Boolean).map(function (l) { var i = l.indexOf(':'); return { text: i > 0 ? l.slice(0, i) : l, keywords: i > 0 ? l.slice(i + 1).split('/').map(function (x) { return x.trim(); }) : [] }; }); o.rubric = q.rubric; if (q.kind === 'graph') { var a = String(q.axes || '').split(','); o.x = a[0]; o.y = a[1]; } }
+    return o;
+  }
+  function aiOne(q) {
+    if (q.kind === 'info') return toast('Choose a question (not a content block) to use AI on it.');
+    var ov = document.createElement('div'); ov.className = 'bd-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'AI for this question');
+    var inner = document.createElement('div'); ov.appendChild(inner); var lab = numbering().label[SEL];
+    var ACTS = [['harder', '⬆ Make it harder'], ['easier', '⬇ Make it easier'], ['command', '🧭 Rewrite with an IB command term'], ['scheme', '📋 Write the mark scheme and model answer'], ['explain', '💡 Write the explanation for students'], ['differentiate', '🪜 Differentiated versions (support and extension)'], ['rewrite', '✍ Rewrite more clearly']];
+    if (/^(label|labelfill|hotspot|annotate)$/.test(q.kind)) ACTS = ACTS.filter(function (x) { return x[0] === 'scheme' || x[0] === 'explain'; });   // picture-based kinds: the AI cannot see the picture, so it only writes the mark scheme and explanation
+    inner.innerHTML = '<div class="bd-top"><div><p class="label">✨ BioScience Vista AI</p><h2>Question ' + E(lab || '') + '</h2><p class="small muted">' + E(label(q)) + '</p></div><button class="btn" type="button" data-x>✕ Close</button></div>' +
+      '<div class="wz-cards">' + ACTS.map(function (a, i) { return '<label><input type="radio" name="ai-a" value="' + a[0] + '"' + (i === 0 ? ' checked' : '') + '><span><b>' + a[1] + '</b></span></label>'; }).join('') + '</div>' +
+      '<div class="bd-row">' + field('Command term', '<select id="ai-c">' + COMMANDS.map(function (c) { return '<option' + (((q.qm || {}).command || 'Explain') === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select>') + field('Level', '<select id="ai-l"><option value="">' + E(GEN.level || 'as the assessment') + '</option>' + LEVELS.map(function (l) { return '<option>' + l + '</option>'; }).join('') + '</select>') + '</div>' +
+      '<div class="acts"><button class="btn main" type="button" id="ai-go">✨ Ask the AI</button></div><div id="ai-out" style="margin-top:12px"></div>';
+    var close = function () { ov.remove(); }; inner.querySelector('[data-x]').onclick = close; ov.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    inner.querySelector('#ai-go').onclick = function () {
+      var act = inner.querySelector('[name=ai-a]:checked').value, out = inner.querySelector('#ai-out'), go = inner.querySelector('#ai-go'); go.disabled = true; out.innerHTML = '<p class="muted">The AI is working… (10–40 seconds)</p>';
+      var body = { mode: 'modify', kind: ST.cat, level: inner.querySelector('#ai-l').value || GEN.level || levelFor(ST.meta) || '', title: ST.title, objectives: [ST.meta.unit, (q.qm || {}).topic].filter(Boolean).join('. '), action: act, command: inner.querySelector('#ai-c').value, item: aiShape(q), section: q.section };
+      patient(body, { stopped: function () { return !ov.isConnected; }, step: function (t) { out.innerHTML = '<p class="muted">' + E(t) + '</p>'; } }, 'Asking the AI').then(function (d) {
+        go.disabled = false; var items = (d.items || []).filter(Boolean).map(function (it) { var n = fromAI(Object.assign({ section: q.section }, it)); if (n) { n.ai = false; n.qm = Object.assign({}, q.qm || {}, { command: act === 'command' ? inner.querySelector('#ai-c').value : (q.qm || {}).command }); if (n.qm.level == null) n.qm.level = 0; } return n; }).filter(Boolean);
+        if (!items.length) { out.innerHTML = '<p class="msg">The AI did not return a usable question. Try again or choose another action.</p>'; return; }
+        out.innerHTML = '<p><b>The AI\'s version' + (items.length > 1 ? 's' : '') + '</b> (nothing has changed yet):</p>';
+        items.forEach(function (n, k) { var card = document.createElement('div'); card.className = 'panel'; card.appendChild(studentView(n, lab, function () {}));
+          var ms = document.createElement('p'); ms.className = 'small'; ms.innerHTML = '<b>Mark scheme:</b> ' + E(n.kind === 'mcq' ? 'ABCDEFGH'.charAt(n.correct) + ': ' + (n.options[n.correct] || '') : QT && QT.has(n.kind) ? QT.pack(n.kind, n.draft).model : (n.model || '') + (n.points ? ' · ' + n.points.replace(/\n/g, ' · ') : '')) + (n.explanation ? '<br><b>Explanation:</b> ' + E(n.explanation) : ''); card.appendChild(ms);
+          var acts = document.createElement('div'); acts.className = 'acts'; acts.innerHTML = (act === 'scheme' || act === 'explain' ? '<button class="btn main sm" type="button" data-k>✓ Use this ' + (act === 'scheme' ? 'mark scheme' : 'explanation') + '</button>' : '<button class="btn main sm" type="button" data-r>✓ Replace question ' + E(lab || '') + '</button>') + ' <button class="btn sm" type="button" data-n>＋ Insert as a new question</button>'; card.appendChild(acts);
+          var r = acts.querySelector('[data-r]'); if (r) r.onclick = function () { if (RESP[q.kind] && n.kind === 'short') n.kind = q.kind; n.image = n.image || q.image; n.media = (n.media || []).length ? n.media : q.media; n.id = q.id; n.section = q.section; ST.questions[ST.questions.indexOf(q)] = n; close(); touch(true); toast('Question replaced. Check it before saving.'); };
+          var kk = acts.querySelector('[data-k]'); if (kk) kk.onclick = function () { if (act === 'scheme') { if (n.model) q.model = n.model; if (n.points) q.points = n.points; if (n.rubric) q.rubric = n.rubric; if (n.kind === q.kind && n.draft && QT && QT.has(q.kind)) q.draft = n.draft; if (n.kind === 'mcq' && q.kind === 'mcq' && n.options.length === q.options.length) q.correct = n.correct; } if (n.explanation) q.explanation = n.explanation; close(); touch(true); toast('Added to the question.'); };
+          acts.querySelector('[data-n]').onclick = function () { var at = ST.questions.indexOf(q) + 1; ST.questions.splice(at, 0, n); SEL = at; close(); touch(true); };
+          out.appendChild(card); });
+      }, function (e) { go.disabled = false; out.innerHTML = '<p class="msg">' + E(e.message || e) + '</p>'; });
+    };
+    document.body.appendChild(ov); inner.querySelector('#ai-go').focus();
+  }
+
+  /* ================================================================ 📊 Results and analytics */
+  function results(id) {
+    app.innerHTML = '<p class="muted">Loading results…</p>';
+    Promise.all([S.db.from('quizzes').select('id,title,category,meta,created_by').eq('id', id).maybeSingle(), S.db.from('quiz_questions').select('position, questions(id,kind,prompt,marks,criterion,meta)').eq('quiz_id', id).order('position'),
+      S.db.from('quiz_attempts').select('id,student_id,status,score,max_score,submitted_at,detail,released').eq('quiz_id', id).order('submitted_at', { ascending: false })]).then(function (x) {
+      var qz = x[0].data; if (!qz) { app.innerHTML = '<p class="msg">This assessment was not found.</p><p><a class="btn" href="#">Back</a></p>'; return; }
+      var qs = (x[1].data || []).map(function (r) { return r.questions; }).filter(function (q) { return q && q.kind !== 'info'; }), atts = (x[2].data || []).filter(function (a) { return a.submitted_at; });
+      var ids = uniq(atts.map(function (a) { return a.student_id; }));
+      return (ids.length ? S.db.from('profiles').select('id,full_name').in('id', ids) : Promise.resolve({ data: [] })).then(function (p) {
+        var nm = {}; (p.data || []).forEach(function (r) { nm[r.id] = r.full_name || 'Student'; });
+        var best = {}; atts.forEach(function (a) { var b = best[a.student_id]; if (!b || (+a.score || 0) > (+b.score || 0)) best[a.student_id] = a; });   // each student's best attempt
+        var rows = Object.keys(best).map(function (k) { return best[k]; }), pc = function (g, m) { return m > 0 ? Math.round(100 * g / m) : 0; };
+        var qstat = {}; qs.forEach(function (q) { qstat[q.id] = { got: 0, max: 0, n: 0, pending: 0 }; });
+        var topic = {}, crit = { A: [0, 0], B: [0, 0], C: [0, 0], D: [0, 0] };
+        rows.forEach(function (a) { (a.detail || []).forEach(function (d) { var s = qstat[d.question_id]; if (!s) return; if (d.got == null) { s.pending++; return; } s.got += +d.got || 0; s.max += +d.max || 0; s.n++;
+          var q = qs.filter(function (z) { return z.id === d.question_id; })[0], m = (q && q.meta) || {}, tp = m.topic || 'No topic set'; topic[tp] = topic[tp] || [0, 0]; topic[tp][0] += +d.got || 0; topic[tp][1] += +d.max || 0;
+          var cm = m.crit || {}, ks = Object.keys(cm).filter(function (k) { return +cm[k] > 0; }); if (!ks.length && q && q.criterion) { cm = {}; cm[q.criterion] = +d.max || 1; ks = [q.criterion]; }
+          var tw = ks.reduce(function (t, k) { return t + (+cm[k] || 0); }, 0); ks.forEach(function (k) { if (!crit[k]) return; crit[k][0] += (+d.got || 0) * (+cm[k] || 0) / (tw || 1); crit[k][1] += (+d.max || 0) * (+cm[k] || 0) / (tw || 1); }); }); });
+        var avg = rows.length ? Math.round(rows.reduce(function (t, a) { return t + pc(+a.score || 0, +a.max_score || 0); }, 0) / rows.length) : 0, need = rows.filter(function (a) { return a.status === 'needs_marking'; }).length;
+        var lab = {}; qs.forEach(function (q, i) { lab[q.id] = ((q.meta || {}).label) || String(i + 1); });
+        var bar = function (p) { return '<div class="rs-bar" title="' + p + '%"><i style="width:' + Math.max(0, Math.min(100, p)) + '%"></i></div>'; };
+        var myp = /^myp_/.test((qz.meta || {}).marking || '');
+        app.innerHTML = '<div class="as-band"><div><p class="label"><a href="#">← Assessment Studio</a> · <a href="#edit/' + id + '">✏️ Edit</a></p><h2>📊 ' + E(qz.title) + '</h2></div><div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn main" href="/teach/#quizzes/' + id + '" target="_blank" rel="noopener">🖊 Mark answers and release results ↗</a><button class="btn" type="button" id="csv">⬇ Download CSV</button></div></div>' +
+          '<div class="as-stats"><div class="as-stat"><b>' + rows.length + '</b><span>Students handed in</span></div><div class="as-stat"><b>' + avg + '%</b><span>Class average (best attempt)</span></div><div class="as-stat"><b>' + need + '</b><span>Waiting for your marking</span></div><div class="as-stat"><b>' + atts.length + '</b><span>Attempts in all</span></div></div>' +
+          (rows.length ? '' : '<p class="emptybox">No student has handed this in yet. Publish it from the editor (🚀 Publish) and share the access link.</p>') +
+          '<div class="bd" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)"><section class="bd-col"><h3>🎓 Students</h3><table class="as-tbl"><thead><tr><th>Student</th><th>Score</th><th>%</th>' + (myp ? '<th>MYP level</th>' : '') + '<th>Status</th><th>Handed in</th></tr></thead><tbody>' +
+            rows.sort(function (a, b) { return (nm[a.student_id] || '').localeCompare(nm[b.student_id] || ''); }).map(function (a) { var p2 = pc(+a.score || 0, +a.max_score || 0), lv = T && T.level ? T.level(+a.score || 0, +a.max_score || 0, 'MYP') : null;
+              return '<tr><td><b>' + E(nm[a.student_id] || 'Student') + '</b></td><td>' + E(a.score == null ? '–' : a.score) + ' / ' + E(a.max_score || '–') + '</td><td>' + bar(p2) + ' ' + p2 + '%</td>' + (myp ? '<td>' + (lv ? lv.n + ' / 8' : '–') + '</td>' : '') + '<td>' + E({ needs_marking: '🖊 needs marking', marked: '✓ marked', submitted: 'handed in' }[a.status] || a.status) + (a.released ? ' · released' : '') + '</td><td>' + day(a.submitted_at) + '</td></tr>'; }).join('') + '</tbody></table></section>' +
+          '<section class="bd-col"><h3>🧩 Questions</h3><table class="as-tbl"><tbody>' + qs.map(function (q) { var s2 = qstat[q.id], p3 = pc(s2.got, s2.max); return '<tr><td><b>' + E(lab[q.id]) + '</b></td><td>' + E((T ? T.text(q.prompt) : q.prompt).replace(/\s+/g, ' ').slice(0, 70)) + '</td><td style="min-width:120px">' + (s2.n ? bar(p3) + ' ' + p3 + '%' : '–') + (s2.pending ? '<br><span class="small muted">' + s2.pending + ' to mark</span>' : '') + '</td></tr>'; }).join('') + '</tbody></table>' +
+            '<h3 style="margin-top:14px">🧭 Topics</h3>' + (Object.keys(topic).length ? '<table class="as-tbl"><tbody>' + Object.keys(topic).sort().map(function (k) { var p4 = pc(topic[k][0], topic[k][1]); return '<tr><td>' + E(k) + '</td><td style="min-width:140px">' + bar(p4) + ' ' + p4 + '%</td></tr>'; }).join('') + '</tbody></table>' : '<p class="small muted">Add a topic to each question (⚙️ Question) to see topic performance.</p>') +
+            '<h3 style="margin-top:14px">🅰 Criteria</h3><table class="as-tbl"><tbody>' + ['A', 'B', 'C', 'D'].filter(function (k) { return crit[k][1] > 0; }).map(function (k) { var p5 = pc(crit[k][0], crit[k][1]), lv = T && T.level ? T.level(crit[k][0], crit[k][1], 'MYP') : null; return '<tr><td><b>' + k + '</b> ' + CRIT[k] + '</td><td style="min-width:140px">' + bar(p5) + ' ' + p5 + '%' + (myp && lv ? ' · level ' + lv.n : '') + '</td></tr>'; }).join('') + '</tbody></table>' +
+            '<p class="small muted" style="margin-top:10px">✨ AI-assisted feedback for written answers is prepared after students hand in and appears with each answer in 🖊 Marking, where you accept or change it.</p></section></div>';
+        app.querySelector('#csv').onclick = function () {
+          var head = ['Student', 'Score', 'Max', 'Percent', 'Status', 'Handed in'].concat(qs.map(function (q) { return 'Q' + lab[q.id]; })), lines = [head];
+          rows.forEach(function (a) { var dd = {}; (a.detail || []).forEach(function (d) { dd[d.question_id] = d.got; }); lines.push([nm[a.student_id] || 'Student', a.score, a.max_score, pc(+a.score || 0, +a.max_score || 0), a.status, a.submitted_at].concat(qs.map(function (q) { return dd[q.id] == null ? '' : dd[q.id]; }))); });
+          var csv = lines.map(function (l) { return l.map(function (c) { c = String(c == null ? '' : c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\n');
+          var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })); a.download = (qz.title || 'results').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') + '-results.csv'; document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); }, 500); };
+      });
+    });
+  }
+  window.addEventListener('beforeunload', function (e) { if (ST && ST.changed) { keepLocal(); e.preventDefault(); e.returnValue = ''; } });
 })();

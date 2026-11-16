@@ -41,7 +41,7 @@
   var KINDS = [
     ['multi', '☑️', 'Several correct answers', 'Choice'], ['match', '🔗', 'Match the pairs', 'Choice'], ['order', '🔢', 'Put in order', 'Choice'], ['classify', '🗂️', 'Sort into groups', 'Choice'],
     ['gaps', '✍️', 'Fill in the gaps', 'Fill in'], ['cloze', '🔽', 'Drop-down in a sentence', 'Fill in'], ['number', '🔟', 'Number with unit', 'Fill in'], ['table', '▦', 'Complete a table', 'Fill in'],
-    ['label', '🏷️', 'Label a diagram', 'Diagram'], ['hotspot', '🎯', 'Click the correct part', 'Diagram']];
+    ['label', '🏷️', 'Label a diagram', 'Diagram'], ['labelfill', '⌨️', 'Type the labels on a diagram', 'Diagram'], ['hotspot', '🎯', 'Click the correct part', 'Diagram']];
   var NAMES = {}; KINDS.forEach(function (k) { NAMES[k[0]] = k; });
   function has(kind) { return !!NAMES[kind]; }
 
@@ -49,7 +49,7 @@
   function blank(kind) {
     return { multi: { choices: [{ t: '', ok: true }, { t: '', ok: false }, { t: '', ok: false }] }, match: { pairs: [{ l: '', r: '' }, { l: '', r: '' }, { l: '', r: '' }] }, order: { items: ['', '', ''] },
       classify: { groups: ['', ''], items: [{ t: '', g: 0 }, { t: '', g: 1 }] }, gaps: { text: '' }, cloze: { text: '' }, number: { value: '', tol: '', unit: '' }, table: { cols: '', rows: '' },
-      label: { image: '', spots: [], extra: '' }, hotspot: { image: '', x: 50, y: 50, r: 10, ratio: 1 } }[kind];
+      label: { image: '', spots: [], extra: '' }, labelfill: { image: '', spots: [] }, hotspot: { image: '', x: 50, y: 50, r: 10, ratio: 1 } }[kind];
   }
   function alts(s) { return String(s).split('|').map(function (x) { return x.trim(); }).filter(Boolean); }
   function cut(text) {   // "a [b|c] d" -> { text: "a [[1]] d", groups: [["b","c"]] }
@@ -70,6 +70,7 @@
       model = words.join('; '); }
     else if (kind === 'label') { var sp = d.spots.filter(function (s) { return s.t.trim(); }), all = sp.map(function (s) { return s.t.trim(); }).concat(String(d.extra || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean)); p = perm(all.length, all.join('|'));
       o.image = d.image; o.spots = sp.map(function (s) { return { x: +s.x, y: +s.y }; }); o.labels = p.map(function (k) { return all[k]; }); a.spots = sp.map(function (s, k) { return p.indexOf(k); }); model = sp.map(function (s, k) { return (k + 1) + ': ' + s.t.trim(); }).join('; '); }
+    else if (kind === 'labelfill') { var sf = d.spots.filter(function (s) { return String(s.t || '').trim(); }); o.image = d.image; o.spots = sf.map(function (s) { return { x: +s.x, y: +s.y }; }); a.gaps = sf.map(function (s) { return alts(s.t); }); model = sf.map(function (s, k) { return (k + 1) + ': ' + alts(s.t)[0]; }).join('; '); }
     else if (kind === 'hotspot') { o.image = d.image; o.ratio = +d.ratio || 1; a.zones = [{ x: +d.x, y: +d.y, r: +d.r }]; model = 'The area marked on the picture.'; }
     return { options: o, accepted: a, model: model };
     function row0(c, cell) { var first = c.text.split('|')[0].trim(); return /^\[\[\d+\]\]$/.test(first) ? '' : first; }
@@ -86,6 +87,7 @@
     else if (kind === 'number') { d.value = a.value == null ? '' : a.value; d.tol = a.tol || ''; d.unit = o.unit || ''; }
     else if (kind === 'table' && o.rows) { d.cols = (o.cols || []).join(', '); d.rows = o.rows.map(function (r, ri) { return r.map(function (c, ci) { return c == null ? '[' + ((a.cells || {})[ri + ',' + ci] || []).join('|') + ']' : c; }).join(' | '); }).join('\n'); }
     else if (kind === 'label' && o.spots) { d.image = o.image || ''; d.spots = o.spots.map(function (s, k) { return { t: (o.labels || [])[(a.spots || [])[k]] || '', x: s.x, y: s.y }; }); var used = a.spots || []; d.extra = (o.labels || []).filter(function (l, k) { return used.indexOf(k) < 0; }).join(', '); }
+    else if (kind === 'labelfill' && o.spots) { d.image = o.image || ''; d.spots = o.spots.map(function (s, k) { return { t: ((a.gaps || [])[k] || []).join('|'), x: s.x, y: s.y }; }); }
     else if (kind === 'hotspot') { var z = (a.zones || [])[0] || {}; d.image = o.image || ''; d.x = z.x == null ? 50 : z.x; d.y = z.y == null ? 50 : z.y; d.r = z.r || 10; d.ratio = o.ratio || 1; }
     return d;
   }
@@ -101,6 +103,7 @@
     if (kind === 'number' && !isFinite(a.value)) out.push('Type the correct number.');
     if (kind === 'table') { if (!o.cols.length) out.push('Type the column headings.'); if (!Object.keys(a.cells).length) out.push('Put [square brackets] round the answer in each cell students must fill in.'); }
     if (kind === 'label') { if (!o.image) out.push('Add the picture.'); if (o.spots.length < 1) out.push('Add at least one label and click the picture to place it.'); }
+    if (kind === 'labelfill') { if (!o.image) out.push('Add the picture.'); if (o.spots.length < 1) out.push('Click the picture to place at least one label and type the correct word.'); }
     if (kind === 'hotspot' && !o.image) out.push('Add the picture.');
     return out;
   }
@@ -113,7 +116,7 @@
     else if (kind === 'hotspot') { n = 1; var xy = String(value || '').split(','), px = parseFloat(xy[0]), py = parseFloat(xy[1]), ra = o.ratio || 1; if (isFinite(px) && isFinite(py)) (a.zones || []).forEach(function (z) { var dx = px - z.x, dy = (py - z.y) * ra; if (dx * dx + dy * dy <= z.r * z.r) hit = 1; }); }
     else { v = blankAns ? null : J(value, null);
       if (kind === 'multi') { n = (a.correct || []).length; if (Array.isArray(v)) { var good = 0, bad = 0; v.filter(function (x, i) { return typeof x === 'number' && v.indexOf(x) === i; }).forEach(function (x) { if (a.correct.indexOf(x) >= 0) good++; else bad++; }); hit = Math.max(0, good - bad); } }
-      else if (kind === 'gaps') { k = a.gaps || []; n = k.length; if (Array.isArray(v)) for (i = 0; i < n; i++) if (k[i].some(function (alt) { return norm(alt) === norm(v[i]) && norm(alt) !== ''; })) hit++; }
+      else if (kind === 'gaps' || kind === 'labelfill') { k = a.gaps || []; n = k.length; if (Array.isArray(v)) for (i = 0; i < n; i++) if (k[i].some(function (alt) { return norm(alt) === norm(v[i]) && norm(alt) !== ''; })) hit++; }
       else if (kind === 'table') { k = a.cells || {}; n = Object.keys(k).length; if (v && typeof v === 'object') Object.keys(k).forEach(function (c) { if (k[c].some(function (alt) { return norm(alt) === norm(v[c]) && norm(alt) !== ''; })) hit++; }); }
       else { k = a[{ match: 'pairs', classify: 'groups', label: 'spots', cloze: 'gaps', order: 'order' }[kind]] || []; n = k.length; if (Array.isArray(v)) for (i = 0; i < n; i++) if (typeof v[i] === 'number' && v[i] === k[i]) hit++; }
     }
@@ -132,6 +135,7 @@
     if (kind === 'number') return String(v) + (o.unit ? ' ' + o.unit : '');
     if (kind === 'table') return Object.keys(v).map(function (c) { var rc = c.split(','); return 'row ' + (+rc[0] + 1) + ', ' + ((o.cols || [])[rc[1]] || 'column ' + (+rc[1] + 1)) + ': ' + v[c]; }).join('; ');
     if (kind === 'label') return (o.spots || []).map(function (s, i) { return (i + 1) + ': ' + pick(o.labels || [], v[i]); }).join('; ');
+    if (kind === 'labelfill') return (o.spots || []).map(function (s, i) { return (i + 1) + ': ' + (v[i] || '–'); }).join('; ');
     if (kind === 'hotspot') return 'Clicked the picture at ' + String(v).split(',').map(function (x) { return Math.round(parseFloat(x)) + '%'; }).join(' across, ') + ' down';
     return String(value);
   }
@@ -155,6 +159,9 @@
       box.appendChild(h('div', { style: 'overflow-x:auto' }, [tb])); }
     else if (kind === 'label') { v = J(value, []); var pic = h('div', { class: 'qt-pic' }, [h('img', { src: o.image || '', alt: 'Diagram to label' })]); (o.spots || []).forEach(function (s, i) { pic.appendChild(h('span', { class: 'qt-pin', style: 'left:' + s.x + '%;top:' + s.y + '%', text: String(i + 1) })); }); box.appendChild(pic);
       (o.spots || []).forEach(function (s, i) { box.appendChild(h('div', { class: 'qt-row' }, [h('span', {}, [h('b', { text: 'Label ' + (i + 1) })]), sel(o.labels || [], v[i], function (x) { v[i] = x; for (var k = 0; k < o.spots.length; k++) if (v[k] === undefined) v[k] = null; send(v); }, 'Label ' + (i + 1))])); }); }
+    else if (kind === 'labelfill') { v = J(value, []); var pf = h('div', { class: 'qt-pic' }, [h('img', { src: o.image || '', alt: 'Diagram to label' })]); (o.spots || []).forEach(function (s, i) { pf.appendChild(h('span', { class: 'qt-pin', style: 'left:' + s.x + '%;top:' + s.y + '%', text: String(i + 1) })); }); box.appendChild(pf);
+      (o.spots || []).forEach(function (s, i) { box.appendChild(h('div', { class: 'qt-row' }, [h('span', {}, [h('b', { text: 'Label ' + (i + 1) })]), h('input', { type: 'text', value: v[i] || '', 'aria-label': 'Label ' + (i + 1), autocomplete: 'off', spellcheck: 'false', readonly: lock ? '' : null, oninput: function () { v[i] = this.value; for (var k = 0; k < o.spots.length; k++) if (v[k] == null) v[k] = ''; send(v.some(function (x) { return x && x.trim(); }) ? v : ''); } })])); });
+      box.appendChild(h('p', { class: 'small muted', text: 'Type the name of each numbered part.' })); }
     else if (kind === 'hotspot') { var hp = h('div', { class: 'qt-pic qt-hot' }, [h('img', { src: o.image || '', alt: 'Picture: click the correct part' })]), mark = function (xy) { var old = hp.querySelector('.qt-pin'); if (old) old.remove(); if (!xy) return; var p = String(xy).split(','); hp.appendChild(h('span', { class: 'qt-pin me', style: 'left:' + p[0] + '%;top:' + p[1] + '%', text: '✓' })); };
       mark(value); if (!lock) hp.firstChild.onclick = function (e) { var r = this.getBoundingClientRect(), xy = (Math.round((e.clientX - r.left) / r.width * 1000) / 10) + ',' + (Math.round((e.clientY - r.top) / r.height * 1000) / 10); mark(xy); send(xy); };
       box.appendChild(hp); box.appendChild(h('p', { class: 'small muted', text: 'Click (or tap) the correct part of the picture. Click again to change your answer.' })); }
@@ -167,7 +174,7 @@
     function txt(val, ph, on, extra) { var a = { type: 'text', value: val == null ? '' : val, placeholder: ph, oninput: function () { on(this.value); ch(); } }; Object.keys(extra || {}).forEach(function (k) { a[k] = extra[k]; }); return h('input', a); }
     function rows(list, make, fresh, addText) { var w = h('div', { class: 'qt-ed' }), draw = function () { w.innerHTML = ''; list.forEach(function (it, i) { var r = make(it, i); r.appendChild(h('button', { type: 'button', class: 'x', 'aria-label': 'Remove row ' + (i + 1), text: '✕', onclick: function () { list.splice(i, 1); draw(); ch(); } })); w.appendChild(r); }); w.appendChild(h('button', { type: 'button', class: 'add', text: '＋ ' + addText, onclick: function () { list.push(fresh()); draw(); ch(); var ins = w.querySelectorAll('input[type=text]'); if (ins.length) ins[ins.length - (kind === 'match' ? 2 : 1)].focus(); } })); }; draw(); return w; }
     function picker(onPlace) { var wrap = h('div', {}), holder = h('div', { class: 'qt-pic qt-hot' }), show = function () { holder.innerHTML = ''; if (!d.image) return; var im = h('img', { src: d.image, alt: 'Your picture', onclick: function (e) { var r = im.getBoundingClientRect(); onPlace(Math.round((e.clientX - r.left) / r.width * 1000) / 10, Math.round((e.clientY - r.top) / r.height * 1000) / 10, im); } }); im.onload = function () { if (kind === 'hotspot') d.ratio = Math.round(im.naturalHeight / im.naturalWidth * 1000) / 1000 || 1; overlay(); }; holder.appendChild(im); overlay(); };
-      var overlay = function () { holder.querySelectorAll('.qt-pin,.qt-zone').forEach(function (x) { x.remove(); }); if (kind === 'label') d.spots.forEach(function (s, i) { if (s.x != null) holder.appendChild(h('span', { class: 'qt-pin', style: 'left:' + s.x + '%;top:' + s.y + '%', text: String(i + 1) })); }); else if (d.image) holder.appendChild(h('span', { class: 'qt-zone', style: 'left:' + d.x + '%;top:' + d.y + '%;width:' + (2 * d.r) + '%;aspect-ratio:1' })); };
+      var overlay = function () { holder.querySelectorAll('.qt-pin,.qt-zone').forEach(function (x) { x.remove(); }); if (kind === 'label' || kind === 'labelfill') d.spots.forEach(function (s, i) { if (s.x != null) holder.appendChild(h('span', { class: 'qt-pin', style: 'left:' + s.x + '%;top:' + s.y + '%', text: String(i + 1) })); }); else if (d.image) holder.appendChild(h('span', { class: 'qt-zone', style: 'left:' + d.x + '%;top:' + d.y + '%;width:' + (2 * d.r) + '%;aspect-ratio:1' })); };
       if (window.BVM && BVM.picField) { var pf = h('div', {}); BVM.picField(pf, { value: d.image || '', uid: window.BVM_UID, label: 'Add the picture or diagram', onChange: function (src) { d.image = src; show(); ch(); } }); wrap.appendChild(pf); } else wrap.appendChild(h('div', { class: 'r' }, [h('input', { type: 'url', value: d.image || '', placeholder: 'Link to the picture (https://…)', 'aria-label': 'Link to the picture', oninput: function () { d.image = this.value.trim(); show(); ch(); } })])); wrap.appendChild(holder); show(); wrap.redraw = overlay; return wrap; }
     if (kind === 'multi') { box.appendChild(h('p', { class: 'hint', text: 'Tick every choice that is correct.' })); box.appendChild(rows(d.choices, function (c, i) { return h('div', { class: 'r' }, [h('input', { type: 'checkbox', checked: c.ok, 'aria-label': 'Choice ' + (i + 1) + ' is correct', onchange: function () { c.ok = this.checked; ch(); } }), txt(c.t, 'Choice ' + (i + 1), function (v) { c.t = v; })]); }, function () { return { t: '', ok: false }; }, 'Add a choice')); }
     else if (kind === 'match') { box.appendChild(h('p', { class: 'hint', text: 'Type each pair side by side. Students see the right-hand side shuffled.' })); box.appendChild(rows(d.pairs, function (p, i) { return h('div', { class: 'r' }, [txt(p.l, 'Item ' + (i + 1), function (v) { p.l = v; }), h('span', { text: '→' }), txt(p.r, 'Its match', function (v) { p.r = v; })]); }, function () { return { l: '', r: '' }; }, 'Add a pair')); }
@@ -179,13 +186,75 @@
     else if (kind === 'number') box.appendChild(h('div', { class: 'r' }, [h('label', { class: 'hint', text: 'Correct number' }), txt(d.value, '96', function (v) { d.value = v; }, { inputmode: 'decimal', 'aria-label': 'Correct number' }), h('label', { class: 'hint', text: 'Accept ±' }), txt(d.tol, '0.5', function (v) { d.tol = v; }, { inputmode: 'decimal', 'aria-label': 'Tolerance' }), h('label', { class: 'hint', text: 'Unit shown' }), txt(d.unit, 'N', function (v) { d.unit = v; }, { 'aria-label': 'Unit' })]));
     else if (kind === 'table') { box.appendChild(h('label', { class: 'hint', text: 'Column headings (separate with commas)' })); box.appendChild(txt(d.cols, 'Planet, Time for one orbit', function (v) { d.cols = v; }, { 'aria-label': 'Column headings' }));
       box.appendChild(h('p', { class: 'hint', html: 'One row per line, cells separated by a bar <b>|</b>. Put <b>[square brackets]</b> round a cell students must fill in.' })); box.appendChild(h('textarea', { 'aria-label': 'Table rows', placeholder: 'Mercury | [88 days|88]\nEarth | [1 year|365 days]', value: d.rows, oninput: function () { d.rows = this.value; ch(); } })); }
-    else if (kind === 'label') { var cur = -1, pk = picker(function (x, y) { if (cur < 0 || !d.spots[cur]) { cur = d.spots.length; d.spots.push({ t: '', x: x, y: y }); } else { d.spots[cur].x = x; d.spots[cur].y = y; } cur = -1; drawSpots(); pk.redraw(); ch(); }), spotsBox = h('div', {}), drawSpots = function () { spotsBox.innerHTML = '';
+    else if (kind === 'label' || kind === 'labelfill') { var cur = -1, pk = picker(function (x, y) { if (cur < 0 || !d.spots[cur]) { cur = d.spots.length; d.spots.push({ t: '', x: x, y: y }); } else { d.spots[cur].x = x; d.spots[cur].y = y; } cur = -1; drawSpots(); pk.redraw(); ch(); }), spotsBox = h('div', {}), drawSpots = function () { spotsBox.innerHTML = '';
         d.spots.forEach(function (s, i) { spotsBox.appendChild(h('div', { class: 'r' }, [h('b', { text: (i + 1) + '.' }), txt(s.t, 'Label ' + (i + 1), function (v) { s.t = v; }), h('button', { type: 'button', class: 'add', text: cur === i ? 'Now click the picture' : '📍 Move', onclick: function () { cur = i; drawSpots(); } }), h('button', { type: 'button', class: 'x', 'aria-label': 'Remove label ' + (i + 1), text: '✕', onclick: function () { d.spots.splice(i, 1); drawSpots(); pk.redraw(); ch(); } })])); }); };
-      box.appendChild(pk); box.appendChild(h('p', { class: 'hint', text: 'Click the picture where a label belongs, then type the label. Students choose each numbered label from a list.' })); box.appendChild(spotsBox); drawSpots(); box.appendChild(h('label', { class: 'hint', text: 'Extra wrong labels (optional, separate with commas)' })); box.appendChild(txt(d.extra, 'nucleus, cell wall', function (v) { d.extra = v; }, { 'aria-label': 'Extra wrong labels' })); }
+      box.appendChild(pk); box.appendChild(h('p', { class: 'hint', text: kind === 'labelfill' ? 'Click the picture where a label belongs, then type the correct word. Other accepted answers go after a bar: cell membrane|plasma membrane. Students type each label.' : 'Click the picture where a label belongs, then type the label. Students drag (or choose) each numbered label.' })); box.appendChild(spotsBox); drawSpots(); if (kind === 'label') { box.appendChild(h('label', { class: 'hint', text: 'Extra wrong labels (optional, separate with commas)' })); box.appendChild(txt(d.extra, 'nucleus, cell wall', function (v) { d.extra = v; }, { 'aria-label': 'Extra wrong labels' })); } }
     else if (kind === 'hotspot') { var pk2 = picker(function (x, y) { d.x = x; d.y = y; pk2.redraw(); ch(); }); box.appendChild(pk2); box.appendChild(h('p', { class: 'hint', text: 'Click the picture on the correct part. The green circle is the area that counts as correct.' }));
       box.appendChild(h('div', { class: 'r' }, [h('label', { class: 'hint', text: 'Size of the correct area' }), h('input', { type: 'range', min: 3, max: 30, value: d.r, 'aria-label': 'Size of the correct area', oninput: function () { d.r = +this.value; pk2.redraw(); ch(); } })])); }
     return box;
   }
+
+  /* ---------------------------------------------------------------- drag and drop (Assessment Studio, Nov 2026)
+     Matching, sorting into groups, putting in order and labelling a diagram can be answered by dragging (mouse, pen or touch).
+     The lists underneath stay, so keyboard and screen-reader users answer exactly as before; dragging only sets those lists,
+     so the answer, its saved form and the marking are unchanged. */
+  var DCSS = '.qt-bank{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:2px dashed #c7d2fe;border-radius:12px;background:#f8faff;min-height:42px;align-items:center}.qt-bank:empty::after{content:"All placed";color:#64748b;font-size:.85rem}' +
+    '.qt-chip{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;padding:6px 11px;border-radius:999px;background:#4f46e5;color:#fff;font-weight:700;font-size:.9rem;line-height:1.2;box-shadow:0 1px 3px rgba(0,0,0,.2);display:inline-block}.qt-chip.used{background:#a5b4fc}' +
+    '.qt-ghost{position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-50%) rotate(-3deg);opacity:.92}.qt-on{outline:3px solid #16a34a!important;outline-offset:2px;background:#f0fdf4!important}' +
+    '.qt-bins{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.qt-bin{border:2px solid #e2e8f0;border-radius:12px;padding:8px;min-height:74px;background:#fff}.qt-bin h5{margin:0 0 6px;font-size:.9rem}.qt-bin .qt-chip{margin:2px}' +
+    '.qt-tag{position:absolute;transform:translate(14px,-50%);background:#fff;color:#172033;border:2px solid #4f46e5;border-radius:8px;padding:1px 6px;font:700 12px/1.3 system-ui;white-space:nowrap;pointer-events:none}' +
+    '.qt-ord .qt-row{touch-action:none;cursor:grab}.qt-ord .qt-row.lift{opacity:.4}.qt-alt{margin-top:4px}.qt-alt>summary{cursor:pointer;font-size:.85rem;color:#475569}';
+  var dstyled = false; function dstyle() { if (dstyled) return; dstyled = true; var s = document.createElement('style'); s.textContent = DCSS; document.head.appendChild(s); }
+  /* drag an element; onDrop(target) gets the element under the pointer that matches sel (inside root), or null */
+  function drag(el, root, sel, onDrop, ghostOf) {
+    el.addEventListener('pointerdown', function (e) {
+      if (e.button > 0) return; var sx = e.clientX, sy = e.clientY, ghost = null, over = null, id = e.pointerId;
+      function find(x, y) { var t = document.elementFromPoint(x, y); t = t && t.closest ? t.closest(sel) : null; return t && root.contains(t) ? t : null; }
+      function move(ev) { if (ev.pointerId !== id) return;
+        if (!ghost) { if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) < 6) return; ghost = (ghostOf ? ghostOf() : el).cloneNode(true); ghost.classList.add('qt-ghost'); ghost.style.width = el.getBoundingClientRect().width + 'px'; document.body.appendChild(ghost); el.classList.add('lift'); }
+        ev.preventDefault(); ghost.style.left = ev.clientX + 'px'; ghost.style.top = ev.clientY + 'px';
+        var t = find(ev.clientX, ev.clientY); if (t !== over) { if (over) over.classList.remove('qt-on'); over = t; if (over) over.classList.add('qt-on'); } }
+      function up(ev) { if (ev.pointerId !== id) return; document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
+        if (over) over.classList.remove('qt-on'); el.classList.remove('lift'); if (!ghost) return; ghost.remove(); onDrop(ev.type === 'pointerup' ? find(ev.clientX, ev.clientY) : null); }
+      document.addEventListener('pointermove', move, { passive: false }); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
+    });
+  }
+  function setSel(s, v) { if (!s) return; s.value = v == null ? '' : String(v); s.dispatchEvent(new Event('change', { bubbles: true })); }
+  function chip(text, i) { return h('span', { class: 'qt-chip', 'data-chip': i, text: text, title: 'Drag to place' }); }
+  function enhance(kind, o, box) {
+    dstyle();
+    var rows = [].slice.call(box.children).filter(function (x) { return x.classList && x.classList.contains('qt-row'); });
+    function alt(list, label) { var d = h('details', { class: 'qt-alt' }, [h('summary', { text: label })]); list.forEach(function (r) { d.appendChild(r); }); return d; }
+    if (kind === 'match' || kind === 'label') {
+      var words = kind === 'match' ? (o.right || []) : (o.labels || []), sels = rows.map(function (r) { return r.querySelector('select'); }), bank = h('div', { class: 'qt-bank', 'aria-hidden': 'true' });
+      var pic = kind === 'label' ? box.querySelector('.qt-pic') : null;
+      if (pic) [].forEach.call(pic.querySelectorAll('.qt-pin'), function (p, i) { p.setAttribute('data-drop', i); p.style.width = '30px'; p.style.height = '30px'; });
+      rows.forEach(function (r, i) { r.setAttribute('data-drop', i); });
+      function paint() { bank.innerHTML = ''; var used = sels.map(function (s) { return s && s.value; });
+        words.forEach(function (w, j) { var c = chip(w, j); if (used.indexOf(String(j)) >= 0) c.classList.add('used'); bank.appendChild(c);
+          drag(c, box, '[data-drop]', function (t) { if (!t) return; var i = +t.getAttribute('data-drop'); if (kind === 'match' || kind === 'label') sels.forEach(function (s, k) { if (k !== i && s && s.value === String(j) && kind === 'label') setSel(s, ''); }); setSel(sels[i], j); paint(); }); });
+        if (pic) { [].forEach.call(pic.querySelectorAll('.qt-tag'), function (x) { x.remove(); }); sels.forEach(function (s, i) { var sp = (o.spots || [])[i]; if (s && s.value !== '' && sp) pic.appendChild(h('span', { class: 'qt-tag', style: 'left:' + sp.x + '%;top:' + sp.y + '%', text: words[+s.value] })); }); } }
+      var before = pic || rows[0] || null;   // labels above the picture, answers above the rows
+      box.insertBefore(h('p', { class: 'small muted', text: kind === 'match' ? 'Drag each answer onto its match (or choose from the lists).' : 'Drag each label onto its number on the diagram (or choose from the lists).' }), before);
+      box.insertBefore(bank, before); box.addEventListener('change', function (e) { if (e.target.tagName === 'SELECT') paint(); }); paint();
+    } else if (kind === 'classify') {
+      var cs = rows.map(function (r) { return r.querySelector('select'); }), bins = h('div', { class: 'qt-bins' }), bank2 = h('div', { class: 'qt-bank', 'data-drop': '-1' });
+      function paint2() { bins.innerHTML = ''; bank2.innerHTML = ''; var boxes = (o.groups || []).map(function (g, gi) { var b = h('div', { class: 'qt-bin', 'data-drop': gi }, [h('h5', { text: g })]); bins.appendChild(b); return b; });
+        (o.items || []).forEach(function (t, i) { var c = chip(t, i), g = cs[i] && cs[i].value !== '' ? +cs[i].value : -1; (g >= 0 && boxes[g] ? boxes[g] : bank2).appendChild(c);
+          drag(c, box, '[data-drop]', function (tg) { if (!tg) return; setSel(cs[i], +tg.getAttribute('data-drop') < 0 ? '' : tg.getAttribute('data-drop')); paint2(); }); }); }
+      var first = rows[0] || null; box.insertBefore(h('p', { class: 'small muted', text: 'Drag each item into its group.' }), first); box.insertBefore(bank2, first); box.insertBefore(bins, first);
+      var al = alt(rows, '⌨️ Use drop-down lists instead'); box.appendChild(al); al.addEventListener('change', paint2); paint2();
+    } else if (kind === 'order') {
+      var list = box.querySelector('.qt-ord'); if (!list) return;
+      function wire() { [].forEach.call(list.children, function (r) { if (r._dw) return; r._dw = 1; r.setAttribute('data-drop', '1');
+        drag(r, list, '.qt-row', function (t) { if (!t || t === r) return; var kids = [].slice.call(list.children), from = kids.indexOf(r), to = kids.indexOf(t), dir = to > from ? 1 : -1, pos = from;
+          while (pos !== to) { var b = list.children[pos].querySelectorAll('button')[dir < 0 ? 0 : 1]; if (!b || b.disabled) break; b.click(); pos += dir; } wire(); }); }); }
+      new MutationObserver(wire).observe(list, { childList: true }); wire();
+      var hint = box.querySelector('p.small'); if (hint) hint.textContent = 'Drag the items (or use the arrows) to put them in the correct order.';
+    }
+  }
+  var studentBase = student;
+  student = function (kind, o, value, onChange, opt) { var box = studentBase(kind, o, value, onChange, opt); if (!(opt && opt.locked) && /^(match|label|classify|order)$/.test(kind) && typeof document.elementFromPoint === 'function') { try { enhance(kind, J(o, {}) || {}, box); } catch (e) {} } return box; };
 
   window.BVQT = { KINDS: KINDS, has: has, name: function (k) { return NAMES[k] ? NAMES[k][1] + ' ' + NAMES[k][2] : k; }, blank: blank, pack: pack, unpack: unpack, problems: problems, score: score, pretty: pretty, student: student, editor: editor, norm: norm };
 })();
