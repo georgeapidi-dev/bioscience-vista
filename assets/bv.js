@@ -186,5 +186,8 @@
   var BV = window.BV = window.BV || {};
   var T = { A: ['A', 'Unity and diversity', '#0284c7'], B: ['B', 'Form and function', '#16a34a'], C: ['C', 'Interaction and interdependence', '#d97706'], D: ['D', 'Continuity and change', '#7c3aed'] };
   BV.THEMES = T;
-  BV.theme = function (t) { var m = /(?:^|[^A-Za-z0-9])([A-D])([1-4])\.(\d)/.exec(t || ''); if (!m) return null; var x = T[m[1]]; return { k: x[0], name: x[1], c: x[2] }; };
+  // levels of organisation, the second part of every IB Biology code (A1 molecules, A2 cells, A3 organisms, A4 ecosystems)
+  var LV = { 1: ['Molecules', '⚛'], 2: ['Cells', '🔬'], 3: ['Organisms', '🫀'], 4: ['Ecosystems', '🌍'] };
+  BV.LEVELS = LV;
+  BV.theme = function (t) { var m = /(?:^|[^A-Za-z0-9])([A-D])([1-4])\.(\d)/.exec(t || ''); if (!m) return null; var x = T[m[1]]; return { k: x[0], name: x[1], c: x[2], lv: +m[2], level: LV[m[2]][0], code: m[1] + m[2] + '.' + m[3] }; };
 })();
