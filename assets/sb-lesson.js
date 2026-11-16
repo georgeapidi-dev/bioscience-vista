@@ -35,9 +35,9 @@
         } else { who = s.user; window.BV_STUDENT = s.user; document.dispatchEvent(new Event('bv-signed-in')); }
       });
       db.rpc('is_staff').then(function (t) {   // teachers: show model answers in every step
-        if (t.data !== true) { db.rpc('is_class_teacher').then(function (k) { if (k.data === true) quizBtns(); }, function () {}); return; }
+        if (t.data !== true) { db.rpc('is_class_teacher').then(function (k) { if (k.data === true) { quizBtns(); setTimeout(quizBtns, 1500); } }, function () {}); return; }
         window.BV_TEACHER = true; document.dispatchEvent(new Event('bv-teacher'));
-        quizBtns();
+        quizBtns(); setTimeout(quizBtns, 1500);
         b.style.background = '#f5f3ff'; b.style.color = '#5b21b6'; b.style.borderBottom = '1px solid #ddd6fe';
         b.textContent = '👩‍🏫 Teacher view: signed in as ' + (s.user.email || 'teacher') + '. Model answers are shown in every step; students see them after finishing each step.';
       }, function () {});
