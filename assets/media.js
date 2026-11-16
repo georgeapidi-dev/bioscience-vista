@@ -12,6 +12,7 @@
     fr.allow = 'autoplay; fullscreen'; fr.setAttribute('allowfullscreen', ''); fr.title = b.getAttribute('data-title') || 'Lesson video';
     fr.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:10px';
     box.innerHTML = ''; box.appendChild(fr); overlay(fr);
+    var card = box.closest('.lv-v'); if (card) { card.classList.add('on'); card.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }   // the playing video fills the row
   });
   document.addEventListener('contextmenu', function (e) { if (e.target.closest && e.target.closest('.lv-media')) e.preventDefault(); });
   var lib = null;
