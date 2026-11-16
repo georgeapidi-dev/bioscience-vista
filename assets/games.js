@@ -224,7 +224,9 @@
     { id: 'circuits', subj: 'phys', icon: '💡', title: 'Circuit Solver', desc: 'Series and parallel: total resistance and current.', type: 'sprint', gen: 'circuits', stars: [100, 200, 300] },
     { id: 'density', subj: 'phys', icon: '🛟', title: 'Sink or Float?', desc: 'Water is 1.0 g/cm³. Will each material float or sink?', type: 'sort', set: DENSITY, stars: [100, 180, 260] },
     { id: 'numline', subj: 'math', icon: '📍', title: 'Number Line Ninja', desc: 'Place whole numbers, decimals, fractions, percentages and negatives on the line.', type: 'numline', stars: [150, 300, 450] },
-    { id: 'scramble', subj: 'sci', icon: '🔤', title: 'Science Word Scramble', desc: 'Read the clue and unscramble the key word. Type or tap the tiles.', type: 'scramble', stars: [100, 220, 340] }];
+    { id: 'scramble', subj: 'sci', icon: '🔤', title: 'Science Word Scramble', desc: 'Read the clue and unscramble the key word. Type or tap the tiles.', type: 'scramble', stars: [100, 220, 340] },
+    { id: 'neuron', subj: 'bio', icon: '⚡', title: 'Fire the Neuron', desc: 'Neural signalling: you are the ion channels! Open Na⁺ and K⁺ channels at the right moment.', type: 'impulse', stars: [150, 300, 450] },
+    { id: 'hormones', subj: 'bio', icon: '📨', title: 'Hormone Dispatch', desc: 'Chemical signalling: pick the gland, the hormone, the target organ and the receptor.', type: 'hormone', stars: [200, 400, 600] }];
   var BY = {}; GAMES.forEach(function (g) { BY[g.id] = g; });
   function daily() { return GAMES[dayNo(today()) % GAMES.length]; }
 
@@ -260,6 +262,8 @@
     '.gm-atomw{display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:center}.gm-atom{width:min(300px,100%);height:auto}.gm-atom [data-sh]{cursor:pointer}.gm-atom [data-sh]:hover{stroke-opacity:.6}.gm-shctl{display:grid;gap:8px}.gm-shctl div{display:flex;align-items:center;gap:8px}.gm-shctl span{width:64px;font-weight:700}.gm-shctl output{min-width:2ch;text-align:center;font-weight:800;font-size:1.2rem}.gm-shctl div button{width:38px;height:38px;border-radius:10px;border:2px solid #cbd5e1;background:#fff;font:inherit;font-weight:800;font-size:1.2rem;cursor:pointer}' +
     '.gm-nl{width:100%;height:auto;display:block;cursor:crosshair;margin:8px 0}.gm-big{font-size:1.6rem}.gm-slots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:12px 0}.gm-slots span{width:38px;height:46px;border-bottom:4px solid #4f46e5;display:grid;place-items:center;font-size:1.5rem;font-weight:800}.gm-slots span.h{color:#b45309}' +
     '.gm-tiles{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:8px 0 12px}.gm-tiles button{width:46px;height:52px;border-radius:12px;border:0;background:linear-gradient(#fde68a,#f59e0b);box-shadow:0 4px 0 #b45309;font:inherit;font-size:1.4rem;font-weight:900;color:#422006;cursor:pointer}.gm-tiles button:disabled{opacity:.25;box-shadow:none;cursor:default}' +
+    '.gm-ion svg{width:100%;max-width:420px;height:auto;display:block;margin:6px auto 0}.gm-hw{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:14px;align-items:start}@media(max-width:600px){.gm-hw{grid-template-columns:1fr}.gm-bodyw{max-width:240px;margin:0 auto}}' +
+    '.gm-body{width:100%;height:auto;display:block}.gm-body [data-o]{cursor:pointer;outline:none}.gm-body [data-o]:hover,.gm-body [data-o]:focus-visible{filter:drop-shadow(0 0 5px #4f46e5) brightness(1.1)}.gm-path{margin:0 0 10px;padding-left:1.2em;color:#15803d;font-weight:700}' +
     '.gm-confetti{position:fixed;inset:0;pointer-events:none;z-index:60}.gm-sec{margin-top:22px}.gm-sec h2{margin:0 0 10px}' +
     '@media (prefers-reduced-motion:reduce){.gm-pop,.gm-shake,.gm-card{animation:none!important;transition:none!important}}';
   document.head.appendChild(css);
@@ -320,7 +324,7 @@
     app.querySelector('#gm-back').onclick = function (e) { e.preventDefault(); location.hash = ''; };
     RUN = { g: g, score: 0, right: 0, wrong: 0, combo: 0, maxCombo: 0, keys: function () {} };
     var stage = app.querySelector('#gm-stage');
-    ({ sprint: sprint, memory: memory, sort: sorter, order: order, ptable: ptable, balance: balance, launch: launch, cellmap: cellmap, catcher: catcher, shells: shells, numline: numline, scramble: scramble })[g.type](g, stage);
+    ({ sprint: sprint, memory: memory, sort: sorter, order: order, ptable: ptable, balance: balance, launch: launch, cellmap: cellmap, catcher: catcher, shells: shells, numline: numline, scramble: scramble, impulse: impulse, hormone: hormone })[g.type](g, stage);
     window.scrollTo(0, 0);
   }
   function sayLive(t) { var l = app.querySelector('#gm-live'); if (l) l.textContent = t; }
@@ -705,6 +709,122 @@
       paint();
     }
     timer(90, function () { finish(); }); next();
+  }
+
+  /* --- impulse: Fire the Neuron. The player is the voltage-gated channels (added 16 Nov 2026) */
+  function impulse(g, stage) {
+    var ROUNDS = 8, r = 0, plan = shuffle([-62, -59, -46, -42, -40, -44, -48, -60]).slice(0, ROUNDS), st, V, t, raf, last;
+    stage.innerHTML = '<p class="small muted" style="margin-top:0">You are the ion channels of an axon. Press each button at the right moment: <b>1</b> open Na⁺ channels when the potential reaches the <b>threshold (−55 mV)</b>, <b>2</b> open K⁺ channels at the <b>peak</b>, <b>3</b> run the Na⁺/K⁺ pump when the membrane is <b>hyperpolarised</b>. If the stimulus never reaches the threshold, do nothing: no impulse (all or nothing)!</p>' +
+      '<canvas class="gm-cv" id="gm-cv" width="820" height="300" style="background:#fff;border:1px solid #e2e8f0" role="img" aria-label="Membrane potential trace"></canvas>' +
+      '<div class="gm-ion"><svg viewBox="0 0 360 70" id="gm-mem" aria-hidden="true"></svg></div>' +
+      '<div class="gm-bins" style="margin-top:8px"><button type="button" class="gm-bin" data-k="na"><kbd>1</kbd> Open Na⁺ channels</button><button type="button" class="gm-bin" data-k="k"><kbd>2</kbd> Open K⁺ channels</button><button type="button" class="gm-bin" data-k="pump"><kbd>3</kbd> Na⁺/K⁺ pump: restore −70 mV</button></div><p class="gm-fb" id="gm-fb" aria-live="polite"></p>';
+    var cv = stage.querySelector('#gm-cv'), c = cv.getContext('2d'), W = cv.width, H = cv.height, trace = [], fb = stage.querySelector('#gm-fb'), mem = stage.querySelector('#gm-mem');
+    var Y = function (v) { return 20 + (50 - v) / 140 * (H - 50); };
+    function say(txt, ok) { fb.className = 'gm-fb ' + (ok ? 'ok' : 'no'); fb.textContent = txt; sayLive(txt); }
+    function newRound() { if (!RUN) return; if (r >= ROUNDS) return finish(); st = { phase: 'stim', S: plan[r], tPh: 0 }; V = -70; t = 0; trace = []; r++; say('Round ' + r + ' of ' + ROUNDS + ': a stimulus arrives…', true); fb.className = 'gm-fb'; }
+    function phase(p) { st.phase = p; st.tPh = 0; }
+    function act(k) {
+      if (!RUN || !st || st.done) return;
+      if (k === 'na') {
+        if (st.phase !== 'stim' && st.phase !== 'subdecay') { addScore(false); return say('✗ The Na⁺ channels are not the next step now.', false); }
+        if (V < -55.5) { addScore(false); say(st.S < -55 ? '✗ This stimulus never reaches the threshold: no impulse should fire!' : '✗ Too early: the threshold (−55 mV) is not reached yet.', false); if (st.S < -55) { st.done = true; setTimeout(newRound, 1400); } return; }
+        var p = addScore(true, V < -50 ? 20 : 10); say('✓ Threshold reached: Na⁺ channels open, Na⁺ rushes in: depolarisation! +' + p, true); phase('depol');
+      } else if (k === 'k') {
+        if (st.phase !== 'depol' && st.phase !== 'peak') { addScore(false); return say('✗ Not yet: K⁺ channels open after depolarisation.', false); }
+        if (V < 25) { addScore(false); return say('✗ Too early: wait for the peak (about +40 mV).', false); }
+        var p2 = addScore(true, st.phase === 'peak' && st.tPh < 0.5 || V > 35 ? 20 : 10); say('✓ Peak: Na⁺ channels close, K⁺ channels open, K⁺ flows out: repolarisation. +' + p2, true); phase('repol');
+      } else {
+        if (st.phase !== 'hyper' && st.phase !== 'repol') { addScore(false); return say('✗ The pump restores the resting potential after the impulse.', false); }
+        if (V > -72) { addScore(false); return say('✗ Wait: the membrane is not hyperpolarised yet.', false); }
+        var p3 = addScore(true, 15); say('✓ Hyperpolarised: the Na⁺/K⁺ pump restores the resting potential (−70 mV). +' + p3, true); phase('restore');
+      }
+    }
+    function step(dt) {
+      st.tPh += dt; t += dt;
+      if (st.phase === 'stim') { V = -70 + (st.S + 70) * Math.min(1, st.tPh / 1.6); if (st.S >= -55 && V >= -55 && st.tPh > 1.6 + 0.9) { addScore(false); say('✗ Too slow: at the threshold the Na⁺ channels should open.', false); phase('depol'); } else if (st.S < -55 && st.tPh > 1.6) phase('subdecay'); }
+      else if (st.phase === 'subdecay') { V = st.S + (-70 - st.S) * Math.min(1, st.tPh / 1.2); if (st.tPh > 1.3 && !st.done) { st.done = true; var p = addScore(true, 20); say('✓ Below the threshold, so no action potential: all or nothing! +' + p, true); setTimeout(newRound, 1200); } }
+      else if (st.phase === 'depol') { V = Math.min(40, V + dt * 160); if (V >= 40) phase('peak'); }
+      else if (st.phase === 'peak') { V = 40; if (st.tPh > 1.1) { addScore(false); say('✗ Missed the peak: the K⁺ channels should open now.', false); phase('repol'); } }
+      else if (st.phase === 'repol') { V = Math.max(-82, V - dt * 120); if (V <= -82) phase('hyper'); }
+      else if (st.phase === 'hyper') { V = -82; if (st.tPh > 1.3) { addScore(false); say('✗ Missed it: the Na⁺/K⁺ pump should restore −70 mV.', false); phase('restore'); } }
+      else if (st.phase === 'restore') { V = Math.min(-70, V + dt * 20); if (V >= -70 && !st.done) { st.done = true; setTimeout(newRound, 700); } }
+    }
+    function draw() {
+      c.fillStyle = '#fff'; c.fillRect(0, 0, W, H); c.font = '12px system-ui'; c.textAlign = 'right';
+      [40, 0, -55, -70, -90].forEach(function (v) { c.strokeStyle = v === -55 ? '#f97316' : '#e2e8f0'; c.setLineDash(v === -55 ? [6, 4] : []); c.beginPath(); c.moveTo(50, Y(v)); c.lineTo(W - 10, Y(v)); c.stroke(); c.setLineDash([]); c.fillStyle = v === -55 ? '#c2410c' : '#475569'; c.fillText(v + ' mV', 46, Y(v) + 4); });
+      c.textAlign = 'left'; c.fillStyle = '#c2410c'; c.fillText('threshold', 56, Y(-55) - 4);
+      c.strokeStyle = '#2563eb'; c.lineWidth = 3; c.beginPath(); trace.forEach(function (p, i) { var x = 50 + p[0] / 7 * (W - 60); i ? c.lineTo(x, Y(p[1])) : c.moveTo(x, Y(p[1])); }); c.stroke();
+      var ph = st ? { stim: 'Stimulus', subdecay: 'Too weak: back to rest', depol: 'Depolarisation', peak: 'Peak', repol: 'Repolarisation', hyper: 'Hyperpolarisation', restore: 'Restoring the resting potential' }[st.phase] : '';
+      c.fillStyle = '#0f172a'; c.font = 'bold 15px system-ui'; c.fillText(Math.round(V) + ' mV · ' + ph, 60, 16);
+      var na = st && (st.phase === 'depol' || st.phase === 'peak'), kk = st && (st.phase === 'repol' || st.phase === 'hyper'), pump = st && st.phase === 'restore';
+      mem.innerHTML = '<rect x="0" y="22" width="360" height="26" fill="#fde68a"/><text x="4" y="14" font-size="10" fill="#475569">outside</text><text x="4" y="66" font-size="10" fill="#475569">inside the axon</text>' +
+        '<rect x="70" y="18" width="34" height="34" rx="6" fill="' + (na ? '#ea580c' : '#94a3b8') + '"/><text x="87" y="40" font-size="10" text-anchor="middle" fill="#fff" font-weight="700">Na⁺</text>' + (na ? '<text x="112" y="62" font-size="11" fill="#ea580c" font-weight="700">↓ Na⁺ in</text>' : '') +
+        '<rect x="170" y="18" width="34" height="34" rx="6" fill="' + (kk ? '#2563eb' : '#94a3b8') + '"/><text x="187" y="40" font-size="10" text-anchor="middle" fill="#fff" font-weight="700">K⁺</text>' + (kk ? '<text x="212" y="14" font-size="11" fill="#2563eb" font-weight="700">↑ K⁺ out</text>' : '') +
+        '<rect x="270" y="18" width="44" height="34" rx="14" fill="' + (pump ? '#16a34a' : '#94a3b8') + '"/><text x="292" y="40" font-size="9" text-anchor="middle" fill="#fff" font-weight="700">pump</text>';
+    }
+    function loop(now) { if (!RUN || RUN.over) return; var dt = Math.min(0.05, (now - (last || now)) / 1000); last = now; if (st) { step(dt); trace.push([Math.min(7, t), V]); } draw(); RUN.raf = requestAnimationFrame(loop); }
+    stage.querySelectorAll('[data-k]').forEach(function (b) { b.onclick = function () { act(b.getAttribute('data-k')); }; });
+    RUN.keys = function (e) { var k = { '1': 'na', '2': 'k', '3': 'pump' }[e.key]; if (k) act(k); };
+    RUN.dbg = function () { return { V: V, phase: st && st.phase, S: st && st.S, done: st && st.done }; };   // for tests
+    newRound(); RUN.raf = requestAnimationFrame(loop);
+  }
+
+  /* --- hormone: Hormone Dispatch. Gland → hormone → target organ → receptor (added 16 Nov 2026) */
+  var HORMONES = ['Insulin', 'Glucagon', 'Adrenaline', 'ADH', 'Thyroxine', 'FSH', 'LH', 'Oestrogen', 'Progesterone', 'Growth hormone', 'TSH'];
+  var JOBS = [
+    ['After a big meal, blood glucose is too high.', 'pancreas', 'Insulin', ['liver', 'muscle'], 'm', 'Insulin makes the liver and muscles take in glucose and store it as glycogen.'],
+    ['It is many hours since you ate: blood glucose is too low.', 'pancreas', 'Glucagon', ['liver'], 'm', 'Glucagon makes the liver break glycogen down into glucose.'],
+    ['A snake appears on the path! Get ready for fight or flight.', 'adrenal', 'Adrenaline', ['heart', 'liver', 'muscle'], 'm', 'Adrenaline raises heart rate and releases glucose for the muscles.'],
+    ['After a long run in the heat, the blood is too concentrated.', 'pituitary', 'ADH', ['kidney'], 'm', 'ADH makes the kidney collecting ducts reabsorb more water.'],
+    ['The body\'s metabolic rate is too low.', 'thyroid', 'Thyroxine', ['cells'], 'i', 'Thyroxine raises the metabolic rate of almost every body cell. It is hydrophobic and acts on receptors inside cells.'],
+    ['The thyroid gland needs a signal to make more thyroxine.', 'pituitary', 'TSH', ['thyroid'], 'm', 'TSH (thyroid-stimulating hormone) from the pituitary stimulates the thyroid.'],
+    ['Start of the menstrual cycle: an egg follicle needs to develop.', 'pituitary', 'FSH', ['ovary'], 'm', 'FSH stimulates a follicle to develop in the ovary.'],
+    ['Middle of the menstrual cycle: time for ovulation.', 'pituitary', 'LH', ['ovary'], 'm', 'A surge of LH triggers the release of an egg from the ovary.'],
+    ['After menstruation, the uterus lining must be rebuilt.', 'ovary', 'Oestrogen', ['uterus'], 'i', 'Oestrogen (a steroid) makes the uterus lining thicken. It acts on receptors inside the cells.'],
+    ['After ovulation, the thick uterus lining must be maintained.', 'ovary', 'Progesterone', ['uterus'], 'i', 'Progesterone (a steroid) maintains the uterus lining.'],
+    ['A child\'s bones and muscles need to grow.', 'pituitary', 'Growth hormone', ['cells', 'muscle'], 'm', 'Growth hormone from the pituitary stimulates growth of bones and muscles.']];
+  var ORGNAME = { pituitary: 'pituitary gland', thyroid: 'thyroid gland', adrenal: 'adrenal glands', pancreas: 'pancreas', ovary: 'ovaries', liver: 'liver', muscle: 'muscles', heart: 'heart', kidney: 'kidneys', uterus: 'uterus', cells: 'all body cells' };
+  function hormone(g, stage) {
+    var list = shuffle(JOBS).slice(0, 6), q = 0, step = 0, job, lock = false;
+    var body = '<svg viewBox="0 0 320 470" class="gm-body" role="group" aria-label="Human body with glands and organs. Each one is a button.">' +
+      '<g fill="#fde7d7" stroke="#d6a07e" stroke-width="2"><circle cx="160" cy="55" r="42"/><rect x="146" y="92" width="28" height="22"/><rect x="100" y="110" width="120" height="210" rx="38"/><rect x="62" y="122" width="34" height="150" rx="16"/><rect x="224" y="122" width="34" height="150" rx="16"/><rect x="112" y="300" width="40" height="160" rx="18"/><rect x="168" y="300" width="40" height="160" rx="18"/></g>' +
+      '<g data-o="pituitary"><circle cx="160" cy="62" r="9" fill="#a855f7" stroke="#6b21a8" stroke-width="2"/></g>' +
+      '<g data-o="thyroid"><path d="M146 104c6-8 10-2 14 2c4-4 8-10 14-2c0 10-28 10-28 0z" fill="#ec4899" stroke="#9d174d" stroke-width="2"/></g>' +
+      '<g data-o="heart"><path d="M146 160c-12-14-30 2-14 18l14 12l14-12c16-16-2-32-14-18z" fill="#ef4444" stroke="#991b1b" stroke-width="2"/></g>' +
+      '<g data-o="liver"><path d="M150 196c30-14 62-8 60 10c-2 14-30 18-60 10z" fill="#92400e" stroke="#451a03" stroke-width="2"/></g>' +
+      '<g data-o="pancreas"><ellipse cx="150" cy="236" rx="30" ry="7" fill="#fbbf24" stroke="#92400e" stroke-width="2"/></g>' +
+      '<g data-o="kidney"><ellipse cx="128" cy="262" rx="10" ry="15" fill="#b91c1c" stroke="#7f1d1d" stroke-width="2"/><ellipse cx="192" cy="262" rx="10" ry="15" fill="#b91c1c" stroke="#7f1d1d" stroke-width="2"/></g>' +
+      '<g data-o="adrenal"><path d="M120 248l8-10l8 10z M184 248l8-10l8 10z" fill="#f59e0b" stroke="#78350f" stroke-width="2"/></g>' +
+      '<g data-o="uterus"><path d="M146 292q14 16 28 0l-4 18h-20z" fill="#f472b6" stroke="#9d174d" stroke-width="2"/></g>' +
+      '<g data-o="ovary"><ellipse cx="132" cy="292" rx="7" ry="5" fill="#fb7185" stroke="#9f1239" stroke-width="2"/><ellipse cx="188" cy="292" rx="7" ry="5" fill="#fb7185" stroke="#9f1239" stroke-width="2"/></g>' +
+      '<g data-o="muscle"><ellipse cx="79" cy="170" rx="13" ry="30" fill="#f87171" stroke="#991b1b" stroke-width="2" opacity=".85"/><ellipse cx="241" cy="170" rx="13" ry="30" fill="#f87171" stroke="#991b1b" stroke-width="2" opacity=".85"/></g>' +
+      '</svg>';
+    function paint(note, cls) {
+      var ask = ['Which <b>gland</b> releases the hormone? Click it on the body.', 'Which <b>hormone</b> does it release into the blood?', 'Which <b>target organ</b> has the receptors? Click it.', 'Where are the <b>receptors</b> for ' + job[2].toLowerCase() + '?'][step];
+      stage.innerHTML = '<p class="small muted" style="margin-top:0">Signal ' + (q + 1) + ' of ' + list.length + ' · step ' + (step + 1) + ' of 4</p><p class="gm-q">📨 ' + E(job[0]) + '<br><span style="font-size:1rem">' + ask + '</span></p>' +
+        '<div class="gm-hw"><div class="gm-bodyw">' + body + '<button type="button" class="gm-bin" data-o="cells" style="width:100%;margin-top:6px">🧫 All body cells</button></div><div class="gm-hside" id="gm-hs"></div></div><p class="gm-fb ' + (cls || '') + '" id="gm-fb" aria-live="polite">' + (note || '') + '</p>';
+      var hs = stage.querySelector('#gm-hs'), path = (job.found || []).map(function (x) { return '<li>' + x + '</li>'; }).join('');
+      hs.innerHTML = '<ol class="gm-path">' + path + '</ol>';
+      if (step === 1) { var opts = shuffle([job[2]].concat(shuffle(HORMONES.filter(function (h) { return h !== job[2]; })).slice(0, 3))); hs.innerHTML += '<div class="gm-bins">' + opts.map(function (h, i) { return '<button type="button" class="gm-bin" data-h="' + E(h) + '"><kbd>' + (i + 1) + '</kbd> ' + E(h) + '</button>'; }).join('') + '</div>'; }
+      if (step === 3) hs.innerHTML += '<div class="gm-bins"><button type="button" class="gm-bin" data-r="m"><kbd>1</kbd> In the cell membrane (transmembrane receptor)</button><button type="button" class="gm-bin" data-r="i"><kbd>2</kbd> Inside the cell (intracellular receptor)</button></div>';
+      var parts = stage.querySelectorAll('[data-o]');
+      parts.forEach(function (p, i) { if (p.tagName.toLowerCase() === 'g') { p.setAttribute('tabindex', '0'); p.setAttribute('role', 'button'); p.setAttribute('aria-label', 'Organ ' + (i + 1)); } p.onclick = function () { pickOrgan(p.getAttribute('data-o')); }; p.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickOrgan(p.getAttribute('data-o')); } }; });
+      stage.querySelectorAll('[data-h]').forEach(function (b) { b.onclick = function () { pickH(b.getAttribute('data-h')); }; });
+      stage.querySelectorAll('[data-r]').forEach(function (b) { b.onclick = function () { pickR(b.getAttribute('data-r')); }; });
+      lock = false;
+    }
+    function good(txt, pts) { (job.found = job.found || []).push(txt); step++; if (step > 3) { q++; lock = true; paint('✓ ' + job[5] + ' +' + pts, 'ok'); setTimeout(next, 2300); } else paint('✓ +' + pts, 'ok'); }
+    function bad(txt) { addScore(false); var fb = stage.querySelector('#gm-fb'); fb.className = 'gm-fb no'; fb.textContent = '✗ ' + txt; stage.classList.add('gm-shake'); setTimeout(function () { stage.classList.remove('gm-shake'); }, 400); }
+    function pickOrgan(o) {
+      if (lock) return;
+      if (step === 0) { if (o === job[1]) good('Gland: ' + ORGNAME[o], addScore(true, 15)); else bad('That is the ' + ORGNAME[o] + '. Which gland makes the hormone for this job?'); }
+      else if (step === 2) { if (job[3].indexOf(o) >= 0) good('Target: ' + ORGNAME[o], addScore(true, 15)); else bad('The ' + ORGNAME[o] + ' is not the main target here.'); }
+    }
+    function pickH(h) { if (lock || step !== 1) return; if (h === job[2]) good('Hormone: ' + h, addScore(true, 15)); else bad(h + ' does a different job.'); }
+    function pickR(r) { if (lock || step !== 3) return; if (r === job[4]) good('Receptor: ' + (r === 'm' ? 'transmembrane (hydrophilic hormone)' : 'intracellular (hydrophobic hormone)'), addScore(true, 15)); else bad(job[4] === 'm' ? job[2] + ' is hydrophilic: it cannot cross the membrane, so its receptor is in the membrane.' : job[2] + ' is hydrophobic: it passes through the membrane to a receptor inside the cell.'); }
+    function next() { if (!RUN) return; if (q >= list.length) return finish(); job = list[q].slice(); job.found = []; step = 0; paint(); }
+    RUN.keys = function (e) { var n = +e.key; if (!n) return; var b = stage.querySelectorAll('[data-h],[data-r]')[n - 1]; if (b) b.click(); };
+    next();
   }
 
   /* ------------------------------------------------------------------ the end of a game: stars, XP, badges */
