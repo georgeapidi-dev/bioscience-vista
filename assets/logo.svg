@@ -1,27 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="BioscienceVista logo">
   <defs>
-    <linearGradient id="lvbg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#4338ca"/>
-      <stop offset=".5" stop-color="#c026d3"/>
-      <stop offset="1" stop-color="#f97316"/>
+    <linearGradient id="bvbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d9488"/>
+      <stop offset=".55" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#7c3aed"/>
     </linearGradient>
-    <radialGradient id="lvglow" cx="44" cy="19" r="26" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
+    <radialGradient id="bvglow" cx="32" cy="14" r="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff" stop-opacity=".45"/>
       <stop offset="1" stop-color="#fff" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="lvstar" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="bvsun" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#fffbeb"/>
-      <stop offset="1" stop-color="#fcd34d"/>
+      <stop offset="1" stop-color="#fbbf24"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="18" fill="url(#lvbg)"/>
-  <rect width="64" height="64" rx="18" fill="url(#lvglow)"/>
-  <!-- orbit: science in motion -->
-  <ellipse cx="35" cy="30" rx="27" ry="10" transform="rotate(-32 35 30)" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.2"/>
-  <circle cx="13.5" cy="46.5" r="3" fill="#fde68a"/>
-  <!-- B for Bioscience: one confident stroke -->
-  <path d="M18 17v32M18 17h8.5a7.5 7.5 0 0 1 0 15H18M18 32h10a8.5 8.5 0 0 1 0 17H18" fill="none" stroke="#fff" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- the nova: a new star -->
-  <path d="M44 6c1.3 8 3.7 10.400 11.700 11.700-8 1.300-10.400 3.700-11.700 11.700-1.300-8-3.700-10.400-11.700-11.700 8-1.300 10.400-3.700 11.700-11.700z" fill="url(#lvstar)"/>
-  <circle cx="55" cy="33" r="1.8" fill="#fff" fill-opacity=".9"/>
+  <rect width="64" height="64" rx="16" fill="url(#bvbg)"/>
+  <rect width="64" height="64" rx="16" fill="url(#bvglow)"/>
+  <!-- the vista: a horizon -->
+  <path d="M5 49q27-11 54 0" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2.4" stroke-linecap="round"/>
+  <!-- the sun rising over it -->
+  <circle cx="32" cy="13" r="5" fill="url(#bvsun)"/>
+  <!-- two leaves (life, bioscience) that together make a V -->
+  <path d="M31 52C19 45 10 31 13 16c11 3 20 13 18 36z" fill="#fff"/>
+  <path d="M33 52c12-7 21-21 18-36-11 3-20 13-18 36z" fill="#d1fae5"/>
+  <path d="M30 48 17 21M34 48l13-27" stroke="#2563eb" stroke-opacity=".35" stroke-width="1.6" stroke-linecap="round"/>
 </svg>
