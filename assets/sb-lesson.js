@@ -35,8 +35,9 @@
         } else { who = s.user; window.BV_STUDENT = s.user; document.dispatchEvent(new Event('bv-signed-in')); }
       });
       db.rpc('is_staff').then(function (t) {   // teachers: show model answers in every step
-        if (t.data !== true) return;
+        if (t.data !== true) { db.rpc('is_class_teacher').then(function (k) { if (k.data === true) quizBtns(); }, function () {}); return; }
         window.BV_TEACHER = true; document.dispatchEvent(new Event('bv-teacher'));
+        quizBtns();
         b.style.background = '#f5f3ff'; b.style.color = '#5b21b6'; b.style.borderBottom = '1px solid #ddd6fe';
         b.textContent = '👩‍🏫 Teacher view: signed in as ' + (s.user.email || 'teacher') + '. Model answers are shown in every step; students see them after finishing each step.';
       }, function () {});
@@ -52,6 +53,11 @@
     db.rpc('log_visit', { page: location.pathname, ref: document.referrer && document.referrer.indexOf(location.origin) !== 0 ? document.referrer.split('?')[0] : null,
       dev: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'phone' : 'computer', vid: vid }).then(function () {}, function () {});
   } catch (e) {}
+  function quizBtns() {   // teachers open the lesson's quiz or exam straight away: questions and marking, no attempt, no timer
+    document.querySelectorAll('a[href^="/quizzes/#"],a[href^="/exams/#"]').forEach(function (a) { var id = a.getAttribute('href').split('#')[1]; if (!id || (a.nextElementSibling && a.nextElementSibling.hasAttribute('data-tq'))) return;
+      var t = document.createElement('a'); t.setAttribute('data-tq', ''); t.className = a.className; t.href = '/teach/#quizzes/' + id + '/preview'; t.textContent = '👁 Teacher: open the questions (no timer)';
+      t.style.cssText = 'background:#0f766e;color:#fff;margin-left:8px'; a.after(t); });
+  }
   // Signed-in students: name and class come from their account, so work is filed under the right class.
   function lockWho(pr) {
     if (!pr || !pr.full_name) return;
