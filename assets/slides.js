@@ -79,7 +79,7 @@
     flush();
   }
   /* slide notes written for the slides: one block per concept or objective, each with a heading */
-  var OWN = document.getElementById('lv-slidenotes'), usedPic = {};
+  var OWN = document.getElementById('lv-slidenotes'), usedPic = {}, ONLY = !!(OWN && OWN.hasAttribute('data-only'));
   function srcOf(n) { var im = n.tagName === 'IMG' ? n : n.querySelector && n.querySelector('img'); return im ? im.getAttribute('src') : ''; }
   if (OWN) {
     [].forEach.call(OWN.querySelectorAll('img'), function (im) { usedPic[im.getAttribute('src')] = 1; });
@@ -94,7 +94,7 @@
     var bl = [], sub = head;
     items.forEach(function (n) {
       if (n.classList.contains('nh') || /^h3$/i.test(n.tagName)) { pack(sub, bl, kind); bl = []; sub = /^(notes|read this)/i.test(txt(n)) ? head : (txt(n) || head); return; }
-      if (OWN && (!(isFig(n) && !n.classList.contains('notes')) || usedPic[srcOf(n)])) return;   // the lesson's own slide notes carry the explanation; a step then adds only the pictures those notes have not already shown
+      if (OWN && (ONLY || !(isFig(n) && !n.classList.contains('notes')) || usedPic[srcOf(n)])) return;   // data-only: the slide notes carry their own pictures too, the step adds nothing   // the lesson's own slide notes carry the explanation; a step then adds only the pictures those notes have not already shown
       if (n.classList.contains('notes') || n.classList.contains('banner')) bl = bl.concat(blocks(n));
       else if (n.classList.contains('card') && !n.querySelector('textarea,select,input,button,canvas') && txt(n).length > 40) bl = bl.concat(blocks(n));   // worked examples, background and other explanation cards
       else if (n.querySelectorAll('input,select,button,canvas').length > 2) return;   // a live simulator: it stays in the lesson
