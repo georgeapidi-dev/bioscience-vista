@@ -1,4 +1,4 @@
-/* Learnova · donations by PayPal (USD) or M-Pesa (KES). Anyone can give, signed in or not. */
+/* BioscienceVista · donations by PayPal (USD) or M-Pesa (KES). Anyone can give, signed in or not. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app');
   if (!S.on) return S.notReady(app);
@@ -8,7 +8,7 @@
   });
   function draw(set) {
     var note = set.charity_note || '70% of every subscription and donation goes to charity.';
-    app.innerHTML = '<section class="panel tint"><h2>💚 ' + E(note) + '</h2><p>Your gift keeps Learnova\'s lessons, quizzes and simulations growing for students everywhere, and most of it goes straight to charity.</p></section>' +
+    app.innerHTML = '<section class="panel tint"><h2>💚 ' + E(note) + '</h2><p>Your gift keeps BioscienceVista\'s lessons, quizzes and simulations growing for students everywhere, and most of it goes straight to charity.</p></section>' +
       '<section class="panel grp"><label class="f">Your name (optional)<input id="dn" maxlength="80" autocomplete="name"></label><label class="f">Message (optional)<input id="dm" maxlength="300"></label></section>' +
       '<div class="two"><section class="panel grp"><h3>💳 PayPal or card (US dollars)</h3><div class="cta" id="amts">' + [5, 10, 25, 50, 100].map(function (a, i) { return '<button type="button" class="btn sm' + (i === 1 ? ' main' : '') + '" data-a="' + a + '">$' + a + '</button>'; }).join('') + '</div>' +
       '<label class="f">Or another amount (USD)<input id="da" type="number" min="1" max="5000" step="1" value="10" inputmode="decimal"></label><div id="ppbox"><p class="small muted">Loading PayPal…</p></div><p class="msg" id="ppm" role="alert"></p></section>' +
@@ -37,7 +37,7 @@
         onApprove: function (d) { m.textContent = 'Confirming…';
           return S.db.functions.invoke('paypal', { body: { action: 'capture_donation', order: d.orderID } }).then(function (r) { var x = r.data || {};
             if (r.error || !x.ok) { m.textContent = x.error || 'The donation was not completed. Please try again.'; return; }
-            app.innerHTML = '<section class="panel tint"><h2>💚 Thank you!</h2><p>Your donation was received. ' + E(note) + '</p><a class="btn main" href="/">Back to Learnova</a></section>'; }); },
+            app.innerHTML = '<section class="panel tint"><h2>💚 Thank you!</h2><p>Your donation was received. ' + E(note) + '</p><a class="btn main" href="/">Back to BioscienceVista</a></section>'; }); },
         onError: function (err) { if (err && err.message === 'amount') return; m.className = 'msg'; m.textContent = 'PayPal could not finish. Please try again.'; }
       }).render(box);
     };

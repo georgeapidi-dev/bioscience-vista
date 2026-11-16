@@ -1,4 +1,4 @@
-/* Learnova · class lessons: a signed-in student sees only the classes they joined and were approved for.
+/* BioscienceVista · class lessons: a signed-in student sees only the classes they joined and were approved for.
    Teachers and visitors who are not signed in still see every class (the pages themselves stay locked). */
 document.addEventListener('DOMContentLoaded', function () {
   var S = window.BVS; if (!S || !S.db) return;

@@ -1,4 +1,4 @@
-/* Learnova · premium access: pay with PayPal (USD) or M-Pesa (KES). Prices come from the database, never from this page. */
+/* BioscienceVista · premium access: pay with PayPal (USD) or M-Pesa (KES). Prices come from the database, never from this page. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app');
   S.guard(app, { allowPending: true, school: true }).then(function (me) {
@@ -16,7 +16,7 @@
     plans = plans.filter(function (p) { return p.audience === who && (+p.amount > 0 || +p.amount_kes > 0); });
     var h = '<section class="panel tint"><h2>' + (a.premium ? '⭐ You have premium access' : 'Premium access') + '</h2><p>' +
       (a.premium ? (a.free ? 'Your access was given free by the admin.' : 'Your access runs until <b>' + E(new Date(a.until).toLocaleDateString()) + '</b>. Paying again adds time on to the end.') :
-        (me.school ? 'Premium lets you run your own classes, add Learnova lessons to them and set quizzes for your students.' : 'Premium opens the lessons, quizzes and simulations of the classes your teacher approved you for.')) + '</p>' +
+        (me.school ? 'Premium lets you run your own classes, add BioscienceVista lessons to them and set quizzes for your students.' : 'Premium opens the lessons, quizzes and simulations of the classes your teacher approved you for.')) + '</p>' +
       '<p class="small">💚 ' + E(set.charity_note || '70% of every subscription and donation goes to charity.') + ' <a href="/donate/">Donate</a></p>' +
       (set.premium_note ? '<p class="small muted">' + E(set.premium_note) + '</p>' : '') + '</section>';
     if (!plans.length) h += '<p class="emptybox">Prices have not been set yet. Ask your teacher or the admin about access.</p>';

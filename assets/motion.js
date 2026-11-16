@@ -1,4 +1,4 @@
-/* Learnova motion layer: scroll reveals, header on scroll, count-up numbers, hero network and parallax. */
+/* BioscienceVista motion layer: scroll reveals, header on scroll, count-up numbers, hero network and parallax. */
 (function () {
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var top = document.querySelector('header.top');

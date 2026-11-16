@@ -1,4 +1,4 @@
-/* Learnova · Time on tasks (/time/?class=ID&n=NAME). For teachers.
+/* BioscienceVista · Time on tasks (/time/?class=ID&n=NAME). For teachers.
    Shows, for one class, the time allowance of every task (interactive lessons, exam-style sets, examinations) and the time
    each student has spent on it. The teacher can change the allowance for the class; students see the new time the next
    time they open the task. Data comes from class_time_report() and is changed with set_task_time() (migration 037);

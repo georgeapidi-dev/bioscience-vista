@@ -1,4 +1,4 @@
-/* Learnova · lesson link-up: when a student is signed in, each saved step is also recorded in their account.
+/* BioscienceVista · lesson link-up: when a student is signed in, each saved step is also recorded in their account.
    The lesson's own Google Form saving is untouched. Uses the public anon key only; the server checks who is signed in. */
 (function () {
   var BV = window.BV || {};
@@ -26,7 +26,7 @@
     b.setAttribute('role', 'status');
     if (s) {
       b.style.cssText = 'font:600 13px/1.4 system-ui,Arial,sans-serif;padding:6px 16px;background:#ecfdf5;color:#065f46;border-bottom:1px solid #a7f3d0';
-      b.textContent = '✓ Logged in as ' + (s.user.email || 'student') + '. Your marks are saved to your Learnova dashboard.';
+      b.textContent = '✓ Logged in as ' + (s.user.email || 'student') + '. Your marks are saved to your BioscienceVista dashboard.';
       db.from('profiles').select('approved,full_name,class_id,classes(name)').eq('id', s.user.id).maybeSingle().then(function (p) {
         lockWho(p.data);
         if (p.data && p.data.approved === false) {
@@ -56,7 +56,7 @@
   function lockWho(pr) {
     if (!pr || !pr.full_name) return;
     var cls = pr.classes && pr.classes.name, set = function (id, v) { var el = document.getElementById(id); if (!el || !v) return;
-      el.value = v; el.readOnly = true; el.title = 'Filled in from your Learnova account'; el.style.background = '#f1f5f9';
+      el.value = v; el.readOnly = true; el.title = 'Filled in from your BioscienceVista account'; el.style.background = '#f1f5f9';
       el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); };
     set('sname', pr.full_name); set('scls', cls);
     if (!cls) { var b = document.querySelector('[role=status]'); if (b) b.textContent += ' You are not in a class yet: ask your teacher for your class join code.'; }
@@ -77,7 +77,7 @@
           try {
             var b = JSON.parse(opts.body), m = /TOTAL=([\d.]+)\s*\/\s*([\d.]+)/.exec(b.answers || '');
             if (s && res.ok && m) db.rpc('record_lesson_result', { lesson_ext_id: b.lesson, got: +m[1], out_of: +m[2], step: b.step || null, attempt: attemptNo() }).then(function (x) {
-              if (x.error) { if (window.console) console.warn('Learnova account:', x.error.message); return; }
+              if (x.error) { if (window.console) console.warn('BioscienceVista account:', x.error.message); return; }
               // whole-lesson feedback on the dashboard, updated from the marks on every question so far
               db.functions.invoke('result-feedback', { body: { lesson: b.lesson } }).then(function () {}, function () {});
               // question-by-question analysis and the learning profile (AI reads the written answers once the lesson is finished)
@@ -98,7 +98,7 @@
         if (lesson && ans && (nm || who)) {
           window.fetch(BV.sbUrl + '/rest/v1/lesson_work', { method: 'POST', headers: { 'apikey': BV.sbKey, 'Authorization': 'Bearer ' + BV.sbKey, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
             body: JSON.stringify({ lesson: lesson.slice(0, 60), student_name: (nm || (who && who.email) || 'Student').slice(0, 80), class_name: cl ? cl.slice(0, 80) : null, step: Math.max(1, Math.min(12, isNaN(step) ? 1 : step)), answers: ans.slice(0, 19900) }) })
-            .then(function (r) { if (!r.ok && window.console) console.warn('Learnova: step not copied to the site database', r.status); }, function () {});
+            .then(function (r) { if (!r.ok && window.console) console.warn('BioscienceVista: step not copied to the site database', r.status); }, function () {});
         }
       }
     } catch (e) {}

@@ -1,4 +1,4 @@
-/* Learnova · Help Desk and Messages buttons.
+/* BioscienceVista · Help Desk and Messages buttons.
    ❓ Help Desk appears in every interactive lesson, simulation and lab: it opens the Science Help Desk over the page,
    so students can ask a question without leaving their work. ✉️ Messages appears on every page for signed-in users
    (students, teachers, admin), with the number of unread messages. */

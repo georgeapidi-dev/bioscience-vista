@@ -1,8 +1,8 @@
-/* Learnova Virtual Laboratory engine · by Learnova
+/* BioscienceVista Virtual Laboratory engine · by BioscienceVista
    One lab = one spec object passed to VLab.mount(spec). The engine draws the seven lab sections
    (background, plan, experiment, results, analyse, evaluate, about the model), keeps the results table,
    draws graphs on <canvas>, exports CSV, gives rule-based feedback (no AI needed) and saves the work
-   to the student's Learnova account when they are signed in. */
+   to the student's BioscienceVista account when they are signed in. */
 (function () {
   var COL = ['#0072B2', '#D55E00', '#009E73', '#CC79A7', '#E69F00', '#56B4E9', '#000000'];   // Okabe–Ito: safe for colour-blind readers
   function E(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -225,12 +225,12 @@
       var w = window.open('', '_blank'); if (!w) { $('#vl-save').textContent = 'Allow pop-ups to open the report.'; return; }
       var img = ''; try { img = $('#vl-gc').toDataURL('image/png'); } catch (e) {}
       w.document.write('<!doctype html><meta charset="utf-8"><title>' + E(spec.title) + ' · lab report</title><style>body{font:15px/1.5 system-ui,Arial;max-width:860px;margin:24px auto;padding:0 16px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:4px 6px;text-align:center}h1{font-size:1.5rem}h2{font-size:1.15rem;margin-top:1.4em}.a{background:#f4f7fb;padding:8px;border-radius:8px;white-space:pre-wrap}</style>' +
-        '<h1>' + E(spec.title) + '</h1><p>Learnova virtual laboratory · ' + new Date().toLocaleString() + ' · Score ' + score() + ' / ' + MAX + '</p>' +
+        '<h1>' + E(spec.title) + '</h1><p>BioscienceVista virtual laboratory · ' + new Date().toLocaleString() + ' · Score ' + score() + ' / ' + MAX + '</p>' +
         '<h2>Research question</h2><p>' + E(spec.rq) + '</p><h2>Hypothesis</h2><div class="a">' + E(S.hyp || '—') + '</div>' +
         '<h2>Results</h2><table><tr><th>Trial</th>' + cols.map(function (c) { return '<th>' + E(c.label) + (c.unit ? ' / ' + E(c.unit) : '') + '</th>'; }).join('') + '</tr>' + S.trials.map(function (r, i) { return '<tr><td>' + (i + 1) + '</td>' + cols.map(function (c) { return '<td>' + cell(r, c) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>' +
         (img ? '<h2>Graph</h2><img src="' + img + '" style="max-width:100%">' : '') +
         QS.map(function (q) { return '<h2>' + E(q.q) + '</h2><div class="a">' + E(S.answers[q.id] || '—') + '</div><p>Mark: ' + (S.scores[q.id] || 0) + ' / ' + q.marks + '</p>'; }).join('') +
-        '<p style="color:#666;font-size:.85em">Lab by Learnova · biosciencevista.com</p>');
+        '<p style="color:#666;font-size:.85em">Lab by BioscienceVista · biosciencevista.com</p>');
       w.document.close(); setTimeout(function () { try { w.print(); } catch (e) {} }, 400);
     }
 

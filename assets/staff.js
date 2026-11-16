@@ -1,4 +1,4 @@
-/* Teacher dashboard · Learnova
+/* Teacher dashboard · BioscienceVista
    Everything here runs with the teacher's own login. Row Level Security decides what each teacher can read or change;
    no service-role key or admin password is ever used in the browser. */
 (function () {
@@ -53,8 +53,8 @@
     var st = me.profile.teacher_status, a = me.access || {};
     var top = '<p class="label">My classes</p><h2>Hello, ' + E((me.profile.full_name || '').split(' ')[0] || 'teacher') + '</h2>';
     if (!me.school) { app.innerHTML = '<section class="panel"><h2>Teachers only</h2><p>This page is for teacher accounts. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; return false; }
-    if (st !== 'approved' || me.roles.indexOf('school_teacher') < 0) { app.innerHTML = top + '<section class="panel tint"><h3>' + (st === 'rejected' ? 'Your teacher account was not approved' : '⏳ Waiting for approval') + '</h3><p>' + (st === 'rejected' ? 'Contact the Learnova admin through Messages if you think this is a mistake.' : 'The Learnova admin checks every new teacher account. You can buy premium now; your classes open as soon as you are approved.') + '</p><p><a class="btn sm" href="/messages/">Messages</a> <a class="btn sm" href="/premium/">Premium</a></p></section><div id="mycbox"></div>'; coursePanel(app.querySelector('#mycbox')); return false; }
-    if (!a.premium) { app.innerHTML = top + '<section class="panel tint"><h3>Premium is needed to run classes</h3><p>Your teacher account is approved. Get premium to create classes, add Learnova lessons and quizzes, and see your students\' results.</p><a class="btn main" href="/premium/">Get premium</a></section>'; return false; }
+    if (st !== 'approved' || me.roles.indexOf('school_teacher') < 0) { app.innerHTML = top + '<section class="panel tint"><h3>' + (st === 'rejected' ? 'Your teacher account was not approved' : '⏳ Waiting for approval') + '</h3><p>' + (st === 'rejected' ? 'Contact the BioscienceVista admin through Messages if you think this is a mistake.' : 'The BioscienceVista admin checks every new teacher account. You can buy premium now; your classes open as soon as you are approved.') + '</p><p><a class="btn sm" href="/messages/">Messages</a> <a class="btn sm" href="/premium/">Premium</a></p></section><div id="mycbox"></div>'; coursePanel(app.querySelector('#mycbox')); return false; }
+    if (!a.premium) { app.innerHTML = top + '<section class="panel tint"><h3>Premium is needed to run classes</h3><p>Your teacher account is approved. Get premium to create classes, add BioscienceVista lessons and quizzes, and see your students\' results.</p><a class="btn main" href="/premium/">Get premium</a></section>'; return false; }
     return true;
   }
   function loadScript(src) { return new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = src; x.onload = ok; x.onerror = function () { bad(new Error('Could not load ' + src)); }; document.head.appendChild(x); }); }
@@ -267,7 +267,7 @@
       '.mdl{margin-top:6px;font-size:.9rem}.mdl summary{cursor:pointer;color:#166534}.mdl div{background:#f0fdf4;border-radius:10px;padding:8px 12px;margin-top:4px}.fb{background:#eff6ff;border-left:4px solid #1d4ed8;border-radius:8px;padding:8px 12px;margin-top:10px;font-size:.92rem}' +
       '.tbl{display:flex;flex-wrap:wrap;gap:6px}.tbl span{background:#e0f2fe;border-radius:8px;padding:3px 9px}.foot{color:#64748b;font-size:.82rem;margin-top:20px}@media print{body{background:#fff}.step{break-inside:avoid}.mdl{display:none}header{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
     var h = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + E(info.title) + ' · ' + E(x.student) + '</title><style>' + css + '</style></head><body><div class="wrap">' +
-      '<header><div class="meta">Completed interactive lesson · Learnova</div><h1>' + E(info.title) + '</h1><div class="meta"><b>' + E(x.student) + '</b> · ' + E(x.cls) + ' · ' + done + ' of ' + nums.length + ' steps saved · last saved ' + E(new Date(x.last).toLocaleString()) + '</div>' +
+      '<header><div class="meta">Completed interactive lesson · BioscienceVista</div><h1>' + E(info.title) + '</h1><div class="meta"><b>' + E(x.student) + '</b> · ' + E(x.cls) + ' · ' + done + ' of ' + nums.length + ' steps saved · last saved ' + E(new Date(x.last).toLocaleString()) + '</div>' +
       (pc != null ? '<div class="score"><b>' + x.total + ' / ' + x.max + '</b><div class="bar"><i style="width:' + pc + '%"></i></div><b>' + pc + '%</b></div>' : '') + '</header>';
     nums.forEach(function (n) {
       var st = info.steps[n] || { title: '', phase: 'Step ' + n, q: {} }, row = x.steps[n], fb = x.fb[n], mdl = {};
@@ -287,7 +287,7 @@
     });
     if (x.draw && x.draw.length) h += '<section class="step"><div class="sh"><div><div class="ph">Made with the tools inside the questions</div><h2>Graphs and drawings</h2></div></div>' + x.draw.map(function (d) {
       return '<div class="qa"><div class="q">' + E((d.kind === 'graph' ? 'Graph' : 'Drawing') + ' · ' + (d.label || d.qkey)) + '</div><img src="' + E(d.image) + '" alt="' + (d.kind === 'graph' ? 'Student graph' : 'Student drawing') + '" style="max-width:100%;border:1px solid #cbd5e1;border-radius:8px;background:#fff"><div class="small" style="color:#64748b">Last changed ' + E(S.when(d.updated_at)) + '</div></div>'; }).join('') + '</section>';
-    return h + '<p class="foot">Lesson by Learnova · biosciencevista.com · printed ' + E(new Date().toLocaleString()) + '</p></div></body></html>';
+    return h + '<p class="foot">Lesson by BioscienceVista · biosciencevista.com · printed ' + E(new Date().toLocaleString()) + '</p></div></body></html>';
   }
   function lessonWork(p, args) {
     p.innerHTML = '<p class="muted">Loading students\' lessons…</p>';
@@ -886,7 +886,7 @@
         '.bar{position:sticky;top:0;background:#fff;padding:8px 0;border-bottom:1px solid #ddd;margin-bottom:10px}@media print{.bar{display:none}}';
       var html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mark scheme · ' + E(qz.title) + '</title><style>' + css + '</style></head><body>' +
         '<div class="bar"><button onclick="print()">🖨 Print or save as PDF</button></div><h1>Mark scheme: ' + E(qz.title) + '</h1>' +
-        '<p class="meta">' + (qz.category === 'exam' ? 'Exam' : 'Quiz') + ' · ' + n + ' questions · ' + total + ' marks' + (qz.time_limit_minutes ? ' · ' + qz.time_limit_minutes + ' minutes' : '') + ' · Prepared by Learnova · Learnova · Confidential: for teachers</p>' + body + '</body></html>';
+        '<p class="meta">' + (qz.category === 'exam' ? 'Exam' : 'Quiz') + ' · ' + n + ' questions · ' + total + ' marks' + (qz.time_limit_minutes ? ' · ' + qz.time_limit_minutes + ' minutes' : '') + ' · Prepared by BioscienceVista · Confidential: for teachers</p>' + body + '</body></html>';
       var w = window.open('', '_blank');
       if (w) { w.document.open(); w.document.write(html); w.document.close(); }
       else { var a2 = document.createElement('a'); a2.href = URL.createObjectURL(new Blob([html], { type: 'text/html' })); a2.download = 'mark-scheme-' + qz.title.replace(/[^\w]+/g, '-').slice(0, 60) + '.html'; a2.click(); }
@@ -915,7 +915,7 @@
         '.fbbox{display:grid;gap:6px}.fbp{border-left:4px solid #cbd5e1;padding:4px 10px}.fbp b{display:block}.fbp ul{margin:0;padding-left:20px}.fbp p{margin:2px 0}.fbp.good{border-color:#16a34a}.fbp.miss{border-color:#dc2626}.fbp.why{border-color:#2563eb}.fbp.imp{border-color:#d97706}.fbp.next{border-color:#7c3aed}.fbp.tc{border-color:#0f766e}.fbsrc{font-size:.8em;color:#64748b;margin:0}' +
         '@media print{.stu{page-break-before:always}}';
       var html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + h(qz.title) + ' · ' + h(c.name) + '</title><style>' + css + '</style></head><body>' +
-        '<p style="color:#64748b">Learnova · teacher report · ' + h(new Date().toLocaleString()) + '</p><h1>' + h(qz.title) + '</h1><p><b>' + h(c.name) + '</b> · ' + done.length + ' of ' + kids.length + ' handed in' + (mean != null ? ' · class average ' + mean + '%' : '') + '</p>' +
+        '<p style="color:#64748b">BioscienceVista · teacher report · ' + h(new Date().toLocaleString()) + '</p><h1>' + h(qz.title) + '</h1><p><b>' + h(c.name) + '</b> · ' + done.length + ' of ' + kids.length + ' handed in' + (mean != null ? ' · class average ' + mean + '%' : '') + '</p>' +
         '<p>Feedback sources: ⚙️ rule-based ' + src.rule + ' · 🤖 AI ' + src.ai + ' · 🧑‍🏫 teacher ' + src.teacher + '. AI marks are suggestions until a teacher confirms them.</p>' +
         '<table><tr><th>Student</th><th>Status</th><th>Mark</th><th>Left the page</th></tr>' + rows + '</table>' + per + '</body></html>';
       var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
@@ -1317,9 +1317,9 @@
         "qs.forEach(function(q){var k=K[q.getAttribute('data-q')]||{},f=q.querySelector('.fb'),v=val(q);f.hidden=false;if(q.getAttribute('data-kind')==='short'){f.className='fb';f.innerHTML='<b>Model answer:</b> '+esc(k.m||'Ask your teacher.')+(k.e?'<br>'+esc(k.e):'')+'<br><i>Compare it with your answer and correct your work.</i>'}" +
         "else{max++;var ok=String(k.c)===v;if(ok)got++;f.className='fb'+(ok?'':' bad');f.innerHTML=(ok?'✓ Correct.':'✗ The correct answer is '+'ABCDEFGH'.charAt(k.c)+'.')+(k.e?' '+esc(k.e):'')}});" +
         "st.querySelector('.score').textContent=max?'Multiple choice in this step: '+got+' / '+max:'Compare your answers with the model answers.'}});";
-      var html = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + E(q.title) + '</title><style>' + css + '</style></head><body><header><main style="padding:0 16px"><p>Interactive lesson</p><h1>' + E(q.title) + '</h1><p>Prepared by ' + E(author) + ' · Learnova</p></main></header><main>' +
+      var html = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + E(q.title) + '</title><style>' + css + '</style></head><body><header><main style="padding:0 16px"><p>Interactive lesson</p><h1>' + E(q.title) + '</h1><p>Prepared by ' + E(author) + ' · BioscienceVista</p></main></header><main>' +
         (q.instructions ? '<section class="step"><h2>Learning objectives</h2><ul>' + String(q.instructions).split('\n').filter(function (l) { return l.trim(); }).map(function (l) { return '<li>' + E(l.trim()) + '</li>'; }).join('') + '</ul></section>' : '') +
-        body + '</main><footer>' + E(q.title) + ' · Prepared by ' + E(author) + ' · made with the Learnova lesson builder · answers are kept on this device</footer><script>' + js + '<\/script></body></html>';
+        body + '</main><footer>' + E(q.title) + ' · Prepared by ' + E(author) + ' · made with the BioscienceVista lesson builder · answers are kept on this device</footer><script>' + js + '<\/script></body></html>';
       var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
       a.download = (q.title || 'lesson').replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').slice(0, 70) + '.html'; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     });
@@ -1659,7 +1659,7 @@
       function read(form) { var o = {}; c.f.forEach(function (f) { var el = form.querySelector('[data-k="' + f[0] + '"]'); o[f[0]] = f[2] === 'bool' ? el.checked : f[2] === 'num' ? (el.value === '' ? (f[0] === 'sort_order' ? 0 : null) : +el.value) : (el.value.trim() || null); }); return o; }
       function draw() {
         var list = rows.filter(function (x) { return !q || c.show(x).toLowerCase().indexOf(q) >= 0; });
-        p.innerHTML = (TEACH ? '<p class="small muted">Your own lessons, links, files and simulations. Each one is seen only by the class you choose (or students you set it for on the 📌 To-do list). Learnova\'s main-site lessons are already in your classes.</p>' : '') + '<nav class="tabs">' + KEYS.map(function (k) { return '<a href="#content/' + k + '" aria-selected="' + (k === t) + '">' + CONTENT[k].label + '</a>'; }).join('') + '</nav>' +
+        p.innerHTML = (TEACH ? '<p class="small muted">Your own lessons, links, files and simulations. Each one is seen only by the class you choose (or students you set it for on the 📌 To-do list). BioscienceVista\'s main-site lessons are already in your classes.</p>' : '') + '<nav class="tabs">' + KEYS.map(function (k) { return '<a href="#content/' + k + '" aria-selected="' + (k === t) + '">' + CONTENT[k].label + '</a>'; }).join('') + '</nav>' +
           '<details class="panel tint"' + (rows.length ? '' : ' open') + '><summary><b>＋ Add to ' + c.label.toLowerCase() + '</b></summary><form class="grp" id="nf" style="margin-top:10px">' + c.f.map(function (f) { return field(f, null); }).join('') + '<button class="btn main sm" type="submit">Add</button></form></details>' +
           '<input type="search" id="q" placeholder="Search ' + c.label.toLowerCase() + '" value="' + E(q) + '" aria-label="Search">' +
           (list.length ? list.map(function (x) { return '<details class="panel" data-id="' + x.id + '"><summary>' + (x.published === false ? '<span class="pill">Hidden</span> ' : '') + E(c.show(x)) + '</summary><form class="grp" style="margin-top:10px">' + c.f.map(function (f) { return field(f, x[f[0]]); }).join('') +
@@ -1807,7 +1807,7 @@
       box.querySelector('#lwrep').onclick = function () {
         var w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to open the report.', true); return; }
         w.document.write('<!doctype html><meta charset="utf-8"><title>' + E(a.sim_title || a.sim) + ' · ' + E(who) + '</title><style>body{font:15px/1.5 system-ui,Arial;max-width:900px;margin:24px auto;padding:0 16px}table{border-collapse:collapse;width:100%;font-size:.9em}td,th{border:1px solid #ccc;padding:4px 6px;text-align:center}.tablewrap{overflow-x:auto}</style>' +
-          labDoc(a, who) + (a.teacher_comment ? '<h3>Teacher\'s comment</h3><p style="white-space:pre-wrap">' + E(a.teacher_comment) + '</p>' : '') + '<p style="color:#666;font-size:.85em">Learnova virtual laboratory report · Learnova · biosciencevista.com</p>');
+          labDoc(a, who) + (a.teacher_comment ? '<h3>Teacher\'s comment</h3><p style="white-space:pre-wrap">' + E(a.teacher_comment) + '</p>' : '') + '<p style="color:#666;font-size:.85em">BioscienceVista virtual laboratory report · BioscienceVista · biosciencevista.com</p>');
         w.document.close();
       };
       box.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1898,9 +1898,9 @@
         var link = function () { var l = card.querySelector('.blink'); return l ? l.value.trim() : null; };
         var text = function (st) {
           var first = (b.booker === 'parent' ? b.contact_name : b.contact_name).split(' ')[0], when = slot() ? nice(slot()) : '';
-          if (st === 'declined') return 'Dear ' + first + ',\n\nThank you for your request for ' + b.subject + ' lessons. Unfortunately I am not available at the times you suggested. Could you send me a few other times that suit you?\n\nBest wishes,\nLearnova';
+          if (st === 'declined') return 'Dear ' + first + ',\n\nThank you for your request for ' + b.subject + ' lessons. Unfortunately I am not available at the times you suggested. Could you send me a few other times that suit you?\n\nBest wishes,\nBioscienceVista';
           return 'Dear ' + first + ',\n\nThank you for booking ' + b.subject + ' lessons' + (b.student_name ? ' for ' + b.student_name : '') + '. I am happy to confirm your lesson on ' + when + ' (' + b.duration_min + ' minutes).\n\n' +
-            (b.mode === 'virtual' ? 'Join here: ' + (link() || '[meeting link]') + '\n\n' : 'Venue: ' + (b.location || '[venue]') + '\n\n') + 'Fee: [fee]\n\nPlease reply if you need to change anything.\n\nBest wishes,\nLearnova';
+            (b.mode === 'virtual' ? 'Join here: ' + (link() || '[meeting link]') + '\n\n' : 'Venue: ' + (b.location || '[venue]') + '\n\n') + 'Fee: [fee]\n\nPlease reply if you need to change anything.\n\nBest wishes,\nBioscienceVista';
         };
         card.querySelectorAll('[data-reply]').forEach(function (a) { a.onclick = function (e) { e.preventDefault();
           var st = b.status === 'declined' ? 'declined' : 'confirmed', t = text(st);
@@ -1937,7 +1937,7 @@
         (pr.data || []).forEach(function (q) { nm[q.id] = q.full_name; });
         p.innerHTML = '<div class="stats"><div class="stat"><span class="small muted">Classes</span><b>' + CLASSES.length + '</b></div><div class="stat"><span class="small muted">Students</span><b>' + Object.keys(MINE).length + '</b></div>' +
           '<div class="stat"><span class="small muted">Asking to join</span><b><a href="#approvals">' + nWait + '</a></b></div><div class="stat"><span class="small muted">Answers to mark</span><b><a href="#marking">' + toMark + '</a></b></div></div>' +
-          (!CLASSES.length ? '<p class="panel tint">Start by <a href="#classes">creating a class</a>: choose the course you teach and its Learnova lessons and quizzes are added for you.</p>' : '') +
+          (!CLASSES.length ? '<p class="panel tint">Start by <a href="#classes">creating a class</a>: choose the course you teach and its BioscienceVista lessons and quizzes are added for you.</p>' : '') +
           (nWait ? '<p class="panel tint"><b>' + nWait + ' student' + (nWait > 1 ? 's are' : ' is') + ' asking to join your classes.</b> <a class="btn main sm" href="#approvals">Review requests</a></p>' : '') +
           (CLASSES.length ? '<h3>🏫 My classes</h3><div class="ccards">' + CLASSES.map(function (c) { var k = per[c.id] || { ok: 0, wait: 0 };
             return '<div class="ccard2" style="--k:' + hue(c.id) + '"><a href="#classes/' + c.id + '"><b>' + E(c.name) + '</b></a><span class="small">👥 ' + k.ok + ' student' + (k.ok === 1 ? '' : 's') + (k.wait ? ' · 🙋 ' + k.wait + ' waiting' : '') + '</span><span class="small"><a href="#classes/' + c.id + '/todo">📌 To-do</a> · <a href="#classes/' + c.id + '/register">🗒 Register</a> · <a href="#classes/' + c.id + '/activity">👀 Activity</a> · <a href="' + '/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a> · <a href="/live/?class=' + c.id + '">🎥 Live</a><br><a href="#classes/' + c.id + '/lessons">🧪 Lessons</a> · <a href="#classes/' + c.id + '/quizzes">📝 Quizzes</a></span></div>'; }).join('') + '</div>' : '') +
@@ -1950,7 +1950,7 @@
   function reviewBox(sec) {
     S.db.from('reviews').select('rating,body,status').eq('user_id', ME.user.id).maybeSingle().then(function (r) {
       var m0 = r.data;
-      sec.innerHTML = '<h3>⭐ Review Learnova</h3><p class="small muted">' + (m0 ? 'Your review is ' + (m0.status === 'approved' ? 'published' : 'waiting for approval') + '. You can change it.' : 'Tell other teachers how Learnova helps your classes. Reviews appear on the home page after a check.') + '</p>' +
+      sec.innerHTML = '<h3>⭐ Review BioscienceVista</h3><p class="small muted">' + (m0 ? 'Your review is ' + (m0.status === 'approved' ? 'published' : 'waiting for approval') + '. You can change it.' : 'Tell other teachers how BioscienceVista helps your classes. Reviews appear on the home page after a check.') + '</p>' +
         '<form id="rvf" class="grp"><select id="rvs">' + [5, 4, 3, 2, 1].map(function (n) { return '<option value="' + n + '"' + (m0 && m0.rating === n ? ' selected' : '') + '>' + '★'.repeat(n) + '</option>'; }).join('') + '</select>' +
         '<textarea id="rvt" maxlength="600" rows="3" placeholder="What works well for you and your students?">' + E(m0 ? m0.body : '') + '</textarea><label class="chk"><input type="checkbox" id="rvn" checked> Show my full name</label><button class="btn main sm">Send review</button></form>';
       sec.querySelector('#rvf').onsubmit = function (e) { e.preventDefault(); S.db.rpc('submit_review', { stars: +sec.querySelector('#rvs').value, words: sec.querySelector('#rvt').value, show_full_name: sec.querySelector('#rvn').checked }).then(function (x) { ok(x, 'Thank you: your review will appear after a check.'); }); };
@@ -1966,15 +1966,15 @@
         var nm = {}; (pr.data || []).forEach(function (q) { nm[q.id] = q.full_name; });
         p.innerHTML = '<p><b>' + rows.length + '</b> request' + (rows.length === 1 ? '' : 's') + ' to join your classes</p><div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Class</th><th>Asked</th><th></th></tr>' + rows.map(function (x) {
           return '<tr><td><b>' + E(nm[x.student_id] || 'Student') + '</b></td><td>' + E(cn[x.class_id] || '') + '</td><td class="small">' + E(S.when(x.requested_at)) + '</td><td>' +
-            (x.status === 'teacher_ok' ? '<span class="pill">waiting for Learnova to confirm</span>' : '<button class="btn main sm" type="button" data-ok="' + x.id + '">✓ Accept</button> <button class="btn sm" type="button" data-no="' + x.id + '">Decline</button>') + '</td></tr>'; }).join('') + '</table></div>' +
-          '<p class="small muted">Students also need premium access to open lessons. Learnova confirms every student a school teacher accepts.</p>';
+            (x.status === 'teacher_ok' ? '<span class="pill">waiting for BioscienceVista to confirm</span>' : '<button class="btn main sm" type="button" data-ok="' + x.id + '">✓ Accept</button> <button class="btn sm" type="button" data-no="' + x.id + '">Decline</button>') + '</td></tr>'; }).join('') + '</table></div>' +
+          '<p class="small muted">Students also need premium access to open lessons. BioscienceVista confirms every student a school teacher accepts.</p>';
         p.querySelectorAll('[data-ok],[data-no]').forEach(function (b) { b.onclick = function () { var yes = b.hasAttribute('data-ok'); b.disabled = true;
-          S.db.rpc('decide_enrolment', { eid: b.getAttribute(yes ? 'data-ok' : 'data-no'), approve: yes }).then(function (q) { if (!ok(q, yes ? (q.data === 'teacher_ok' ? 'Accepted: sent to Learnova to confirm' : 'Accepted') : 'Declined')) { b.disabled = false; return; } refs().then(function () { teachApprovals(p); }); }); }; });
+          S.db.rpc('decide_enrolment', { eid: b.getAttribute(yes ? 'data-ok' : 'data-no'), approve: yes }).then(function (q) { if (!ok(q, yes ? (q.data === 'teacher_ok' ? 'Accepted: sent to BioscienceVista to confirm' : 'Accepted') : 'Declined')) { b.disabled = false; return; } refs().then(function () { teachApprovals(p); }); }); }; });
       });
     });
   }
   var COURSES = null, TC = { cur: null, tab: 'students' };
-  /* A teacher's courses. The Learnova admin approves each one (migration 034); approving a course makes the teacher's class for it.
+  /* A teacher's courses. The BioscienceVista admin approves each one (migration 034); approving a course makes the teacher's class for it.
      MYC is null while the database has no course table yet: then everything works as before. */
   var MYC = null;
   function myCourses() {
@@ -1998,7 +1998,7 @@
     courseList().then(function (cs) {
       var nm = {}; cs.forEach(function (k) { nm[k.slug] = k.name; });
       var lab = { approved: '<span class="pill ok">✓ Approved</span>', pending: '<span class="pill t">⏳ Waiting for the admin</span>', declined: '<span class="pill">Not approved</span>' };
-      el.innerHTML = '<section class="panel grp"><h3 style="margin:0 0 6px">📚 My courses</h3><p class="small muted">These are the courses you chose when you signed up. The Learnova admin approves each one; when a course is approved, your class for it is made and you can add more classes for that course. ' +
+      el.innerHTML = '<section class="panel grp"><h3 style="margin:0 0 6px">📚 My courses</h3><p class="small muted">These are the courses you chose when you signed up. The BioscienceVista admin approves each one; when a course is approved, your class for it is made and you can add more classes for that course. ' +
         (viewing ? '' : 'Only the admin can add a course for you: <a href="/messages/">send a message</a> to ask.') + '</p>' +
         (MYC.length ? MYC.slice().sort(function (a, b) { return (nm[a.course] || a.course).localeCompare(nm[b.course] || b.course); }).map(function (c) {
           return '<div class="row2" style="padding:5px 0;border-bottom:1px solid var(--line)"><span><b>' + E(nm[c.course] || c.course) + '</b></span><span class="cta">' + (lab[c.status] || '') + '</span></div>'; }).join('') : '<p class="small">No course yet.</p>') + '</section>';
@@ -2019,7 +2019,7 @@
       if (!TC.cur || !CLASSES.some(function (c) { return c.id === TC.cur; })) TC.cur = CLASSES[0] ? CLASSES[0].id : null;
       var c = CLASSES.filter(function (x) { return x.id === TC.cur; })[0];
       p.innerHTML = '<section class="panel grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><span class="cta"><button class="btn sm" type="button" id="chs">🏫 ' + E(ME.profile.school_name || 'Set your school') + '</button>' + (ME.admin && AS ? '' : '<button class="btn main sm" type="button" id="newc">＋ New class</button>') + '</span></div>' +
-        (CLASSES.length ? '<div class="cchips">' + CLASSES.map(function (x) { return '<button type="button" class="cchip' + (x.id === TC.cur ? ' on' : '') + '" style="--k:' + hue(x.id) + '" data-c="' + x.id + '">' + E(x.name) + (x.active ? '' : ' (closed)') + '</button>'; }).join('') + '</div>' : '<p class="small muted">' + (MYC !== null && !ME.admin ? 'No classes yet. Your class for a course is made when the Learnova admin approves the course (see My courses below).' : 'No classes yet. Press ＋ New class and choose the course you teach.') + '</p>') +
+        (CLASSES.length ? '<div class="cchips">' + CLASSES.map(function (x) { return '<button type="button" class="cchip' + (x.id === TC.cur ? ' on' : '') + '" style="--k:' + hue(x.id) + '" data-c="' + x.id + '">' + E(x.name) + (x.active ? '' : ' (closed)') + '</button>'; }).join('') + '</div>' : '<p class="small muted">' + (MYC !== null && !ME.admin ? 'No classes yet. Your class for a course is made when the BioscienceVista admin approves the course (see My courses below).' : 'No classes yet. Press ＋ New class and choose the course you teach.') + '</p>') +
         '<div id="newbox"></div></section><div id="mycbox"></div><div id="cbox"></div>';
       myCourses().then(function () { coursePanel(p.querySelector('#mycbox')); });
       if (ARCHIVED.length) {   // the teacher's archived classes: restore any of them (the admin can also remove them to the bin)
@@ -2049,11 +2049,11 @@
       if (MYC !== null && !ME.admin) {   // only the courses the admin has approved for this teacher
         var yes = MYC.filter(function (x) { return x.status === 'approved'; }).map(function (x) { return x.course; });
         cs = cs.filter(function (k) { return yes.indexOf(k.slug) >= 0 || (c && c.course === k.slug); });
-        if (!cs.length) { box.innerHTML = '<p class="msg" style="margin-top:10px">None of your courses is approved yet. You can make classes as soon as the Learnova admin approves a course (see <b>My courses</b>).</p>'; return; }
+        if (!cs.length) { box.innerHTML = '<p class="msg" style="margin-top:10px">None of your courses is approved yet. You can make classes as soon as the BioscienceVista admin approves a course (see <b>My courses</b>).</p>'; return; }
       }
       box.innerHTML = '<form class="grp" id="cf" style="margin-top:10px"><label class="f">What do you teach in this class?<select id="cc" required><option value="">Choose the course…</option>' +
         cs.map(function (k) { return '<option value="' + E(k.slug) + '"' + (c && c.course === k.slug ? ' selected' : '') + '>' + E(k.name) + ' (' + k.lessons + ' lessons' + (k.quizzes ? ', ' + k.quizzes + ' quizzes' : '') + ')</option>'; }).join('') + '</select></label>' +
-        '<p class="small muted">Only that course\'s Learnova lessons and quizzes are added to the class. You can untick any you don\'t need under 📘 Lessons, and add your own in Lesson builder and Content.</p>' +
+        '<p class="small muted">Only that course\'s BioscienceVista lessons and quizzes are added to the class. You can untick any you don\'t need under 📘 Lessons, and add your own in Lesson builder and Content.</p>' +
         '<label class="f">Class name (students search for it)<input id="cn" required maxlength="80" value="' + E(c ? c.name : '') + '" placeholder="e.g. DP1 Biology HL 2026"></label>' +
         '<label class="f">Short description (optional)<input id="cd" maxlength="160" value="' + E(c && c.description || '') + '"></label>' +
         '<label class="chk"><input type="checkbox" id="cli"' + (!c || c.listed ? ' checked' : '') + '> Students can find this class and ask to join</label>' +
@@ -2068,7 +2068,7 @@
       var ar = box.querySelector('#carch'); if (ar) ar.onclick = function () { S.db.from('classes').update({ active: !c.active }).eq('id', c.id).then(function (r) { if (ok(r, c.active ? 'Class closed' : 'Class reopened')) teachClasses(p); }); };
     });
   }
-  /* Students in a teacher's class see only the lessons added to the class. They can ask for another Learnova lesson; the teacher decides here.
+  /* Students in a teacher's class see only the lessons added to the class. They can ask for another BioscienceVista lesson; the teacher decides here.
      Approving adds the lesson to the class for everyone in it. (Needs migration 031; before that the list is simply empty.) */
   function lessonRequests(c, p) {
     var old = p.querySelector('#lreq'); if (old) old.remove();
@@ -2088,7 +2088,7 @@
     var tabs = [['students', '👥 Students'], ['materials', '📘 Lessons'], ['qz', '📝 Quizzes'], ['team', '🤝 Co-teachers']];
     box.innerHTML = '<section class="panel grp"><div class="row2 cband" style="--k:' + hue(c.id) + '"><div><h3 style="margin:0">' + E(c.name) + '</h3><p class="small muted">' + E([c.subject, c.level].filter(Boolean).join(' · ')) +
       (c.listed ? ' · students find it under <b>' + E(c.school_name || ME.profile.school_name || 'your name') + '</b>' : ' · hidden from the join list') + '</p></div>' +
-      '<span class="cta"><button class="btn sm" type="button" id="sync" title="Add any new Learnova lessons and quizzes for this course">⟳ Add new course lessons</button><button class="btn sm" type="button" id="edc">Edit</button><button class="btn sm" type="button" id="carc" title="Archive this class: students keep their results; you can restore it later">🗄 Archive</button></span></div><div id="edbox"></div>' +
+      '<span class="cta"><button class="btn sm" type="button" id="sync" title="Add any new BioscienceVista lessons and quizzes for this course">⟳ Add new course lessons</button><button class="btn sm" type="button" id="edc">Edit</button><button class="btn sm" type="button" id="carc" title="Archive this class: students keep their results; you can restore it later">🗄 Archive</button></span></div><div id="edbox"></div>' +
       '<p class="qlinks"><a style="--k:#7c3aed" href="#classes/' + c.id + '/todo">📌 To-do list: set lessons and quizzes</a><a style="--k:#059669" href="#classes/' + c.id + '/register">🗒 Register</a><a style="--k:#db2777" href="#classes/' + c.id + '/activity">👀 Activity</a><a style="--k:#0f766e" href="' + '/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a><a style="--k:#7c3aed" href="/live/?class=' + c.id + '">🎥 Live lessons</a><a style="--k:#0d9488" href="#classes/' + c.id + '/lessons">🧪 Lesson progress</a><a style="--k:#ca8a04" href="#classes/' + c.id + '/quizzes">📝 Quiz results</a><a style="--k:#2563eb" href="#classes/' + c.id + '/analysis">📊 Analysis</a></p>' +
       '<div class="cchips" role="tablist">' + tabs.map(function (t, i) { return '<button type="button" class="cchip' + (TC.tab === t[0] ? ' on' : '') + '" style="--k:' + ['#4f46e5', '#0d9488', '#ca8a04', '#ea580c'][i] + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="tab"></div></section>';
     box.querySelector('#edc').onclick = function () { classForm(box.querySelector('#edbox'), c, p); };
@@ -2109,7 +2109,7 @@
         var others = CLASSES.filter(function (o) { return o.id !== c.id && o.owner_kind !== 'main'; });   // the teacher's other open classes
         okk.sort(function (a, b) { return (nm[a.student_id] || '').localeCompare(nm[b.student_id] || ''); });
         t.innerHTML = '<h4>Requests to join (' + wait.length + ')</h4>' + (wait.length ? wait.map(function (e) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(nm[e.student_id] || 'Student') + '</b> <span class="small muted">asked ' + E(S.when(e.requested_at)) + '</span></span><span class="cta"><button class="btn main sm" data-ok="' + e.id + '">Accept</button><button class="btn sm" data-no="' + e.id + '">Decline</button></span></div>'; }).join('') : '<p class="small muted">None.</p>') +
-          (held.length ? '<h4>Waiting for Learnova to confirm (' + held.length + ')</h4>' + held.map(function (e) { return '<p>' + E(nm[e.student_id] || 'Student') + '</p>'; }).join('') : '') +
+          (held.length ? '<h4>Waiting for BioscienceVista to confirm (' + held.length + ')</h4>' + held.map(function (e) { return '<p>' + E(nm[e.student_id] || 'Student') + '</p>'; }).join('') : '') +
           '<h4>Students in this class (' + okk.length + ')</h4>' + (okk.length ? okk.map(function (e) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><a href="#students/' + e.student_id + '">' + E(nm[e.student_id] || 'Student') + '</a></span><span class="cta">' + (others.length ? '<select class="btn sm" data-mv="' + e.student_id + '" aria-label="Move to another class"><option value="">Move to…</option>' + others.map(function (o) { return '<option value="' + o.id + '">' + E(o.name) + '</option>'; }).join('') + '</select>' : '') + '<a class="btn sm" href="/messages/">Message</a><button class="btn sm" data-no="' + e.id + '">Remove</button></span></div>'; }).join('') : '<p class="small muted">No students yet. They find your class under your school and ask to join, or add them below.</p>') +
           '<h4>➕ Add existing students</h4><p class="small muted">Search for students of your school or of your other classes by name, student number or email, and add them to <b>' + E(c.name) + '</b>.</p>' +
           '<div class="row2"><input id="sfind" placeholder="Name, student number or email" style="flex:1"><button type="button" class="btn sm" id="sgo">Search</button></div><div id="sres"></div>';
@@ -2127,7 +2127,7 @@
             out.innerHTML = rows.length ? rows.map(function (s2) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(s2.full_name || 'Student') + '</b> <span class="small muted">' + E([s2.student_number, s2.school_name, s2.classes ? 'in ' + s2.classes : 'no class'].filter(Boolean).join(' · ')) + '</span></span><button type="button" class="btn main sm" data-add="' + s2.id + '">Add to class</button></div>'; }).join('')
               : '<p class="small muted">No students found who are not already in this class.</p>';
             out.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = function () { b.disabled = true;
-              S.db.rpc('teacher_add_student', { sid: b.getAttribute('data-add'), cid: c.id }).then(function (y) { if (!ok(y, y.data === 'approved' ? 'Added to the class' : 'Added: waiting for Learnova to confirm')) { b.disabled = false; return; } refs().then(function () { tcStudents(t, c); }); }); }; });
+              S.db.rpc('teacher_add_student', { sid: b.getAttribute('data-add'), cid: c.id }).then(function (y) { if (!ok(y, y.data === 'approved' ? 'Added to the class' : 'Added: waiting for BioscienceVista to confirm')) { b.disabled = false; return; } refs().then(function () { tcStudents(t, c); }); }); }; });
           }); };
         t.querySelector('#sgo').onclick = find; t.querySelector('#sfind').onkeydown = function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); find(); } };
       });
@@ -2138,7 +2138,7 @@
     Promise.all([CAT ? Promise.resolve({ data: CAT }) : S.db.from('materials').select('*').order('sort'), S.db.from('class_materials').select('path,sort').eq('class_id', c.id)]).then(function (x) {
       CAT = x[0].data || []; var have = {}; (x[1].data || []).forEach(function (m) { have[m.path] = 1; });
       var subjects = []; CAT.forEach(function (m) { if (subjects.indexOf(m.subject) < 0) subjects.push(m.subject); });
-      t.innerHTML = '<p class="small">These are the Learnova lessons in <b>' + E(c.name) + '</b>. Students see only these (plus anything you set on the 📌 To-do list). Tick or untick to change the list.</p>' +
+      t.innerHTML = '<p class="small">These are the BioscienceVista lessons in <b>' + E(c.name) + '</b>. Students see only these (plus anything you set on the 📌 To-do list). Tick or untick to change the list.</p>' +
         '<div class="two"><label class="f">Subject<select id="msub"><option value="">All subjects</option>' + subjects.map(function (s2) { return '<option>' + E(s2) + '</option>'; }).join('') + '</select></label><label class="f">Search<input id="mq" placeholder="topic or title"></label></div>' +
         '<label class="chk"><input type="checkbox" id="monly" checked> Show only lessons in this class (' + Object.keys(have).length + ')</label><div id="mlist"></div>';
       var list = function () {
@@ -2180,9 +2180,9 @@
   function tcTeam(t, c) {
     S.db.rpc('class_coteachers', { cid: c.id }).then(function (r) {
       var rows = r.data || [];
-      t.innerHTML = '<p class="small">Add a colleague who also teaches this class. They can <b>see</b> the class, its students, lessons, quizzes and results, but cannot change anything. They need an approved Learnova teacher account.</p>' +
+      t.innerHTML = '<p class="small">Add a colleague who also teaches this class. They can <b>see</b> the class, its students, lessons, quizzes and results, but cannot change anything. They need an approved BioscienceVista teacher account.</p>' +
         (rows.length ? rows.map(function (x) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>🤝 <b>' + E(x.full_name || 'Teacher') + '</b> <span class="small muted">' + E(x.school || '') + '</span></span><button class="btn sm" data-rm="' + E(x.teacher_id) + '">Remove</button></div>'; }).join('') : '<p class="small muted">No co-teachers yet.</p>') +
-        '<form id="cof" class="row2" style="margin-top:10px"><input id="coe" type="email" required placeholder="Colleague\'s email (their Learnova teacher account)" style="flex:1"><button class="btn main sm" type="submit">Add co-teacher</button></form>';
+        '<form id="cof" class="row2" style="margin-top:10px"><input id="coe" type="email" required placeholder="Colleague\'s email (their BioscienceVista teacher account)" style="flex:1"><button class="btn main sm" type="submit">Add co-teacher</button></form>';
       t.querySelector('#cof').onsubmit = function (e) { e.preventDefault(); S.db.rpc('add_coteacher', { cid: c.id, teacher_email: t.querySelector('#coe').value }).then(function (x) { if (ok(x, 'Co-teacher added')) tcTeam(t, c); }); };
       t.querySelectorAll('[data-rm]').forEach(function (b) { b.onclick = function () { if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'Click again to remove'; return; }
         S.db.rpc('remove_coteacher', { cid: c.id, tid: b.getAttribute('data-rm') }).then(function (x) { if (ok(x, 'Removed')) tcTeam(t, c); }); }; });

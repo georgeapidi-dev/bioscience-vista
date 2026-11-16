@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Learnova logo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="BioscienceVista logo">
   <defs>
     <linearGradient id="lvbg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#4338ca"/>
@@ -19,8 +19,8 @@
   <!-- orbit: science in motion -->
   <ellipse cx="35" cy="30" rx="27" ry="10" transform="rotate(-32 35 30)" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.2"/>
   <circle cx="13.5" cy="46.5" r="3" fill="#fde68a"/>
-  <!-- L for Learn: one confident stroke -->
-  <path d="M23 14v26q0 8 8 8h15" fill="none" stroke="#fff" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- B for Bioscience: one confident stroke -->
+  <path d="M18 17v32M18 17h8.5a7.5 7.5 0 0 1 0 15H18M18 32h10a8.5 8.5 0 0 1 0 17H18" fill="none" stroke="#fff" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
   <!-- the nova: a new star -->
   <path d="M44 6c1.3 8 3.7 10.400 11.700 11.700-8 1.300-10.400 3.700-11.700 11.700-1.300-8-3.700-10.400-11.700-11.700 8-1.300 10.400-3.700 11.700-11.700z" fill="url(#lvstar)"/>
   <circle cx="55" cy="33" r="1.8" fill="#fff" fill-opacity=".9"/>

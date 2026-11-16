@@ -1,4 +1,4 @@
-/* Learnova · Discussion forum on Learnova accounts (replaces the old personal-code forum).
+/* BioscienceVista · Discussion forum on BioscienceVista accounts (replaces the old personal-code forum).
    Boards: one per class you belong to (or teach) plus "All classes". Posts appear straight away; teachers can hide
    posts in their classes. Names come from checked database functions, so students never read each other's profiles. */
 (function () {
@@ -15,7 +15,7 @@
   }).catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
   window.addEventListener('hashchange', function () { if (!me) return; var t = /^#t\/([0-9a-f-]{36})$/.exec(location.hash); if (t) thread(t[1]); else list(); });
 
-  function fail(e) { var m = String(e && e.message || e); app.innerHTML = '<section class="panel"><h2>💬 Discussion forum</h2><p>' + (/forum_|schema cache|does not exist/.test(m) ? 'The forum is being moved to your Learnova account and will open here shortly.' : E(S.nice(e))) + '</p></section>'; }
+  function fail(e) { var m = String(e && e.message || e); app.innerHTML = '<section class="panel"><h2>💬 Discussion forum</h2><p>' + (/forum_|schema cache|does not exist/.test(m) ? 'The forum is being moved to your BioscienceVista account and will open here shortly.' : E(S.nice(e))) + '</p></section>'; }
   function list() {
     app.innerHTML = '<p class="muted">Loading discussions…</p>';
     S.db.rpc('forum_threads', { cls: cur.id }).then(function (r) {

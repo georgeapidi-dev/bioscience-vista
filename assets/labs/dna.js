@@ -1,4 +1,4 @@
-/* DNA replication laboratory · Learnova · by Learnova */
+/* DNA replication laboratory · BioscienceVista · by BioscienceVista */
 (function () {
   var M = window.LABM, LABS = window.LABS = window.LABS || {};
   LABS.dna = {

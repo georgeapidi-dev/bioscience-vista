@@ -1,4 +1,4 @@
-/* Learnova · Messages: private conversations between students, teachers and admin.
+/* BioscienceVista · Messages: private conversations between students, teachers and admin.
    Students and parents write to their teachers and admins; teachers and admins can write to anyone. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, PEOPLE = {}, MSGS = [], who = null, poll = null;

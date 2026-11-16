@@ -1,4 +1,4 @@
-/* Learnova · media for questions: pictures, video, audio (upload or record), graphs from data, drawn diagrams · by Learnova
+/* BioscienceVista · media for questions: pictures, video, audio (upload or record), graphs from data, drawn diagrams · by BioscienceVista
    BVM.editor(host, list, onChange, {uid}) shows the media of one question with buttons to add more.
    Files go to the public storage bucket "question-media" in the person's own folder (migration 039).
    Pictures and drawings fall back to a small embedded picture if the bucket is not there yet. */

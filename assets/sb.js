@@ -1,4 +1,4 @@
-/* Learnova · Supabase helper (public anon key only; security comes from Row Level Security) */
+/* BioscienceVista · Supabase helper (public anon key only; security comes from Row Level Security) */
 (function () {
   var BV = window.BV = window.BV || {}, S = window.BVS = {};
   S.on = !!(BV.sbUrl && BV.sbKey && window.supabase);

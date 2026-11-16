@@ -1,4 +1,4 @@
-/* Learnova · Builder (/build/). One place to build exam-style question sets, examinations and interactive lessons.
+/* BioscienceVista · Builder (/build/). One place to build exam-style question sets, examinations and interactive lessons.
    Layout: question list on the left, the question being edited in the middle, settings and a live student preview on the right.
    Saving always shows the whole item as a student will see it first ("preview before saving").
    Everything a teacher builds goes into "My assessments and lessons" and can be added to the teacher's own classes.

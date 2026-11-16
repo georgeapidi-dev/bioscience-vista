@@ -1,4 +1,4 @@
-/* Learnova · "Stuck?" help inside every interactive lesson step.
+/* BioscienceVista · "Stuck?" help inside every interactive lesson step.
    For each step with written questions: a button that opens a small tutor box. The student picks the question, may write
    what they think so far, and gets one hint and one guiding question, never the answer (server function "step-help").
    Signed out, or when the AI is busy, the hint comes from the step's own mark scheme on the server or, offline, on the page. */

@@ -1,4 +1,4 @@
-/* Learnova · lesson slides: a detailed explanation of the lesson's concepts, set out by concept and objective, not by the six lesson steps.
+/* BioscienceVista · lesson slides: a detailed explanation of the lesson's concepts, set out by concept and objective, not by the six lesson steps.
    Where a lesson carries its own slide notes (#lv-slidenotes, written for the slides), those are used; otherwise every explanatory part of the lesson is used.
    Built from the lesson itself: notes, diagrams, images and videos only (no questions or tasks).
    Every interactive lesson gets a slide deck inside the page: arrows, keyboard, swipe, and an Expand button
@@ -22,7 +22,7 @@
   // ---------- read the lesson ----------
   var slides = [], h1 = document.querySelector('h1'), title = h1 ? txt(h1) : document.title;
   var meta = document.querySelector('header .meta, .meta'), big = document.querySelector('.big'), hook = document.querySelector('.hook p');
-  slides.push({ kind: 'title', html: '<p class="sd-k">' + E(meta ? txt(meta).replace(/ · Prepared by Learnova/, '') : 'Learnova lesson') + '</p><h1>' + E(title) + '</h1>' +
+  slides.push({ kind: 'title', html: '<p class="sd-k">' + E(meta ? txt(meta).replace(/ · Prepared by BioscienceVista/, '') : 'BioscienceVista lesson') + '</p><h1>' + E(title) + '</h1>' +
     (big ? '<p class="sd-q">' + E(txt(big)) + '</p>' : '') + (hook ? '<p class="sd-hook">🎯 ' + E(txt(hook)) + '</p>' : '') });
   var firstStep = document.querySelector('section.step');
   var pre = [].slice.call(document.querySelectorAll('.card.notes')).filter(function (n) { return !n.closest('section.step') && firstStep && (n.compareDocumentPosition(firstStep) & 4); });

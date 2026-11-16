@@ -1,4 +1,4 @@
-/* Learnova · open course materials inside the site (view only, no download).
+/* BioscienceVista · open course materials inside the site (view only, no download).
    Resource pages: a list of [data-f] buttons; tapping one shows it in the viewer above the list.
    /view/?f=<id>&t=<title>&b=<back>: a single file. Videos and documents stream from the creator's files. */
 (function () {
@@ -50,7 +50,7 @@
     var t = p.get('t') || 'Document', back = p.get('b') || '/';
     if (!/^\/[\w\/-]*$/.test(back)) back = '/';
     var vt = document.getElementById('vw-t'), vb = document.getElementById('vw-back');
-    if (vt) vt.textContent = t; if (vb) vb.href = back; document.title = t + ' · Learnova';
+    if (vt) vt.textContent = t; if (vb) vb.href = back; document.title = t + ' · BioscienceVista';
     show(p.get('f'), p.get('k') === 'video' ? 'video' : 'doc', t);
   } else if (h) {
     var b0 = list.filter(function (b) { return b.getAttribute('data-f') === h; })[0];

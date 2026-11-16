@@ -1,4 +1,4 @@
-/* Acid–base titration laboratory · Learnova · by Learnova */
+/* Acid–base titration laboratory · BioscienceVista · by BioscienceVista */
 (function () {
   var M = window.LABM, LABS = window.LABS = window.LABS || {};
   LABS.titration = {

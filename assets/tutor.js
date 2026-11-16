@@ -1,4 +1,4 @@
-/* Science Help Desk · Learnova · by Learnova
+/* Science Help Desk · BioscienceVista · by BioscienceVista
    No AI. A student's question is matched against George's lesson notes (lesson_notes) and shown at once.
    If the notes do not answer it, the student sends the question to the teacher, who answers it from the staff dashboard. */
 (function () {
@@ -63,7 +63,7 @@
     var n = x.n, L = LESSONS[x.r.lesson] || {}, img = '';
     if (n.image && n.image.src) img = '<figure class="hfig"><img src="' + E(n.image.src) + '" alt="' + E(n.image.caption || n.title) + '" loading="lazy"><figcaption>' + E(n.image.caption || '') +
       ' <a href="' + E(n.image.page || '#') + '" target="_blank" rel="noopener" class="muted">Image: ' + E((n.image.artist || 'Wikimedia Commons').slice(0, 60)) + (n.image.license ? ', ' + E(n.image.license) : '') + '</a></figcaption></figure>';
-    else if (n.drawn && n.drawn.svg) img = '<figure class="hfig"><img src="data:image/svg+xml;charset=utf-8,' + encodeURIComponent(n.drawn.svg) + '" alt="' + E(n.drawn.caption || n.title) + '"><figcaption>' + E(n.drawn.caption || '') + ' · Diagram drawn for Learnova</figcaption></figure>';
+    else if (n.drawn && n.drawn.svg) img = '<figure class="hfig"><img src="data:image/svg+xml;charset=utf-8,' + encodeURIComponent(n.drawn.svg) + '" alt="' + E(n.drawn.caption || n.title) + '"><figcaption>' + E(n.drawn.caption || '') + ' · Diagram drawn for BioscienceVista</figcaption></figure>';
     return '<article class="hcard"><p class="small muted">📘 ' + E(L.title || x.r.lesson) + (level(x.r.lesson) ? ' · ' + E(level(x.r.lesson)) : '') + '</p><h3>' + E(n.title || '') + '</h3>' +
       (n.intro ? '<p>' + E(n.intro) + '</p>' : '') + img +
       (n.points && n.points.length ? '<ul>' + n.points.map(function (p) { return '<li>' + E(p) + '</li>'; }).join('') + '</ul>' : '') +
@@ -294,7 +294,7 @@
       '<p class="msg" id="hst" role="status"></p></form><div id="hres" aria-live="polite"></div></section>' +
       '<aside><div class="panel"><h3>My questions<span id="hbadge"></span></h3><div id="hmine"><p class="small muted">Loading…</p></div></div>' +
       '<div class="panel" hidden><h3>Questions other students asked</h3><div id="hfaq"></div></div>' +
-      '<p class="small muted">Answers come from your teacher and from the Learnova lesson notes. Do not share personal information in a question.</p></aside></div>';
+      '<p class="small muted">Answers come from your teacher and from the BioscienceVista lesson notes. Do not share personal information in a question.</p></aside></div>';
     var st = app.querySelector('#hst'); st.textContent = 'Loading notes…';
     var tq = app.querySelector('#hq');
     Promise.all([

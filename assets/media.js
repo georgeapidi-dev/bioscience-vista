@@ -1,4 +1,4 @@
-/* Learnova · lesson videos and slides shown inside the lesson (no download buttons). Videos stream from the
+/* BioscienceVista · lesson videos and slides shown inside the lesson (no download buttons). Videos stream from the
    creator's files; slides are drawn page by page with PDF.js from this site. Both credit their creators. */
 (function () {
   function overlay(fr) {   // cover the player's "open in new window" corner so the video stays in the lesson

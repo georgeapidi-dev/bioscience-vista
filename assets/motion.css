@@ -1,4 +1,4 @@
-/* Learnova motion layer: page entrance, scroll reveals, animated heroes, and the redesigned home page.
+/* BioscienceVista motion layer: page entrance, scroll reveals, animated heroes, and the redesigned home page.
    Everything stops for people who ask their device for reduced motion. */
 @keyframes lv-fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes lv-aurora{0%{transform:translate(0,0) scale(1)}33%{transform:translate(8%,-6%) scale(1.12)}66%{transform:translate(-6%,8%) scale(.94)}100%{transform:translate(0,0) scale(1)}}

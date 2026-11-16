@@ -1,4 +1,4 @@
-/* Assessment centre · Learnova: exam-style questions (/quizzes/) and examinations (/exams/). Marking is done on the server by submit_quiz. */
+/* Assessment centre · BioscienceVista: exam-style questions (/quizzes/) and examinations (/exams/). Marking is done on the server by submit_quiz. */
 (function () {
   var T = window.BVT;
   var S = window.BVS, E = S.E, app = document.getElementById('app'), timer = null, beat = null, GUARD = null, TM = null, ME;
@@ -149,7 +149,7 @@
     sebKey().then(function (k) {
       var g = q.integrity || {}, keys = Array.isArray(g.seb_keys) ? g.seb_keys : [], has = k && keys.indexOf(k) >= 0;
       app.innerHTML = '<section class="panel"><p class="label">Teacher · Safe Exam Browser set-up</p><h2>' + E(q.title) + '</h2>' +
-        (!k ? '<p class="msg">This Safe Exam Browser does not share its settings key. Use Safe Exam Browser 3 or newer, and open the exam with the settings file downloaded from Learnova (it has "Use Browser Exam Key and Config Key" switched on).</p>' :
+        (!k ? '<p class="msg">This Safe Exam Browser does not share its settings key. Use Safe Exam Browser 3 or newer, and open the exam with the settings file downloaded from BioscienceVista (it has "Use Browser Exam Key and Config Key" switched on).</p>' :
           '<p>You are signed in as a teacher inside Safe Exam Browser. ' + (has ? '<b>✓ This set-up is registered.</b> Students opening the exam with the same settings file will be let in.' :
             'Register this set-up so that students can only take the exam with <b>this same settings file</b>. Anyone using another file, or an ordinary browser, is kept out.') + '</p>' +
           '<p class="small muted">Set-ups registered for this exam: ' + keys.length + '. Register again whenever you download a new settings file (changing the settings changes the key). Students must open the exam the same way you did, with the same file.</p>') +

@@ -1,4 +1,4 @@
-/* Learnova · Live Check (/check/).
+/* BioscienceVista · Live Check (/check/).
    Teacher (/check/?class=ID&n=NAME): type one question (options or an open answer), send it to the class, and watch the
    answers arrive as a live chart with names; close it to reveal the answer to students. Past checks stay listed.
    Student (/check/): the page waits for a check from any of their classes, shows it at once, and after the teacher

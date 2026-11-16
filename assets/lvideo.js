@@ -1,4 +1,4 @@
-/* Learnova · lesson videos play inside the lesson.
+/* BioscienceVista · lesson videos play inside the lesson.
    Any link to one YouTube video (in the notes, the "Watch and learn" box, or a "Watch" slide) opens in a player on the page
    instead of leaving the site: full width, or docked in a corner so the student can keep working while it plays.
    A link to a YouTube search cannot be shown inside another site (YouTube does not allow it), so those still open YouTube

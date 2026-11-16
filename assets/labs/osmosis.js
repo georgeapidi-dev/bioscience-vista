@@ -1,4 +1,4 @@
-/* Osmosis and diffusion laboratory · Learnova · by Learnova */
+/* Osmosis and diffusion laboratory · BioscienceVista · by BioscienceVista */
 (function () {
   var M = window.LABM, LABS = window.LABS = window.LABS || {};
   LABS.osmosis = {

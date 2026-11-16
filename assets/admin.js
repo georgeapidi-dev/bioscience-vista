@@ -1,4 +1,4 @@
-/* Learnova · admin: join requests, members and free access, teacher approvals, payments (PayPal and M-Pesa), prices and settings. */
+/* BioscienceVista · admin: join requests, members and free access, teacher approvals, payments (PayPal and M-Pesa), prices and settings. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), TAB = (location.hash.slice(1) || 'requests');
   S.guard(app, { staff: true }).then(function (me) {
@@ -8,7 +8,7 @@
   }).catch(function () {});
   var TABS = [['requests', '🙋 Join requests'], ['members', '👥 Members & access'], ['teachers', '🧑‍🏫 Teachers'], ['payments', '💳 Payments'], ['settings', '⚙️ Prices & settings'], ['schools', '🏫 Schools'], ['reviews', '⭐ Reviews'], ['admins', '🔑 Admins']];
   function draw() {
-    app.innerHTML = '<div class="row2 cband" style="--k:#7c3aed"><div><p class="label">Admin</p><h2 style="margin:0">Learnova admin</h2><p class="small">Approvals, members, teachers, payments and settings</p></div><div class="cta"><a class="btn sm" href="/staff/">🌐 Main site</a><a class="btn sm" href="/teach/">🏫 My classes</a></div></div>' +
+    app.innerHTML = '<div class="row2 cband" style="--k:#7c3aed"><div><p class="label">Admin</p><h2 style="margin:0">BioscienceVista admin</h2><p class="small">Approvals, members, teachers, payments and settings</p></div><div class="cta"><a class="btn sm" href="/staff/">🌐 Main site</a><a class="btn sm" href="/teach/">🏫 My classes</a></div></div>' +
       '<div class="cta" role="tablist">' + TABS.map(function (t) { return '<button type="button" class="btn sm' + (TAB === t[0] ? ' main' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="ais" class="small" style="margin:10px 0;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:#f8fafc"></div><div id="ems" class="small" style="margin:10px 0;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:#f8fafc"></div><section class="panel grp" id="tab"><p class="muted small">Loading…</p></section>';
     aiStatus(false); mailStatus(null);
     app.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { TAB = b.getAttribute('data-t'); history.replaceState(null, '', '#' + TAB); draw(); }; });
@@ -99,7 +99,7 @@
       t.innerHTML = '<p class="small">Admins can change everything on the main site: lessons, quizzes, classes, prices, payments and members. Teachers and students cannot. Give admin rights only to people you trust.</p>' +
         '<h4>Admins (' + ad.length + ')</h4>' + ad.map(function (m) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>🔑 <b>' + E(m.full_name) + '</b> <span class="small muted">' + E(m.email) + '</span></span>' +
           (m.id === (window.BVS_ME || '') ? '<span class="pill">you</span>' : '<button class="btn sm" data-rm="' + E(m.id) + '">Remove admin</button>') + '</div>'; }).join('') +
-        '<h4>Add an admin</h4><label class="f">Their email (they must already have a Learnova account)<input id="ae" type="email" list="ael"><datalist id="ael">' + all.filter(function (m) { return m.account_type !== 'admin'; }).map(function (m) { return '<option value="' + E(m.email) + '">' + E(m.full_name) + '</option>'; }).join('') + '</datalist></label>' +
+        '<h4>Add an admin</h4><label class="f">Their email (they must already have a BioscienceVista account)<input id="ae" type="email" list="ael"><datalist id="ael">' + all.filter(function (m) { return m.account_type !== 'admin'; }).map(function (m) { return '<option value="' + E(m.email) + '">' + E(m.full_name) + '</option>'; }).join('') + '</datalist></label>' +
         '<button class="btn main sm" id="aadd">Make admin</button><p class="msg" id="am"></p>';
       t.querySelector('#aadd').onclick = function () { var em = t.querySelector('#ae').value.trim().toLowerCase(), u = all.filter(function (m) { return (m.email || '').toLowerCase() === em; })[0], m = t.querySelector('#am');
         if (!u) { m.textContent = 'No account uses that email.'; return; }
@@ -145,7 +145,7 @@
       var rows = r.data || [];
       t.innerHTML = '<h3>Students asking to join (' + rows.length + ')</h3><p class="small">You approve every student, including those in other teachers\' classes. <b>Approve + free</b> also gives that student free access, so they can join without paying.</p>' + (rows.length ? '<label class="chk"><input type="checkbox" id="all"> Select all</label>' + rows.map(function (x) {
         return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><label class="chk"><input type="checkbox" data-sel="' + x.id + '"> <b>' + E(x.full_name || 'Student') + '</b> → ' + E(x.class_name) + ' <span class="small muted">' + E(x.school || '') + ' · ' + E(S.when(x.requested_at)) + '</span> ' +
-          (x.status === 'teacher_ok' ? '<span class="pill ok">teacher said yes</span> ' : x.school !== 'Learnova' ? '<span class="pill">teacher has not answered</span> ' : '') +
+          (x.status === 'teacher_ok' ? '<span class="pill ok">teacher said yes</span> ' : x.school !== 'BioscienceVista' ? '<span class="pill">teacher has not answered</span> ' : '') +
           (x.premium ? '<span class="pill ok">premium</span>' : '<span class="pill">no premium</span>') + '</label><span class="cta"><button class="btn main sm" data-ok="' + x.id + '">Approve</button>' +
           (x.premium ? '' : '<button class="btn sm" data-free="' + x.id + '">Approve + free</button>') + '<button class="btn sm" data-no="' + x.id + '">Decline</button></span></div>'; }).join('') +
         '<div class="cta" style="margin-top:10px"><button class="btn main sm" id="okall">Approve selected</button><button class="btn sm" id="noall">Decline selected</button></div>' : '<p class="small muted">No requests waiting.</p>') +
@@ -212,7 +212,7 @@
             return rest.length && m.teacher_status !== 'rejected' ? '<div class="row2" style="padding:3px 0;justify-content:flex-start;gap:8px"><select data-addsel="' + m.id + '" aria-label="Add a course for ' + E(m.full_name) + '" style="max-width:280px"><option value="">Add a course for this teacher…</option>' +
               rest.map(function (k) { return '<option value="' + E(k.slug) + '">' + E(k.name) + '</option>'; }).join('') + '</select><button class="btn sm" data-addc="' + m.id + '">Add and approve</button></div>' : ''; })() + '</div>';
       };
-      t.innerHTML = '<p class="small">Teachers from other schools and private tutors. An approved teacher with premium can create their own classes, add Learnova lessons and published quizzes to them, and see only their own students. They cannot change anything on the main site.</p>' +
+      t.innerHTML = '<p class="small">Teachers from other schools and private tutors. An approved teacher with premium can create their own classes, add BioscienceVista lessons and published quizzes to them, and see only their own students. They cannot change anything on the main site.</p>' +
         (TC ? '<p class="small"><b>Each teacher selects courses at sign-up and you approve each course.</b> Approving a course makes that teacher\'s class for it (and approves a teacher who is still waiting). A teacher can make classes only for approved courses, and cannot add courses: you add one here.' + (wait ? ' <span class="pill t">' + wait + ' course' + (wait === 1 ? '' : 's') + ' waiting</span>' : '') + '</p>' : '') +
         (rows.length ? rows.map(function (m) { return '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="row2"><span><b>' + E(m.full_name) + '</b> <span class="small muted">' + E(m.email) + ' · signed up ' + E(new Date(m.created_at).toLocaleDateString()) + '</span><br>' +
           '<span class="pill' + (m.teacher_status === 'approved' ? ' ok' : '') + '">' + E(m.teacher_status) + '</span></span><span class="cta"><a class="btn sm" href="/teach/?as=' + m.id + '#overview" title="See and edit this teacher\'s classes, their dashboard and their students">👁 Open classroom</a>' + (m.teacher_status !== 'approved' ? '<button class="btn main sm" data-ok="' + m.id + '">Approve</button>' : '') +

@@ -1,4 +1,4 @@
-/* Learnova · task timer. Every task (interactive lesson, exam-style set, examination) has a time allowance.
+/* BioscienceVista · task timer. Every task (interactive lesson, exam-style set, examination) has a time allowance.
    The timer starts by itself when a signed-in student opens the task, and the time spent is recorded for the teacher.
    - Lessons and exam-style sets: only the time with the page in view counts. At zero the student is told and can carry on;
      the extra time is recorded.

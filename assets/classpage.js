@@ -1,4 +1,4 @@
-/* Learnova · a class page for classes run by teachers from other schools: the lessons their teacher chose. */
+/* BioscienceVista · a class page for classes run by teachers from other schools: the lessons their teacher chose. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app');
   var id = new URLSearchParams(location.search).get('id') || '';

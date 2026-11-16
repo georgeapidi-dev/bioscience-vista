@@ -1,4 +1,4 @@
-/* Live page content from the teacher's Site editor · Learnova */
+/* Live page content from the teacher's Site editor · BioscienceVista */
 (function () {
   var E = BV.esc;
   function autoDl(u) {
@@ -28,7 +28,7 @@
     }).join('');
   };
   /* The first backend (Google Sheet) was retired on 15 Nov 2026: page sections are built into the pages, and the home page
-     shows the admin's public announcements from Learnova (table announcements, migration 044). */
+     shows the admin's public announcements from BioscienceVista (table announcements, migration 044). */
   var news = document.getElementById('news');
   if (!news || !BV.sbUrl || !BV.sbKey) return;
   fetch(BV.sbUrl + '/rest/v1/announcements?select=title,body,link,created_at,expires_at,pinned&class_id=is.null&is_public=eq.true&order=pinned.desc,created_at.desc&limit=8',

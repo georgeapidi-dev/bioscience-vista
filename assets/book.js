@@ -1,4 +1,4 @@
-/* Book a private lesson · Learnova
+/* Book a private lesson · BioscienceVista
    Requests go to the database through book_lesson(); only the site admin can read them. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app');
@@ -35,7 +35,7 @@
       '<label class="f">Phone or WhatsApp (optional)<input name="phone" type="tel" maxlength="40" autocomplete="tel" placeholder="+254 …"></label></div>' +
       '<p class="small muted" id="u18">Under 18? Please ask a parent or guardian to book, or add their phone number so they can agree the lessons too.</p>' +
       '<label class="bk-hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>' +
-      '<label class="chk"><input type="checkbox" name="agree" required> I agree that Learnova may contact me by email or phone about this booking.</label></fieldset>' +
+      '<label class="chk"><input type="checkbox" name="agree" required> I agree that BioscienceVista may contact me by email or phone about this booking.</label></fieldset>' +
       '<p class="small muted">This is a request, not a payment. You will get a reply to confirm the time, the fee and, for virtual lessons, the meeting link.</p>' +
       '<p id="bkmsg" class="small" aria-live="polite"></p><div class="cta"><button class="btn main" type="submit">Send booking request</button></div></form>' +
       '<div id="mine"></div>';
@@ -78,7 +78,7 @@
       ({ single: 'one lesson', weekly: 'weekly lessons', exam_prep: 'exam preparation' }[p.plan]) + '</li>' + p.slots.map(function (s, i) { return '<li>Choice ' + (i + 1) + ': ' + E(nice(s.local)) + '</li>'; }).join('') + '</ul>';
   }
   function done(p) {
-    app.innerHTML = '<section class="panel tint grp"><h2>✅ Request sent</h2><p>Thank you, ' + E(p.contact_name.split(' ')[0]) + '. Learnova will reply to <b>' + E(p.email) + '</b>' + (p.phone ? ' or on ' + E(p.phone) : '') +
+    app.innerHTML = '<section class="panel tint grp"><h2>✅ Request sent</h2><p>Thank you, ' + E(p.contact_name.split(' ')[0]) + '. BioscienceVista will reply to <b>' + E(p.email) + '</b>' + (p.phone ? ' or on ' + E(p.phone) : '') +
       ' to confirm the time and the fee' + (p.mode === 'virtual' ? ', and send the meeting link' : '') + '.</p>' + summary(p) +
       '<div class="cta"><a class="btn sm" href="/book/">Make another request</a><a class="btn sm" href="/learn/">Go to the Learning centre</a></div></section><div id="mine"></div>';
     mine();

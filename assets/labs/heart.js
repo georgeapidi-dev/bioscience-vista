@@ -1,4 +1,4 @@
-/* Heart and circulation laboratory · Learnova · by Learnova */
+/* Heart and circulation laboratory · BioscienceVista · by BioscienceVista */
 (function () {
   var M = window.LABM, LABS = window.LABS = window.LABS || {};
   var CONDS = [['normal', 'Healthy heart'], ['stenosis', 'Aortic valve stenosis (narrow valve)'], ['regurg', 'Mitral valve regurgitation (leaky valve)'], ['weak', 'Weakened heart muscle (heart failure)']];

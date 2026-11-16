@@ -1,4 +1,4 @@
-/* Learnova · Practice and revision (/practice/) · by Learnova
+/* BioscienceVista · Practice and revision (/practice/) · by BioscienceVista
    🎯 Practice: choose level and topics; the site makes a set from the course questions (practice_make, migration 039),
       the quiz player marks it automatically and gives results and detailed feedback. Teachers get an editable draft instead.
    🃏 My questions: students (and teachers) write their own quick revision questions and flashcards, with pictures, graphs,

@@ -1,4 +1,4 @@
-/* Interactive lesson player · Learnova
+/* Interactive lesson player · BioscienceVista
    Six inquiry steps; read or listen; answer by typing or writing by hand; work is saved as you go; teacher checks and releases marks. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, Q, ATT, items = [], ans = {}, step = 0, lessonRow = null, preview = false, dirty = false;

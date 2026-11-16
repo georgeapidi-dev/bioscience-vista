@@ -1,4 +1,4 @@
-/* Learnova · Live Classroom dashboard (/live/).
+/* BioscienceVista · Live Classroom dashboard (/live/).
    Teachers schedule, edit, cancel and start live lessons, add resources, invite guests, see attendance and recordings.
    Students see their classes' lessons, join them, open resources and released recordings, and see their own attendance.
    Admins also see every session, the guest and recording policies, the video set-up and the audit log.
@@ -71,7 +71,7 @@
     var tabs = [['#', '📅 Upcoming and live'], ['#past', '🗂 Past'], ['#mine', '🧾 My attendance']];
     if (T && MAYTEACH) tabs = [['#', '📅 Upcoming and live'], ['#past', '🗂 Past'], ['#new', '＋ Schedule']];
     if (ADMIN) tabs.push(['#admin', '🛡 Admin']);
-    app.innerHTML = '<div class="row2 cband" style="--k:#7c3aed"><div><p class="label">BioScience Vista Live</p><h2 style="margin:0">🎥 Live Classroom</h2><p class="small" style="margin:4px 0 0">' +
+    app.innerHTML = '<div class="row2 cband" style="--k:#7c3aed"><div><p class="label">BioscienceVista Live</p><h2 style="margin:0">🎥 Live Classroom</h2><p class="small" style="margin:4px 0 0">' +
       (T ? 'Schedule live lessons and meetings, teach with video, the whiteboard and your resources, and see who attended.' : 'Your live lessons: join when your teacher starts, open the lesson\'s resources, and watch recordings your teacher shares.') +
       (T && !MAYTEACH ? ' <b>The administrator has not switched on live lessons for your account yet.</b>' : '') + (CLS0 ? ' <b>Showing one class.</b> <a href="/live/" style="color:inherit">Show all</a>' : '') + '</p></div><div class="cta">' + (T && MAYTEACH ? '<a class="btn main sm" href="#new">＋ Schedule a lesson</a><a class="btn sm" href="/teach/">🏫 My classes</a>' : '<a class="btn sm" href="/dashboard/">← My dashboard</a>') + '</div></div>' +
       '<nav class="tabs" aria-label="Live Classroom">' + tabs.map(function (t) { return '<a href="' + t[0] + '" aria-selected="' + (t[0] === active) + '">' + t[1] + '</a>'; }).join('') + '</nav><div id="lvb" style="margin-top:12px">' + inner + '</div>';
@@ -137,7 +137,7 @@
         '<label><span>Time zone</span><select name="time_zone">' + zones.map(function (z) { return '<option' + (z === tz ? ' selected' : '') + '>' + E(z) + '</option>'; }).join('') + '</select></label></div>' +
         '<div class="lv-checks"><label><input type="checkbox" name="recording_pref"' + (s && s.recording_pref === 'allowed' ? ' checked' : '') + (settings.live_recording_on === 'no' ? ' disabled' : '') + '> <span><b>Allow recording</b>: you can start and stop it during the lesson; everyone sees a recording notice. Off by default.' + (settings.live_recording_on === 'no' ? ' (Turned off by the administrator.)' : '') + '</span></label>' +
         '<label><input type="checkbox" name="recordings_for_students"' + (s && s.recordings_for_students ? ' checked' : '') + '> <span><b>Students may watch the recording</b> afterwards (only students of this lesson).</span></label>' +
-        '<label><input type="checkbox" name="guests_allowed"' + (s && s.guests_allowed ? ' checked' : '') + (settings.live_guests_on === 'no' ? ' disabled' : '') + '> <span><b>Allow invited guests</b> (people without a Learnova account) with a private link you create.</span></label></div>' +
+        '<label><input type="checkbox" name="guests_allowed"' + (s && s.guests_allowed ? ' checked' : '') + (settings.live_guests_on === 'no' ? ' disabled' : '') + '> <span><b>Allow invited guests</b> (people without a BioscienceVista account) with a private link you create.</span></label></div>' +
         '<p class="msg" id="lvm" role="alert"></p><div class="cta"><button class="btn main" type="submit">' + (s ? 'Save changes' : 'Schedule lesson') + '</button><a class="btn" href="' + (s ? '#s/' + s.id : '#') + '">Cancel</a></div></form>';
       var f = box.querySelector('#lvf'), msg = box.querySelector('#lvm');
       f.onsubmit = function (e) { e.preventDefault(); var v = function (n) { return f.elements[n].value.trim(); };
@@ -262,9 +262,9 @@
     Promise.all([S.db.rpc('live_people', { sid: s.id }), S.db.from('live_session_participants').select('user_id,role').eq('session_id', s.id)]).then(function (r) {
       var ppl = r[0].data || [], extra = r[1].data || [];
       var kids = ppl.filter(function (p) { return p.role === 'student'; }), added = ppl.filter(function (p) { return p.role !== 'student'; });
-      el.innerHTML = '<h3>👥 People</h3><p class="small">' + (s.class_id ? '<b>' + kids.length + '</b> student' + (kids.length === 1 ? '' : 's') + ' of ' + E(s.classes && s.classes.name || 'the class') + ' can join. ' : '') + 'Add a colleague who has a Learnova account (e.g. for a staff meeting); co-hosts can run the meeting with you.</p>' +
+      el.innerHTML = '<h3>👥 People</h3><p class="small">' + (s.class_id ? '<b>' + kids.length + '</b> student' + (kids.length === 1 ? '' : 's') + ' of ' + E(s.classes && s.classes.name || 'the class') + ' can join. ' : '') + 'Add a colleague who has a BioscienceVista account (e.g. for a staff meeting); co-hosts can run the meeting with you.</p>' +
         (added.length ? added.map(function (p) { return '<div class="lv-row"><b>' + E(p.full_name || 'Member') + '</b><span class="lv-st scheduled">' + E(p.role) + '</span><button class="btn sm" type="button" data-rm="' + p.user_id + '">Remove</button></div>'; }).join('') : '') +
-        '<form id="pf" class="row2" style="gap:8px;justify-content:flex-start;margin-top:6px"><input name="email" type="email" required placeholder="Their Learnova email" style="flex:1;min-width:200px" aria-label="Email"><select name="role"><option value="participant">Participant</option><option value="cohost">Co-host</option></select><button class="btn sm">Add</button></form><p class="msg" id="pfm" role="alert"></p>';
+        '<form id="pf" class="row2" style="gap:8px;justify-content:flex-start;margin-top:6px"><input name="email" type="email" required placeholder="Their BioscienceVista email" style="flex:1;min-width:200px" aria-label="Email"><select name="role"><option value="participant">Participant</option><option value="cohost">Co-host</option></select><button class="btn sm">Add</button></form><p class="msg" id="pfm" role="alert"></p>';
       el.querySelector('#pf').onsubmit = function (e) { e.preventDefault(); var f = this, m = el.querySelector('#pfm');
         S.db.rpc('live_add_person', { sid: s.id, email: f.elements.email.value, as_role: f.elements.role.value }).then(function (x) { if (x.error) { m.className = 'msg'; m.textContent = S.nice(x.error); return; } people(el, s); }); };
       el.querySelectorAll('[data-rm]').forEach(function (b) { b.onclick = function () { S.db.from('live_session_participants').delete().eq('session_id', s.id).eq('user_id', b.getAttribute('data-rm')).then(function () { people(el, s); }); }; });

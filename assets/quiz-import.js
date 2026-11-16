@@ -1,4 +1,4 @@
-/* Learnova · quiz tools: read PDF / Word files, find questions, read mark schemes, suggest marks, question editor cards.
+/* BioscienceVista · quiz tools: read PDF / Word files, find questions, read mark schemes, suggest marks, question editor cards.
    Everything runs in the teacher's browser; files are never uploaded anywhere. */
 (function () {
   var Q = window.BVQ = {};

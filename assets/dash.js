@@ -1,4 +1,4 @@
-/* Student dashboard · Learnova */
+/* Student dashboard · BioscienceVista */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app');
   /* Admin only: /dashboard/?as=<student id> shows that student's dashboard as they see it, view only.
@@ -96,7 +96,7 @@
   function classesPanel(me, box) {
     var a = me.access || {}, mine = a.classes || [];
     var link = function (c) { return c.slug ? '/' + c.slug + '/' : '/class/?id=' + c.id; };
-    var st = { approved: '<span class="pill ok">✓ Approved</span>', pending: '<span class="pill t">⏳ Waiting for the teacher</span>', teacher_ok: '<span class="pill t">⏳ Teacher said yes · waiting for Learnova</span>', rejected: '<span class="pill">Not accepted</span>' };
+    var st = { approved: '<span class="pill ok">✓ Approved</span>', pending: '<span class="pill t">⏳ Waiting for the teacher</span>', teacher_ok: '<span class="pill t">⏳ Teacher said yes · waiting for BioscienceVista</span>', rejected: '<span class="pill">Not accepted</span>' };
     var prem = a.premium ? '<p class="small"><span class="pill ok">⭐ Premium</span> ' + (a.free ? 'Free access given by the admin.' : a.until ? 'Until ' + E(new Date(a.until).toLocaleDateString()) + '. <a href="/premium/">Extend</a>' : '') + '</p>'
       : '<p class="small"><b>Premium access is needed</b> to open class lessons, quizzes and simulations. <a class="btn main sm" href="/premium/">Get premium</a></p>';
     box.innerHTML = '<section class="panel tint grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><button type="button" class="btn sm" id="addc">＋ Join a class</button></div>' + prem +
@@ -115,7 +115,7 @@
         schools.sort(function (x, y) { return (IND(y) - IND(x)) || x.localeCompare(y); });   // Independent learners first, then the teachers by school
         /* the course of a class, by the name on the course list (class_directory gives it after migration 034; before that subject and level) */
         var course = function (c) { var sj = c.subject || '', lv = c.level || ''; return sj ? (lv && sj.indexOf(lv) < 0 ? sj + ' ' + lv : sj) : c.name; };
-        jb.innerHTML = '<p class="small" style="margin-top:10px">Learning on your own? Choose <b>Learnova · Independent learners</b>: you are in straight away and can join <b>more than one course</b>. In a teacher\'s class? Choose your teacher, then your course.</p>' +
+        jb.innerHTML = '<p class="small" style="margin-top:10px">Learning on your own? Choose <b>BioscienceVista · Independent learners</b>: you are in straight away and can join <b>more than one course</b>. In a teacher\'s class? Choose your teacher, then your course.</p>' +
           '<div class="grp"><label class="f">1. Your teacher<select id="jsch"><option value="">Choose…</option>' + schools.map(function (s) { return '<option>' + E(s) + '</option>'; }).join('') + '</select></label>' +
           '<label class="f">Or search by course, teacher or class name<input id="jq" placeholder="e.g. Biology HL"></label><div id="jlist"></div><p class="msg" id="jm" role="alert"></p></div>';
         var draw = function () {
@@ -165,13 +165,13 @@
         b.disabled = true; S.db.rpc('begin_retry', { lesson_ext_id: l.external_id }).then(function () { location.href = l.url + (l.url.indexOf('?') < 0 ? '?' : '&') + 'retry=1&lid=' + encodeURIComponent(l.external_id); }); }; });
     });
   }
-  // a review of Learnova, shown on the home page once the admin approves it
+  // a review of BioscienceVista, shown on the home page once the admin approves it
   function reviewBox(me) {
     var sec = document.createElement('section'); sec.className = 'panel'; sec.id = 'review';
     var plan = app.querySelector('#plan'); if (!plan) return; plan.after(sec);
     S.db.from('reviews').select('rating,body,status').eq('user_id', me.user.id).maybeSingle().then(function (r) {
       var mine = r.data;
-      sec.innerHTML = '<h3>⭐ Review Learnova</h3>' + (mine ? '<p class="small">Your review is <b>' + E(mine.status === 'approved' ? 'published' : mine.status === 'hidden' ? 'not shown' : 'waiting for approval') + '</b>. You can change it below.</p>' : '<p class="small muted">Tell other students and teachers what helps you most. Reviews appear on the home page after a check.</p>') +
+      sec.innerHTML = '<h3>⭐ Review BioscienceVista</h3>' + (mine ? '<p class="small">Your review is <b>' + E(mine.status === 'approved' ? 'published' : mine.status === 'hidden' ? 'not shown' : 'waiting for approval') + '</b>. You can change it below.</p>' : '<p class="small muted">Tell other students and teachers what helps you most. Reviews appear on the home page after a check.</p>') +
         '<form id="rvf" class="grp"><div class="cta" role="radiogroup" aria-label="Stars">' + [1, 2, 3, 4, 5].map(function (n) { return '<label class="chk"><input type="radio" name="st" value="' + n + '"' + ((mine ? mine.rating : 5) === n ? ' checked' : '') + '> ' + '★'.repeat(n) + '</label>'; }).join('') + '</div>' +
         '<textarea id="rvt" maxlength="600" rows="3" placeholder="What do you like about the lessons, quizzes or labs?">' + E(mine ? mine.body : '') + '</textarea>' +
         '<label class="chk"><input type="checkbox" id="rvn"> Show my full name (otherwise only my first name)</label><button class="btn main sm" type="submit">Send review</button><p class="msg" id="rvm"></p></form>';
@@ -270,7 +270,7 @@
   }
   // when a teacher is writing on the class whiteboard right now, say so at the top of the dashboard
   var bwOn = false;
-  /* announcements from the student's teachers and from Learnova (table announcements, migration 044) */
+  /* announcements from the student's teachers and from BioscienceVista (table announcements, migration 044) */
   function news(me) {
     var box = document.getElementById('bv-news'); if (!box) return;
     var ids = (me.classes || []).map(function (c) { return c.id; }).filter(Boolean);
@@ -281,7 +281,7 @@
       var rows = (r.data || []).filter(function (a) { return !a.expires_at || new Date(a.expires_at).getTime() >= now; }).slice(0, 6);
       if (!rows.length) { box.innerHTML = ''; return; }
       box.innerHTML = '<section class="panel" style="border-left:6px solid #ea580c"><h3 style="margin-top:0">📣 Announcements</h3>' + rows.map(function (a) {
-        return '<div style="margin:8px 0"><b>' + (a.pinned ? '📌 ' : '') + E(a.title) + '</b> <span class="small muted">' + E(a.class_id ? cn[a.class_id] || 'Your class' : 'Learnova') + ' · ' + E(new Date(a.created_at).toLocaleDateString()) + '</span>' +
+        return '<div style="margin:8px 0"><b>' + (a.pinned ? '📌 ' : '') + E(a.title) + '</b> <span class="small muted">' + E(a.class_id ? cn[a.class_id] || 'Your class' : 'BioscienceVista') + ' · ' + E(new Date(a.created_at).toLocaleDateString()) + '</span>' +
           (a.body ? '<div style="white-space:pre-wrap">' + E(a.body) + '</div>' : '') + (a.link ? '<div><a href="' + E(a.link) + '">Open →</a></div>' : '') + '</div>'; }).join('') + '</section>';
     }, function () {});
   }

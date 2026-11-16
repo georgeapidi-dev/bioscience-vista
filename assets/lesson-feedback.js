@@ -1,4 +1,4 @@
-/* Learnova · lesson feedback: the same five-part feedback on every interactive lesson, worksheet and simulation question.
+/* BioscienceVista · lesson feedback: the same five-part feedback on every interactive lesson, worksheet and simulation question.
    Instant and rule-based: what you did well, what is missing, why (misconceptions), how to improve, and what to study next.
    Signed-in students also get detailed feedback on their written answers from the server function "lesson-feedback". */
 (function () {
@@ -145,7 +145,7 @@
       ai.innerHTML = '<button type="button">📝 Get detailed feedback on my written answers</button><span class="small muted"></span>';
       wrap.appendChild(ai);
       var btn = ai.querySelector('button'), note = ai.querySelector('span');
-      if (!window.BV_DB) { btn.disabled = true; btn.style.cursor = 'default'; note.textContent = 'Log in to Learnova to get detailed feedback.'; }
+      if (!window.BV_DB) { btn.disabled = true; btn.style.cursor = 'default'; note.textContent = 'Log in to BioscienceVista to get detailed feedback.'; }
       btn.onclick = function () { askAI(n, texts, wrap, btn, note); };
     }
     var models = box.querySelector('details.model'); box.insertBefore(wrap, models || null);
@@ -260,7 +260,7 @@
             (n.image && n.image.src ? '<figure style="margin:10px 0 0;text-align:center"><img src="' + esc(n.image.src) + '" alt="' + esc(n.image.caption || n.image.title || '') + '" loading="lazy" style="max-width:100%;max-height:360px;border-radius:8px;background:#fff">' +
               '<figcaption class="small">' + esc(n.image.caption || '') + '<br><span style="opacity:.75">Image: <a href="' + esc(n.image.page || '#') + '" target="_blank" rel="noopener">' + esc(n.image.title || 'source') + '</a>' + (n.image.artist ? ' · ' + esc(n.image.artist) : '') + ', ' + esc(n.image.license || '') + ', via Wikimedia Commons</span></figcaption></figure>' :
              n.drawn && n.drawn.svg ? '<figure style="margin:10px 0 0;text-align:center"><img src="data:image/svg+xml;charset=utf-8,' + encodeURIComponent(n.drawn.svg) + '" alt="' + esc(n.drawn.caption || 'Diagram') + '" style="width:100%;max-width:640px;border-radius:8px;background:#fff;border:1px solid #e2e8f0">' +
-              '<figcaption class="small">' + esc(n.drawn.caption || '') + '<br><span style="opacity:.75">Diagram drawn for Learnova</span></figcaption></figure>' : '');
+              '<figcaption class="small">' + esc(n.drawn.caption || '') + '<br><span style="opacity:.75">Diagram drawn for BioscienceVista</span></figcaption></figure>' : '');
           var card = q.closest('.card') || q; card.parentNode.insertBefore(box, card);
         });
       }, function () {});

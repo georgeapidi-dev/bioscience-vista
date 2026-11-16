@@ -1,4 +1,4 @@
-/* Registration and login · Learnova */
+/* Registration and login · BioscienceVista */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), mode = app.getAttribute('data-mode');
   if (!S.on) return S.notReady(app);
@@ -6,7 +6,7 @@
   function go(me) { location.href = next && next.charAt(0) === '/' && next.charAt(1) !== '/' ? next : (me && me.staff ? '/staff/' : me && me.school ? '/teach/' : me && me.parent ? '/parent/' : '/dashboard/'); }
 
   if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'parent') return parentRegister();
-  /* The course list (the admin's list): [address of the course, name, group, soon]. soon = no Learnova lessons yet.
+  /* The course list (the admin's list): [address of the course, name, group, soon]. soon = no BioscienceVista lessons yet.
      The same list is kept in the database (course_catalog, migration 034). It changes only what people choose from. */
   var CAT = [['grade-6', 'Grade 6 Science', 'MYP Science'], ['grade-7', 'Grade 7 Science', 'MYP Science'], ['grade-8', 'Grade 8 Science', 'MYP Science'], ['grade-9', 'Grade 9 Science', 'MYP Science'], ['grade-10', 'Grade 10 Science', 'MYP Science'],
     ['bio-sl', 'IB Diploma Biology SL', 'IB Diploma'], ['bio-hl', 'IB Diploma Biology HL', 'IB Diploma'], ['chem-sl', 'IB Diploma Chemistry SL', 'IB Diploma'], ['chem-hl', 'IB Diploma Chemistry HL', 'IB Diploma'],
@@ -21,7 +21,7 @@
     CAT.forEach(function (c) {
       if (c[2] !== g) { g = c[2]; h += '<p class="small" style="margin:10px 0 2px"><b>' + E(g) + '</b></p>'; }
       h += '<div style="padding:3px 0"><label class="chk"><input type="checkbox" data-course="' + c[0] + '"' + (c[3] && !teacher ? ' disabled' : '') + '> ' + E(c[1]) +
-        (c[3] ? ' <span class="small muted">(' + (teacher ? 'no Learnova lessons yet' : 'lessons coming soon') + ')</span>' : '') + '</label></div>'; });
+        (c[3] ? ' <span class="small muted">(' + (teacher ? 'no BioscienceVista lessons yet' : 'lessons coming soon') + ')</span>' : '') + '</label></div>'; });
     return '<fieldset class="grp" id="rcs" style="border:1px solid var(--line);border-radius:12px;padding:12px"><legend><b>' + label + '</b></legend>' + h + '</fieldset>';
   }
   function chosen() { var out = []; app.querySelectorAll('[data-course]:checked').forEach(function (b) { out.push(b.getAttribute('data-course')); }); return out; }
@@ -41,11 +41,11 @@
     var T = kind === 'teacher', L = kind === 'learner';
     app.innerHTML = '<form class="form narrow" id="rf" novalidate><h2>' + (T ? 'Teacher account' : L ? 'Independent learner account' : 'Student account') + '</h2>' +
       (L ? '<p class="muted small">Choose your courses below: one or as many as you like. You are in straight away, with no teacher to wait for, and you see everything in the courses you choose. You can add or drop courses later on your dashboard. Premium access opens the lessons.</p>' : !T ? '<p class="muted small">After signing up, press <b>Join a class</b> on your dashboard, choose your teacher, then choose your course from the courses your teacher offers. You see the lessons your teacher adds to the class.</p>' : '') +
-      '<p class="muted small">' + (T ? 'Your classes, students and materials are private to you and your students. The Learnova admin approves new teachers and each course they teach; a premium subscription is needed to run classes.' :
+      '<p class="muted small">' + (T ? 'Your classes, students and materials are private to you and your students. The BioscienceVista admin approves new teachers and each course they teach; a premium subscription is needed to run classes.' :
         L ? 'Independent learners can choose more than one course.' : 'After signing up you choose your teacher, then your course. Your teacher approves you, and premium access opens the class materials.') + '</p>' +
       '<label class="f">Full name<input id="rn" autocomplete="name" required placeholder="' + (T ? 'Your name as students know it' : 'As it appears on your school records') + '"></label>' +
       (T ? '<label class="f">School (choose it from the list, or type it if it is new; "Private tutor" if you have none)<input id="rs" list="rsl" autocomplete="organization" required maxlength="120"><datalist id="rsl"></datalist></label>' : '') +
-      (T ? coursePicker('Courses you teach: tick one or more. The Learnova admin approves each course, and your class for a course is made when it is approved. After signing up, only the admin can add a course for you', true) : L ? coursePicker('Courses you want to learn: tick one or more (HL includes the SL lessons; AS Level and A Level are separate courses)') : '') +
+      (T ? coursePicker('Courses you teach: tick one or more. The BioscienceVista admin approves each course, and your class for a course is made when it is approved. After signing up, only the admin can add a course for you', true) : L ? coursePicker('Courses you want to learn: tick one or more (HL includes the SL lessons; AS Level and A Level are separate courses)') : '') +
       '<label class="f">Email<input id="re" type="email" autocomplete="email" required></label>' +
       '<label class="f">Password (at least 8 characters)<input id="rp" type="password" autocomplete="new-password" minlength="8" required></label>' +
       '<label class="f">Confirm password<input id="rp2" type="password" autocomplete="new-password" required></label>' +
@@ -71,7 +71,7 @@
         if (res.error) { m.textContent = S.nice(res.error); return; }
         if (res.data.session) { location.href = T ? '/teach/' : '/dashboard/'; return; }
         app.innerHTML = '<section class="panel tint"><p class="label">Almost there</p><h2>Check your email</h2><p>We sent a confirmation link to <b>' + E(em) + '</b>. Open it to activate your account, then <a href="/login/">log in</a>' +
-          (T ? '. The Learnova admin then approves your teacher account and each course you ticked. Your class for a course is made when that course is approved.' : L ? '. Your courses will be waiting on your dashboard.' : ', press Join a class and choose your teacher.') + '</p><p class="small muted">No email after a few minutes? Check your spam folder.</p></section>';
+          (T ? '. The BioscienceVista admin then approves your teacher account and each course you ticked. Your class for a course is made when that course is approved.' : L ? '. Your courses will be waiting on your dashboard.' : ', press Join a class and choose your teacher.') + '</p><p class="small muted">No email after a few minutes? Check your spam folder.</p></section>';
       });
     });
   }
@@ -150,7 +150,7 @@
   }
   // forgotten password: email a reset link; the link opens this page with ?reset=1 and a one-time sign-in
   function forgotForm(email, note) {
-    app.innerHTML = '<form class="form narrow" id="ff"><h2>Reset your password</h2><p class="muted small">Type the email you use for Learnova. We will email you a link to choose a new password.</p>' +
+    app.innerHTML = '<form class="form narrow" id="ff"><h2>Reset your password</h2><p class="muted small">Type the email you use for BioscienceVista. We will email you a link to choose a new password.</p>' +
       (note ? '<p class="msg">' + E(note) + '</p>' : '') +
       '<label class="f">Email<input id="fe" type="email" autocomplete="email" required value="' + E(email || '') + '"></label>' +
       '<button class="btn main" type="submit">Email me a reset link</button><p class="msg" id="fm" role="alert"></p>' +
@@ -163,7 +163,7 @@
       S.db.auth.resetPasswordForEmail(em, { redirectTo: location.origin + '/login/?reset=1' }).then(function (r) {
         b.disabled = false;
         if (r.error) { m.textContent = /rate|seconds/i.test(r.error.message) ? 'Please wait a minute before asking for another link.' : S.nice(r.error); return; }
-        app.innerHTML = '<section class="panel tint"><p class="label">Check your email</p><h2>Reset link sent</h2><p>If <b>' + E(em) + '</b> has a Learnova account, a link to choose a new password is on its way. Open it on this device.</p>' +
+        app.innerHTML = '<section class="panel tint"><p class="label">Check your email</p><h2>Reset link sent</h2><p>If <b>' + E(em) + '</b> has a BioscienceVista account, a link to choose a new password is on its way. Open it on this device.</p>' +
           '<p class="small muted">No email after a few minutes? Check your spam or junk folder, or ask your teacher to reset it for you.</p><p class="small"><a href="/login/">← Back to log in</a></p></section>';
       });
     });

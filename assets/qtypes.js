@@ -1,4 +1,4 @@
-/* Learnova · question types (window.BVQT). Ten kinds of question that are marked automatically:
+/* BioscienceVista · question types (window.BVQT). Ten kinds of question that are marked automatically:
    multi (several correct answers), match, order, classify, gaps, cloze (drop-down in a sentence), number, table, label, hotspot.
    One module gives the student's view, the teacher's editor and the scoring used by the preview. The same scoring runs on the
    server when work is handed in (auto_feedback, migration 038): the key (accepted) is never sent to students.

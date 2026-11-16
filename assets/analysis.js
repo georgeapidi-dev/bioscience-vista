@@ -1,4 +1,4 @@
-/* Learnova · Student Work Analysis Engine: views shared by the teacher dashboard and the student dashboard.
+/* BioscienceVista · Student Work Analysis Engine: views shared by the teacher dashboard and the student dashboard.
    Everything here is drawn from the database's rule-based analysis (works without AI). AI analysis, when present,
    is shown in its own clearly labelled box. Evidence (what the marks show) is kept apart from suggestions. */
 (function () {
@@ -138,7 +138,7 @@
   A.reportDoc = function (title, meta, body) {
     return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + E(title) + '</title><style>' + CSS.replace('STYLES', A.css) + '</style></head><body>' +
       '<div class="bar"><button onclick="print()">🖨 Print or save as PDF</button></div><h1>' + E(title) + '</h1><p class="meta">' + meta + '</p>' + body +
-      '<p class="meta" style="margin-top:24px">Learnova · prepared by Learnova · generated ' + E(new Date().toLocaleString()) + ' from the marks recorded in Learnova. Marks are evidence; suggestions and AI analysis are recommendations for the teacher to judge.</p></body></html>';
+      '<p class="meta" style="margin-top:24px">BioscienceVista · prepared by BioscienceVista · generated ' + E(new Date().toLocaleString()) + ' from the marks recorded in BioscienceVista. Marks are evidence; suggestions and AI analysis are recommendations for the teacher to judge.</p></body></html>';
   };
   A.openDoc = function (html, name) {
     var w = window.open('', '_blank');

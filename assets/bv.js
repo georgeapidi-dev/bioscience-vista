@@ -1,4 +1,4 @@
-/* Learnova shared script · by Learnova */
+/* BioscienceVista shared script · by BioscienceVista */
 (function () {
   var BV = window.BV = window.BV || {};
   // menu + theme

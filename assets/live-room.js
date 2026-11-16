@@ -1,4 +1,4 @@
-/* Learnova · Live lesson room (/live/room/?s=ID) and guest joining (/live/join/?t=TOKEN).
+/* BioscienceVista · Live lesson room (/live/room/?s=ID) and guest joining (/live/join/?t=TOKEN).
    Video, audio, screen sharing, gallery, chat and the participant list come from Daily Prebuilt (daily-js), joined with a
    one-room, short-lived token from the live-join or live-guest Edge Function. Beside the video sit the lesson's whiteboard
    (the teacher writes; everyone else watches live) and its resources. Teachers can record, see raised hands and end the
@@ -55,7 +55,7 @@
   function prejoin(d, wait) {
     var title = sess ? sess.title : (info && info.session && info.session.title) || 'Live lesson';
     var rec = d ? d.recording : sess && sess.recording_pref === 'allowed';
-    app.innerHTML = '<div class="lr-pre"><section class="panel"><p class="label">BioScience Vista Live</p><h2 style="margin:0">🎥 ' + E(title) + '</h2>' +
+    app.innerHTML = '<div class="lr-pre"><section class="panel"><p class="label">BioscienceVista Live</p><h2 style="margin:0">🎥 ' + E(title) + '</h2>' +
       (sess ? '<p class="small" style="margin:0">' + E(fmt(sess.starts_at, { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })) + ' · ' + sess.duration_min + ' min' + (sess.classes ? ' · ' + E(sess.classes.name) : '') + '</p>' : '') +
       (wait ? '<p class="lr-pill warn" style="justify-self:start">⏳ ' + E(wait.error) + '</p>' :
         (rec ? '<label class="lr-consent"><input type="checkbox" id="cs"> <span><b>⏺ This lesson may be recorded.</b> ' + E(d.consent || '') + ' You will see a red "Recording" sign whenever it is.</span></label>' : '') +
@@ -72,7 +72,7 @@
     fn('live-guest', { action: 'check', token: TOKEN }).then(function (d) {
       if (!d.ok) { msg(E(d.error || 'This invitation cannot be used.'), false); return; }
       var s = d.session;
-      app.innerHTML = '<div class="lr-pre"><section class="panel"><p class="label">You are invited to a BioScience Vista Live session</p><h2 style="margin:0">🎥 ' + E(s.title) + '</h2>' +
+      app.innerHTML = '<div class="lr-pre"><section class="panel"><p class="label">You are invited to a BioscienceVista Live session</p><h2 style="margin:0">🎥 ' + E(s.title) + '</h2>' +
         '<p class="small" style="margin:0">' + E(fmt(s.starts_at, { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })) + ' (your time) · ' + s.duration_min + ' min' + (s.teacher ? ' · with ' + E(s.teacher) : '') + '</p>' +
         '<form id="gj" class="lr-form" style="display:grid;gap:10px"><label><b>Your name</b> (as others will see it)<input name="name" maxlength="40" required autocomplete="name" style="width:100%"></label>' +
         (s.recording ? '<label class="lr-consent"><input type="checkbox" name="cs" required> <span><b>⏺ This session may be recorded.</b> You will see a red "Recording" sign whenever it is.</span></label>' : '') +

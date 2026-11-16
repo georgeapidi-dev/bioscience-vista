@@ -1,4 +1,4 @@
-/* Learnova · Smart Whiteboard.
+/* BioscienceVista · Smart Whiteboard.
    Pen (with stylus pressure), pencil, highlighter, eraser, text, lines, arrows, boxes, ellipses, graphs and images on
    16:9 pages, with zoom and pan, projected full screen and shared live. Two modes:
    - Freehand: ink stays exactly as written.
@@ -145,7 +145,7 @@
   }
   function helpText() {
     return '<details class="small" style="margin-top:8px"><summary><b>How it works and keyboard shortcuts</b></summary><p><b>✨ Smart Notes</b>: stop writing for a moment (or press 🔍 Recognise) and a card shows what was read next to a corrected version. Choose <b>Accept</b>, edit the text first, use the text as read, or <b>Keep handwriting</b>. Nothing changes until you choose. Accepted text keeps your strokes: 👁 Handwriting shows them, and selecting the text gives <b>↩ Handwriting</b> to bring them back. Equations and formulae are tidied (H2O → H₂O, -> → →) but never re-worded.</p>' +
-      '<p>Handwriting is read by your browser where it can do this itself; otherwise only the finished strokes are sent to Learnova\'s server, which asks Google\'s handwriting recogniser. Corrections come from Claude via Learnova\'s server. If either is unavailable the status says so and your ink stays as written.</p>' +
+      '<p>Handwriting is read by your browser where it can do this itself; otherwise only the finished strokes are sent to BioscienceVista\'s server, which asks Google\'s handwriting recogniser. Corrections come from Claude via BioscienceVista\'s server. If either is unavailable the status says so and your ink stays as written.</p>' +
       '<p><b>Keys</b>: V select · H pan · P pen · N pencil · I highlighter · E eraser · T text · L line · A arrow · D double arrow · R box · O ellipse · G graph · [ ] thickness · Ctrl+Z / Ctrl+Y undo / redo · Delete removes the selection · Ctrl+D duplicate · Ctrl+Enter recognise · Ctrl+S save now · + − 0 zoom · Space+drag or two fingers pan · Ctrl+wheel or pinch zoom · F full screen · Alt+← → pages. Paste or drop an image to add it.</p></details>';
   }
 
@@ -782,7 +782,7 @@
     else if (ready) { el.className = 'pill warn'; el.textContent = '💡 ' + ready + ' suggestion' + (ready > 1 ? 's' : ''); }
     else if (kind === 'wait' && mode === 'smart') { el.className = 'pill'; el.textContent = '✍️ Waiting for a pause…'; }
     else { el.className = 'pill' + (mode === 'smart' ? ' ok' : ''); el.textContent = mode === 'smart' ? '✨ Smart Notes on' + eng : '✏️ Freehand'; }
-    el.title = 'Handwriting recognition' + (lastEngine ? ': last read by the ' + (lastEngine === 'browser' ? 'browser\'s own recogniser' : 'Learnova server') : '');
+    el.title = 'Handwriting recognition' + (lastEngine ? ': last read by the ' + (lastEngine === 'browser' ? 'browser\'s own recogniser' : 'BioscienceVista server') : '');
   }
 
   // ======================= undo / redo =======================

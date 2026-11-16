@@ -1,4 +1,4 @@
-/* Learnova · Games (/games/) · by Learnova
+/* BioscienceVista · Games (/games/) · by BioscienceVista
    Educational games in Biology, Chemistry, Physics, Mathematics and general Science, with gamification:
    XP and levels, stars for every game, a daily challenge (double XP), a day streak, badges and, for signed-in
    students, cloud save and a leaderboard of their classes (migration 047). Without an account everything is kept
@@ -217,7 +217,7 @@
     stopAll(); var L = level(P.xp), st = streak(), d = daily(), done = P.days.indexOf(today()) >= 0;
     var nStars = Object.keys(P.stars).reduce(function (a, k) { return a + (P.stars[k] || 0); }, 0);
     app.innerHTML = '<div class="gm">' +
-      '<section class="gm-hero"><div><p class="label" style="color:#fff;opacity:.85;margin:0">Learnova games</p><h1 style="margin:0;color:#fff;font-size:1.6rem">Games: play, learn and level up</h1><p>Biology, Chemistry, Physics, Maths and Science games. Earn XP, collect stars and badges, and keep your streak going.</p>' +
+      '<section class="gm-hero"><div><p class="label" style="color:#fff;opacity:.85;margin:0">BioscienceVista games</p><h1 style="margin:0;color:#fff;font-size:1.6rem">Games: play, learn and level up</h1><p>Biology, Chemistry, Physics, Maths and Science games. Earn XP, collect stars and badges, and keep your streak going.</p>' +
         '<div class="gm-stats"><span>🔥 ' + st + '-day streak</span><span>⭐ ' + nStars + ' / ' + GAMES.length * 3 + ' stars</span><span>🏅 ' + P.badges.length + ' / ' + BADGES.length + ' badges</span><span>🎮 ' + (P.total || 0) + ' games</span></div></div>' +
         '<div class="gm-lv"><div class="gm-ring" style="--p:' + L.pct + '" title="' + (P.xp - L.from) + ' of ' + (L.to - L.from) + ' XP to the next level"><b>' + L.n + '</b></div><div><b style="font-size:1.1rem">' + E(L.title) + '</b><br>' + P.xp.toLocaleString() + ' XP<br><span class="small" style="opacity:.9">' + (L.to - P.xp) + ' XP to level ' + (L.n + 1) + '</span></div></div></section>' +
       '<div class="gm-daily"><span style="font-size:2rem">☀️</span><div><b>Daily challenge: ' + E(d.title) + '</b><br><span class="small">Double XP today' + (done ? '' : ' · play any game today to keep your streak') + '</span></div><button class="btn main" type="button" data-play="' + d.id + '">Play ×2 XP</button></div>' +
@@ -228,7 +228,7 @@
           '<span class="meta">' + starsHtml(P.stars[g.id]) + '<span>' + (P.best[g.id] ? 'Best ' + P.best[g.id] : 'New') + '</span></span></button>'; }).join('') + '</div>' +
       '<section class="gm-sec"><h2>🏅 Badges</h2><div class="gm-badges">' + BADGES.map(function (b) { var on = P.badges.indexOf(b[0]) >= 0; return '<div class="gm-badge' + (on ? '' : ' off') + '" title="' + E(b[3]) + '"><span aria-hidden="true">' + b[1] + '</span><b>' + E(b[2]) + '</b>' + E(b[3]) + (on ? '' : '<span class="sr-only"> (not yet earned)</span>') + '</div>'; }).join('') + '</div></section>' +
       '<section class="gm-sec" id="gm-lb"></section>' +
-      '<p class="small muted gm-sec">' + (ME ? (CLOUD ? '☁️ Your XP, stars and badges are saved to your Learnova account.' : 'Your progress is kept on this device.') : 'Your progress is kept on this device. <a href="/login/?next=/games/">Log in</a> to save it to your account and join your class leaderboard.') + ' Games by Learnova.</p></div>';
+      '<p class="small muted gm-sec">' + (ME ? (CLOUD ? '☁️ Your XP, stars and badges are saved to your BioscienceVista account.' : 'Your progress is kept on this device.') : 'Your progress is kept on this device. <a href="/login/?next=/games/">Log in</a> to save it to your account and join your class leaderboard.') + ' Games by BioscienceVista.</p></div>';
     app.querySelectorAll('[data-play]').forEach(function (b) { b.onclick = function () { location.hash = 'play/' + b.getAttribute('data-play'); }; });
     app.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { FILTER = b.getAttribute('data-f'); hub(); var x = app.querySelector('[data-f="' + FILTER + '"]'); if (x) x.focus(); }; });
     app.querySelector('#gm-snd').onclick = function () { SOUND = !SOUND; try { localStorage.setItem('bv-games-sound', SOUND ? '1' : '0'); } catch (e) {} hub(); app.querySelector('#gm-snd').focus(); };
