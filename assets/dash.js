@@ -322,7 +322,7 @@
     var TYPES = [['les', '📘 Interactive lessons', '#2563eb'], ['exam', '🧪 Examinations', '#7c3aed'], ['qs', '📝 Exam-style questions', '#ea580c'], ['oth', '📎 Other tasks', '#0d9488']];
     var groups = function (rows, empty) {
       var out = TYPES.map(function (T) { var r = rows.filter(function (x) { return x.type === T[0]; }); if (!r.length) return '';
-        return '<div class="td-grp" style="--tc:' + T[2] + '"><h4>' + T[1] + ' <span>' + r.filter(function (x) { return !x.done; }).length + '</span></h4>' + r.filter(function (x) { return !x.done; }).map(function (x) { return x.html; }).join('') +
+        return '<div class="td-grp" style="--tc:' + T[2] + '"><h4>' + T[1] + ' <span>' + r.filter(function (x) { return !x.done; }).length + '</span></h4>' + (function () { var o = r.filter(function (x) { return !x.done; }); return o.slice(0, 5).map(function (x) { return x.html; }).join('') + (o.length > 5 ? '<details><summary class="small" style="cursor:pointer;font-weight:700;color:var(--tc)">Show ' + (o.length - 5) + ' more</summary>' + o.slice(5).map(function (x) { return x.html; }).join('') + '</details>' : ''); })() +
           (r.some(function (x) { return x.done; }) ? '<details><summary class="small muted">Done (' + r.filter(function (x) { return x.done; }).length + ')</summary>' + r.filter(function (x) { return x.done; }).map(function (x) { return x.html; }).join('') + '</details>' : '') + '</div>'; }).join('');
       return out || '<p class="emptybox">' + empty + '</p>';
     };
