@@ -14,6 +14,26 @@
   function quizRows(withSubject) {
     return S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results,topic_id,' + (withSubject ? 'subject,' : '') + ' topics(name), quiz_classes(class_id, published, classes(id,name,archived_at,site_slug,follows,programme))').in('published', (ME.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false });
   }
+  function css() {
+    if (document.getElementById('qc-css')) return; var st = document.createElement('style'); st.id = 'qc-css';
+    st.textContent = '.qc-hero{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center;padding:20px 22px;border-radius:20px;color:#fff;background:linear-gradient(120deg,#0d9488,#2563eb 55%,#7c3aed);box-shadow:0 10px 26px rgba(37,99,235,.22)}.qc-hero h2{margin:2px 0 4px;color:#fff}.qc-hero p{margin:0;opacity:.92}.qc-lab{text-transform:uppercase;letter-spacing:.08em;font-size:.75rem;font-weight:800;opacity:.85}' +
+      '.qc-stats{display:flex;gap:10px}.qc-stats span{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:14px;padding:8px 14px;text-align:center;font-size:.85rem}.qc-stats b{display:block;font-size:1.5rem;line-height:1.1}' +
+      '.qc-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}.qc-tabs a{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 10px;border-radius:14px;font-weight:800;text-decoration:none;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.14);transition:transform .12s}.qc-tabs a:hover{transform:translateY(-2px)}.qc-tabs a.on{outline:3px solid #0f172a;outline-offset:2px}' +
+      '.qc-t1{background:linear-gradient(135deg,#f97316,#ef4444)}.qc-t2{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}.qc-t3{background:linear-gradient(135deg,#10b981,#0d9488)}.qc-t4{background:linear-gradient(135deg,#0ea5e9,#2563eb)}.qc-t5{background:linear-gradient(135deg,#ec4899,#be185d)}' +
+      '.qc-note{background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:10px 14px;font-size:.9rem}' +
+      '.qc-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:10px 12px;margin:0 0 14px;position:sticky;top:0;z-index:5}' +
+      '.qc-sel,.qc-find{display:flex;align-items:center;gap:6px;font-weight:700}.qc-sel select,.qc-find input{font:inherit;padding:8px 10px;border:2px solid #c7d2fe;border-radius:10px;background:#f8fafc;max-width:min(320px,70vw)}.qc-find{flex:1 1 200px}.qc-find input{width:100%}' +
+      '.qc-chipsel,.qc-show{display:flex;flex-wrap:wrap;gap:6px}.qc-chipsel button,.qc-show button{font:inherit;font-weight:700;font-size:.88rem;padding:7px 12px;border-radius:999px;border:2px solid #c7d2fe;background:#eef2ff;color:#3730a3;cursor:pointer}.qc-chipsel button.on,.qc-show button.on{background:#4f46e5;border-color:#4f46e5;color:#fff}' +
+      '.qc-cls{margin:18px 0 8px;font-size:1.15rem}.qc-h{display:flex;align-items:center;gap:8px;margin:14px 0 8px;font-size:1rem}.qc-h span{background:#e2e8f0;border-radius:999px;padding:1px 10px;font-size:.85rem}.qc-h.todo span{background:#fed7aa;color:#9a3412}.qc-h.done span{background:#bbf7d0;color:#166534}' +
+      '.qc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}' +
+      '.qc-card{display:flex;flex-direction:column;gap:8px;background:#fff;border:1px solid #e2e8f0;border-top:6px solid var(--qc);border-radius:16px;padding:12px 14px;box-shadow:0 2px 8px rgba(15,23,42,.06)}.qc-card[hidden]{display:none}' +
+      '.qc-bio{--qc:#16a34a;--qcb:#f0fdf4}.qc-chem{--qc:#ea580c;--qcb:#fff7ed}.qc-phys{--qc:#2563eb;--qcb:#eff6ff}.qc-oth{--qc:#7c3aed;--qcb:#f5f3ff}' +
+      '.qc-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.qc-head b{line-height:1.3}.qc-score{flex:none;background:#dcfce7;color:#166534;font-weight:800;border-radius:999px;padding:2px 10px;font-size:.85rem}.qc-score.wait{background:#fef3c7;color:#92400e}' +
+      '.qc-chips{display:flex;flex-wrap:wrap;gap:5px}.qc-chips span{background:var(--qcb);color:#334155;border-radius:8px;padding:2px 8px;font-size:.8rem}' +
+      '.qc-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:auto}.qc-acts .btn.main{background:var(--qc);border-color:var(--qc)}.qc-more{flex:1 1 100%}.qc-more summary{cursor:pointer;font-size:.85rem;font-weight:700;color:#475569}.qc-more ul{margin:6px 0 0;padding-left:1.1em;font-size:.86rem}.qc-more ul ul{padding-left:1.1em;margin:4px 0}' +
+      '.qc-part[hidden]{display:none}@media(max-width:600px){.qc-bar{position:static}.qc-hero{padding:16px}}';
+    document.head.appendChild(st);
+  }
   function list() {
     app.innerHTML = '<p class="muted">Loading the Assessment centre…</p>';
     Promise.all([
@@ -33,18 +53,23 @@
       var parent = {}; ((x[3] && x[3].data) || []).forEach(function (t) { parent[t.id] = t.parent_id; });
       var LES = ((x[2] && x[2].data) || []).filter(function (l) { return l.published !== false && l.url; });
       function lessonsOf(q) { if (!q.topic_id) return ''; var ls = LES.filter(function (l) { return l.topic_id === q.topic_id || parent[l.topic_id] === q.topic_id; }); if (!ls.length) return '';
-        return '<div class="qlessons"><span class="small muted">📘 Interactive lessons for this topic</span><div class="cta" style="justify-content:flex-start">' + ls.map(function (l) { return '<a class="btn sm" href="' + E(l.url) + '">' + E(String(l.title || '').split(':')[0]) + '</a>'; }).join('') + '</div></div>'; }
+        var seen = {}; ls = ls.filter(function (l) { var k = l.url; if (seen[k]) return false; seen[k] = 1; return true; });
+        return '<li>📘 <b>' + ls.length + ' interactive lesson' + (ls.length > 1 ? 's' : '') + '</b><ul>' + ls.map(function (l) { return '<li><a href="' + E(l.url) + '">' + E(String(l.title || '').split(':')[0]) + '</a></li>'; }).join('') + '</ul></li>'; }
       var qs = x[0].data || [], at = x[1].data || [], now = new Date();
       if (ME.staff) qs = qs.filter(function () { return true; });
+      function subjOf(q) { return BV.subj.of(q.subject, q.topics && q.topics.name, q.title); }
       function card(q) {
         var mine = at.filter(function (a) { return a.quiz_id === q.id; }), done = mine.filter(function (a) { return a.status !== 'in_progress'; }), live = mine.filter(function (a) { return a.status === 'in_progress'; })[0];
         var open = (!q.opens_at || new Date(q.opens_at) <= now) && (!q.due_at || new Date(q.due_at) >= now), left = q.max_attempts - mine.length;
         var best = done.reduce(function (b, a) { var st = !q.show_results && !a.released ? 'held' : a.status; return a.score != null && (b == null || +a.score > b.score) ? { score: +a.score, max: +a.max_score, status: st } : b; }, null);
         var lockCls = lockOf(q);
         var btn = lockCls ? (asked[q.id] === 'pending' ? '<span class="pill">🔒 Requested · waiting for your teacher</span>' : '<span class="small muted">🔒 Opens when your teacher approves it</span> <button type="button" class="btn sm" data-reqq="' + q.id + '" data-cls="' + lockCls + '">' + (asked[q.id] === 'declined' ? 'Ask again' : 'Request') + '</button>') : live ? '<a class="btn main sm" href="#' + q.id + '">Continue</a>' : open && left > 0 ? '<a class="btn main sm" href="#' + q.id + '">' + (done.length ? 'Try again' : 'Start') + '</a>' : done.length ? '<a class="btn sm" href="#' + q.id + '">See my result</a>' : '<span class="pill">' + (q.opens_at && new Date(q.opens_at) > now ? 'Opens ' + E(S.when(q.opens_at)) : 'Closed') + '</span>';
-        return '<article class="task"><div class="top2"><b>' + E(q.title) + '</b>' + (best ? '<span class="score">' + (best.status === 'held' ? 'Waiting for your teacher' : best.status === 'needs_marking' ? 'Being marked' : best.score + ' / ' + best.max) + '</span>' : '') + '</div>' +
-          '<span class="small muted">' + [q.topics && q.topics.name, q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : 'No time limit', q.due_at ? 'Due ' + S.when(q.due_at) : '', q.max_attempts + ' attempt' + (q.max_attempts > 1 ? 's' : '')].filter(Boolean).map(E).join(' · ') + '</span>' +
-          (q.instructions ? '<p class="small">' + E(q.instructions) + '</p>' : '') + '<div class="acts">' + btn + '</div>' + lessonsOf(q) + '</article>';
+        var sj = subjOf(q) || '', col = /bio/i.test(sj) ? 'bio' : /chem/i.test(sj) ? 'chem' : /phys/i.test(sj) ? 'phys' : 'oth';
+        var more = (q.instructions ? '<li>ℹ️ ' + E(q.instructions) + '</li>' : '') + lessonsOf(q);
+        return '<article class="qc-card qc-' + col + '" data-find="' + E((q.title + ' ' + (q.topics && q.topics.name || '')).toLowerCase()) + '"><div class="qc-head"><b>' + E(q.title) + '</b>' +
+          (best ? '<span class="qc-score' + (best.status === 'held' || best.status === 'needs_marking' ? ' wait' : '') + '">' + (best.status === 'held' ? 'Waiting for your teacher' : best.status === 'needs_marking' ? 'Being marked' : best.score + ' / ' + best.max) + '</span>' : '') + '</div>' +
+          '<div class="qc-chips">' + [q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : '⏱ No time limit', q.due_at ? '📅 Due ' + S.when(q.due_at) : '', '🔁 ' + q.max_attempts + ' attempt' + (q.max_attempts > 1 ? 's' : '')].filter(Boolean).map(function (t) { return '<span>' + E(t) + '</span>'; }).join('') + '</div>' +
+          '<div class="qc-acts">' + btn + (more ? '<details class="qc-more"><summary>More</summary><ul>' + more + '</ul></details>' : '') + '</div></article>';
       }
       // each quiz sits under the class it is set for (a student sees only their own classes)
       var mine = {}; (ME.classes || []).forEach(function (c) { mine[c.id] = c.name; });
@@ -55,23 +80,38 @@
         cls.forEach(function (c) { if (!groups[c.id]) { groups[c.id] = { name: c.name, cls: c, qs: [] }; order.push(c.id); } groups[c.id].qs.push(q); });
       });
       order.sort(function (a, b) { return groups[a].name.localeCompare(groups[b].name); });
-      var subjOf = function (q) { return BV.subj.of(q.subject, q.topics && q.topics.name, q.title); };
       var isDone = function (q) { return at.some(function (a) { return a.quiz_id === q.id && a.status !== 'in_progress'; }); };
-      var pick = new URLSearchParams(location.search).get('class') || (order.length === 1 ? order[0] : '');
-      app.innerHTML = '<div class="row2"><div><p class="label">Assessment centre</p><h2>' + (EXAM ? 'Examinations' : 'Exam-style questions') + '</h2><p class="muted small">' + (EXAM ? 'Timed examinations set by your teacher.' : 'Topic-by-topic practice questions, each with the interactive lessons it goes with.') + '</p></div><a class="btn sm" href="/dashboard/">My dashboard</a></div>' +
-        '<nav class="cta" aria-label="Assessment centre" style="justify-content:flex-start;margin:6px 0 14px"><a class="btn' + (EXAM ? '' : ' main') + '" href="/quizzes/"' + (EXAM ? '' : ' aria-current="page"') + '>📝 Exam-style questions</a><a class="btn' + (EXAM ? ' main' : '') + '" href="/exams/"' + (EXAM ? ' aria-current="page"' : '') + ' style="--c:#7c3aed">🧪 Examinations</a></nav>' +
-        (ME.staff ? '<p class="panel tint small">You are signed in as an admin. Students only see ' + NOUN + 's set for their own classes. Build and set them in the <a href="/staff/#quizzes">Teacher dashboard</a>.</p>' : '') +
+      var pick = new URLSearchParams(location.search).get('class') || (order.length === 1 || (ME.staff && order.length > 3) ? order[0] : '');
+      if (pick && !groups[pick]) pick = order[0] || '';
+      css();
+      var many = order.length > 4, nDo = qs.filter(function (q) { return !isDone(q); }).length;
+      app.innerHTML = '<div class="qc-hero"><div><p class="qc-lab">Assessment centre</p><h2>' + (EXAM ? '🧪 Examinations' : '📝 Exam-style questions') + '</h2><p>' + (EXAM ? 'Timed examinations set by your teacher.' : 'Topic-by-topic practice questions, each with the interactive lessons it goes with.') + '</p></div>' +
+        '<div class="qc-stats"><span><b>' + nDo + '</b> to do</span><span><b>' + (qs.length - nDo) + '</b> done</span></div></div>' +
+        '<nav class="qc-tabs" aria-label="Assessment centre"><a class="qc-t1' + (EXAM ? '' : ' on') + '" href="/quizzes/"' + (EXAM ? '' : ' aria-current="page"') + '>📝 Exam-style questions</a><a class="qc-t2' + (EXAM ? ' on' : '') + '" href="/exams/"' + (EXAM ? ' aria-current="page"' : '') + '>🧪 Examinations</a><a class="qc-t3" href="/practice/">🃏 Practice &amp; revision</a><a class="qc-t4" href="/dashboard/">🏠 My dashboard</a>' + (ME.staff ? '<a class="qc-t5" href="/build/">🛠️ Assessment Studio</a>' : '') + '</nav>' +
+        (ME.staff ? '<p class="qc-note">👀 Admin view: students only see the ' + NOUN + 's set for their own classes. Set them in the <a href="/staff/#quizzes">Teacher dashboard</a>.</p>' : '') +
         (!order.length && !ME.staff ? '<p class="panel tint">Join a class on <a href="/dashboard/">your dashboard</a> to see your ' + NOUN + 's.</p>' : '') +
-        (order.length > 1 ? '<div class="cta" role="tablist"><button type="button" class="btn sm' + (pick ? '' : ' main') + '" data-g="">All classes</button>' + order.map(function (g) { return '<button type="button" class="btn sm' + (pick === g ? ' main' : '') + '" data-g="' + E(g) + '">' + E(groups[g].name) + ' (' + groups[g].qs.length + ')</button>'; }).join('') + '</div>' : '') +
+        (order.length ? '<div class="qc-bar">' + (order.length > 1 ? (many ? '<label class="qc-sel">🏫 Class <select id="qc-cls"><option value="">All classes</option>' + order.map(function (g) { return '<option value="' + E(g) + '"' + (pick === g ? ' selected' : '') + '>' + E(groups[g].name) + ' (' + groups[g].qs.length + ')</option>'; }).join('') + '</select></label>'
+            : '<div class="qc-chipsel" role="group" aria-label="Class"><button type="button" class="' + (pick ? '' : 'on') + '" data-g="">All classes</button>' + order.map(function (g) { return '<button type="button" class="' + (pick === g ? 'on' : '') + '" data-g="' + E(g) + '">' + E(groups[g].name) + ' (' + groups[g].qs.length + ')</button>'; }).join('') + '</div>') : '') +
+          '<label class="qc-find">🔎 <input type="search" id="qc-find" placeholder="Find a topic…" aria-label="Find a topic"></label>' +
+          '<div class="qc-show" role="group" aria-label="Show"><button type="button" class="on" data-show="all">All</button><button type="button" data-show="todo">To do</button><button type="button" data-show="done">Completed</button></div></div>' : '') +
         order.filter(function (g) { return !pick || g === pick; }).map(function (g) { var gq = groups[g].qs, todo = gq.filter(function (q) { return !isDone(q); }), past = gq.filter(isDone);
           var lists = function (qs2) { var td = qs2.filter(function (q) { return !isDone(q); }), ps = qs2.filter(isDone);
-            return '<h4>To do</h4>' + (td.length ? td.map(card).join('') : '<p class="emptybox">Nothing to do right now.</p>') + (ps.length ? '<h4>Completed</h4>' + ps.map(card).join('') : ''); };
+            return '<div class="qc-part" data-part="todo"><h4 class="qc-h todo">To do <span>' + td.length + '</span></h4>' + (td.length ? '<div class="qc-grid">' + td.map(card).join('') + '</div>' : '<p class="emptybox">Nothing to do right now. 🎉</p>') + '</div>' +
+              (ps.length ? '<div class="qc-part" data-part="done"><h4 class="qc-h done">Completed <span>' + ps.length + '</span></h4><div class="qc-grid">' + ps.map(card).join('') + '</div></div>' : ''); };
           // Grade 6 to 10 science: Biology, Chemistry and Physics are kept apart, one tab per subject
-          return '<section class="grp panel"><h3 class="sec-h">🏫 ' + E(groups[g].name) + '</h3>' +
+          return '<section class="grp qc-grp"><h3 class="qc-cls">🏫 ' + E(groups[g].name) + '</h3>' +
             (BV.subj.isMyp(groups[g].cls) ? BV.subj.split(gq, subjOf, lists) : lists(gq)) + '</section>'; }).join('');
       app.querySelectorAll('[data-reqq]').forEach(function (b) { b.onclick = function () { b.disabled = true;
         S.db.rpc('request_quiz', { qid: b.getAttribute('data-reqq'), cid: b.getAttribute('data-cls') }).then(function (r) { if (r.error) { b.disabled = false; alert(S.nice(r.error)); return; } list(); }); }; });
-      app.querySelectorAll('[data-g]').forEach(function (b) { b.onclick = function () { var u = new URL(location.href); if (b.getAttribute('data-g')) u.searchParams.set('class', b.getAttribute('data-g')); else u.searchParams.delete('class'); history.replaceState(null, '', u); list(); }; });
+      function goCls(v) { var u = new URL(location.href); if (v) u.searchParams.set('class', v); else u.searchParams.delete('class'); history.replaceState(null, '', u); list(); }
+      app.querySelectorAll('[data-g]').forEach(function (b) { b.onclick = function () { goCls(b.getAttribute('data-g')); }; });
+      var sel = app.querySelector('#qc-cls'); if (sel) sel.onchange = function () { goCls(sel.value); };
+      var show = 'all', fnd = app.querySelector('#qc-find');
+      function filt() { var t = (fnd && fnd.value || '').trim().toLowerCase();
+        app.querySelectorAll('.qc-part').forEach(function (p) { p.hidden = show !== 'all' && p.getAttribute('data-part') !== show; });
+        app.querySelectorAll('.qc-card').forEach(function (c) { c.hidden = !!t && c.getAttribute('data-find').indexOf(t) < 0; }); }
+      if (fnd) fnd.oninput = filt;
+      app.querySelectorAll('[data-show]').forEach(function (b) { b.onclick = function () { show = b.getAttribute('data-show'); app.querySelectorAll('[data-show]').forEach(function (x) { x.classList.toggle('on', x === b); }); filt(); }; });
     });
   }
 
