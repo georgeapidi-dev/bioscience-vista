@@ -367,6 +367,7 @@
     h += '<details class="panel"><summary><b>My profile</b></summary><form id="pf" class="grp" style="margin-top:10px"><label class="f">Full name<input id="pn" value="' + E(me.profile.full_name) + '"></label><button class="btn sm" type="submit">Save</button><p class="msg" id="pm"></p></form>' +
       '</details>';
     app.innerHTML = h; boardWatch(me); news(me);
+    var tdw = app.querySelector('.td-wrap'); if (tdw && BV.findBox) { var fw = document.createElement('div'); tdw.parentNode.insertBefore(fw, tdw); fw.appendChild(tdw); BV.findBox(fw, '.td-row, .todo', '.td-lv, .td-th, .td-grp', 'Find in my To do: a topic, code or title…'); }
     app.querySelector('#so').onclick = S.signOut;
     myProfile(me);
     app.querySelectorAll('[data-done]').forEach(function (b) { b.onclick = function () {

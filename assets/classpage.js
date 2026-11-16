@@ -22,6 +22,7 @@
               list.map(function (m) { var t = m.materials || {}, u = t.unit || '', lvk, th = BV.theme(t.title || u), col = th ? th.c : '#0d9488', lvk = th ? th.k + th.lv : '', lh = lvk && lvk !== lastLv ? '<p class="cp-lv" style="--hc:' + col + '"><span class="cp-th">' + th.k + '</span>Theme ' + th.k + ' · ' + E(th.name) + ' → <b>' + th.lv + ' · ' + E(th.level) + '</b></p>' : ''; lastLv = lvk || lastLv; hd = lh + (u !== last ? '<h3 class="sec-h cp-h" style="--hc:' + col + '">' + E(u) + '</h3>' : ''); last = u;
               return hd + '<article class="task cp-m" style="--hc:' + col + '"><div class="top2"><b><a href="' + E(m.path) + '">' + E(t.title || m.path) + '</a></b>' + (t.level === 'HL only' ? '<span class="pill">HL</span>' : '') + (me.admin ? S.del('classmat', c.id + '|' + m.path, (t.title || m.path) + ' (from ' + c.name + ')') : '') + '</div></article>'; }).join(''); }) + '</section>'
             : '<p class="emptybox">Your teacher has not added lessons yet.</p>');
+        var sec = app.querySelector('section.grp'); if (sec && BV.findBox) BV.findBox(sec, '.cp-m', null, 'Find a lesson in this class…');
       });
     });
   }).catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });

@@ -191,3 +191,24 @@
   BV.LEVELS = LV;
   BV.theme = function (t) { var m = /(?:^|[^A-Za-z0-9])([A-D])([1-4])\.(\d)/.exec(t || ''); if (!m) return null; var x = T[m[1]]; return { k: x[0], name: x[1], c: x[2], lv: +m[2], level: LV[m[2]][0], code: m[1] + m[2] + '.' + m[3] }; };
 })();
+/* BV.findBox(where, items, groups, placeholder): a "Find" box that filters a list on the page as you type (16 Nov 2026, admin: "put search").
+   items: what to show or hide; groups: headings and boxes that hide when nothing inside them matches. Matches inside a closed "Show more" open it. */
+(function () {
+  var BV = window.BV = window.BV || {};
+  BV.findBox = function (where, items, groups, ph) {
+    if (!where || where.querySelector(':scope > .bv-find')) return;
+    if (!document.getElementById('bv-find-css')) { var st = document.createElement('style'); st.id = 'bv-find-css';
+      st.textContent = '.bv-find{display:flex;align-items:center;gap:8px;margin:10px 0 12px;background:#fff;border:2px solid #c7d2fe;border-radius:14px;padding:4px 6px 4px 12px;box-shadow:0 4px 14px rgba(79,70,229,.1)}.bv-find svg{width:19px;height:19px;stroke:#4f46e5;fill:none;stroke-width:2.4;stroke-linecap:round;flex:none}.bv-find input{flex:1;border:0;outline:none;font:600 1rem system-ui,Arial;background:transparent;min-width:0;padding:7px 0;color:#0f172a}.bv-find small{color:#64748b;font:600 .8rem system-ui;white-space:nowrap;padding-right:6px}.bv-hit-none{display:none!important}';
+      document.head.appendChild(st); }
+    var box = document.createElement('label'); box.className = 'bv-find';
+    box.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="' + (ph || 'Find a lesson, topic or code…') + '" aria-label="' + (ph || 'Find on this page') + '"><small></small>';
+    where.insertBefore(box, where.firstChild);
+    var inp = box.querySelector('input'), info = box.querySelector('small');
+    inp.addEventListener('input', function () {
+      var q = inp.value.trim().toLowerCase(), words = q.split(/\s+/).filter(Boolean), n = 0, all = where.querySelectorAll(items);
+      all.forEach(function (el) { var ok = !words.length || words.every(function (w) { return el.textContent.toLowerCase().indexOf(w) >= 0; }); el.classList.toggle('bv-hit-none', !ok); if (ok) { n++; if (words.length) { var d = el.closest('details'); while (d) { d.open = true; d = d.parentElement && d.parentElement.closest('details'); } } } });
+      if (groups) where.querySelectorAll(groups).forEach(function (g) { var vis = [].some.call(g.querySelectorAll(items), function (el) { return !el.classList.contains('bv-hit-none'); }); g.classList.toggle('bv-hit-none', words.length > 0 && !vis); });
+      info.textContent = words.length ? n + ' found' : '';
+    });
+  };
+})();
