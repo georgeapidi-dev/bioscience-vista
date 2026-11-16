@@ -18,7 +18,7 @@
           (rows.length ? '<section class="grp">' + BV.subj.split(rows, function (m) { var t = m.materials || {}; return /^MYP /.test(t.subject || '') ? BV.subj.of(t.subject, t.unit) : ''; }, function (list) { var last = '';
             // Grade 6 to 10 science: one tab per subject (Biology, Chemistry, Physics); inside a tab, lessons sit under their unit
             return list.map(function (m) { var t = m.materials || {}, u = t.unit || '', hd = u !== last ? '<h3 class="sec-h">' + E(u) + '</h3>' : ''; last = u;
-              return hd + '<article class="task"><div class="top2"><b><a href="' + E(m.path) + '">' + E(t.title || m.path) + '</a></b>' + (t.level === 'HL only' ? '<span class="pill">HL</span>' : '') + '</div></article>'; }).join(''); }) + '</section>'
+              return hd + '<article class="task"><div class="top2"><b><a href="' + E(m.path) + '">' + E(t.title || m.path) + '</a></b>' + (t.level === 'HL only' ? '<span class="pill">HL</span>' : '') + (me.admin ? S.del('classmat', c.id + '|' + m.path, (t.title || m.path) + ' (from ' + c.name + ')') : '') + '</div></article>'; }).join(''); }) + '</section>'
             : '<p class="emptybox">Your teacher has not added lessons yet.</p>');
       });
     });

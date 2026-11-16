@@ -35,12 +35,12 @@
           (lk.status === 'pending' ? '<span class="pill">Requested · waiting</span>' : '<button type="button" class="btn sm" data-ask="' + l.id + '" data-cls="' + lk.class_id + '">' + (lk.status === 'declined' ? 'Ask again' : 'Request') + '</button>') + '</div>';
         var p = prog[l.id], pc = p ? p.percent : 0, il = /^IL-/.test(l.external_id || '');
         return '<a class="lcard" href="' + E(l.url || '#') + '"><span class="ic">' + (il ? '📘' : '🧪') + '</span><span><b>' + E(l.title) + '</b><span class="small muted">' + E(l.summary || '') + (l.max_marks ? ' · ' + l.max_marks + ' marks' : '') + '</span>' +
-          '<span class="bar" title="' + pc + '% done"><i style="width:' + pc + '%"></i></span></span><span class="go">' + (p && p.status === 'completed' ? 'Review ✓' : p ? 'Continue' : 'Start') + '</span></a>';
+          '<span class="bar" title="' + pc + '% done"><i style="width:' + pc + '%"></i></span></span><span class="go">' + (p && p.status === 'completed' ? 'Review ✓' : p ? 'Continue' : 'Start') + '</span>' + (me.admin && l.id ? S.del('lesson', l.id, l.title) : '') + '</a>';
       }
       function items(t) {
         return (L[t.id] || []).map(lessonCard).join('') +
-          (SIM[t.id] || []).map(function (s) { return '<a class="lcard" href="' + E(s.url) + '"' + (s.is_internal ? '' : ' target="_blank" rel="noopener"') + '><span class="ic">🔬</span><span><b>' + E(s.title) + '</b><span class="small muted">Virtual lab</span></span><span class="go">Open</span></a>'; }).join('') +
-          (R[t.id] || []).map(function (r) { return '<a class="lcard" href="' + E(r.url) + '" target="_blank" rel="noopener"><span class="ic">' + (r.kind === 'video' ? '🎬' : '📄') + '</span><span><b>' + E(r.title) + '</b><span class="small muted">' + E(r.kind === 'video' ? 'Videos' : 'Notes') + '</span></span><span class="go">Open ↗</span></a>'; }).join('');
+          (SIM[t.id] || []).map(function (s) { return '<a class="lcard" href="' + E(s.url) + '"' + (s.is_internal ? '' : ' target="_blank" rel="noopener"') + '><span class="ic">🔬</span><span><b>' + E(s.title) + '</b><span class="small muted">Virtual lab</span></span><span class="go">Open</span>' + (me.admin ? S.del('simulation', s.id, s.title) : '') + '</a>'; }).join('') +
+          (R[t.id] || []).map(function (r) { return '<a class="lcard" href="' + E(r.url) + '" target="_blank" rel="noopener"><span class="ic">' + (r.kind === 'video' ? '🎬' : '📄') + '</span><span><b>' + E(r.title) + '</b><span class="small muted">' + E(r.kind === 'video' ? 'Videos' : 'Notes') + '</span></span><span class="go">Open ↗</span>' + (me.admin ? S.del('resource', r.id, r.title) : '') + '</a>'; }).join('');
       }
       function match(t) { if (!q) return true; var txt = (t.name + ' ' + (t.code || '') + ' ' + (L[t.id] || []).map(function (l) { return l.title; }).join(' ')).toLowerCase(); return txt.indexOf(q) >= 0 || (KIDS[t.id] || []).some(match); }
       /* In a teacher's class you see the lessons your teacher added. The rest of the course can be asked for here; your teacher decides.
@@ -105,7 +105,7 @@
     });
   }
 
-  function sims() {
+  function sims(me) {
     return S.db.from('simulations').select('id,title,description,url,thumbnail_url,source,is_internal,sort_order, topics(name, subjects(name,slug,colour))').eq('published', true).order('sort_order').then(function (r) {
       var all = r.data || [], f = 'all', q = '';
       var subs = []; all.forEach(function (s) { var sb = s.topics && s.topics.subjects; if (sb && !subs.some(function (x) { return x.slug === sb.slug; })) subs.push(sb); });
@@ -117,7 +117,7 @@
             return '<a class="course" style="--k:' + E(sb ? sb.colour : '#15803d') + '" href="' + E(s.url) + '"' + (s.is_internal ? '' : ' target="_blank" rel="noopener"') + '>' +
               (s.thumbnail_url ? '<img src="' + E(s.thumbnail_url) + '" alt="" loading="lazy" style="width:100%;height:140px;object-fit:cover;border-radius:10px;background:var(--surface)">' : '<span class="ic">🔬</span>') +
               '<span class="label" style="color:var(--k)">' + E(s.topics ? s.topics.name : (s.is_internal ? 'BioscienceVista lab' : s.source || 'External')) + '</span><b>' + E(s.title) + '</b><span class="muted">' + E(s.description || '') + '</span>' +
-              '<span class="go">' + (s.is_internal ? 'Open lab →' : 'Open on ' + E(s.source || 'website') + ' ↗') + '</span></a>'; }).join('') + '</div>' : '<p class="emptybox">No simulations match.</p>');
+              '<span class="go">' + (s.is_internal ? 'Open lab →' : 'Open on ' + E(s.source || 'website') + ' ↗') + (me && me.admin ? S.del('simulation', s.id, s.title) : '') + '</span></a>'; }).join('') + '</div>' : '<p class="emptybox">No simulations match.</p>');
         app.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { f = b.getAttribute('data-f'); draw(); }; });
         var qi = app.querySelector('#q'); qi.oninput = function () { q = qi.value.toLowerCase().trim(); draw(); var n = app.querySelector('#q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); };
       }

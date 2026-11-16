@@ -70,7 +70,7 @@
         return '<article class="qc-card qc-' + col + '" data-find="' + E((q.title + ' ' + (q.topics && q.topics.name || '')).toLowerCase()) + '"><div class="qc-head"><b>' + E(q.title) + '</b>' +
           (best ? '<span class="qc-score' + (best.status === 'held' || best.status === 'needs_marking' ? ' wait' : '') + '">' + (best.status === 'held' ? 'Waiting for your teacher' : best.status === 'needs_marking' ? 'Being marked' : best.score + ' / ' + best.max) + '</span>' : '') + '</div>' +
           '<div class="qc-chips">' + [q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : '⏱ No time limit', q.due_at ? '📅 Due ' + S.when(q.due_at) : '', '🔁 ' + q.max_attempts + ' attempt' + (q.max_attempts > 1 ? 's' : '')].filter(Boolean).map(function (t) { return '<span>' + E(t) + '</span>'; }).join('') + '</div>' +
-          '<div class="qc-acts">' + btn + (more ? '<details class="qc-more"><summary>More</summary><ul>' + more + '</ul></details>' : '') + '</div></article>';
+          '<div class="qc-acts">' + btn + (ME.admin ? S.del('quiz', q.id, q.title) : '') + (more ? '<details class="qc-more"><summary>More</summary><ul>' + more + '</ul></details>' : '') + '</div></article>';
       }
       // each quiz sits under the class it is set for (a student sees only their own classes)
       var mine = {}; (ME.classes || []).forEach(function (c) { mine[c.id] = c.name; });

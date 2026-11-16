@@ -97,6 +97,42 @@
         myp: function (kind, id, title) { return /^MYP/.test(prog(kind === 'quiz' ? (qz[id] || {}).topic_id : lt[id])) || /\bgrade (6|7|8|9|10)\b/i.test(title || ''); } };
     });
   };
+  /* 🗑 admin delete button for any material (added 16 Nov 2026). S.del(kind, id, title) gives the button's HTML; one click handler for the whole site.
+     quiz / lesson → the 🗑 Bin for 30 days (bin_item, migration 042; restore from Teacher dashboard → Bin);
+     resource / simulation → unpublished (hidden from everyone; publish it again under Content); classmat → taken out of that class only (id = class id|path). */
+  S.del = function (kind, id, title) {
+    return '<span class="adm-del" role="button" tabindex="0" data-dk="' + S.E(kind) + '" data-di="' + S.E(id) + '" data-dt="' + S.E(title || '') + '" title="Delete (admin)" aria-label="Delete ' + S.E(title || 'this item') + '">🗑</span>';
+  };
+  (function () {
+    if (document.getElementById('adm-del-css')) return;
+    var st = document.createElement('style'); st.id = 'adm-del-css';
+    st.textContent = '.adm-del{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;border-radius:9px;background:#fee2e2;border:1px solid #fca5a5;color:#b91c1c;cursor:pointer;font-size:15px;line-height:1;margin-left:6px;transition:transform .1s}.adm-del:hover,.adm-del:focus-visible{background:#ef4444;color:#fff;transform:scale(1.08);outline:none}.adm-gone{opacity:.25;filter:grayscale(1);pointer-events:none;transition:opacity .4s}';
+    (document.head || document.documentElement).appendChild(st);
+    var NAMES = { quiz: 'This goes to the 🗑 Bin for 30 days. You can restore it from Teacher dashboard → Bin.', lesson: 'This goes to the 🗑 Bin for 30 days. You can restore it from Teacher dashboard → Bin.',
+      resource: 'It will be hidden from everyone (unpublished). You can publish it again under Teacher dashboard → Content.', simulation: 'It will be hidden from everyone (unpublished). You can publish it again under Teacher dashboard → Content.',
+      classmat: 'It is taken out of this class only. The material itself stays on the site.' };
+    function run(el) {
+      var k = el.getAttribute('data-dk'), id = el.getAttribute('data-di'), t = el.getAttribute('data-dt') || 'this item';
+      if (!confirm('Delete “' + t + '”?\n\n' + (NAMES[k] || ''))) return;
+      var done = function (r) {
+        if (r && r.error) { alert(S.nice(r.error)); return; }
+        var card = el.closest('[data-delcard], .lcard, .course, .qc-card, .task, li, tr') || el; card.classList.add('adm-gone'); el.remove();
+        setTimeout(function () { card.style.display = 'none'; }, 450);
+      };
+      var p = k === 'quiz' || k === 'lesson' ? S.db.rpc('bin_item', { kind: k, item: id })
+        : k === 'resource' ? S.db.from('resources').update({ published: false }).eq('id', id)
+        : k === 'simulation' ? S.db.from('simulations').update({ published: false }).eq('id', id)
+        : k === 'classmat' ? S.db.from('class_materials').delete().eq('class_id', id.split('|')[0]).eq('path', id.split('|').slice(1).join('|'))
+        : null;
+      if (p) p.then(done, function (e) { alert(S.nice(e)); });
+    }
+    var handle = function (e) {
+      var el = e.target && e.target.closest ? e.target.closest('.adm-del') : null; if (!el) return;
+      if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault(); e.stopPropagation(); run(el);
+    };
+    document.addEventListener('click', handle, true); document.addEventListener('keydown', handle, true);
+  })();
   S.pct = function (s, m) { return m ? Math.round(100 * s / m) : null; };
   S.when = function (t) { return t ? new Date(t).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : ''; };
   if (S.on) { S.me().then(S.updateNav).catch(function () {}); S.logVisit(); }
