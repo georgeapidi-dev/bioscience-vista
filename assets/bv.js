@@ -180,3 +180,11 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !dir.hidden) { show(false); nb.focus(); } });
   document.addEventListener('click', function (e) { if (!dir.hidden && !dir.contains(e.target)) show(false); });
 })();
+
+/* IB Biology themes A to D, each with its own colour (16 Nov 2026): BV.theme(title) → {k, name, c} or null. Used by the To do lists, class pages and the Assessment centre. */
+(function () {
+  var BV = window.BV = window.BV || {};
+  var T = { A: ['A', 'Unity and diversity', '#0284c7'], B: ['B', 'Form and function', '#16a34a'], C: ['C', 'Interaction and interdependence', '#d97706'], D: ['D', 'Continuity and change', '#7c3aed'] };
+  BV.THEMES = T;
+  BV.theme = function (t) { var m = /(?:^|[^A-Za-z0-9])([A-D])([1-4])\.(\d)/.exec(t || ''); if (!m) return null; var x = T[m[1]]; return { k: x[0], name: x[1], c: x[2] }; };
+})();

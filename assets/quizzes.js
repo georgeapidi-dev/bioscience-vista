@@ -67,9 +67,10 @@
         var btn = lockCls ? (asked[q.id] === 'pending' ? '<span class="pill">🔒 Requested · waiting for your teacher</span>' : '<span class="small muted">🔒 Opens when your teacher approves it</span> <button type="button" class="btn sm" data-reqq="' + q.id + '" data-cls="' + lockCls + '">' + (asked[q.id] === 'declined' ? 'Ask again' : 'Request') + '</button>') : live ? '<a class="btn main sm" href="#' + q.id + '">Continue</a>' : open && left > 0 ? '<a class="btn main sm" href="#' + q.id + '">' + (done.length ? 'Try again' : 'Start') + '</a>' : done.length ? '<a class="btn sm" href="#' + q.id + '">See my result</a>' : '<span class="pill">' + (q.opens_at && new Date(q.opens_at) > now ? 'Opens ' + E(S.when(q.opens_at)) : 'Closed') + '</span>';
         var sj = subjOf(q) || '', col = /bio/i.test(sj) ? 'bio' : /chem/i.test(sj) ? 'chem' : /phys/i.test(sj) ? 'phys' : 'oth';
         var more = (q.instructions ? '<li>ℹ️ ' + E(q.instructions) + '</li>' : '') + lessonsOf(q);
-        return '<article class="qc-card qc-' + col + '" data-find="' + E((q.title + ' ' + (q.topics && q.topics.name || '')).toLowerCase()) + '"><div class="qc-head"><b>' + E(q.title) + '</b>' +
+        var th = BV.theme(q.title);
+        return '<article class="qc-card qc-' + col + '"' + (th ? ' style="--qc:' + th.c + ';--qcb:color-mix(in srgb,' + th.c + ' 10%,#fff)"' : '') + ' data-find="' + E((q.title + ' ' + (q.topics && q.topics.name || '')).toLowerCase()) + '"><div class="qc-head"><b>' + E(q.title) + '</b>' +
           (best ? '<span class="qc-score' + (best.status === 'held' || best.status === 'needs_marking' ? ' wait' : '') + '">' + (best.status === 'held' ? 'Waiting for your teacher' : best.status === 'needs_marking' ? 'Being marked' : best.score + ' / ' + best.max) + '</span>' : '') + '</div>' +
-          '<div class="qc-chips">' + [q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : '⏱ No time limit', q.due_at ? '📅 Due ' + S.when(q.due_at) : '', '🔁 ' + q.max_attempts + ' attempt' + (q.max_attempts > 1 ? 's' : '')].filter(Boolean).map(function (t) { return '<span>' + E(t) + '</span>'; }).join('') + '</div>' +
+          '<div class="qc-chips">' + (th ? '<span style="background:' + th.c + ';color:#fff;font-weight:800">Theme ' + th.k + ' · ' + E(th.name) + '</span>' : '') + [q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : '⏱ No time limit', q.due_at ? '📅 Due ' + S.when(q.due_at) : '', '🔁 ' + q.max_attempts + ' attempt' + (q.max_attempts > 1 ? 's' : '')].filter(Boolean).map(function (t) { return '<span>' + E(t) + '</span>'; }).join('') + '</div>' +
           '<div class="qc-acts">' + btn + (ME.admin ? S.del('quiz', q.id, q.title) : '') + (more ? '<details class="qc-more"><summary>More</summary><ul>' + more + '</ul></details>' : '') + '</div></article>';
       }
       // each quiz sits under the class it is set for (a student sees only their own classes)
@@ -96,7 +97,8 @@
           '<label class="qc-find">🔎 <input type="search" id="qc-find" placeholder="Find a topic…" aria-label="Find a topic"></label>' +
           '<div class="qc-show" role="group" aria-label="Show"><button type="button" class="on" data-show="all">All</button><button type="button" data-show="todo">To do</button><button type="button" data-show="done">Completed</button></div></div>' : '') +
         order.filter(function (g) { return !pick || g === pick; }).map(function (g) { var gq = groups[g].qs, todo = gq.filter(function (q) { return !isDone(q); }), past = gq.filter(isDone);
-          var lists = function (qs2) { var td = qs2.filter(function (q) { return !isDone(q); }), ps = qs2.filter(isDone);
+          var lists = function (qs2) { qs2 = qs2.slice().sort(function (a, b) { var x = BV.theme(a.title), y = BV.theme(b.title); return (x ? x.k : 'Z').localeCompare(y ? y.k : 'Z') || String(a.title).localeCompare(String(b.title), undefined, { numeric: true }); });
+            var td = qs2.filter(function (q) { return !isDone(q); }), ps = qs2.filter(isDone);
             return '<div class="qc-part" data-part="todo"><h4 class="qc-h todo">To do <span>' + td.length + '</span></h4>' + (td.length ? '<div class="qc-grid">' + td.map(card).join('') + '</div>' : '<p class="emptybox">Nothing to do right now. 🎉</p>') + '</div>' +
               (ps.length ? '<div class="qc-part" data-part="done"><h4 class="qc-h done">Completed <span>' + ps.length + '</span></h4><div class="qc-grid">' + ps.map(card).join('') + '</div></div>' : ''); };
           // Grade 6 to 10 science: Biology, Chemistry and Physics are kept apart, one tab per subject
