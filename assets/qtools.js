@@ -48,21 +48,21 @@
   }
   var SEEN = {}, SEENT = 0;
   T.rich = function (prompt, inline) {
-    var lines = tidy(T.text(prompt).split('\n')), out = [], buf = [], para = [];
+    var lines = tidy(T.text(prompt).split('\n')), out = [], buf = [], para = [], tAt = -1;
     function flushP() { if (para.length) { out.push(inline && !out.length ? para.map(fmt).join('<br>') : '<span class="qp">' + para.map(fmt).join('<br>') + '</span>'); para = []; } }
     lines.forEach(function (l) {
       if (isRow(l)) { flushP(); buf.push(l); return; }
-      if (buf.length) { out.push(T.table(buf)); buf = []; }
+      if (buf.length) { out.push(T.table(buf)); buf = []; if (tAt < 0) tAt = out.length; }
       if (!l.trim()) { flushP(); return; }
       para.push(l);
     });
-    flushP(); if (buf.length) out.push(T.table(buf));
+    flushP(); if (buf.length) { out.push(T.table(buf)); if (tAt < 0) tAt = out.length; }
     // a table of numbers also gets a graph of the data, unless the question asks the student to plot or draw it
     var raw = String(prompt || '');
     if (!/\[\[answer:graph|\b(plot|plotting|sketch|draw|drawing|construct)\b|your graph|bar chart|histogram/i.test(raw)) {
       var tl = [], done = false; lines.forEach(function (l) { if (done) return; if (isRow(l)) tl.push(l); else if (tl.length) done = true; });
       var sig = tl.join('\n'), now = Date.now(); if (now - SEENT > 2000) SEEN = {}; SEENT = now;   // parts (a), (b), (c) repeat the same data: draw its graph once per page
-      var g = SEEN[sig] ? null : T.autoGraph(tl); if (g) SEEN[sig] = 1; if (g) out.push('<figure class="qm qm-graph qm-auto">' + T.graphSvg(g) + '<figcaption>Graph of the data in the table</figcaption></figure>');
+      var g = SEEN[sig] ? null : T.autoGraph(tl); if (g) SEEN[sig] = 1; if (g) out.splice(tAt < 0 ? out.length : tAt, 0, '<figure class="qm qm-graph qm-auto">' + T.graphSvg(g) + '<figcaption>Graph of the data in the table</figcaption></figure>');   // straight under its table
     }
     var md = T.parse(prompt).media; if (md.length) out.push(T.mediaHtml(md));
     return out.join('');
@@ -76,6 +76,8 @@
       var data = M.slice(1); if (data.length < 3) return null;
       var ser = []; for (var k = 1; k < M[0].length; k++) if (data.every(function (r) { return isN(r[k]); })) ser.push(k);
       if (!ser.length || ser.length > 6) return null;
+      var unit = function (h) { var m = /\/\s*(.+)$|\(([^)]+)\)\s*$/.exec(String(h)); return m ? (m[1] || m[2]).trim() : ''; };
+      if (ser.length > 1 && ser.some(function (k) { return unit(M[0][k]) !== unit(M[0][ser[0]]); })) ser = [ser[ser.length - 1]];   // different units: graph the last measured column only
       var xnum = data.every(function (r) { return isN(r[0]); });
       return { t: 'graph', kind: xnum ? 'line' : 'bar', x: M[0][0], y: ser.length === 1 ? M[0][ser[0]] : '', series: ser.length > 1 ? ser.map(function (k) { return M[0][k]; }) : [''],
         rows: data.map(function (r) { return [xnum ? nv(r[0]) : r[0]].concat(ser.map(function (k) { return nv(r[k]); })); }), zero: !xnum ? true : undefined };
