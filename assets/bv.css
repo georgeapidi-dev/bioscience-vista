@@ -507,3 +507,13 @@ html.bvnav .navdd-list a{display:flex!important;border-radius:12px!important;mar
 .bv-tile[aria-current]{background:var(--k);color:#fff}.bv-tile[aria-current] small{color:#fff}
 @media (max-width:420px){.bv-tiles{grid-template-columns:1fr}}
 @media print{.bvdir{display:none!important}}
+
+/* the BioscienceVista wordmark (16 Nov 2026, admin: "make the website name unique and attractive"):
+   "Bio" in leaf green, "science" in deep ink, "Vista" in an italic serif with the sunrise gradient of the logo, a small rising sun over it, and the motto underneath */
+.brand span.bvw{display:inline-block;line-height:1;padding-bottom:0;font-family:Outfit,var(--display),system-ui,sans-serif;font-weight:900;letter-spacing:-.035em;color:var(--ink,#13213c)}
+.brand span.bvw::after{content:none}
+.brand .bvw-bio{font-style:normal;color:#0f9d58}
+.brand span.bvw b{position:relative;font-family:Fraunces,Georgia,serif;font-style:italic;font-weight:900;letter-spacing:-.01em;margin-left:.04em;padding-right:.08em;background:linear-gradient(100deg,#0d9488 0%,#2563eb 50%,#7c3aed 85%,#db2777 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand span.bvw b::before{content:"";position:absolute;right:.02em;top:-.18em;width:.34em;height:.34em;border-radius:50%;background:radial-gradient(circle at 40% 40%,#fde68a,#f59e0b 70%);box-shadow:0 0 10px rgba(245,158,11,.55)}
+.brand span.bvw small{display:block;margin-top:3px;font:700 .3em/1 Outfit,system-ui,sans-serif;letter-spacing:.32em;text-transform:uppercase;color:#64748b;-webkit-text-fill-color:#64748b}
+@media (max-width:560px){.brand span.bvw small{display:none}}

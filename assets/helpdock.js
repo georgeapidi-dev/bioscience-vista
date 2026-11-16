@@ -27,12 +27,23 @@
     '#bvhelp .br button{width:auto!important;margin:0!important;border:0;background:#0f172a;color:#fff;border-radius:999px;padding:7px 13px;font:600 13px system-ui,Arial,sans-serif;cursor:pointer}' +
     '#bvhelp iframe{flex:1;border:0;width:100%;background:#fff}@media print{#bvhelp-stack,#bvhelp{display:none!important}}' +
     '@media(max-width:560px){#bvhelp-stack button{padding:9px 12px;font-size:13px}#bvhelp{padding:0}#bvhelp .bx{height:100vh;border-radius:0}}';
+  css.textContent += '#bvhelp-stack .bvf-list{display:none;flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:2px}#bvhelp-stack.bvf-on .bvf-list{display:flex;animation:bvfin .18s ease-out}' +
+    '@keyframes bvfin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}' +
+    '#bvhelp-stack .bvf{width:54px!important;height:54px;max-width:none!important;justify-content:center;padding:0!important;border-radius:18px;background:linear-gradient(135deg,#0d9488,#2563eb 55%,#7c3aed);box-shadow:0 8px 22px rgba(37,99,235,.35)}' +
+    '#bvhelp-stack .bvf svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}#bvhelp-stack.bvf-on .bvf svg{transform:rotate(45deg)}' +
+    '#bvhelp-stack #bvdock-btn{position:static!important;left:auto!important;bottom:auto!important}#bvhelp-stack #bvdock-btn::before{content:none!important}';
   var stack = document.createElement('div'); stack.id = 'bvhelp-stack';
+  var list = document.createElement('div'); list.className = 'bvf-list'; list.id = 'bvf-list';
+  var fab = document.createElement('button'); fab.type = 'button'; fab.className = 'bvf'; fab.setAttribute('aria-expanded', 'false'); fab.setAttribute('aria-controls', 'bvf-list');
+  fab.setAttribute('aria-label', 'Quick tools: help desk, messages, graph and draw, donate'); fab.title = 'Quick tools';
+  fab.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="n" hidden></span>';
+  fab.addEventListener('click', function () { var on = !stack.classList.contains('bvf-on'); stack.classList.toggle('bvf-on', on); fab.setAttribute('aria-expanded', on ? 'true' : 'false'); });
+  document.addEventListener('click', function (e) { if (stack.classList.contains('bvf-on') && !stack.contains(e.target)) { stack.classList.remove('bvf-on'); fab.setAttribute('aria-expanded', 'false'); } });
   var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'h'; hb.innerHTML = '❓ Help Desk'; hb.title = 'Ask a science question without leaving this page';
   var mb = document.createElement('button'); mb.type = 'button'; mb.className = 'm'; mb.innerHTML = '✉️ Messages <span class="n" hidden></span>'; mb.title = 'Messages with your teachers';
   var gb = document.createElement('button'); gb.type = 'button'; gb.className = 'g'; gb.innerHTML = '💚 Donate'; gb.title = '70% of every donation goes to charity';
   gb.addEventListener('click', function () { location.href = '/donate/'; });
-  if (GIVE) stack.appendChild(gb); if (signed) stack.appendChild(mb); if (HELP) stack.appendChild(hb);
+  if (HELP) list.appendChild(hb); if (signed) list.appendChild(mb); if (GIVE) list.appendChild(gb); stack.appendChild(list); stack.appendChild(fab);
   if (!GIVE && !signed && !HELP) return;
   var box = document.createElement('div'); box.id = 'bvhelp'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
   box.innerHTML = '<div class="bx"><div class="br"><b></b><button type="button" class="x">✕ Back to the page</button></div><iframe></iframe></div>';
@@ -58,9 +69,12 @@
   function unread() {
     var t = token(); if (!t || !window.fetch) return;
     fetch(URL_ + '/rest/v1/rpc/unread_messages', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: '{}' })
-      .then(function (r) { return r.ok ? r.json() : 0; }).then(function (n) { var b = mb.querySelector('.n'); n = +n || 0; b.textContent = n > 99 ? '99+' : n; b.hidden = !n; }).catch(function () {});
+      .then(function (r) { return r.ok ? r.json() : 0; }).then(function (n) { var b = mb.querySelector('.n'), f = fab.querySelector('.n'); n = +n || 0; b.textContent = f.textContent = n > 99 ? '99+' : n; b.hidden = f.hidden = !n; }).catch(function () {});
   }
-  function place() { stack.style.bottom = (document.getElementById('bvdock-btn') ? 112 : 16) + 'px'; }
+  function place() {   // the Graph & Draw button of lessons joins the same menu
+    var d = document.getElementById('bvdock-btn'); if (d && d.parentNode !== list && !/[?&]help=1/.test(me)) list.insertBefore(d, list.firstChild);   // lessons keep it in their tool rail
+    stack.style.bottom = 'calc(16px + env(safe-area-inset-bottom,0px))';
+  }
   function mount() {
     if (!document.body) return;
     if (!document.head.contains(css)) document.head.appendChild(css);
