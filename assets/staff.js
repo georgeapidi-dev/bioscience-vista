@@ -2160,36 +2160,38 @@
   function tcMaterials(t, c) {
     Promise.all([CAT ? Promise.resolve({ data: CAT }) : S.db.from('materials').select('*').order('sort'), S.db.from('class_materials').select('path,sort').eq('class_id', c.id)]).then(function (x) {
       CAT = x[0].data || []; var have = {}; (x[1].data || []).forEach(function (m) { have[m.path] = 1; });
-      var subjects = [], levels = [], courses = [];
       // main-site courses: an IB subject splits into HL (SL and HL + HL only) and SL (SL and HL); others go by subject and grade
       var coursesOf = function (m) { return m.level === 'HL only' ? [m.subject + ' HL'] : m.level === 'SL and HL' ? [m.subject + ' HL', m.subject + ' SL'] : [m.subject + (m.level ? ' · ' + m.level : '')]; };
-      CAT.forEach(function (m) { if (subjects.indexOf(m.subject) < 0) subjects.push(m.subject); if (m.level && levels.indexOf(m.level) < 0) levels.push(m.level); coursesOf(m).forEach(function (k) { if (courses.indexOf(k) < 0) courses.push(k); }); });
-      courses.sort();
-      t.innerHTML = '<div class="row2"><p class="small" style="flex:1;margin:0">These are the BioscienceVista lessons in <b>' + E(c.name) + '</b>. Students see only these (plus anything you set on the 📌 To-do list). Tick or untick to change the list.</p><button type="button" class="btn main sm" id="mfrom">➕ Add materials from the main site</button></div>' +
-        '<div class="two"><label class="f">Main-site course<select id="mcourse"><option value="">All main-site courses</option>' + courses.map(function (k) { return '<option>' + E(k) + '</option>'; }).join('') + '</select></label><label class="f">Subject<select id="msub"><option value="">All subjects</option>' + subjects.map(function (s2) { return '<option>' + E(s2) + '</option>'; }).join('') + '</select></label></div>' +
-        '<label class="f">Search<input id="mq" placeholder="topic or title"></label>' +
-        '<div class="two"><label class="f">Show<select id="mshow"><option value="in">In this class (' + Object.keys(have).length + ')</option><option value="out">➕ On the main site, not in this class yet</option><option value="all">Everything</option></select></label>' +
-        '<label class="f">Level<select id="mlv"><option value="">All levels</option>' + levels.map(function (l) { return '<option>' + E(l) + '</option>'; }).join('') + '</select></label></div>' +
-        '<p class="small muted" id="mhint"></p><div id="mlist"></div>';
+      var courses = []; CAT.forEach(function (m) { coursesOf(m).forEach(function (k) { if (courses.indexOf(k) < 0) courses.push(k); }); }); courses.sort();
+      var mine = [c.subject, (c.level || '').toUpperCase()].filter(Boolean).join(' '), mode = TC.madd ? 'out' : 'in';
+      if (!document.getElementById('tcm-css')) { var st = document.createElement('style'); st.id = 'tcm-css';
+        st.textContent = '.tcm-seg{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}.tcm-seg button{border:2px solid #e2e8f0;background:#fff;border-radius:999px;padding:7px 14px;font:700 14px Outfit,system-ui,sans-serif;cursor:pointer;color:#334155}.tcm-seg button.on{background:#0d9488;border-color:#0d9488;color:#fff}' +
+          '.tcm-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.tcm-bar select,.tcm-bar input{flex:1 1 200px;min-width:0}.tcm-row{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--line)}.tcm-row span{flex:1;min-width:0}.tcm-row a{color:inherit;text-decoration:none}.tcm-row a:hover{text-decoration:underline}' +
+          '.tcm-add{background:#0d9488;color:#fff;border:0;border-radius:8px;padding:5px 12px;font-weight:700;cursor:pointer}.tcm-rm{background:none;border:1px solid #e2e8f0;border-radius:8px;padding:4px 9px;cursor:pointer;color:#64748b}.tcm-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:4px 0}'; document.head.appendChild(st); }
+      t.innerHTML = '<div class="tcm-seg"><button type="button" data-m="in">📘 In this class (<b id="mn">' + Object.keys(have).length + '</b>)</button><button type="button" data-m="out">➕ Add from main site</button></div>' +
+        '<div class="tcm-bar"><select id="mcourse" aria-label="Main-site course"><option value="">All courses</option>' + courses.map(function (k) { return '<option' + (k === mine && mode === 'out' ? ' selected' : '') + '>' + E(k) + '</option>'; }).join('') + '</select><input id="mq" placeholder="🔍 Search" aria-label="Search"></div>' +
+        '<div class="tcm-top" id="mtop"></div><div id="mlist"></div>';
+      var save = function (pth, add) { return (add ? S.db.from('class_materials').insert({ class_id: c.id, path: pth, added_by: ME.user.id, sort: Object.keys(have).length }) : S.db.from('class_materials').delete().eq('class_id', c.id).eq('path', pth)).then(function (r) {
+        if (r.error) { toast(S.nice(r.error), true); return false; } if (add) have[pth] = 1; else delete have[pth]; delete MATS[c.id]; t.querySelector('#mn').textContent = Object.keys(have).length; return true; }); };
       var list = function () {
-        var sub = t.querySelector('#msub').value, q = t.querySelector('#mq').value.trim().toLowerCase(), show = t.querySelector('#mshow').value, lv = t.querySelector('#mlv').value, crs = t.querySelector('#mcourse').value, last = '';
-        var all = CAT.filter(function (m) { return (!crs || coursesOf(m).indexOf(crs) >= 0) && (!sub || m.subject === sub) && (!lv || m.level === lv) && (show === 'all' || (show === 'in') === !!have[m.path]) && (!q || (m.title + ' ' + (m.unit || '')).toLowerCase().indexOf(q) >= 0); }), rows = all.slice(0, 400);
-        t.querySelector('#mhint').innerHTML = show === 'out' ? (all.length ? all.length + ' main-site materials are not in this class yet. Tick one to add it' + (all.length > 1 ? ', or <button type="button" class="btn sm" id="maddall">➕ Add all ' + all.length + ' shown</button>' : '') + '.' : 'Every material that matches is already in this class.') : '';
-        var mrows = function (list) { var last = ''; return list.map(function (m) { var u = /^MYP /.test(m.subject || '') && m.unit ? m.unit : m.subject + ' · ' + (m.unit || ''), hd = u !== last ? '<p class="label" style="margin-top:10px">' + E(u) + '</p>' : ''; last = u;
-          return hd + '<label class="chk" style="display:flex;gap:8px"><input type="checkbox" data-p="' + E(m.path) + '"' + (have[m.path] ? ' checked' : '') + '><span>' + E(m.title) + (m.level === 'HL only' ? ' <span class="pill">HL</span>' : '') + ' <a class="small" href="' + E(m.path) + '" target="_blank" rel="noopener">open</a></span></label>'; }).join(''); };
-        // Grade 6 to 10 science lessons: one tab per subject (Biology, Chemistry, Physics)
-        t.querySelector('#mlist').innerHTML = rows.length ? BV.subj.split(rows, function (m) { return /^MYP /.test(m.subject || '') ? BV.subj.of(m.subject) : ''; }, mrows) : '<p class="small muted">Nothing found.</p>';
-        t.querySelectorAll('[data-p]').forEach(function (b) { b.onchange = function () { var pth = b.getAttribute('data-p'); b.disabled = true;
-          (b.checked ? S.db.from('class_materials').insert({ class_id: c.id, path: pth, added_by: ME.user.id, sort: Object.keys(have).length }) : S.db.from('class_materials').delete().eq('class_id', c.id).eq('path', pth)).then(function (r) {
-            b.disabled = false; if (r.error) { b.checked = !b.checked; return toast(S.nice(r.error), true); } if (b.checked) have[pth] = 1; else delete have[pth]; delete MATS[c.id]; }); }; });
+        t.querySelectorAll('[data-m]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-m') === mode); });
+        var q = t.querySelector('#mq').value.trim().toLowerCase(), crs = t.querySelector('#mcourse').value;
+        var all = CAT.filter(function (m) { return (mode === 'in') === !!have[m.path] && (!crs || coursesOf(m).indexOf(crs) >= 0) && (!q || (m.title + ' ' + (m.unit || '')).toLowerCase().indexOf(q) >= 0); }), rows = all.slice(0, 400);
+        t.querySelector('#mtop').innerHTML = mode === 'out' && all.length ? '<span class="small muted">' + all.length + ' to add</span><button type="button" class="tcm-add" id="maddall">➕ Add all ' + all.length + '</button>' : '';
+        var mrows = function (list) { var last = ''; return list.map(function (m) { var u = /^MYP /.test(m.subject || '') && m.unit ? m.unit : (m.unit || m.subject), hd = u !== last ? '<p class="label" style="margin-top:10px">' + E(u) + '</p>' : ''; last = u;
+          return hd + '<div class="tcm-row"><span><a href="' + E(m.path) + '" target="_blank" rel="noopener">' + E(m.title) + '</a>' + (m.level === 'HL only' ? ' <span class="pill">HL</span>' : '') + '</span>' +
+            (mode === 'out' ? '<button type="button" class="tcm-add" data-a="' + E(m.path) + '">+ Add</button>' : '<button type="button" class="tcm-rm" data-r="' + E(m.path) + '" title="Remove from this class">✕</button>') + '</div>'; }).join(''); };
+        t.querySelector('#mlist').innerHTML = rows.length ? BV.subj.split(rows, function (m) { return /^MYP /.test(m.subject || '') ? BV.subj.of(m.subject) : ''; }, mrows) : '<p class="small muted">' + (mode === 'out' ? '✓ Everything here is already in the class.' : 'Nothing here yet: press ➕ Add from main site.') + '</p>';
       };
-      t.querySelector('#msub').onchange = list; t.querySelector('#mq').oninput = list; t.querySelector('#mshow').onchange = list; t.querySelector('#mlv').onchange = list; t.querySelector('#mcourse').onchange = list;
-      t.querySelector('#mfrom').onclick = function () { var sh = t.querySelector('#mshow'), cs = t.querySelector('#mcourse'); sh.value = 'out';
-        if (!cs.value) { var k = [c.subject, (c.level || '').toUpperCase()].filter(Boolean).join(' '); if (courses.indexOf(k) >= 0) cs.value = k; } list(); cs.focus(); };
-      t.addEventListener('click', function (ev) { var b = ev.target.closest('#maddall'); if (!b) return; var paths = [].map.call(t.querySelectorAll('#mlist [data-p]:not(:checked)'), function (x) { return x.getAttribute('data-p'); });
-        if (!paths.length || !confirm('Add ' + paths.length + ' materials to ' + c.name + '?')) return; b.disabled = true; var n = Object.keys(have).length;
-        S.db.from('class_materials').upsert(paths.map(function (pth, i) { return { class_id: c.id, path: pth, added_by: ME.user.id, sort: n + i }; }), { onConflict: 'class_id,path', ignoreDuplicates: true }).then(function (r) {
-          if (r.error) { b.disabled = false; return toast(S.nice(r.error), true); } paths.forEach(function (pth) { have[pth] = 1; }); delete MATS[c.id]; toast('Added ' + paths.length + ' materials'); list(); }); });
+      t.addEventListener('click', function (ev) {
+        var sg = ev.target.closest('[data-m]'); if (sg) { mode = sg.getAttribute('data-m'); TC.madd = mode === 'out'; var cs = t.querySelector('#mcourse'); cs.value = mode === 'out' && courses.indexOf(mine) >= 0 ? mine : ''; list(); return; }
+        var a = ev.target.closest('[data-a],[data-r]'); if (a) { a.disabled = true; var add = a.hasAttribute('data-a');
+          save(a.getAttribute(add ? 'data-a' : 'data-r'), add).then(function (okk) { if (okk) { var row = a.closest('.tcm-row'); row.style.opacity = .4; setTimeout(list, 250); } else a.disabled = false; }); return; }
+        var b = ev.target.closest('#maddall'); if (!b) return; var paths = [].map.call(t.querySelectorAll('#mlist [data-a]'), function (x) { return x.getAttribute('data-a'); });
+        if (!paths.length) return; b.disabled = true; var n0 = Object.keys(have).length;
+        S.db.from('class_materials').upsert(paths.map(function (pth, i) { return { class_id: c.id, path: pth, added_by: ME.user.id, sort: n0 + i }; }), { onConflict: 'class_id,path', ignoreDuplicates: true }).then(function (r) {
+          if (r.error) { b.disabled = false; return toast(S.nice(r.error), true); } paths.forEach(function (pth) { have[pth] = 1; }); delete MATS[c.id]; t.querySelector('#mn').textContent = Object.keys(have).length; toast('Added ' + paths.length); list(); }); });
+      t.querySelector('#mq').oninput = list; t.querySelector('#mcourse').onchange = list;
       list();
     });
   }
