@@ -899,7 +899,7 @@
         if (a.explanation && String(a.mark_scheme || '').indexOf(a.explanation) < 0) h += '<p class="small"><b>Why:</b> ' + E(a.explanation) + '</p>';
         if (!h) h = '<p class="ans"><i>No mark scheme entered for this question yet.</i></p>';
         return '<section class="q"><div class="qh"><b>Question ' + n + '</b><span>[' + (q.marks || 0) + ' mark' + (q.marks === 1 ? '' : 's') + ']</span></div><div class="prompt">' + md(prompt) + '</div>' +
-          (q.image_url ? '<img src="' + E(q.image_url) + '" alt="">' : '') + h + '</section>';
+          (q.image_url ? BVT.fig(q.image_url, '') : '') + h + '</section>';
       }).join('');
       var css = 'body{font:15px/1.5 Arial,Helvetica,sans-serif;color:#111;max-width:860px;margin:24px auto;padding:0 16px}h1{font-size:1.5em;margin:0}.meta{color:#555;margin:4px 0 18px}' +
         '.q{border:1px solid #ccc;border-radius:8px;padding:10px 14px;margin:12px 0;page-break-inside:avoid}.qh{display:flex;justify-content:space-between;border-bottom:1px solid #eee;margin-bottom:6px}' +
@@ -1416,7 +1416,7 @@
         '<form id="pvf" class="grp">' + qs.map(function (z, i) {
           var name = 'pv-' + z.id, opts = z.options || [], md = BVT.parse(z.prompt).mode, drawn = z.kind === 'short' && /^(graph|draw|annotate)$/.test(md);
           return '<fieldset class="q" data-id="' + z.id + '"><legend>' + num(z.prompt, i) + BVT.rich(z.prompt, true) + ' <span class="pill">' + z.marks + ' mark' + (z.marks > 1 ? 's' : '') + '</span>' + (md ? ' <span class="pill">' + E(BVT.MODES[md]) + '</span>' : '') + '</legend>' +
-            (z.image_url && md !== 'annotate' ? '<img src="' + E(z.image_url) + '" alt="" style="max-width:100%;max-height:420px;border-radius:8px">' : '') +
+            (z.image_url && md !== 'annotate' ? BVT.fig(z.image_url, '') : '') +
             (drawn ? '<div data-pad="' + z.id + '"></div>' :
              z.kind !== 'short' && md === 'dropdown' ? '<select class="qdrop" name="' + name + '"><option value="">Choose an answer…</option>' + opts.map(function (o, j) { return '<option value="' + j + '">' + L.charAt(j) + '. ' + E(o) + '</option>'; }).join('') + '</select>' :
              z.kind === 'short' ? '<textarea name="' + name + '" rows="' + (z.marks >= 6 ? 10 : z.marks >= 3 ? 6 : 3) + '" placeholder="Type an answer to test the marking"></textarea>'

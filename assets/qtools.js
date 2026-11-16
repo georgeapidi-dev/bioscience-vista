@@ -34,8 +34,21 @@
     var rows = lines.filter(function (l) { return !sep(l); }).map(cells), head = lines.length > 1 && sep(lines[1]);
     return '<div class="qtable-wrap"><table class="qtable">' + rows.map(function (r, i) { var tag = head && i === 0 ? 'th' : 'td'; return '<tr>' + r.map(function (c) { return '<' + tag + '>' + (c ? fmt(c) : '&nbsp;') + '</' + tag + '>'; }).join('') + '</tr>'; }).join('') + '</table></div>';
   };
+  /* data written as "Temperature / °C | 10 | 20 | 30" lines (no outer bars): two or more such lines in a row with the same number of cells
+     are a table too, shown with a header row (16 Nov 2026, admin: put tables in all questions that need them) */
+  function loose(l) { return l.indexOf('|') >= 0 && !(/^\s*\|/.test(l) && /\|\s*$/.test(l)) && !/\[\[/.test(l) && l.trim().length > 2 ? l.split('|').length : 0; }
+  function tidy(lines) {
+    var out = lines.slice();
+    for (var i = 0; i < out.length; i++) {
+      var n = loose(out[i]); if (!n) continue;
+      var j = i; while (j + 1 < out.length && loose(out[j + 1]) === n) j++;
+      if (j > i) { for (var k = i; k <= j; k++) out[k] = '| ' + out[k].trim() + ' |'; out.splice(i + 1, 0, '|' + new Array(n + 1).join(' --- |')); i = j + 1; }
+    }
+    return out;
+  }
+  var SEEN = {}, SEENT = 0;
   T.rich = function (prompt, inline) {
-    var lines = T.text(prompt).split('\n'), out = [], buf = [], para = [];
+    var lines = tidy(T.text(prompt).split('\n')), out = [], buf = [], para = [];
     function flushP() { if (para.length) { out.push(inline && !out.length ? para.map(fmt).join('<br>') : '<span class="qp">' + para.map(fmt).join('<br>') + '</span>'); para = []; } }
     lines.forEach(function (l) {
       if (isRow(l)) { flushP(); buf.push(l); return; }
@@ -44,8 +57,38 @@
       para.push(l);
     });
     flushP(); if (buf.length) out.push(T.table(buf));
+    // a table of numbers also gets a graph of the data, unless the question asks the student to plot or draw it
+    var raw = String(prompt || '');
+    if (!/\[\[answer:graph|\b(plot|plotting|sketch|draw|drawing|construct)\b|your graph|bar chart|histogram/i.test(raw)) {
+      var tl = [], done = false; lines.forEach(function (l) { if (done) return; if (isRow(l)) tl.push(l); else if (tl.length) done = true; });
+      var sig = tl.join('\n'), now = Date.now(); if (now - SEENT > 2000) SEEN = {}; SEENT = now;   // parts (a), (b), (c) repeat the same data: draw its graph once per page
+      var g = SEEN[sig] ? null : T.autoGraph(tl); if (g) SEEN[sig] = 1; if (g) out.push('<figure class="qm qm-graph qm-auto">' + T.graphSvg(g) + '<figcaption>Graph of the data in the table</figcaption></figure>');
+    }
     var md = T.parse(prompt).media; if (md.length) out.push(T.mediaHtml(md));
     return out.join('');
+  };
+  /* a graph spec from table rows, or null: columns (x then series) or rows (x row first, then series rows) of numbers */
+  T.autoGraph = function (tl) {
+    var sep = function (l) { return /-/.test(l) && /^\s*\|?[\s:\-|]+\|?\s*$/.test(l); };
+    var R = tl.filter(function (l) { return !sep(l); }).map(cells); if (R.length < 2) return null;
+    var isN = function (v) { return /^[-+−]?\d+(?:[.,]\d+)?$/.test(String(v).replace(/\s/g, '').replace('−', '-')); }, nv = function (v) { return String(v).replace(/\s/g, '').replace('−', '-').replace(',', '.'); };
+    var cols = function (M) {   // M[0] = header; M[1..] data rows: x in column 0, numeric columns are series
+      var data = M.slice(1); if (data.length < 3) return null;
+      var ser = []; for (var k = 1; k < M[0].length; k++) if (data.every(function (r) { return isN(r[k]); })) ser.push(k);
+      if (!ser.length || ser.length > 6) return null;
+      var xnum = data.every(function (r) { return isN(r[0]); });
+      return { t: 'graph', kind: xnum ? 'line' : 'bar', x: M[0][0], y: ser.length === 1 ? M[0][ser[0]] : '', series: ser.length > 1 ? ser.map(function (k) { return M[0][k]; }) : [''],
+        rows: data.map(function (r) { return [xnum ? nv(r[0]) : r[0]].concat(ser.map(function (k) { return nv(r[k]); })); }), zero: !xnum ? true : undefined };
+    };
+    var g = cols(R);
+    if (!g && R.length <= 6 && R[0].length >= 4) { var T2 = R[0].map(function (_, j) { return R.map(function (r) { return r[j]; }); }); g = cols(T2); }   // data written across the rows
+    return g;
+  };
+  /* a question's picture (questions.image_url); "#cap=…" at the end of the address is its caption */
+  T.fig = function (url, alt, h) {
+    var u = String(url || ''), m = /#cap=([^#]*)$/.exec(u), cap = ''; if (m) { try { cap = decodeURIComponent(m[1]); } catch (e) {} u = u.slice(0, m.index); }
+    var src = safe(u) || (u.charAt(0) === '/' ? u : ''); if (!src) return '';
+    return '<figure class="qm qm-img qfig"><img src="' + E(src) + '" alt="' + E(cap || alt || 'Diagram for this question') + '" loading="lazy" style="max-width:100%;max-height:' + (h || 420) + 'px;border-radius:8px">' + (cap ? '<figcaption>' + E(cap) + '</figcaption>' : '') + '</figure>';
   };
   T.media = function (prompt) { return T.parse(prompt).media; };
   /* a choice can be a picture: "[[img:https://…]] optional words" */
@@ -256,7 +299,7 @@
 
   if (!document.getElementById('qtools-css')) {
     var st = document.createElement('style'); st.id = 'qtools-css';
-    st.textContent = '.qtable-wrap{overflow-x:auto;margin:.5em 0}.qtable{border-collapse:collapse;min-width:50%;font-size:.95em;background:var(--card,#fff)}.qtable th,.qtable td{border:1px solid var(--line,#cfd6e2);padding:6px 10px;text-align:left;vertical-align:top}.qtable th{background:var(--tint,#eef4ff);font-weight:700}' +
+    st.textContent = '.qtable-wrap{overflow-x:auto;margin:.5em 0}.qtable{border-collapse:collapse;min-width:50%;font-size:.95em;background:var(--card,#fff)}.qtable th,.qtable td{border:1px solid var(--line,#cfd6e2);padding:6px 10px;text-align:left;vertical-align:top}.qtable th{background:var(--tint,#eef4ff);font-weight:700}.qtable td:first-child{font-weight:600;background:#f8fafc}.qtable td,.qtable th{text-align:center}.qtable td:first-child,.qtable th:first-child{text-align:left}' +
       '.qp{display:block;margin:.25em 0}.dtools{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.dtools button{border:1px solid var(--line,#d6dbe4);background:var(--card,#fff);border-radius:8px;padding:5px 9px;cursor:pointer;font:inherit}.dtools button[aria-pressed=true]{background:#2563eb;color:#fff;border-color:#2563eb}.dcol{display:inline-flex;gap:2px}.dcol button{font-size:18px;padding:2px 7px}.dcol button[aria-pressed=true]{background:#e0e7ff!important;color:inherit}' +
       'select.qdrop{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line,#d6dbe4);min-width:260px;max-width:100%}' +
       '.fbbox{display:grid;gap:8px;margin:.5em 0}.fbp{border-left:4px solid var(--line,#d6dbe4);padding:4px 10px;border-radius:4px}.fbp b{display:block;margin-bottom:2px}.fbp ul{margin:0;padding-left:20px}.fbp p{margin:2px 0}' +
