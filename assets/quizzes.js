@@ -218,7 +218,7 @@
   function isFull() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
   function goFull() { var d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen; try { var r = f && f.call(d); if (r && r.catch) r.catch(function () {}); } catch (e) {} }
   function exitFull() { try { if (isFull()) (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {} }
-  function sebLink() { return 'sebs://' + location.host + '/assets/learnova-' + (EXAM ? 'exams' : 'quizzes') + '.seb'; }   // opens Safe Exam Browser on this page; the student signs in there
+  function sebLink() { return 'sebs://' + location.host + '/assets/biosciencevista-' + (EXAM ? 'exams' : 'quizzes') + '.seb'; }   // opens Safe Exam Browser on this page; the student signs in there
   function watch(q, attempt, f, prev, handIn) {
     var R = rules(q), needFs = R.fullscreen && fsOK(), away = false, since = 0, n = +(prev.away_count || 0), secs = +(prev.away_seconds || 0), done = false, offs = [];
     function on(t, ev, fn) { t.addEventListener(ev, fn, true); offs.push(function () { t.removeEventListener(ev, fn, true); }); }

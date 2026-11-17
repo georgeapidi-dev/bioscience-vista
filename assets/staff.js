@@ -1245,7 +1245,7 @@
         var filt = gi.block_web === false ? '<key>URLFilterEnable</key><false/>' : '<key>URLFilterEnable</key><true/><key>URLFilterEnableContentFilter</key><false/><key>URLFilterRules</key><array>' +
           hosts.map(function (h) { return '<dict><key>active</key><true/><key>regex</key><false/><key>expression</key><string>' + h + '</string><key>action</key><integer>1</integer></dict>'; }).join('') + '</array>';
         var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0"><dict>' +
-          '<key>originatorVersion</key><string>Learnova</string><key>startURL</key><string>' + E(url) + '</string><key>sendBrowserExamKey</key><true/>' +
+          '<key>originatorVersion</key><string>BioscienceVista</string><key>startURL</key><string>' + E(url) + '</string><key>sendBrowserExamKey</key><true/>' +
           (gi.quit_hash ? '<key>hashedQuitPassword</key><string>' + gi.quit_hash + '</string>' : '') +
           '<key>allowQuit</key><true/><key>quitURL</key><string>' + E(location.origin) + '/?seb=quit</string><key>quitURLConfirm</key><true/><key>browserViewMode</key><integer>1</integer>' +
           '<key>enableBrowserWindowToolbar</key><true/><key>browserWindowAllowReload</key><true/><key>newBrowserWindowByLinkPolicy</key><integer>1</integer><key>newBrowserWindowByScriptPolicy</key><integer>1</integer>' +
