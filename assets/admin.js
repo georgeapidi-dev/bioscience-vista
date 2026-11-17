@@ -1,18 +1,19 @@
 /* BioscienceVista · admin: join requests, members and free access, teacher approvals, payments (PayPal and M-Pesa), prices and settings. */
 (function () {
-  var S = window.BVS, E = S.E, app = document.getElementById('app'), TAB = (location.hash.slice(1) || 'requests');
+  var S = window.BVS, E = S.E, app = document.getElementById('app'), TAB = (location.hash.slice(1) || 'approvals');
   S.guard(app, { staff: true }).then(function (me) {
     window.BVS_ME = me.user.id;
     if (!me.admin) { app.innerHTML = '<section class="panel"><h2>Admin only</h2><p><a href="/staff/">Back to the teacher dashboard</a></p></section>'; return; }
     draw();
   }).catch(function () {});
-  var TABS = [['requests', '🙋 Join requests'], ['members', '👥 Members & access'], ['teachers', '🧑‍🏫 Teachers'], ['payments', '💳 Payments'], ['settings', '⚙️ Prices & settings'], ['schools', '🏫 Schools'], ['reviews', '⭐ Reviews'], ['admins', '🔑 Admins']];
+  if (TAB === 'requests' || TAB === 'teachers') TAB = 'approvals';
+  var TABS = [['approvals', '✅ Approvals'], ['members', '👥 Members & access'], ['payments', '💳 Payments'], ['settings', '⚙️ Prices & settings'], ['schools', '🏫 Schools'], ['reviews', '⭐ Reviews'], ['admins', '🔑 Admins']];
   function draw() {
     app.innerHTML = '<div class="row2 cband" style="--k:#7c3aed"><div><p class="label">Admin</p><h2 style="margin:0">BioscienceVista admin</h2><p class="small">Approvals, members, teachers, payments and settings</p></div><div class="cta"><a class="btn sm" href="/staff/">🌐 Main site</a><a class="btn sm" href="/teach/">🏫 My classes</a></div></div>' +
       '<div class="cta" role="tablist">' + TABS.map(function (t) { return '<button type="button" class="btn sm' + (TAB === t[0] ? ' main' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="ais" class="small" style="margin:10px 0;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:#f8fafc"></div><div id="ems" class="small" style="margin:10px 0;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:#f8fafc"></div><section class="panel grp" id="tab"><p class="muted small">Loading…</p></section>';
     aiStatus(false); mailStatus(null);
     app.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { TAB = b.getAttribute('data-t'); history.replaceState(null, '', '#' + TAB); draw(); }; });
-    ({ requests: requests, members: members, teachers: teachers, payments: payments, settings: settings, schools: schools, reviews: reviews, admins: admins })[TAB](app.querySelector('#tab'));
+    ({ approvals: approvals, members: members, payments: payments, settings: settings, schools: schools, reviews: reviews, admins: admins })[TAB](app.querySelector('#tab'));
   }
   // AI helper status: one tiny server-side check, remembered for this visit; "Check again" repeats it
   var AIS = null;
@@ -112,51 +113,122 @@
   /* Members grouped the way a school is: teacher → their classes → the students in each class. Click a teacher, then a class, then a student's Dashboard. */
   function byTeacher(box) {
     box.innerHTML = '<p class="muted">Loading teachers, classes and students…</p>';
-    Promise.all([S.db.from('classes').select('id,name,programme,teacher_id,owner_kind,archived_at').order('name'), S.db.from('enrolments').select('student_id,class_id,status'), S.db.from('profiles').select('id,full_name,class_id')]).then(function (x) {
+    Promise.all([S.db.from('classes').select('id,name,programme,teacher_id,owner_kind,archived_at').order('name'), S.db.from('enrolments').select('id,student_id,class_id,status'), S.db.from('profiles').select('id,full_name,class_id')]).then(function (x) {
       if (x[0].error) return fail(box, x[0]);
       var who = {}; (x[2].data || []).forEach(function (p) { who[p.id] = { name: p.full_name || '(no name)', email: '' }; });
       (MEM || []).forEach(function (m) { who[m.id] = { name: m.full_name || (who[m.id] || {}).name || '(no name)', email: m.email || '', type: m.account_type }; });
-      var inClass = {}, placed = {}, add = function (c, s) { (inClass[c] = inClass[c] || {})[s] = 1; };
-      (x[1].data || []).forEach(function (e) { if (e.status === 'approved') add(e.class_id, e.student_id); });
+      var inClass = {}, placed = {}, add = function (c, s, eid) { (inClass[c] = inClass[c] || {})[s] = eid || (inClass[c] || {})[s] || 1; };
+      (x[1].data || []).forEach(function (e) { if (e.status === 'approved') add(e.class_id, e.student_id, e.id); });
       (x[2].data || []).forEach(function (p) { if (p.class_id) add(p.class_id, p.id); });
       var by = {}, order = [];
       (x[0].data || []).filter(function (c) { return !c.archived_at; }).forEach(function (c) { var k = c.teacher_id || '_'; if (!by[k]) { by[k] = []; order.push(k); } by[k].push(c); });
       var kids = function (c, tid) { return Object.keys(inClass[c.id] || {}).filter(function (s) { return s !== tid; }).sort(function (a, b) { return ((who[a] || {}).name || '').localeCompare((who[b] || {}).name || ''); }); };
       var total = function (tid) { var u = {}; by[tid].forEach(function (c) { kids(c, tid).forEach(function (s) { u[s] = 1; }); }); return Object.keys(u).length; };
       order.sort(function (a, b) { return (a === window.BVS_ME ? -1 : b === window.BVS_ME ? 1 : 0) || total(b) - total(a) || ((who[a] || {}).name || '').localeCompare((who[b] || {}).name || ''); });
-      var row = function (s) { placed[s] = 1; var w = who[s] || { name: '(no name)', email: '' };
-        return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(w.name) + '</b> <span class="small muted">' + E(w.email) + '</span></span><a class="btn sm" href="/dashboard/?as=' + s + '">📊 Dashboard</a></div>'; };
+      var row = function (s, c) { placed[s] = 1; var w = who[s] || { name: '(no name)', email: '' }, m = memOf(s), eid = c && inClass[c.id] ? inClass[c.id][s] : null;
+        return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(w.name) + '</b> <span class="small muted">' + E(w.email) + '</span> ' + prem(m) + '</span><span class="cta"><a class="btn sm" href="/dashboard/?as=' + s + '">📊 Dashboard</a>' + accessBtns(m) +
+          (c ? '<button class="btn sm" data-out="' + s + '" data-cls="' + c.id + '" data-eid="' + (eid && eid !== 1 ? eid : '') + '">Remove from class</button>' : '') + '<button class="btn sm" data-del="' + s + '">Delete account</button></span></div>'; };
       var cls = function (c, tid) { var ss = kids(c, tid), link = c.owner_kind === 'main' ? '/staff/#classes/' + c.id : '/teach/?as=' + tid + '#classes/' + c.id;
-        return '<details class="panel" style="margin:8px 0"><summary style="cursor:pointer"><b>▸ 🏫 ' + E(c.name) + '</b> <span class="small muted">' + E(c.programme || '') + ' · ' + ss.length + ' student' + (ss.length === 1 ? '' : 's') + '</span></summary><p style="margin:8px 0"><a class="btn sm" href="' + link + '">Open the class page</a></p>' + (ss.length ? ss.map(row).join('') : '<p class="emptybox">No students in this class yet.</p>') + '</details>'; };
+        return '<details class="panel" style="margin:8px 0"><summary style="cursor:pointer"><b>▸ 🏫 ' + E(c.name) + '</b> <span class="small muted">' + E(c.programme || '') + ' · ' + ss.length + ' student' + (ss.length === 1 ? '' : 's') + '</span></summary><p style="margin:8px 0"><a class="btn sm" href="' + link + '">Open the class page</a></p>' + (ss.length ? ss.map(function (z) { return row(z, c); }).join('') : '<p class="emptybox">No students in this class yet.</p>') + '</details>'; };
       var html = order.map(function (tid) { var w = who[tid] || { name: 'Teacher', email: '' }, mine = tid === window.BVS_ME, cs = by[tid], full = cs.filter(function (c) { return kids(c, tid).length; }), empty = cs.filter(function (c) { return !kids(c, tid).length; });
         return '<details class="panel tint" style="margin:10px 0"' + (order.length === 1 ? ' open' : '') + '><summary style="cursor:pointer"><b style="font-size:1.05rem">▸ 🧑‍🏫 ' + E(w.name) + '</b>' + (mine ? ' <span class="pill" style="display:inline-block;width:auto">you · main site</span>' : '') + ' <span class="small muted">' + E(w.email) + ' · ' + cs.length + ' class' + (cs.length === 1 ? '' : 'es') + ' · ' + total(tid) + ' student' + (total(tid) === 1 ? '' : 's') + '</span></summary>' +
-          '<p style="margin:8px 0"><a class="btn sm" href="' + (mine ? '/staff/#classes' : '/teach/?as=' + tid + '#overview') + '">👁 Open ' + (mine ? 'my classes' : 'this teacher\'s classroom') + '</a></p>' +
+          '<div class="row2" style="margin:8px 0"><span>' + (mine ? '' : prem(memOf(tid))) + '</span><span class="cta"><a class="btn sm" href="' + (mine ? '/staff/#classes' : '/teach/?as=' + tid + '#overview') + '">👁 Open ' + (mine ? 'my classes' : 'this teacher\'s classroom') + '</a>' + (mine || tid === '_' ? '' : accessBtns(memOf(tid)) + '<button class="btn sm" data-del="' + tid + '">Delete teacher account</button>') + '</span></div>' +
           (full.length ? full.map(function (c) { return cls(c, tid); }).join('') : '<p class="emptybox">No class of this teacher has students yet.</p>') +
           (empty.length ? '<details style="margin:8px 0"><summary class="small" style="cursor:pointer;font-weight:700">Classes with no students yet (' + empty.length + ')</summary>' + empty.map(function (c) { return cls(c, tid); }).join('') + '</details>' : '') + '</details>'; }).join('');
       var loose = (MEM || []).filter(function (m) { return m.account_type === 'student' && !placed[m.id]; });
-      box.innerHTML = '<p class="small muted">Click a teacher to see their classes, a class to see its students, then <b>📊 Dashboard</b> to see what that student sees.</p>' + (html || '<p class="emptybox">No classes yet.</p>') +
+      box.innerHTML = '<p class="small muted">Click a teacher to see their classes, then a class to see its students. Each person\'s row has everything: premium status, free access, extra premium months, remove from class and delete account.</p>' + (html || '<p class="emptybox">No classes yet.</p>') +
         (loose.length ? '<details class="panel" style="margin:10px 0"><summary><b>Students not in a class yet</b> <span class="small muted">' + loose.length + '</span></summary>' + loose.map(function (m) { return row(m.id); }).join('') + '</details>' : '');
+      var again = function () { byTeacher(box); };
+      wireAccess(box, again);
+      box.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { delAcct(b, again); }; });
+      box.querySelectorAll('[data-out]').forEach(function (b) { b.onclick = function () { twice(b, 'Click again to remove', function () {
+        var sid = b.getAttribute('data-out'), cid = b.getAttribute('data-cls'), eid = b.getAttribute('data-eid');
+        (eid ? S.db.rpc('decide_enrolment', { eid: eid, approve: false }) : Promise.resolve({})).then(function (r) { if (r.error) throw r.error;
+          return S.db.from('profiles').update({ class_id: null }).eq('id', sid).eq('class_id', cid); }).then(function (r) { if (r && r.error) throw r.error; again(); }, function (e) { b.disabled = false; alert(S.nice(e)); }); }); }; });
     });
   }
+  /* premium and free access on one row with the name: status pill, free access on/off, add paid months */
+  function prem(m) { var paid = m.premium_until && new Date(m.premium_until) > new Date();
+    return m.premium_free ? '<span class="pill ok">free access</span>' : paid ? '<span class="pill ok">premium to ' + E(new Date(m.premium_until).toLocaleDateString()) + '</span>' : '<span class="pill">no premium</span>'; }
+  function accessBtns(m) { return '<button class="btn sm' + (m.premium_free ? '' : ' main') + '" data-pfree="' + m.id + '" data-v="' + (m.premium_free ? 0 : 1) + '">' + (m.premium_free ? 'Remove free access' : '🎁 Give free access') + '</button>' +
+    '<button class="btn sm" data-padd="' + m.id + '" title="Add months of paid premium">＋ Premium months</button>'; }
+  function memOf(id) { return (MEM || []).filter(function (z) { return z.id === id; })[0] || { id: id }; }
+  function wireAccess(box, after) {
+    box.querySelectorAll('[data-pfree]').forEach(function (b) { b.onclick = function () { var id = b.getAttribute('data-pfree'), v = b.getAttribute('data-v') === '1'; b.disabled = true;
+      S.db.rpc('set_premium', { uid: id, free: v }).then(function (x) { if (x.error) { b.disabled = false; return alert(S.nice(x.error)); } (MEM || []).forEach(function (m) { if (m.id === id) m.premium_free = v; }); after(); }); }; });
+    box.querySelectorAll('[data-padd]').forEach(function (b) { b.onclick = function () { var id = b.getAttribute('data-padd'), n = parseInt(prompt('Add how many months of premium?', '4'), 10); if (!(n > 0 && n <= 24)) return;
+      var m = memOf(id), from = m.premium_until && new Date(m.premium_until) > new Date() ? new Date(m.premium_until) : new Date(); from.setMonth(from.getMonth() + n);
+      S.db.rpc('set_premium', { uid: id, free: !!m.premium_free, until: from.toISOString() }).then(function (x) { if (x.error) return alert(S.nice(x.error)); m.premium_until = from.toISOString(); after(); }); }; });
+  }
   function fail(t, r) { t.innerHTML = '<p class="msg">' + E(S.nice(r.error)) + '</p>'; }
-  function requests(t) {
-    S.db.rpc('my_join_requests').then(function (r) {
-      if (r.error) return fail(t, r);
-      var rows = r.data || [];
-      t.innerHTML = '<h3>Students asking to join (' + rows.length + ')</h3><p class="small">You approve every student, including those in other teachers\' classes. <b>Approve + free</b> also gives that student free access, so they can join without paying.</p>' + (rows.length ? '<label class="chk"><input type="checkbox" id="all"> Select all</label>' + rows.map(function (x) {
-        return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><label class="chk"><input type="checkbox" data-sel="' + x.id + '"> <b>' + E(x.full_name || 'Student') + '</b> → ' + E(x.class_name) + ' <span class="small muted">' + E(x.school || '') + ' · ' + E(S.when(x.requested_at)) + '</span> ' +
-          (x.status === 'teacher_ok' ? '<span class="pill ok">teacher said yes</span> ' : x.school !== 'BioscienceVista' ? '<span class="pill">teacher has not answered</span> ' : '') +
-          (x.premium ? '<span class="pill ok">premium</span>' : '<span class="pill">no premium</span>') + '</label><span class="cta"><button class="btn main sm" data-ok="' + x.id + '">Approve</button>' +
-          (x.premium ? '' : '<button class="btn sm" data-free="' + x.id + '">Approve + free</button>') + '<button class="btn sm" data-no="' + x.id + '">Decline</button></span></div>'; }).join('') +
-        '<div class="cta" style="margin-top:10px"><button class="btn main sm" id="okall">Approve selected</button><button class="btn sm" id="noall">Decline selected</button></div>' : '<p class="small muted">No requests waiting.</p>') +
-        '<p class="small muted">A student also needs premium (paid, or free access from the Members tab) to open materials.</p>';
-      var go = function (ids, ok, free) { Promise.all(ids.map(function (i) { return S.db.rpc('decide_enrolment', { eid: i, approve: ok, give_free: !!free }); })).then(function (rs) { var e = rs.filter(function (z) { return z.error; })[0]; if (e) alert(S.nice(e.error)); requests(t); }); };
-      t.querySelectorAll('[data-ok]').forEach(function (b) { b.onclick = function () { go([b.getAttribute('data-ok')], true); }; });
-      t.querySelectorAll('[data-no]').forEach(function (b) { b.onclick = function () { go([b.getAttribute('data-no')], false); }; });
-      t.querySelectorAll('[data-free]').forEach(function (b) { b.onclick = function () { MEM = null; go([b.getAttribute('data-free')], true, true); }; });
+  /* ---------- one place for every approval: teachers, and students in my classes and other teachers' classes ---------- */
+  function twice(b, label, fn) {   // first click asks, second click does it
+    if (!b.dataset.sure) { b.dataset.was = b.textContent; b.dataset.sure = 1; b.textContent = label; b.classList.add('main'); setTimeout(function () { if (b.isConnected && b.dataset.sure) { delete b.dataset.sure; b.textContent = b.dataset.was; b.classList.remove('main'); } }, 5000); return; }
+    b.disabled = true; fn();
+  }
+  function delAcct(b, after) { twice(b, 'Click again: delete forever', function () { S.db.rpc('delete_account', { uid: b.getAttribute('data-del') }).then(function (r) { if (r.error) { b.disabled = false; return alert(S.nice(r.error)); } MEM = null; after(); }); }); }
+  function approvals(t) {
+    var none = function () { return { data: [] }; };
+    Promise.all([S.db.rpc('my_join_requests'), S.db.from('classes').select('id,name,teacher_id,owner_kind'), S.db.rpc('admin_members'), S.db.from('pending_accounts').select('*').then(null, none), S.db.from('teacher_courses').select('teacher_id,course,status').then(null, none)]).then(function (x) {
+      if (x[0].error) return fail(t, x[0]);
+      var reqs = x[0].data || [], CL = {}, mem = {}, me = window.BVS_ME;
+      (x[1].data || []).forEach(function (c) { CL[c.id] = c; });
+      MEM = x[2].data || MEM; (MEM || []).forEach(function (m) { mem[m.id] = m; });
+      var asked = {}; reqs.forEach(function (q) { asked[q.student_id] = 1; });
+      var newAcc = (x[3].data || []).filter(function (p) { return !asked[p.student_id] && p.account_type !== 'teacher' && p.account_type !== 'admin'; });
+      var tcWait = (x[4].data || []).filter(function (c) { return c.status === 'pending'; });
+      var tWait = (MEM || []).filter(function (m) { return m.account_type === 'teacher' && (m.teacher_status === 'pending' || tcWait.some(function (c) { return c.teacher_id === m.id; })); });
+      var mine = function (cid) { var c = CL[cid]; return !c || c.owner_kind === 'main' || c.teacher_id === me; };
+      var tname = function (tid) { return tid === me ? 'You' : ((mem[tid] || {}).full_name || 'Teacher'); };
+      var srow = function (q) { var m = mem[q.student_id] || {};
+        return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><label class="chk"><input type="checkbox" data-sel="' + q.id + '"> <b>' + E(q.full_name || m.full_name || 'Student') + '</b> <span class="small muted">' + E(m.email || '') + ' · asked ' + E(S.when(q.requested_at)) + '</span> ' +
+          (q.status === 'teacher_ok' ? '<span class="pill ok">teacher said yes</span> ' : '') + (q.premium ? '<span class="pill ok">premium</span>' : '<span class="pill">no premium</span>') + '</label>' +
+          '<span class="cta"><button class="btn main sm" data-ok="' + q.id + '">✓ Approve</button>' + (q.premium ? '' : '<button class="btn sm" data-free="' + q.id + '">✓ Approve + free access</button>') +
+          '<button class="btn sm" data-no="' + q.id + '">Decline</button><button class="btn sm" data-del="' + q.student_id + '">Delete account</button></span></div>'; };
+      var byClass = function (list) { var g = {}, o = []; list.forEach(function (q) { if (!g[q.class_id]) { g[q.class_id] = []; o.push(q.class_id); } g[q.class_id].push(q); });
+        o.sort(function (a, b) { return (CL[a] ? CL[a].name : '').localeCompare(CL[b] ? CL[b].name : ''); });
+        return o.map(function (cid) { return '<div class="panel" style="margin:8px 0"><p style="margin:0 0 4px"><b>🏫 ' + E((CL[cid] || {}).name || g[cid][0].class_name || 'Class') + '</b> <span class="small muted">' + g[cid].length + ' waiting</span></p>' + g[cid].map(srow).join('') + '</div>'; }).join(''); };
+      var my = reqs.filter(function (q) { return mine(q.class_id); }), other = reqs.filter(function (q) { return !mine(q.class_id); });
+      var byT = {}, tOrder = []; other.forEach(function (q) { var tid = (CL[q.class_id] || {}).teacher_id || '_'; if (!byT[tid]) { byT[tid] = []; tOrder.push(tid); } byT[tid].push(q); });
+      tOrder.sort(function (a, b) { return tname(a).localeCompare(tname(b)); });
+      var total = reqs.length + newAcc.length + tWait.length;
+      t.innerHTML = '<div class="row2"><p style="margin:0"><b>' + total + '</b> waiting for you: ' + tWait.length + ' teacher' + (tWait.length === 1 ? '' : 's') + ', ' + reqs.length + ' join request' + (reqs.length === 1 ? '' : 's') + ', ' + newAcc.length + ' new account' + (newAcc.length === 1 ? '' : 's') + '.</p>' +
+          (total ? '<button class="btn main" id="okeverything">✓ Approve all ' + total + '</button>' : '') + '</div>' +
+        '<p class="small muted">One place for every approval. <b>Approve + free access</b> also gives the student free premium. <b>Delete account</b> asks twice, then removes the account for good.</p>' +
+        '<h3>🧑‍🏫 Teachers waiting (' + tWait.length + ')</h3>' + (tWait.length ? '<p class="small muted">Approve the teacher and each course they chose below.</p>' : '<p class="small muted">No teachers waiting.</p>') + '<div id="tbox"></div>' +
+        '<h3>🙋 Students: my classes (' + my.length + ')</h3>' + (my.length ? byClass(my) : '<p class="small muted">No requests for your classes.</p>') +
+        '<h3>🙋 Students: other teachers\' classes (' + other.length + ')</h3>' + (other.length ? tOrder.map(function (tid) { return '<details class="panel tint" open style="margin:8px 0"><summary style="cursor:pointer"><b>🧑‍🏫 ' + E(tname(tid)) + '</b> <span class="small muted">' + byT[tid].length + ' waiting</span></summary>' + byClass(byT[tid]) + '</details>'; }).join('') : '<p class="small muted">No requests for other teachers\' classes.</p>') +
+        (reqs.length ? '<div class="cta" style="margin:8px 0"><label class="chk"><input type="checkbox" id="all"> Select all students</label><button class="btn main sm" id="okall">✓ Approve selected</button><button class="btn sm" id="freeall">✓ Approve selected + free access</button><button class="btn sm" id="noall">Decline selected</button></div>' : '') +
+        '<h3>🆕 New accounts not in a class yet (' + newAcc.length + ')</h3>' + (newAcc.length ? newAcc.map(function (p) { var m = mem[p.student_id] || {};
+          return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>' + E(p.full_name || '(no name)') + '</b> <span class="small muted">' + E(m.email || '') + ' · ' + E(p.account_type || 'student') + ' · ' + E(p.class_name || 'no class') + ' · signed up ' + E(S.when(p.created_at)) + '</span></span>' +
+            '<span class="cta"><button class="btn main sm" data-acc="' + p.student_id + '">✓ Approve</button><button class="btn sm" data-accfree="' + p.student_id + '">✓ Approve + free access</button><button class="btn sm" data-del="' + p.student_id + '">Delete account</button></span></div>'; }).join('') : '<p class="small muted">Nobody waiting.</p>') +
+        '<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">🧑‍🏫 All teachers and their courses</summary><div id="tall"></div></details>';
+      // teachers waiting: the teacher manager, only those waiting; all teachers in the details box
+      if (tWait.length) teachers(t.querySelector('#tbox'), function (m) { return tWait.some(function (w) { return w.id === m.id; }); });
+      var tall = t.querySelector('#tall'), opened = false; t.querySelector('details:last-of-type').addEventListener('toggle', function () { if (!opened) { opened = true; teachers(tall); } });
+      var redo = function () { approvals(t); };
+      var go = function (ids, ok, free) { return Promise.all(ids.map(function (i) { return S.db.rpc('decide_enrolment', { eid: i, approve: ok, give_free: !!free }); })).then(function (rs) { var e = rs.filter(function (z) { return z.error; })[0]; if (e) alert(S.nice(e.error)); MEM = null; }); };
+      var acc = function (ids, free) { return S.db.from('profiles').update({ approved: true, admin_ok: true }).in('id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']).then(function (r) { if (r.error) alert(S.nice(r.error));
+        return free ? Promise.all(ids.map(function (i) { return S.db.rpc('set_premium', { uid: i, free: true }); })) : null; }).then(function () { MEM = null; }); };
+      t.querySelectorAll('[data-ok]').forEach(function (b) { b.onclick = function () { b.disabled = true; go([b.getAttribute('data-ok')], true).then(redo); }; });
+      t.querySelectorAll('[data-free]').forEach(function (b) { b.onclick = function () { b.disabled = true; go([b.getAttribute('data-free')], true, true).then(redo); }; });
+      t.querySelectorAll('[data-no]').forEach(function (b) { b.onclick = function () { if (!confirm('Decline this request?')) return; b.disabled = true; go([b.getAttribute('data-no')], false).then(redo); }; });
+      t.querySelectorAll('[data-acc]').forEach(function (b) { b.onclick = function () { b.disabled = true; acc([b.getAttribute('data-acc')]).then(redo); }; });
+      t.querySelectorAll('[data-accfree]').forEach(function (b) { b.onclick = function () { b.disabled = true; acc([b.getAttribute('data-accfree')], true).then(redo); }; });
+      [].forEach.call(t.querySelectorAll('[data-del]'), function (b) { b.onclick = function () { delAcct(b, redo); }; });
       var sel = function () { return [].map.call(t.querySelectorAll('[data-sel]:checked'), function (b) { return b.getAttribute('data-sel'); }); };
       var a = t.querySelector('#all'); if (a) a.onchange = function () { t.querySelectorAll('[data-sel]').forEach(function (b) { b.checked = a.checked; }); };
-      var oa = t.querySelector('#okall'); if (oa) { oa.onclick = function () { var s = sel(); if (s.length) go(s, true); }; t.querySelector('#noall').onclick = function () { var s = sel(); if (s.length && confirm('Decline ' + s.length + ' requests?')) go(s, false); }; }
+      var oa = t.querySelector('#okall'); if (oa) {
+        oa.onclick = function () { var s = sel(); if (s.length) go(s, true).then(redo); };
+        t.querySelector('#freeall').onclick = function () { var s = sel(); if (s.length) go(s, true, true).then(redo); };
+        t.querySelector('#noall').onclick = function () { var s = sel(); if (s.length && confirm('Decline ' + s.length + ' requests?')) go(s, false).then(redo); }; }
+      var ev = t.querySelector('#okeverything'); if (ev) ev.onclick = function () {
+        if (!confirm('Approve everything waiting?\n\n• ' + tWait.length + ' teacher(s) and the ' + tcWait.length + ' course(s) they chose\n• ' + reqs.length + ' student join request(s)\n• ' + newAcc.length + ' new account(s)\n\nNo free access is given: use "Approve + free access" for that.')) return;
+        ev.disabled = true; ev.textContent = 'Approving…';
+        var tjobs = tWait.filter(function (m) { return m.teacher_status === 'pending'; }).map(function (m) { return S.db.rpc('decide_teacher', { uid: m.id, approve: true }); })
+          .concat(tcWait.filter(function (c) { return tWait.some(function (m) { return m.id === c.teacher_id; }); }).map(function (c) { return S.db.rpc('decide_teacher_course', { uid: c.teacher_id, course_slug: c.course, yes: true }); }));
+        Promise.all(tjobs).then(function (rs) { var e = rs.filter(function (z) { return z && z.error; })[0]; if (e) alert(S.nice(e.error)); return go(reqs.map(function (q) { return q.id; }), true); })
+          .then(function () { return acc(newAcc.map(function (p) { return p.student_id; })); }).then(redo); };
     });
   }
   var MEM = null;
@@ -173,32 +245,27 @@
       var now = new Date();
       var list = function () {
         var q = t.querySelector('#mq').value.trim().toLowerCase(), f = t.querySelector('#mf').value;
-        var rows = MEM.filter(function (m) { var prem = m.premium_free || (m.premium_until && new Date(m.premium_until) > now);
+        var rows = (MEM || []).filter(function (m) { var prem = m.premium_free || (m.premium_until && new Date(m.premium_until) > now);
           return (!q || ((m.full_name || '') + ' ' + (m.email || '') + ' ' + (m.classes || '')).toLowerCase().indexOf(q) >= 0) &&
             (!f || (f === 'nopremium' ? !prem : f === 'pending' ? m.pending > 0 : m.account_type === f)); });
         t.querySelector('#ml').innerHTML = '<p class="small muted">' + rows.length + ' accounts</p>' + rows.slice(0, 300).map(function (m) {
           var paid = m.premium_until && new Date(m.premium_until) > now;
           return '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="row2"><span><b>' + E(m.full_name || '–') + '</b> <span class="small muted">' + E(m.email) + ' · ' + E(m.account_type) + '</span><br><span class="small">' + E(m.classes || 'no class') + '</span></span>' +
-            '<span class="cta">' + (m.account_type === 'teacher' ? '<a class="btn sm" href="/teach/?as=' + m.id + '#overview">👁 Classroom</a>' : m.account_type === 'student' ? '<a class="btn sm" href="/dashboard/?as=' + m.id + '">📊 Dashboard</a>' : '') + (m.premium_free ? '<span class="pill ok">free access</span>' : paid ? '<span class="pill ok">paid to ' + E(new Date(m.premium_until).toLocaleDateString()) + '</span>' : '<span class="pill">no premium</span>') +
-            '<button class="btn sm' + (m.premium_free ? '' : ' main') + '" data-free="' + m.id + '" data-v="' + (m.premium_free ? 0 : 1) + '">' + (m.premium_free ? 'Remove free access' : 'Give free access') + '</button>' +
-            '<button class="btn sm" data-add="' + m.id + '">＋ Months</button></span></div></div>'; }).join('');
-        t.querySelectorAll('[data-free]').forEach(function (b) { b.onclick = function () { var id = b.getAttribute('data-free'), v = b.getAttribute('data-v') === '1';
-          S.db.rpc('set_premium', { uid: id, free: v }).then(function (x) { if (x.error) return alert(S.nice(x.error)); MEM.forEach(function (m) { if (m.id === id) m.premium_free = v; }); list(); }); }; });
-        t.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = function () { var id = b.getAttribute('data-add'), n = parseInt(prompt('Add how many months of premium?', '4'), 10); if (!(n > 0 && n <= 24)) return;
-          var m = MEM.filter(function (z) { return z.id === id; })[0], from = m.premium_until && new Date(m.premium_until) > now ? new Date(m.premium_until) : new Date(); from.setMonth(from.getMonth() + n);
-          S.db.rpc('set_premium', { uid: id, free: !!m.premium_free, until: from.toISOString() }).then(function (x) { if (x.error) return alert(S.nice(x.error)); m.premium_until = from.toISOString(); list(); }); }; });
+            '<span class="cta">' + (m.account_type === 'teacher' ? '<a class="btn sm" href="/teach/?as=' + m.id + '#overview">👁 Classroom</a>' : m.account_type === 'student' ? '<a class="btn sm" href="/dashboard/?as=' + m.id + '">📊 Dashboard</a>' : '') + prem(m) + accessBtns(m) +
+            (m.id === window.BVS_ME ? '' : '<button class="btn sm" data-del="' + m.id + '">Delete account</button>') + '</span></div></div>'; }).join('');
+        var ml = t.querySelector('#ml'); wireAccess(ml, list); ml.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { delAcct(b, function () { members(t); }); }; });
       };
       t.querySelector('#mq').oninput = list; t.querySelector('#mf').onchange = list; list();
     });
   }
-  function teachers(t) {
+  function teachers(t, only) {
     var none = function () { return { error: true }; };
     Promise.all([S.db.rpc('admin_members'), S.db.from('teacher_courses').select('teacher_id,course,status,requested_at').then(null, none), S.db.rpc('course_list').then(null, none)]).then(function (z) {
       var r = z[0]; if (r.error) return fail(t, r);
       var TC = z[1] && !z[1].error ? (z[1].data || []) : null, nm = {};   // TC is null until migration 034 (courses approved one by one)
       var ALLC = (z[2] && z[2].data) || []; ALLC.forEach(function (k) { nm[k.slug] = k.name; });
       var by = {}; (TC || []).forEach(function (c) { (by[c.teacher_id] = by[c.teacher_id] || []).push(c); });
-      var rows = (r.data || []).filter(function (m) { return m.account_type === 'teacher' && m.teacher_status; });
+      var rows = (r.data || []).filter(function (m) { return m.account_type === 'teacher' && m.teacher_status && (!only || only(m)); });
       var wait = (TC || []).filter(function (c) { return c.status === 'pending' && rows.some(function (m) { return m.id === c.teacher_id; }); }).length;
       rows.sort(function (a, b) { var pa = (by[a.id] || []).some(function (c) { return c.status === 'pending'; }) || a.teacher_status === 'pending', pb = (by[b.id] || []).some(function (c) { return c.status === 'pending'; }) || b.teacher_status === 'pending'; return (pb - pa) || (a.full_name || '').localeCompare(b.full_name || ''); });
       var courses = function (m) {
@@ -212,19 +279,21 @@
             return rest.length && m.teacher_status !== 'rejected' ? '<div class="row2" style="padding:3px 0;justify-content:flex-start;gap:8px"><select data-addsel="' + m.id + '" aria-label="Add a course for ' + E(m.full_name) + '" style="max-width:280px"><option value="">Add a course for this teacher…</option>' +
               rest.map(function (k) { return '<option value="' + E(k.slug) + '">' + E(k.name) + '</option>'; }).join('') + '</select><button class="btn sm" data-addc="' + m.id + '">Add and approve</button></div>' : ''; })() + '</div>';
       };
-      t.innerHTML = '<p class="small">Teachers from other schools and private tutors. An approved teacher with premium can create their own classes, add BioscienceVista lessons and published quizzes to them, and see only their own students. They cannot change anything on the main site.</p>' +
-        (TC ? '<p class="small"><b>Each teacher selects courses at sign-up and you approve each course.</b> Approving a course makes that teacher\'s class for it (and approves a teacher who is still waiting). A teacher can make classes only for approved courses, and cannot add courses: you add one here.' + (wait ? ' <span class="pill t">' + wait + ' course' + (wait === 1 ? '' : 's') + ' waiting</span>' : '') + '</p>' : '') +
+      t.innerHTML = (only ? '' : '<p class="small">Teachers from other schools and private tutors. An approved teacher with premium can create their own classes, add BioscienceVista lessons and published quizzes to them, and see only their own students. They cannot change anything on the main site.</p>' +
+        (TC ? '<p class="small"><b>Each teacher selects courses at sign-up and you approve each course.</b> Approving a course makes that teacher\'s class for it (and approves a teacher who is still waiting). A teacher can make classes only for approved courses, and cannot add courses: you add one here.' + (wait ? ' <span class="pill t">' + wait + ' course' + (wait === 1 ? '' : 's') + ' waiting</span>' : '') + '</p>' : '')) +
         (rows.length ? rows.map(function (m) { return '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="row2"><span><b>' + E(m.full_name) + '</b> <span class="small muted">' + E(m.email) + ' · signed up ' + E(new Date(m.created_at).toLocaleDateString()) + '</span><br>' +
-          '<span class="pill' + (m.teacher_status === 'approved' ? ' ok' : '') + '">' + E(m.teacher_status) + '</span></span><span class="cta"><a class="btn sm" href="/teach/?as=' + m.id + '#overview" title="See and edit this teacher\'s classes, their dashboard and their students">👁 Open classroom</a>' + (m.teacher_status !== 'approved' ? '<button class="btn main sm" data-ok="' + m.id + '">Approve</button>' : '') +
-          (m.teacher_status !== 'rejected' ? '<button class="btn sm" data-no="' + m.id + '">' + (m.teacher_status === 'approved' ? 'Remove teacher access' : 'Decline') + '</button>' : '') + '</span></div>' + courses(m) + '</div>'; }).join('') : '<p class="small muted">No teacher sign-ups yet.</p>');
+          '<span class="pill' + (m.teacher_status === 'approved' ? ' ok' : '') + '">' + E(m.teacher_status) + '</span> ' + prem(m) + '</span><span class="cta"><a class="btn sm" href="/teach/?as=' + m.id + '#overview" title="See and edit this teacher\'s classes, their dashboard and their students">👁 Open classroom</a>' + (m.teacher_status !== 'approved' ? '<button class="btn main sm" data-ok="' + m.id + '">Approve</button>' : '') +
+          (m.teacher_status !== 'rejected' ? '<button class="btn sm" data-no="' + m.id + '">' + (m.teacher_status === 'approved' ? 'Remove teacher access' : 'Decline') + '</button>' : '') + accessBtns(m) + '<button class="btn sm" data-del="' + m.id + '">Delete account</button></span></div>' + courses(m) + '</div>'; }).join('') : '<p class="small muted">No teacher sign-ups yet.</p>');
       t.querySelectorAll('[data-ok],[data-no]').forEach(function (b) { b.onclick = function () { var ok = b.hasAttribute('data-ok'); if (!ok && !confirm('Remove this teacher\'s access? Their classes stay but they cannot manage them.')) return;
-        S.db.rpc('decide_teacher', { uid: b.getAttribute(ok ? 'data-ok' : 'data-no'), approve: ok }).then(function (x) { if (x.error) return alert(S.nice(x.error)); MEM = null; teachers(t); }); }; });
+        S.db.rpc('decide_teacher', { uid: b.getAttribute(ok ? 'data-ok' : 'data-no'), approve: ok }).then(function (x) { if (x.error) return alert(S.nice(x.error)); MEM = null; if (only) approvals(app.querySelector('#tab')); else teachers(t); }); }; });
+      wireAccess(t, function () { if (only) approvals(app.querySelector('#tab')); else teachers(t, only); });
+      t.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { delAcct(b, function () { if (only) approvals(app.querySelector('#tab')); else teachers(t, only); }); }; });
       t.querySelectorAll('[data-addc]').forEach(function (b) { b.onclick = function () { var id = b.getAttribute('data-addc'), sel = t.querySelector('[data-addsel="' + id + '"]'); if (!sel.value) return alert('Choose the course to add.'); b.disabled = true;
-        S.db.rpc('decide_teacher_course', { uid: id, course_slug: sel.value, yes: true }).then(function (x) { if (x.error) { b.disabled = false; return alert(S.nice(x.error)); } MEM = null; teachers(t); }); }; });
+        S.db.rpc('decide_teacher_course', { uid: id, course_slug: sel.value, yes: true }).then(function (x) { if (x.error) { b.disabled = false; return alert(S.nice(x.error)); } MEM = null; if (only) approvals(app.querySelector('#tab')); else teachers(t); }); }; });
       t.querySelectorAll('[data-cyes],[data-cno]').forEach(function (b) { b.onclick = function () { var yes = b.hasAttribute('data-cyes');
         if (!yes && b.textContent === 'Remove course' && !confirm('Remove this course from the teacher? Classes already made stay, but the teacher cannot make new classes for it.')) return;
         b.disabled = true;
-        S.db.rpc('decide_teacher_course', { uid: b.getAttribute(yes ? 'data-cyes' : 'data-cno'), course_slug: b.getAttribute('data-course'), yes: yes }).then(function (x) { if (x.error) { b.disabled = false; return alert(S.nice(x.error)); } MEM = null; teachers(t); }); }; });
+        S.db.rpc('decide_teacher_course', { uid: b.getAttribute(yes ? 'data-cyes' : 'data-cno'), course_slug: b.getAttribute('data-course'), yes: yes }).then(function (x) { if (x.error) { b.disabled = false; return alert(S.nice(x.error)); } MEM = null; if (only) approvals(app.querySelector('#tab')); else teachers(t); }); }; });
     });
   }
   function payments(t) {

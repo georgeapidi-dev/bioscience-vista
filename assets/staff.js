@@ -373,7 +373,7 @@
       p.innerHTML = '<div class="stats"><div class="stat"><span class="small muted">Students</span><b>' + st.length + '</b></div><div class="stat"><span class="small muted">Classes</span><b>' + CLASSES.length + '</b></div>' +
         '<div class="stat"><span class="small muted">Class average</span><b>' + (avg == null ? '–' : avg + '%') + '</b></div><div class="stat"><span class="small muted">Answers to mark</span><b><a href="#marking">' + (x[1].count || 0) + '</a></b></div></div>' +
         (x[5] && x[5].count ? '<p class="panel tint"><b>' + x[5].count + ' new lesson booking' + (x[5].count > 1 ? 's' : '') + '.</b> <a class="btn main sm" href="#bookings">Reply to bookings</a></p>' : '') +
-        (nPend ? '<p class="panel tint"><b>' + nPend + ' new account' + (nPend > 1 ? 's are' : ' is') + ' waiting for approval.</b> <a class="btn main sm" href="#approvals">Review and approve</a></p>' : '') +
+        (nPend ? '<p class="panel tint"><b>' + nPend + ' new account' + (nPend > 1 ? 's are' : ' is') + ' waiting for approval.</b> <a class="btn main sm" href="' + (ME.admin ? '/admin/#approvals' : '#approvals') + '">Review and approve</a></p>' : '') +
         (!CLASSES.length ? '<p class="panel tint">Start by <a href="#classes">creating a class</a>. Each class gets a join code that students type when they register.</p>' : '') +
         '<section class="panel"><h3>Latest results</h3>' + ((x[2].data || []).length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Task</th><th>Score</th><th>When</th></tr>' + x[2].data.map(function (r) { return '<tr><td>' + E(names[r.student_id] || '–') + '</td><td>' + E(r.title) + '</td><td>' + (r.score == null ? '–' : E(r.score) + '/' + E(r.max_score)) + '</td><td class="small">' + E(S.when(r.recorded_at)) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="muted">No results yet.</p>') +
         '<p class="small muted">' + (x[3].count || 0) + ' published quizzes · <a href="/teacher/">Classic teacher console (Google Sheets)</a></p></section>';
@@ -1739,6 +1739,7 @@
 
   /* ---------- approvals: one click ---------- */
   function approvals(p) {
+    if (ME.admin) { p.innerHTML = '<div class="panel tint"><p><b>All approvals are now in one place.</b> Teachers, students asking to join your classes and other teachers\' classes, and new accounts, with approve, free access, premium and delete on each row.</p><a class="btn main" href="/admin/#approvals">✅ Open all approvals</a></div>'; return; }
     Promise.all([S.db.from('pending_accounts').select('*').order('created_at'), S.db.rpc('account_emails')]).then(function (x) {
       var rows = x[0].data || [], em = {}; (x[1].data || []).forEach(function (u) { em[u.user_id] = u.email; });
       if (!rows.length) { p.innerHTML = '<p class="emptybox">Nobody is waiting for approval. New sign-ups appear here.</p>'; return; }
