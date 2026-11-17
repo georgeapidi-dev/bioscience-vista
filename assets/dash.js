@@ -98,7 +98,15 @@
     var link = function (c) { return c.slug ? '/' + c.slug + '/' : '/class/?id=' + c.id; };
     var st = { approved: '<span class="pill ok">✓ Approved</span>', pending: '<span class="pill t">⏳ Waiting for the teacher</span>', teacher_ok: '<span class="pill t">⏳ Teacher said yes · waiting for BioscienceVista</span>', rejected: '<span class="pill">Not accepted</span>' };
     var prem = a.premium ? '<p class="small"><span class="pill ok">⭐ Premium</span> ' + (a.free ? 'Free access given by the admin.' : a.until ? 'Until ' + E(new Date(a.until).toLocaleDateString()) + '. <a href="/premium/">Extend</a>' : '') + '</p>'
-      : '<p class="small"><b>Premium access is needed</b> to open class lessons, quizzes and simulations. <a class="btn main sm" href="/premium/">Get premium</a></p>';
+      : (mine.some(function (c) { return c.status === 'approved'; })
+        ? '<div class="panel" style="border:2px solid #16a34a;background:#f0fdf4"><b>✅ You are approved. One more step: pay for premium</b><p class="small" style="margin:4px 0 8px">Premium opens the lessons, quizzes and simulations of your class. Pay by PayPal, card or M-Pesa.</p><a class="btn main" href="/premium/">💳 Pay for premium</a></div>'
+        : '<p class="small"><b>Premium access is needed</b> to open class lessons, quizzes and simulations. <a class="btn main sm" href="/premium/">Get premium</a></p>');
+    // the admin asked this student to pay: open the premium page once per visit, straight after signing in
+    if (!a.premium && !me.staff && mine.some(function (c) { return c.status === 'approved'; })) {
+      var seen = false; try { seen = sessionStorage.getItem('bv-paygo') === '1'; } catch (e) {}
+      if (!seen) S.db.from('messages').select('id').eq('recipient', me.user.id).like('body', '💳 Premium:%').limit(1).then(function (r) {
+        if (r.data && r.data.length) { try { sessionStorage.setItem('bv-paygo', '1'); } catch (e) {} location.href = '/premium/'; } }, function () {});
+    }
     box.innerHTML = '<section class="panel tint grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><button type="button" class="btn sm" id="addc">＋ Join a class</button></div>' + prem +
       (mine.length ? mine.map(function (c) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>' + (c.status === 'approved' ? '<a href="' + E(link(c)) + '"><b>' + E(c.name) + '</b></a>' : '<b>' + E(c.name) + '</b>') + ' ' + (st[c.status] || '') + '</span>' +
         '<button type="button" class="btn sm" data-leave="' + E(c.id) + '" title="Leave this class">Leave</button></div>'; }).join('') : '<p class="small">You have not joined a class yet. Press <b>Join a class</b>.</p>') +
