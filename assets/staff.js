@@ -405,7 +405,7 @@
     else if (args && args[0]) return refs().then(function () { classPage(p, args[0], args[1]); });
     refs().then(function () {
       p.innerHTML = '<section class="panel"><h3>Class pages</h3><p class="small muted">Open a class to see its quizzes, exams and interactive lessons, and who has and has not submitted. The page updates itself while you watch.</p>' +
-        (CLASSES.length ? '<div class="cgrid">' + CLASSES.map(function (c) { return '<a class="ccard" href="#classes/' + c.id + '"><b>' + E(c.name) + '</b><span class="small muted">' + E(c.programme || '') + '</span><span class="small" data-n="' + c.id + '">…</span></a>'; }).join('') + '</div>' : '<p class="emptybox">No classes yet.</p>') + '</section>' +
+        (CLASSES.length ? '<div class="cgrid">' + CLASSES.map(function (c) { return '<div class="ccard" style="display:flex;flex-direction:column;gap:4px"><a href="#classes/' + c.id + '" style="text-decoration:none;color:inherit;display:flex;flex-direction:column"><b>' + E(c.name) + '</b><span class="small muted">' + E(c.programme || '') + '</span><span class="small" data-n="' + c.id + '">…</span></a><a class="btn sm" href="#classes/' + c.id + '/status" style="align-self:flex-start">🟢 Live work status</a></div>'; }).join('') + '</div>' : '<p class="emptybox">No classes yet.</p>') + '</section>' +
         '<form class="panel row2" id="nc"><input id="cn" placeholder="Class name, e.g. Grade 9 Science" required><input id="cp" placeholder="Programme, e.g. MYP 4" style="max-width:180px"><button class="btn main sm" type="submit">Create class</button></form>' +
         (CLASSES.length ? '<div class="tablewrap"><table class="marks"><tr><th>Class</th><th>Programme</th><th>Join code</th><th>Open for joining</th><th></th>' + (ME.admin ? '<th>Archive / remove</th>' : '') + '</tr>' + CLASSES.map(function (c) {
           return '<tr data-id="' + c.id + '"><td><input data-k="name" value="' + E(c.name) + '"></td><td><input data-k="programme" value="' + E(c.programme || '') + '"></td><td><b class="code">' + E(c.join_code) + '</b> <button type="button" class="btn sm" data-a="new">New code</button></td>' +
@@ -462,25 +462,26 @@
   function classPage(p, cid, sub) {
     var c = CLASSES.filter(function (x) { return x.id === cid; })[0];
     if (!c) { p.innerHTML = '<p class="emptybox">This class was not found, or it is not one of your classes. <a href="#classes">All classes</a></p>'; return; }
-    sub = ['lessons', 'todo', 'analysis', 'register', 'activity', 'news'].indexOf(sub) >= 0 ? sub : 'quizzes';
+    sub = ['lessons', 'todo', 'analysis', 'register', 'activity', 'news', 'status'].indexOf(sub) >= 0 ? sub : 'quizzes';
     var state = { filter: 'all', open: {}, lesson: null, live: true };
     try { state.lesson = sessionStorage.getItem('bv-cl-' + cid) || null; } catch (e) {}
     p.innerHTML = '<p class="small"><a href="#classes">← All classes</a></p><div class="row2' + ' cband" style="--k:' + hue(c.id) + '"><div><p class="label">' + E(c.programme || 'Class') + '</p><h2 style="margin:0">' + E(c.name) + '</h2></div>' +
-      '<a class="btn main sm" href="/check/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '" style="--c:#7c3aed" title="Send one question to this class and watch the answers arrive">⚡ Live Check</a>' + '<a class="btn main sm" href="/time/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '" style="--c:#0ea5e9;background:#0284c7;border-color:#0284c7" title="The time each student spent on each task, and the time allowed">⏱ Time on tasks</a>' + '<div class="small muted" style="text-align:right">' + (TEACH ? '' : 'Join code <b class="code">' + E(c.join_code) + '</b><br>') + '<label class="chk" style="display:inline-flex"><input type="checkbox" id="lv" checked> Live: update every 15 seconds</label> <span id="stamp"></span></div></div>' +
-      '<nav class="tabs" aria-label="Class sections"' + ' data-cnav' + '><a href="#classes/' + cid + '/add" style="--k:#0d9488;font-weight:800">➕ Add lessons from main site</a><a href="#classes/' + cid + '/manage" style="--k:#4f46e5">👥 Students &amp; settings</a><a href="#classes/' + cid + '/quizzes" aria-selected="' + (sub === 'quizzes') + '">📝 Quizzes and exams</a><a href="#classes/' + cid + '/lessons" aria-selected="' + (sub === 'lessons') + '">🧪 Interactive lessons</a><a href="#classes/' + cid + '/todo" aria-selected="' + (sub === 'todo') + '">📌 To-do list</a><a href="#classes/' + cid + '/register" aria-selected="' + (sub === 'register') + '">🗒 Register</a><a href="#classes/' + cid + '/activity" aria-selected="' + (sub === 'activity') + '">👀 Activity</a><a href="' + '/board/?class=' + cid + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a><a href="/live/?class=' + cid + '">🎥 Live lessons</a><a href="#classes/' + cid + '/analysis" aria-selected="' + (sub === 'analysis') + '">📊 Analysis</a><a href="#classes/' + cid + '/news" aria-selected="' + (sub === 'news') + '">📣 Announcements</a></nav>' +
+      '<a class="btn main sm" href="#classes/' + c.id + '/status" style="--c:#16a34a" title="See what every student is working on right now. Updates every 10 seconds.">🟢 Live work status</a>' + '<a class="btn main sm" href="/check/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '" style="--c:#7c3aed" title="Send one question to this class and watch the answers arrive">⚡ Live Check</a>' + '<a class="btn main sm" href="/time/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '" style="--c:#0ea5e9;background:#0284c7;border-color:#0284c7" title="The time each student spent on each task, and the time allowed">⏱ Time on tasks</a>' + '<div class="small muted" style="text-align:right">' + (TEACH ? '' : 'Join code <b class="code">' + E(c.join_code) + '</b><br>') + '<label class="chk" style="display:inline-flex"><input type="checkbox" id="lv" checked> Live: update every 15 seconds</label> <span id="stamp"></span></div></div>' +
+      '<nav class="tabs" aria-label="Class sections"' + ' data-cnav' + '><a href="#classes/' + cid + '/add" style="--k:#0d9488;font-weight:800">➕ Add lessons from main site</a><a href="#classes/' + cid + '/manage" style="--k:#4f46e5">👥 Students &amp; settings</a><a href="#classes/' + cid + '/status" aria-selected="' + (sub === 'status') + '" style="--k:#16a34a;font-weight:800">🟢 Live work status</a><a href="#classes/' + cid + '/quizzes" aria-selected="' + (sub === 'quizzes') + '">📝 Quizzes and exams</a><a href="#classes/' + cid + '/lessons" aria-selected="' + (sub === 'lessons') + '">🧪 Interactive lessons</a><a href="#classes/' + cid + '/todo" aria-selected="' + (sub === 'todo') + '">📌 To-do list</a><a href="#classes/' + cid + '/register" aria-selected="' + (sub === 'register') + '">🗒 Register</a><a href="#classes/' + cid + '/activity" aria-selected="' + (sub === 'activity') + '">👀 Activity</a><a href="' + '/board/?class=' + cid + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a><a href="/live/?class=' + cid + '">🎥 Live lessons</a><a href="#classes/' + cid + '/analysis" aria-selected="' + (sub === 'analysis') + '">📊 Analysis</a><a href="#classes/' + cid + '/news" aria-selected="' + (sub === 'news') + '">📣 Announcements</a></nav>' +
       '<div id="cbody"><p class="muted">Loading…</p></div>';
     var body = p.querySelector('#cbody'), busy = false;
-    { var CH = { quizzes: '#ca8a04', lessons: '#0d9488', todo: '#7c3aed', register: '#059669', activity: '#db2777', analysis: '#2563eb', news: '#ea580c' };
+    { var CH = { status: '#16a34a', quizzes: '#ca8a04', lessons: '#0d9488', todo: '#7c3aed', register: '#059669', activity: '#db2777', analysis: '#2563eb', news: '#ea580c' };
       p.querySelectorAll('[data-cnav] a').forEach(function (a) { var k = CH[a.getAttribute('href').split('/')[2]]; if (k) a.style.setProperty('--k', k); }); }
     function load() {
       if (busy) return; busy = true;
-      (sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'news' ? newsBoard : sub === 'register' ? registerBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
+      (sub === 'status' ? statusBoard : sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'news' ? newsBoard : sub === 'register' ? registerBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
         var miss = /class_(quiz|lesson)_board|class_todo|assign_work|class_analysis|announcements|schema cache|does not exist/i.test((e && (e.message || e.details)) || String(e));
         body.innerHTML = miss ? '<p class="emptybox">This part of the class page needs a database update (' + (sub === 'todo' ? 'migration 015' : sub === 'analysis' ? 'migration 016' : sub === 'news' ? 'migration 044' : 'migration 011') + ') before it can show results. Run it once in the Supabase SQL editor, then reload this page.</p>' : '<p class="msg">' + E(S.nice(e)) + '</p>'; });
     }
     state.reload = load;
-    p.querySelector('#lv').onchange = function () { state.live = this.checked; clearInterval(LIVE); if (state.live) { LIVE = setInterval(load, 15000); load(); } };
-    clearInterval(LIVE); LIVE = setInterval(load, 15000); load();
+    var EVERY = sub === 'status' ? 10000 : 15000;
+    p.querySelector('#lv').onchange = function () { state.live = this.checked; clearInterval(LIVE); if (state.live) { LIVE = setInterval(load, EVERY); load(); } };
+    clearInterval(LIVE); LIVE = setInterval(load, EVERY); load();
   }
   /* ---------- to-do lists: work set for the whole class or for chosen students ---------- */
   var ICON = { lesson: '🧪', quiz: '📝', resource: '📄', sim: '🔬', link: '🔗', task: '✏️' };
@@ -943,6 +944,56 @@
       var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
       a.download = (qz.title + ' ' + c.name).replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').slice(0, 80) + '-report.html'; document.body.appendChild(a); a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    });
+  }
+
+  /* ---------- live work status: every student of the class, what they are doing now (refreshes every 10 seconds) ---------- */
+  function statusBoard(body, c, state) {
+    var days = state.sdays || 1, since = new Date(); since.setHours(0, 0, 0, 0); since.setDate(since.getDate() - (days - 1));
+    return roster(c.id).then(function (kids) {
+      var ids = kids.map(function (k) { return k.id; });
+      if (!ids.length) { body.innerHTML = '<p class="emptybox">No students have joined ' + E(c.name) + ' yet (join code <b class="code">' + E(c.join_code || '') + '</b>).</p>'; return; }
+      return Promise.all([S.db.from('lesson_work').select('lesson,student_id,step,saved_at,answers').in('student_id', ids).gte('saved_at', since.toISOString()).order('saved_at', { ascending: false }).limit(3000),
+        S.db.from('quiz_attempts').select('student_id,status,started_at,submitted_at,last_seen,away_now,score,max_score,quizzes(title)').in('student_id', ids).gte('started_at', since.toISOString()).order('started_at', { ascending: false }).limit(1000)]).then(function (x) {
+        if (x[0].error) throw x[0].error;
+        var work = x[0].data || [], att = (x[1] && !x[1].error && x[1].data) || [], need = {};
+        work.forEach(function (w) { need[w.lesson] = 1; });
+        var ln = Object.keys(need);
+        return (ln.length ? S.db.from('lessons').select('external_id,title').in('external_id', ln) : Promise.resolve({ data: [] })).then(function (lr) {
+          var title = {}; (lr.data || []).forEach(function (l) { title[l.external_id] = l.title; });
+          var now = Date.now(), per = {};
+          kids.forEach(function (k) { per[k.id] = { k: k, lessons: {}, order: [], last: null, quiz: null }; });
+          work.forEach(function (w) { var P = per[w.student_id]; if (!P) return; var L = P.lessons[w.lesson];
+            if (!L) { L = P.lessons[w.lesson] = { id: w.lesson, steps: {}, last: w.saved_at, total: null }; P.order.push(w.lesson); }
+            L.steps[w.step] = 1; if (!L.total) { var m = /TOTAL=([0-9.]+ ?\/ ?[0-9.]+)/.exec(w.answers || ''); if (m) L.total = m[1].replace(/\s/g, ''); }
+            if (!P.last || w.saved_at > P.last) P.last = w.saved_at; });
+          att.forEach(function (a) { var P = per[a.student_id]; if (!P || P.quiz) return; P.quiz = a; var t = a.last_seen || a.submitted_at || a.started_at; if (t && (!P.last || t > P.last)) P.last = t; });
+          var chips = function (L) { var o = ''; for (var i = 1; i <= 6; i++) o += '<span class="stp' + (L && L.steps[i] ? ' on' : '') + '">' + i + '</span>'; return o; };
+          var rows = kids.map(function (k) { var P = per[k.id], qz = P.quiz, cur = P.order[0] ? P.lessons[P.order[0]] : null;
+            var qt = qz ? (qz.last_seen || qz.submitted_at || qz.started_at) : null, onQuiz = !!(qz && qz.status === 'in_progress' && (!cur || qt > cur.last));
+            var age = P.last ? (now - new Date(P.last)) / 60000 : 1e9, st;
+            if (onQuiz && qz.away_now) st = ['away', '<span class="pill new">🔴 Left the quiz page</span>'];
+            else if (age < 3) st = ['now', '<span class="pill ok">🟢 Working now</span>'];
+            else if (age < 15) st = ['pause', '<span class="pill t">🟡 Paused ' + Math.round(age) + ' min</span>'];
+            else if (P.last) st = ['earlier', '<span class="pill">⚪ Active ' + ago(P.last) + '</span>'];
+            else st = ['none', '<span class="pill" style="opacity:.7">○ No work ' + (days === 1 ? 'today' : 'in ' + days + ' days') + '</span>'];
+            var lastQuiz = qz && !onQuiz && (!cur || qt > cur.last);
+            var what = onQuiz ? '📝 ' + E((qz.quizzes || {}).title || 'Quiz') + ' <span class="small muted">in progress</span>' : lastQuiz ? '📝 ' + E((qz.quizzes || {}).title || 'Quiz') + ' <span class="small muted">handed in</span>' : cur ? '🧪 ' + E(title[cur.id] || cur.id) : '<span class="muted">–</span>';
+            var stepsCell = onQuiz || lastQuiz ? '' : cur ? chips(cur) + (cur.steps[6] || Object.keys(cur.steps).length >= 6 ? ' <span class="pill ok">✓ done</span>' : '') : '';
+            var marks = lastQuiz && qz.max_score ? E(qz.score + '/' + qz.max_score) : !onQuiz && cur && cur.total ? E(cur.total) : '';
+            var rest = P.order.filter(function (id) { return !cur || id !== cur.id || lastQuiz || onQuiz; });
+            var more = rest.map(function (id) { var L = P.lessons[id]; return '<div class="small">🧪 ' + E(title[id] || id) + ' ' + chips(L) + (L.total ? ' · ' + E(L.total) : '') + ' · ' + ago(L.last) + '</div>'; }).join('');
+            return { k: k, st: st, age: age, html: '<tr><td><b>' + E(k.full_name || '(no name)') + '</b></td><td>' + st[1] + '</td><td>' + what + (more ? '<details><summary class="small">' + rest.length + ' other lesson' + (rest.length === 1 ? '' : 's') + '</summary>' + more + '</details>' : '') + '</td><td>' + stepsCell + '</td><td>' + marks + '</td><td class="small">' + (P.last ? ago(P.last) : '–') + '</td></tr>' }; });
+          var rank = { now: 0, away: 1, pause: 2, earlier: 3, none: 4 }; rows.sort(function (a, b) { return rank[a.st[0]] - rank[b.st[0]] || a.age - b.age || (a.k.full_name || '').localeCompare(b.k.full_name || ''); });
+          var cnt = function (k) { return rows.filter(function (r) { return r.st[0] === k; }).length; };
+          body.innerHTML = '<div class="row2"><p style="margin:0"><b>🟢 ' + cnt('now') + ' working now</b> · <b style="color:#b45309">🟡 ' + cnt('pause') + ' paused</b>' + (cnt('away') ? ' · <b style="color:#b91c1c">🔴 ' + cnt('away') + ' left a quiz page</b>' : '') + ' · ⚪ ' + cnt('earlier') + ' active earlier · ○ ' + cnt('none') + ' no work</p>' +
+              '<label class="small">Show <select id="sdays"><option value="1"' + (days === 1 ? ' selected' : '') + '>Today</option><option value="7"' + (days === 7 ? ' selected' : '') + '>Last 7 days</option><option value="30"' + (days === 30 ? ' selected' : '') + '>Last 30 days</option></select></label></div>' +
+            bar([[cnt('now'), 'var(--ok)', 'working now'], [cnt('pause') + cnt('away'), '#f59e0b', 'paused'], [cnt('earlier'), '#94a3b8', 'active earlier'], [cnt('none'), '#e2e8f0', 'no work']], rows.length) +
+            '<p class="small muted">Updates by itself every 10 seconds (last update ' + new Date().toLocaleTimeString() + '). Steps light up as each student saves them; "Marks so far" counts the marked questions in the steps saved. Open <a href="#classes/' + c.id + '/lessons">🧪 Interactive lessons</a> to read a student\'s answers.</p>' +
+            '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Now</th><th>Working on</th><th>Steps saved</th><th>Marks so far</th><th>Last activity</th></tr>' + rows.map(function (r) { return r.html; }).join('') + '</table></div>';
+          body.querySelector('#sdays').onchange = function () { state.sdays = +this.value; state.reload(); };
+        });
+      });
     });
   }
   function lessonBoard(body, c, state) {
@@ -1966,7 +2017,7 @@
           (!CLASSES.length ? '<p class="panel tint">Start by <a href="#classes">creating a class</a>: choose the course you teach and its BioscienceVista lessons and quizzes are added for you.</p>' : '') +
           (nWait ? '<p class="panel tint"><b>' + nWait + ' student' + (nWait > 1 ? 's are' : ' is') + ' asking to join your classes.</b> <a class="btn main sm" href="#approvals">Review requests</a></p>' : '') +
           (CLASSES.length ? '<h3>🏫 My classes</h3><div class="ccards">' + CLASSES.map(function (c) { var k = per[c.id] || { ok: 0, wait: 0 };
-            return '<div class="ccard2" style="--k:' + hue(c.id) + '"><a href="#classes/' + c.id + '"><b>' + E(c.name) + '</b></a><span class="small">👥 ' + k.ok + ' student' + (k.ok === 1 ? '' : 's') + (k.wait ? ' · 🙋 ' + k.wait + ' waiting' : '') + '</span><span class="cc-main"><a href="#classes/' + c.id + '">Open class →</a><a href="#classes/' + c.id + '/todo">📌 Set work</a><a href="#classes/' + c.id + '/add">➕ Add lessons</a></span>' +
+            return '<div class="ccard2" style="--k:' + hue(c.id) + '"><a href="#classes/' + c.id + '"><b>' + E(c.name) + '</b></a><span class="small">👥 ' + k.ok + ' student' + (k.ok === 1 ? '' : 's') + (k.wait ? ' · 🙋 ' + k.wait + ' waiting' : '') + '</span><span class="cc-main"><a href="#classes/' + c.id + '">Open class →</a><a href="#classes/' + c.id + '/status">🟢 Live work status</a><a href="#classes/' + c.id + '/todo">📌 Set work</a><a href="#classes/' + c.id + '/add">➕ Add lessons</a></span>' +
               '<details class="cc-more"><summary>More</summary><span><a href="#classes/' + c.id + '/lessons">🧪 Lessons</a><a href="#classes/' + c.id + '/quizzes">📝 Quizzes</a><a href="#classes/' + c.id + '/register">🗒 Register</a><a href="#classes/' + c.id + '/activity">👀 Activity</a><a href="' + '/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a><a href="/live/?class=' + c.id + '">🎥 Live</a></span></details></div>'; }).join('') + '</div>' : '') +
                     '<section class="panel"><h3>Latest results</h3>' + (res.length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Task</th><th>Score</th></tr>' + res.map(function (r) { return '<tr><td>' + E(nm[r.student_id] || '–') + '</td><td>' + E(r.title) + '</td><td>' + E(r.score) + '/' + E(r.max_score) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="small muted">No results yet.</p>') + '</section>' + (ME.admin ? '' : '<section class="panel" id="rvbox"></section>');
         if (!ME.admin) reviewBox(p.querySelector('#rvbox'));
@@ -2149,7 +2200,7 @@
     box.innerHTML = '<section class="panel grp"><div class="row2 cband" style="--k:' + hue(c.id) + '"><div><h3 style="margin:0">' + E(c.name) + '</h3><p class="small muted">' + E([c.subject, c.level].filter(Boolean).join(' · ')) +
       (c.listed ? ' · students find it under <b>' + E(c.school_name || ME.profile.school_name || 'your name') + '</b>' : ' · hidden from the join list') + '</p></div>' +
       '<span class="cta"><button class="btn sm" type="button" id="sync" title="Add any new BioscienceVista lessons and quizzes for this course">⟳ Add new course lessons</button><button class="btn sm" type="button" id="edc">Edit</button><button class="btn sm" type="button" id="carc" title="Archive this class: students keep their results; you can restore it later">🗄 Archive</button></span></div><div id="edbox"></div>' +
-      '<p class="qlinks"><a style="--k:#0d9488" href="#classes/' + c.id + '">📂 Open the class page: to-do list, register, results, whiteboard, live lessons →</a></p>' +
+      '<p class="qlinks"><a style="--k:#16a34a" href="#classes/' + c.id + '/status">🟢 Live work status: what each student is doing now →</a><a style="--k:#0d9488" href="#classes/' + c.id + '">📂 Open the class page: to-do list, register, results, whiteboard, live lessons →</a></p>' +
       '<div class="cchips" role="tablist">' + tabs.map(function (t, i) { return '<button type="button" class="cchip' + (TC.tab === t[0] ? ' on' : '') + '" style="--k:' + ['#4f46e5', '#0d9488', '#ca8a04', '#ea580c'][i] + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="tab"></div></section>';
     box.querySelector('#edc').onclick = function () { classForm(box.querySelector('#edbox'), c, p); };
     box.querySelector('#carc').onclick = function () {
