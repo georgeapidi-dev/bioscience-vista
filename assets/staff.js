@@ -1743,14 +1743,14 @@
       var rows = x[0].data || [], em = {}; (x[1].data || []).forEach(function (u) { em[u.user_id] = u.email; });
       if (!rows.length) { p.innerHTML = '<p class="emptybox">Nobody is waiting for approval. New sign-ups appear here.</p>'; return; }
       p.innerHTML = '<div class="row2"><p><b>' + rows.length + '</b> waiting for approval</p><button class="btn main sm" type="button" id="all">✓ Approve all ' + rows.length + '</button></div>' +
-        '<div class="tablewrap"><table class="marks"><tr><th>Name</th><th>Email</th><th>Class</th><th>Signed up</th><th></th></tr>' + rows.map(function (r) {
-          return '<tr data-row="' + r.student_id + '"><td><b>' + E(r.full_name || '(no name)') + '</b></td><td class="small">' + E(em[r.student_id] || '') + '</td><td>' + E(r.class_name || 'no class') + '</td><td class="small">' + E(S.when(r.created_at)) + '</td>' +
-            '<td><button class="btn main sm" type="button" data-ok="' + r.student_id + '"' + (r.class_id ? '' : ' disabled title="Not in a class yet"') + '>✓ Approve</button> ' + removeButtons(r.student_id, !!r.class_id) + '</td></tr>'; }).join('') + '</table></div>' +
-        '<p class="small muted">Approve gives the person their lessons, quizzes and simulations straight away. "Remove from class" sends them back to the join-a-class screen; "Delete account" removes them completely.</p>';
-      function approve(ids) { return S.db.from('profiles').update({ approved: true }).in('id', ids); }
+        '<div class="tablewrap"><table class="marks"><tr><th>Name</th><th>Email</th><th>Account</th><th>Class</th><th>Signed up</th><th></th></tr>' + rows.map(function (r) {
+          return '<tr data-row="' + r.student_id + '"><td><b>' + E(r.full_name || '(no name)') + '</b></td><td class="small">' + E(em[r.student_id] || '') + '</td><td>' + E(r.account_type || 'student') + (r.admin_ok === false ? ' <span class="pill">needs site admin</span>' : '') + '</td><td>' + E(r.class_name || 'no class') + '</td><td class="small">' + E(S.when(r.created_at)) + '</td>' +
+            '<td><button class="btn main sm" type="button" data-ok="' + r.student_id + '"' + (r.class_id || ME.admin ? '' : ' disabled title="Not in a class yet"') + '>✓ Approve</button> ' + removeButtons(r.student_id, !!r.class_id) + '</td></tr>'; }).join('') + '</table></div>' +
+        '<p class="small muted">Only accounts approved by the site admin can open materials (visitors see the catalogue only). Approve gives the person their lessons, quizzes and simulations straight away. "Remove from class" sends them back to the join-a-class screen; "Delete account" removes them completely.</p>';
+      function approve(ids) { return S.db.from('profiles').update(ME.admin ? { approved: true, admin_ok: true } : { approved: true }).in('id', ids); }
       p.querySelectorAll('[data-ok]').forEach(function (b) { b.onclick = function () { b.disabled = true; approve([b.getAttribute('data-ok')]).then(function (r) {
         if (!ok(r, 'Approved')) { b.disabled = false; return; } var tr = p.querySelector('[data-row="' + b.getAttribute('data-ok') + '"]'); tr.style.opacity = .5; b.textContent = '✓ Approved'; }); }; });
-      p.querySelector('#all').onclick = function () { var ids = rows.filter(function (r) { return r.class_id; }).map(function (r) { return r.student_id; }); approve(ids).then(function (r) { if (ok(r, ids.length + ' approved')) approvals(p); }); };
+      p.querySelector('#all').onclick = function () { var ids = rows.filter(function (r) { return r.class_id || ME.admin; }).map(function (r) { return r.student_id; }); approve(ids).then(function (r) { if (ok(r, ids.length + ' approved')) approvals(p); }); };
       wireRemove(p, function () { approvals(p); });
     });
   }

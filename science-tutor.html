@@ -16,7 +16,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "j4vb6bK3NKUpQPg9", "ct": "rAAMjHZASIptf9Zs109a2D25igX51LZbTiVUa52tBe+KO8pbHxUrtUDvPPTy2DmqtjR4a1tLcJmf3NaZ/gdo9rw6/e2Yw7zUhwbxTeQxyg2Sx1I11AtCnydJ1+9wPAVftfqOOT3HXygiZRovAGQsQ4XqpBbnkd9L66MVsuQnglT6pJf8VOw86VzrSLxpz1Qdvx+ZyVtMIn6egzdxAwXLix6Y0tibkbEZAxhURVuhuPqd8klwuSbZzMUpAWTpvzjXQ+7Ro1cIFkKPtLRO/5UfjN30o1pdJijzegUYl58xoETrjaI6gC/xj6Edcf+XSEfm+D+ky25nQA9zJI4O+1x/L880G13zMbLhKnKNloJvFobovEHEymC0UTj1lUo0kRB4YEfEHypQ+O13rthtbbdazR1qp978FuP0Yk7aaUfaP3SRGlW8KsLUu2a3jDZcbPoKANmKM4wqb9Db91zzRd32X5+KgvWcbyQzu0++ok68x9zaFj+rjWKwTQbbQfhmoFCYzOEdkjaFxaAp6aaHqT3/Qc6JyBD9lIqiNXwVuLDHYdtL2IXlUN0V/7fmUexeeHGJybCZ/0Hgc+rqh/5jLgubPNQr/kgpbsJhAsxs2FwImbVQ18SnF20UEMrx/0JSh2E3kB7G27PZVtzqurRlTUe4sIg4y/6EuqhpTjfvqt98"};
+var P = {"v": "1d5badf4", "iv": "lrWnDkw2voIrEGkq", "ct": "jldmpE3YtjlTznm8SIjkMw3TMkFYFn0X8h7i+F+sb1bWTinWYfBCyF3itawlYlj7jGY6m+ZvGPYTCJ3TDrwTHIE/D7kUDK4m7CXzi3PW3wmuIKBR23wmuVpFUVvowKBoC69Plu+04eBCH3CbW/Scl0wTjPL0KBEgQlHY0VpmHYMT8s67T1Tn/i+OCUSmfIcPWFyRnhsmSimcBIbQZNUGPBIWAuvNMw1ayzInCvJzOP9Ud0kKXYpvBGolM82MrRw0CMYO28jB59MwejiDaX3wLx1ggNTFfOSPfQJlYZUF8nZ3RJfb1Ggp4K0R82ULS5VOjvpPnrolP9ySQ8bN/dD17fVNOkQMlK6eV389RIbLnUhIJ+LH43xB2ZpCVdE/FvljquAHYEdlegzY6mvlroJEv2qCYUTILnXwjPU8ZNLbmM0u3B4mgmBrAV/wHKtjqOjOKNODiGEtOaP3jDaWdfyd3vboTRQ0NgkII9NYtrk3zu9YHtlaBIPwihIRqIhM+Jnz5nGtgzdiEBZW2y0y8iUegq97QNxtCslsksr7Usf79uY8wdWS4UDIbLMWfzjEwY3rK+e7FCnq/KMOu2wk2nPmOtFUIMmIaG1gXfzsFtDSpYN6mxm8S2l0qWaJU5XjD+nvC8KcQd6dPpb3eBlN+lcuP5xmwPOCyIQjVBRvkntTg/uzJNTOtROaUdj13cFKnjveJTfaJs+zyersCsrkJhWZYr4="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -34,7 +34,8 @@ var P = {"v": "1d5badf4", "iv": "j4vb6bK3NKUpQPg9", "ct": "rAAMjHZASIptf9Zs109a2
   try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('mas-key-') === 0) localStorage.removeItem(k); }); } catch (e) {}
   var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } });
   db.auth.getSession().then(function (r) {
-    var s = r.data && r.data.session; if (!s) return login();
+    var s = r.data && r.data.session, T = (document.title || '').replace(/ · BioscienceVista$/, '').replace(/</g, '&lt;');
+    if (!s) return say('<h1>🔒 ' + T + '</h1><p>This material is for members of BioscienceVista. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
     if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });
@@ -42,8 +43,9 @@ var P = {"v": "1d5badf4", "iv": "j4vb6bK3NKUpQPg9", "ct": "rAAMjHZASIptf9Zs109a2
     function fetchKey() {
       return (P.p ? db.rpc('page_key', { p: P.p }) : db.rpc('site_key')).then(function (x) {
         if (x.error) throw x.error;
-        if (!x.data) return say(P.p ? '<h1>This page is not in your classes</h1><p>You can open the classes and lessons you have joined. To see this one, join its class from your dashboard; your teacher approves it. Premium access is needed for class materials.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'
-          : '<h1>Not open yet</h1><p>You are signed in. Class materials open when you have premium access and your teacher has approved you for a class.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>');
+        if (!x.data) return db.rpc('admin_ok').then(function (ok) { if (ok.data === false) return say('<h1>⏳ Waiting for approval</h1><p>Thank you for signing up. The site admin checks every new account before it can open materials. You will be able to open this page as soon as your account is approved.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>'); notOpen(); }, notOpen);
+        function notOpen() { return say(P.p ? '<h1>This page is not in your classes</h1><p>You can open the classes and lessons you have joined. To see this one, join its class from your dashboard; your teacher approves it. Premium access is needed for class materials.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'
+          : '<h1>Not open yet</h1><p>You are signed in. Class materials open when you have premium access and your teacher has approved you for a class.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'); }
         return open(x.data).then(function () { try { sessionStorage.setItem(C, x.data); } catch (e) {} },
           function () { say('<h1>This page was updated</h1><p>Reload to open the newest version.</p><a class="btn" href="' + here + '">Reload</a>'); });
       });

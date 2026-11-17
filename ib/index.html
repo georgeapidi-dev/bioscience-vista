@@ -16,7 +16,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "9ho4dPoUP7Inq8hy", "ct": "FkF2M1GGEmt00RGvIKpAYlZHqocH0YEoCe0s+1HvsAt0lTDR7PgWF7VvRtmSeJMIzQQ58WeyRxk7tughCPqLS0zblXUGXCUpeudPW3FO67mEsGTUIGAfGn8tkkHhmX5u+z9lkPVac5GjYgr1Dl1eYLXoBD0Tp3g1zz7t25QIU1u/9lEmLSd2srl6J0nWDGH6OOIkXjo/A2J8B+rLQKe7KIcdxtCZEnYH/5+4gyoMe5rizRVRl0suoCN3ytYvoUS9tm30OjHZCRuEjwySJTk3/8Lv9VeDNQnl4HABK0s7oSU6b4FQr0qV9O4j4HFaYeuTX/RX4pa22pQdkGJGb+Lui4O6RfzuBMUIxSwIks0vjNM661IRqY5xXR8IsLqKVENtJ5E="};
+var P = {"v": "1d5badf4", "iv": "ctDvZtnEbcXOpC3i", "ct": "W6TTSt/wnX60AtwcGSUb1uu0PFZsvSlNaI0/hC0N5WRpxmf0Uoz43TQcYwjnMlHPYg9uGAl5W3QqXJv9d127Xn7ZnCDT5VHwED+eEpMx7UT3FfUfShYePEqmKI+PbXkIr1EMK1lNE9KUmbkJhT/utEcBmoL0m+lYwiP9icKo9k3JlOZPKH5ZsqRolNGQbGYHLEpklhjenLDeptFcERez7QT6bq+qNv1GtLeXfMUR51ox590OWV5/xk4ioXvgOXBTEXxha+jCpTcbj3VKxKEjzYQFSl3mbKPffwNb7yrI5rBptpkd3G/2z3ClgVPrd/LDBmwzi8Syn7NVN14lKVcTtquUX0iHqhYHMaVVDM+hZqoz1SwSfHBVQQYf9KBi+Qw+DUosZJ6GAtYzUp9hnIu1kVnQp9uhetckpmiCzGOLH5wN4tc80w=="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -34,7 +34,8 @@ var P = {"v": "1d5badf4", "iv": "9ho4dPoUP7Inq8hy", "ct": "FkF2M1GGEmt00RGvIKpAY
   try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('mas-key-') === 0) localStorage.removeItem(k); }); } catch (e) {}
   var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } });
   db.auth.getSession().then(function (r) {
-    var s = r.data && r.data.session; if (!s) return login();
+    var s = r.data && r.data.session, T = (document.title || '').replace(/ · BioscienceVista$/, '').replace(/</g, '&lt;');
+    if (!s) return say('<h1>🔒 ' + T + '</h1><p>This material is for members of BioscienceVista. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
     if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });
@@ -42,8 +43,9 @@ var P = {"v": "1d5badf4", "iv": "9ho4dPoUP7Inq8hy", "ct": "FkF2M1GGEmt00RGvIKpAY
     function fetchKey() {
       return (P.p ? db.rpc('page_key', { p: P.p }) : db.rpc('site_key')).then(function (x) {
         if (x.error) throw x.error;
-        if (!x.data) return say(P.p ? '<h1>This page is not in your classes</h1><p>You can open the classes and lessons you have joined. To see this one, join its class from your dashboard; your teacher approves it. Premium access is needed for class materials.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'
-          : '<h1>Not open yet</h1><p>You are signed in. Class materials open when you have premium access and your teacher has approved you for a class.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>');
+        if (!x.data) return db.rpc('admin_ok').then(function (ok) { if (ok.data === false) return say('<h1>⏳ Waiting for approval</h1><p>Thank you for signing up. The site admin checks every new account before it can open materials. You will be able to open this page as soon as your account is approved.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>'); notOpen(); }, notOpen);
+        function notOpen() { return say(P.p ? '<h1>This page is not in your classes</h1><p>You can open the classes and lessons you have joined. To see this one, join its class from your dashboard; your teacher approves it. Premium access is needed for class materials.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'
+          : '<h1>Not open yet</h1><p>You are signed in. Class materials open when you have premium access and your teacher has approved you for a class.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'); }
         return open(x.data).then(function () { try { sessionStorage.setItem(C, x.data); } catch (e) {} },
           function () { say('<h1>This page was updated</h1><p>Reload to open the newest version.</p><a class="btn" href="' + here + '">Reload</a>'); });
       });

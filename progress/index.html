@@ -16,7 +16,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "M4DQQQxjbdM6JR5N", "ct": "B922Wvvtt4SQD7mLlZAXqGGi1Fc/E/FDf0L9+/fXayINu8De45EyAPnbYlPjfLKs1Qb7llmGkQptvIKJfCnEywWEmut1sSAbTcMq3FQECQDpGowZFs2tBjcld/LQ6vV+O6d8i8XhPySgbjGJYllopfQD86P2VMuJ/0dQMSPOMncMKw3efGIYb3rmzG20omzWM9VgkzxbCjLdNB6IZ+cMxyySytxpwnojGe7vMRAoxicfyV5VGusFuK+lGKnmb/3iKYaq3s+VIZ0cpOA6ut+HonCCp56CPY/9HWS8LSnH06EtOSFP1waCZEOgrPZInroqwyRgTJQjAH1k5vQVLHfvr6JZX1hIeZ6WmyjNwy5K4Z1IrJKrZyIhAYeyJH2JKKspIbMozTJZk58tIVtSwd658LvtDhNGvtMuFwUMVuhYUB+/bPR3TIHMZwGQp1Jr/MlQfT9j0Loog9d80jBa1GL+CXYH2gxkmoVAvl5iwzzzs5hMWqfkuXcjbMCuFdV7L8gshMzVgfg5D3KnjB9Pc8uqerUeW9TYLAYYzvKuwP8="};
+var P = {"v": "1d5badf4", "iv": "+tlZ2VVfyxUhcu3o", "ct": "hqlI+3HjNUzrg/wPRDCVmdWPhUuVyrKSwSSGfdgaPlOrduNm/Gl3r6MXFk4EmMXnrV22ycz+5Gr350JQbW+4mQ1y1qAoT24nt08yHSGZz7CEKdAlHHFfW7rbz3EOBd984r/IunWfiYTqFxU7c1hk1UUeNwIdJWru1jE6awcGFOByJEvhEIrXJJDmpYCstEAM1T8rOgTAv/ZGxQ5Ok39bVE9gv27+cybVZRous70AfeVZYivLHfqntu6Py7PD07Fwm4re0w+wsqt6mg49PvoYadXFTeQkakdVgTAxjOMQ/J8OJ6EjQwGmejX1jXpWCvVCAr6ANqCx5hvEyJhPgtgMr8nDKPNQgaaZ7UqOYgVgqR+ruC3cHlEHkPjcPkK3SOihn5goku/aKQjwBYCn2puANDdnYrlYti0gJsKbL7uZ4aA18ncMHUegeN+2p6gWEXPyGiFau1GH607r8s++Qz1BahmZUbslXFsnqCglKr9zCmVZflKnvekmvILypCI4SK2L6Nc/O0qgsehwO8YkZLQlqZJ6VoSSaBOJuafB10gOYSl8p01CDXZdl/1sWBDwM+HADjoKQBJ0g3bhe2AQCsMlcQ=="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -34,7 +34,8 @@ var P = {"v": "1d5badf4", "iv": "M4DQQQxjbdM6JR5N", "ct": "B922Wvvtt4SQD7mLlZAXq
   try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('mas-key-') === 0) localStorage.removeItem(k); }); } catch (e) {}
   var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } });
   db.auth.getSession().then(function (r) {
-    var s = r.data && r.data.session; if (!s) return login();
+    var s = r.data && r.data.session, T = (document.title || '').replace(/ · BioscienceVista$/, '').replace(/</g, '&lt;');
+    if (!s) return say('<h1>🔒 ' + T + '</h1><p>This material is for members of BioscienceVista. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
     if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });
@@ -42,8 +43,9 @@ var P = {"v": "1d5badf4", "iv": "M4DQQQxjbdM6JR5N", "ct": "B922Wvvtt4SQD7mLlZAXq
     function fetchKey() {
       return (P.p ? db.rpc('page_key', { p: P.p }) : db.rpc('site_key')).then(function (x) {
         if (x.error) throw x.error;
-        if (!x.data) return say(P.p ? '<h1>This page is not in your classes</h1><p>You can open the classes and lessons you have joined. To see this one, join its class from your dashboard; your teacher approves it. Premium access is needed for class materials.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'
-          : '<h1>Not open yet</h1><p>You are signed in. Class materials open when you have premium access and your teacher has approved you for a class.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>');
+        if (!x.data) return db.rpc('admin_ok').then(function (ok) { if (ok.data === false) return say('<h1>⏳ Waiting for approval</h1><p>Thank you for signing up. The site admin checks every new account before it can open materials. You will be able to open this page as soon as your account is approved.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>'); notOpen(); }, notOpen);
+        function notOpen() { return say(P.p ? '<h1>This page is not in your classes</h1><p>You can open the classes and lessons you have joined. To see this one, join its class from your dashboard; your teacher approves it. Premium access is needed for class materials.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'
+          : '<h1>Not open yet</h1><p>You are signed in. Class materials open when you have premium access and your teacher has approved you for a class.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'); }
         return open(x.data).then(function () { try { sessionStorage.setItem(C, x.data); } catch (e) {} },
           function () { say('<h1>This page was updated</h1><p>Reload to open the newest version.</p><a class="btn" href="' + here + '">Reload</a>'); });
       });
