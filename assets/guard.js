@@ -4,7 +4,10 @@
    (so screenshots and photos can be traced), and no right-click, copying, dragging, printing or saving of the page.
    The site admin and teachers are not restricted. Typing in answer boxes still works normally. */
 (function () {
-  if (!window.BV_LOCKED || window.BV_GUARD) return; window.BV_GUARD = 1;
+  // 17 Nov 2026 (admin): signed-up students and teachers are NOT restricted (now or in future); only visitors are kept out,
+  // and they never reach a locked page. So the watermark and copy blocks are switched off.
+  var ENABLED = false;
+  if (!ENABLED || !window.BV_LOCKED || window.BV_GUARD) return; window.BV_GUARD = 1;
   var BV = window.BV || {}, sess = null;
   try { Object.keys(localStorage).forEach(function (k) { if (/^sb-.*-auth-token$/.test(k)) { var v = JSON.parse(localStorage.getItem(k)); sess = v && (v.currentSession || v); } }); } catch (e) {}
   var user = sess && sess.user; if (!user) return;
