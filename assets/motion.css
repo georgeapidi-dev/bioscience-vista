@@ -61,7 +61,7 @@ header.top.scrolled{box-shadow:0 6px 24px rgba(15,23,42,.10);backdrop-filter:sat
 .hm-dna{position:absolute;right:-4%;top:38%;width:90px;height:220px;opacity:.9;z-index:1}
 .hm-dna circle{animation:lv-float 3s ease-in-out infinite}
 .hm-atom{position:absolute;left:44%;top:-4%;width:86px;height:86px;animation:lv-spin 14s linear infinite;z-index:1;opacity:.95}
-.hm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 18px}
+.hm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 18px}
 @media (max-width:700px){.hm-stats{grid-template-columns:repeat(2,1fr)}}
 .hm-stats div{border-radius:20px;padding:18px;background:var(--raised);border:1px solid var(--line);box-shadow:var(--shadow);position:relative;overflow:hidden}
 .hm-stats div::after{content:"";position:absolute;inset:auto -30% -60% auto;width:120px;height:120px;border-radius:50%;background:var(--k,#2dd4bf);opacity:.12}
