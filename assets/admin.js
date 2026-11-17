@@ -150,7 +150,7 @@
   /* asking approved students to pay for premium: a message (also emailed when email notices are on) and the premium page when they next sign in */
   var ASKPAY = null;   // admin setting 'ask_pay': 'on' (default) or 'off'
   function askPaySetting() { if (ASKPAY !== null) return Promise.resolve(ASKPAY); return S.db.from('app_settings').select('v').eq('k', 'ask_pay').maybeSingle().then(function (r) { ASKPAY = !(r.data && r.data.v === 'off'); return ASKPAY; }, function () { ASKPAY = true; return ASKPAY; }); }
-  var PAYMSG = '💳 Premium: you have been approved on BioscienceVista. To open your lessons, quizzes and simulations, please pay for premium here: https://biosciencevista.com/premium/ (PayPal, card or M-Pesa). Thank you!';
+  var PAYMSG = '💳 Premium: you have been approved on BioscienceVista. To open your lessons, quizzes and simulations, please pay for premium here: https://biosciencevista.com/premium/ (M-Pesa or bank transfer). Thank you!';
   function hasPrem(m) { return !!(m && (m.premium_free || (m.premium_until && new Date(m.premium_until) > new Date()))); }
   function askPay(ids, force) {   // ids of students; only those without premium are asked
     return (force ? Promise.resolve(true) : askPaySetting()).then(function (on) {
