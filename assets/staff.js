@@ -2093,6 +2093,38 @@
         S.db.from('classes').update(row).eq('id', c.id).then(function (r) { if (!ok(r)) return;
           (course !== c.course ? S.db.rpc('set_class_course', { cid: c.id, course_slug: course }) : Promise.resolve({})).then(function (x) { if (ok(x, 'Saved')) teachClasses(p); }); }); };
       var ar = box.querySelector('#carch'); if (ar) ar.onclick = function () { S.db.from('classes').update({ active: !c.active }).eq('id', c.id).then(function (r) { if (ok(r, c.active ? 'Class closed' : 'Class reopened')) teachClasses(p); }); };
+      if (c) transferBox(box, c, p);
+    });
+  }
+  /* Edit class → transfer students to another of the teacher's classes (17 Nov 2026, admin). Results stay with each student. */
+  function transferBox(box, c, p) {
+    var others = CLASSES.filter(function (o) { return o.id !== c.id && o.owner_kind !== 'main'; }), d = document.createElement('section');
+    d.className = 'panel grp'; d.style.marginTop = '12px'; box.appendChild(d);
+    if (!others.length) { d.innerHTML = '<h4 style="margin:0">🔀 Transfer students</h4><p class="small muted">Make another class first; then you can move students into it here.</p>'; return; }
+    d.innerHTML = '<p class="small muted">Loading students…</p>';
+    S.db.from('enrolments').select('student_id').eq('class_id', c.id).eq('status', 'approved').then(function (r) {
+      var ids = (r.data || []).map(function (e) { return e.student_id; });
+      if (!ids.length) { d.innerHTML = '<h4 style="margin:0">🔀 Transfer students</h4><p class="small muted">No students in this class yet.</p>'; return; }
+      S.db.from('profiles').select('id,full_name').in('id', ids).then(function (pr) {
+        var nm = {}; (pr.data || []).forEach(function (x) { nm[x.id] = x.full_name || 'Student'; }); ids.sort(function (a, b) { return (nm[a] || '').localeCompare(nm[b] || ''); });
+        d.innerHTML = '<h4 style="margin:0 0 6px">🔀 Transfer students to another class</h4><p class="small muted">Tick the students, choose the class and press Transfer. Their past results and work stay with them.</p>' +
+          '<div class="row2" style="gap:8px;align-items:center;flex-wrap:wrap"><label class="chk" style="margin:0"><input type="checkbox" id="tr-all"> Select all (' + ids.length + ')</label>' +
+          '<select id="tr-to" aria-label="Move to class"><option value="">Move to…</option>' + others.map(function (o) { return '<option value="' + o.id + '">' + E(o.name) + '</option>'; }).join('') + '</select>' +
+          '<button type="button" class="btn main sm" id="tr-go">🔀 Transfer</button><span class="small muted" id="tr-n"></span></div>' +
+          '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:4px;margin-top:8px;max-height:280px;overflow:auto">' + ids.map(function (id) { return '<label class="chk" style="margin:0"><input type="checkbox" data-tr="' + id + '"> ' + E(nm[id] || 'Student') + '</label>'; }).join('') + '</div>';
+        var boxes = function () { return [].slice.call(d.querySelectorAll('[data-tr]')); }, count = function () { var n = boxes().filter(function (x) { return x.checked; }).length; d.querySelector('#tr-n').textContent = n ? n + ' selected' : ''; };
+        d.querySelector('#tr-all').onchange = function () { var on = this.checked; boxes().forEach(function (x) { x.checked = on; }); count(); };
+        boxes().forEach(function (x) { x.onchange = count; });
+        d.querySelector('#tr-go').onclick = function () {
+          var to = d.querySelector('#tr-to').value, sel = boxes().filter(function (x) { return x.checked; }).map(function (x) { return x.getAttribute('data-tr'); }), btn = this;
+          if (!sel.length) return toast('Tick at least one student.', true); if (!to) return toast('Choose the class to move them to.', true);
+          var name = d.querySelector('#tr-to').selectedOptions[0].text;
+          if (!confirm('Move ' + sel.length + ' student' + (sel.length > 1 ? 's' : '') + ' from ' + c.name + ' to ' + name + '?')) return;
+          btn.disabled = true; var done = 0, fail = 0;
+          sel.reduce(function (pr, sid) { return pr.then(function () { return S.db.rpc('teacher_move_student', { sid: sid, from_cid: c.id, to_cid: to }).then(function (x) { if (x.error) fail++; else done++; }); }); }, Promise.resolve())
+            .then(function () { toast(done + ' moved to ' + name + (fail ? ' · ' + fail + ' could not be moved' : ''), !!fail); refs().then(function () { teachClasses(p); }); });
+        };
+      });
     });
   }
   /* Students in a teacher's class see only the lessons added to the class. They can ask for another BioscienceVista lesson; the teacher decides here.
