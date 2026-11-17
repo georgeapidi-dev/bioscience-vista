@@ -320,7 +320,7 @@
   function payments(t) {
     S.db.rpc('admin_payments').then(function (r) {
       if (r.error) return fail(t, r);
-      var rows = r.data || [], MAN = { mpesa: 'M-Pesa', payoneer: 'Payoneer', paypalme: 'PayPal.Me', bank: 'Bank transfer', link: 'Payment link' }, wait = rows.filter(function (y) { return MAN[y.method] && y.status === 'pending'; });
+      var rows = r.data || [], MAN = { mpesa: 'M-Pesa', usd_bank: 'USD bank transfer', payoneer: 'Payoneer', paypalme: 'PayPal.Me', bank: 'Bank transfer', link: 'Payment link' }, wait = rows.filter(function (y) { return MAN[y.method] && y.status === 'pending'; });
       t.innerHTML = '<h3>Payments to check (' + wait.length + ')</h3><p class="small">M-Pesa, PayPal.Me, bank transfers and payment-link payments wait here. Find the transaction ID in your M-Pesa messages, PayPal activity or bank statement and check the amount before confirming. Confirming starts the premium time straight away.</p>' +
         (wait.length ? wait.map(function (y) { return '<div class="row2" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><span class="pill">' + E(MAN[y.method]) + '</span> <b>' + E(y.mpesa_code) + '</b> · ' + E(y.currency) + ' ' + E(Number(y.amount).toLocaleString()) + ' · ' + E(y.plan) + '<br><span class="small">' + E(y.full_name || '') + ' (' + E(y.email || '') + ') · paid from ' + E(y.payer_phone || '') + (y.payer_name ? ' · ' + E(y.payer_name) : '') + ' · ' + E(S.when(y.created_at)) + (y.donor_message ? '<br>“' + E(y.donor_message) + '”' : '') + '</span></span>' +
           '<span class="cta"><button class="btn main sm" data-ok="' + E(y.reference) + '">Confirm</button><button class="btn sm" data-no="' + E(y.reference) + '">Not received</button></span></div>'; }).join('') : '<p class="small muted">Nothing waiting.</p>') +
@@ -334,8 +334,8 @@
     Promise.all([S.db.from('plans').select('*').order('sort'), S.db.from('app_settings').select('k,v')]).then(function (x) {
       if (x[0].error) return fail(t, x[0]);
       var set = {}; (x[1].data || []).forEach(function (r) { set[r.k] = r.v; });
-      t.innerHTML = '<h3>Prices</h3><p class="small">A price of 0 hides that way of paying for the plan. Payoneer (or PayPal) is charged in US dollars; M-Pesa in Kenya shillings.</p>' +
-        '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Plan</th><th>For</th><th>Months</th><th>Payoneer / card (USD)</th><th>M-Pesa (KES)</th><th>On sale</th></tr></thead><tbody>' +
+      t.innerHTML = '<h3>Prices</h3><p class="small">A price of 0 hides that way of paying for the plan. The USD bank transfer uses the USD price; M-Pesa uses the Kenya-shilling price.</p>' +
+        '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Plan</th><th>For</th><th>Months</th><th>USD price</th><th>M-Pesa (KES)</th><th>On sale</th></tr></thead><tbody>' +
         (x[0].data || []).map(function (p) { return '<tr data-plan="' + E(p.code) + '"><td><input data-f="name" value="' + E(p.name) + '" maxlength="60"></td><td>' + E(p.audience) + '</td><td><input data-f="months" type="number" min="1" max="24" value="' + p.months + '" style="width:5em"></td>' +
           '<td><input data-f="amount" type="number" min="0" step="0.01" value="' + p.amount + '" style="width:7em"></td><td><input data-f="amount_kes" type="number" min="0" step="1" value="' + p.amount_kes + '" style="width:7em"></td><td><input data-f="active" type="checkbox"' + (p.active ? ' checked' : '') + '></td></tr>'; }).join('') +
         '</tbody></table></div><button class="btn main sm" id="savep">Save prices</button><p class="msg" id="pm"></p>' +
@@ -343,12 +343,11 @@
         '<label class="f">M-Pesa number students send money to<input id="s_mpesa_number" value="' + E(set.mpesa_number || '') + '" placeholder="e.g. 0712 345 678" inputmode="tel"></label>' +
         '<label class="f">Name shown on M-Pesa for that number<input id="s_mpesa_name" value="' + E(set.mpesa_name || '') + '" maxlength="60"></label>' +
         '<label class="f">PayPal client ID (only used when no Payoneer link is saved; leave empty to switch PayPal off)<input id="s_paypal_client_id" value="' + E(set.paypal_client_id || '') + '" autocomplete="off"></label>' +
-        '<h4>💳 Payoneer (replaces PayPal on the premium page once a link is saved)</h4><p class="small muted">In Payoneer, open <b>Get paid → Request a payment</b> (or your Payoneer Checkout payment link) and create a link the payer can pay by card or bank. Paste one link for every plan, or a separate link for each plan (with its amount). Payers type the transaction ID; you confirm it under 💳 Payments.</p>' +
-        '<label class="f">Payoneer payment link for all plans<input id="s_payoneer_link" value="' + E(set.payoneer_link || '') + '" placeholder="https://…payoneer.com/…" autocomplete="off"></label>' +
-        (x[0].data || []).map(function (p) { return '<label class="f">Payoneer link for "' + E(p.name) + '" (' + E(p.currency || 'USD') + ' ' + E(p.amount) + ', optional)<input id="s_payoneer_' + E(p.code) + '" data-pyk="payoneer_' + E(p.code) + '" value="' + E(set['payoneer_' + p.code] || '') + '" placeholder="https://…" autocomplete="off"></label>'; }).join('') +
+        '<h4>🏦 USD bank account (shown on the premium and donate pages in place of PayPal and Payoneer)</h4><p class="small muted">Type exactly what a payer needs for an international or local US-dollar transfer: bank name, account name, account number, branch, SWIFT/BIC code and bank address. Payers type their bank reference; you confirm it under 💳 Payments when the money arrives.</p>' +
+        '<label class="f">USD bank account details<textarea id="s_usd_bank_details" rows="6" maxlength="800" placeholder="Bank: …&#10;Account name: …&#10;Account number (USD): …&#10;Branch: …&#10;SWIFT/BIC: …&#10;Bank address: …">' + E(set.usd_bank_details || '') + '</textarea></label>' +
         '<h4>Other ways to pay (optional)</h4>' +
         '<label class="f">PayPal.Me name or link (e.g. georgeapidi or https://paypal.me/georgeapidi)<input id="s_paypalme" value="' + E(set.paypalme || '') + '" autocomplete="off"></label>' +
-        '<label class="f">Bank transfer details shown to payers (bank, account name, account number, branch, SWIFT; or Airtel Money number)<textarea id="s_bank_details" rows="4" maxlength="600">' + E(set.bank_details || '') + '</textarea></label>' +
+        '<label class="f">Kenya-shilling bank or Airtel Money details (optional; paid in KES)<textarea id="s_bank_details" rows="4" maxlength="600">' + E(set.bank_details || '') + '</textarea></label>' +
         '<label class="f">Your own payment page link (Pesapal, Flutterwave, Paystack, Stripe payment link …)<input id="s_pay_link" value="' + E(set.pay_link || '') + '" placeholder="https://…" autocomplete="off"></label>' +
         '<label class="f">Name of that payment page (shown on the button)<input id="s_pay_link_name" value="' + E(set.pay_link_name || '') + '" maxlength="40" placeholder="e.g. Card or Airtel Money (Pesapal)"></label>' +
         '<label class="f">Charity line (shown on the premium and donate pages)<input id="s_charity_note" value="' + E(set.charity_note || '') + '" maxlength="200"></label>' +
@@ -360,7 +359,7 @@
           return S.db.from('plans').update({ name: g('name').value.trim(), months: +g('months').value, amount: +g('amount').value || 0, amount_kes: +g('amount_kes').value || 0, active: g('active').checked }).eq('code', tr.getAttribute('data-plan')); }))
           .then(function (rs) { var e = rs.filter(function (r) { return r.error; })[0]; m.className = e ? 'msg' : 'msg ok'; m.textContent = e ? S.nice(e.error) : 'Prices saved.'; }); };
       t.querySelector('#saves').onclick = function () { var m = t.querySelector('#sm');
-        var rows = ['mpesa_number', 'mpesa_name', 'paypal_client_id', 'premium_note', 'charity_note', 'paypalme', 'bank_details', 'pay_link', 'pay_link_name', 'payoneer_link'].concat([].map.call(t.querySelectorAll('[data-pyk]'), function (i) { return i.getAttribute('data-pyk'); })).map(function (k) { return { k: k, v: t.querySelector('#s_' + k).value.trim() }; });
+        var rows = ['mpesa_number', 'mpesa_name', 'paypal_client_id', 'premium_note', 'charity_note', 'paypalme', 'bank_details', 'pay_link', 'pay_link_name', 'usd_bank_details'].map(function (k) { return { k: k, v: t.querySelector('#s_' + k).value.trim() }; });
         Promise.all([S.db.from('app_settings').upsert(rows.filter(function (r) { return r.v; })), S.db.from('app_settings').delete().in('k', rows.filter(function (r) { return !r.v; }).map(function (r) { return r.k; }).concat(['__none__']))])
           .then(function (rs) { var e = rs.filter(function (r) { return r.error; })[0]; m.className = e ? 'msg' : 'msg ok'; m.textContent = e ? S.nice(e.error) : 'Settings saved.'; }); };
     });

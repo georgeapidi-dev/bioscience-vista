@@ -11,9 +11,10 @@
   }).catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
   function money(a, c) { return c + ' ' + Number(a).toLocaleString(undefined, { minimumFractionDigits: c === 'KES' ? 0 : 2, maximumFractionDigits: 2 }); }
-  var PYR = false;   // Payoneer replaces PayPal when the admin has saved a Payoneer link
+  var PYR = false, USD = false;   // the USD bank account replaces Payoneer and PayPal when the admin has saved its details   // Payoneer replaces PayPal when the admin has saved a Payoneer link
   function draw(me, plans, set, pays) {
-    PYR = !!(set.payoneer_link || Object.keys(set).some(function (k) { return /^payoneer_/.test(k) && set[k]; }));
+    USD = !!set.usd_bank_details;
+    PYR = !USD && !!(set.payoneer_link || Object.keys(set).some(function (k) { return /^payoneer_/.test(k) && set[k]; }));
     var a = me.access || {}, who = me.school ? 'teacher' : 'student';
     plans = plans.filter(function (p) { return p.audience === who && (+p.amount > 0 || +p.amount_kes > 0); });
     var h = '<section class="panel tint"><h2>' + (a.premium ? '⭐ You have premium access' : 'Premium access') + '</h2><p>' +
@@ -24,12 +25,12 @@
     if (!plans.length) h += '<p class="emptybox">Prices have not been set yet. Ask your teacher or the admin about access.</p>';
     else h += '<div class="grp"><h3 class="sec-h">1. Choose a plan</h3>' + plans.map(function (p, i) {
       return '<label class="panel" style="display:flex;gap:10px;align-items:center;cursor:pointer"><input type="radio" name="plan" value="' + E(p.code) + '"' + (i ? '' : ' checked') + '><span><b>' + E(p.name) + '</b><br><span class="small">' +
-        [+p.amount > 0 ? money(p.amount, p.currency) + (PYR ? ' by card or bank (Payoneer)' : ' by PayPal or card') : '', +p.amount_kes > 0 ? money(p.amount_kes, 'KES') + ' by M-Pesa' : ''].filter(Boolean).join(' · ') + '</span></span></label>'; }).join('') +
-      '<h3 class="sec-h">2. Pay</h3><div class="two">' + (PYR ? '<section class="panel grp"><h3>💳 Card or bank (Payoneer, USD)</h3><div id="pybox"></div></section>' : '<section class="panel grp"><h3>💳 PayPal or card (USD)</h3><div id="ppbox"><p class="small muted">Loading PayPal…</p></div><p class="msg" id="ppm" role="alert"></p></section>') +
+        [+p.amount > 0 ? money(p.amount, p.currency) + (USD ? ' by bank transfer (USD)' : PYR ? ' by card or bank (Payoneer)' : ' by PayPal or card') : '', +p.amount_kes > 0 ? money(p.amount_kes, 'KES') + ' by M-Pesa' : ''].filter(Boolean).join(' · ') + '</span></span></label>'; }).join('') +
+      '<h3 class="sec-h">2. Pay</h3><div class="two">' + (USD ? '<section class="panel grp"><h3>🏦 Bank transfer (US dollars)</h3><div id="usbox"></div></section>' : PYR ? '<section class="panel grp"><h3>💳 Card or bank (Payoneer, USD)</h3><div id="pybox"></div></section>' : '<section class="panel grp"><h3>💳 PayPal or card (USD)</h3><div id="ppbox"><p class="small muted">Loading PayPal…</p></div><p class="msg" id="ppm" role="alert"></p></section>') +
       '<section class="panel grp"><h3>📱 M-Pesa (KES)</h3><div id="mpbox"></div></section></div>' +
       (set.paypalme || set.bank_details || set.pay_link ? '<section class="panel grp"><h3>🔁 Other ways to pay</h3><p class="small muted">If PayPal checkout does not work for you, use one of these. Then type the transaction ID from your receipt so the admin can confirm it.</p><div id="otbox"></div></section>' : '') + '</div>';
     if (pays.length) h += '<section class="grp"><h3 class="sec-h">My payments</h3>' + pays.map(function (y) {
-      return '<p class="small">' + E(new Date(y.created_at).toLocaleDateString()) + ' · ' + E(({ mpesa: 'M-Pesa ', payoneer: 'Payoneer ', paypalme: 'PayPal.Me ', bank: 'Bank transfer ', link: (set.pay_link_name || 'Online payment') + ' ' }[y.method] || 'PayPal ') + (y.method === 'paypal' ? '' : (y.mpesa_code || ''))) + ' · ' + E(money(y.amount, y.currency)) + ' · <b>' +
+      return '<p class="small">' + E(new Date(y.created_at).toLocaleDateString()) + ' · ' + E(({ mpesa: 'M-Pesa ', usd_bank: 'USD bank transfer ', payoneer: 'Payoneer ', paypalme: 'PayPal.Me ', bank: 'Bank transfer ', link: (set.pay_link_name || 'Online payment') + ' ' }[y.method] || 'PayPal ') + (y.method === 'paypal' ? '' : (y.mpesa_code || ''))) + ' · ' + E(money(y.amount, y.currency)) + ' · <b>' +
         E({ pending: y.method === 'paypal' ? 'not finished' : 'waiting for the admin to confirm', paid: 'paid ✓', failed: 'not accepted' }[y.status] || y.status) + '</b></p>'; }).join('') + '</section>';
     app.innerHTML = h;
     if (!plans.length) return;
@@ -86,8 +87,22 @@
           b.disabled = false; if (r.error) { m.textContent = /submit_manual_payment|schema cache/i.test(r.error.message || '') ? 'Payoneer payments are being set up. Please pay by M-Pesa for now.' : S.nice(r.error); return; }
           m.className = 'msg ok'; m.textContent = 'Received. You will get premium access as soon as the admin confirms it.'; setTimeout(function () { location.reload(); }, 2500); }); };
     };
-    app.querySelectorAll('input[name=plan]').forEach(function (r) { r.onchange = function () { mp(); if (PYR) py(); else pp(); ot(); }; });
-    mp(); ot(); if (PYR) { py(); return; }
+
+    // USD bank transfer (migration 057): the payer sends the plan's US-dollar price to the admin's USD account, then types the bank reference; the admin confirms it
+    var us = function () {
+      var box = app.querySelector('#usbox'); if (!box) return;
+      var p = plan(); if (!p || !(+p.amount > 0)) { box.innerHTML = '<p class="small muted">This plan has no US-dollar price. Please pay by M-Pesa.</p>'; return; }
+      box.innerHTML = '<p class="small">Send <b>' + E(money(p.amount, p.currency || 'USD')) + '</b> (plus any bank charges on your side) to:</p><pre class="small" style="white-space:pre-wrap;background:var(--surface);padding:10px;border-radius:8px;border:1px solid var(--line)">' + E(set.usd_bank_details) + '</pre>' +
+        '<p class="small muted">Write your name and "' + E(p.name) + '" as the payment reference. Then type the bank reference (or SWIFT / transaction number) from your receipt below.</p>' +
+        '<form id="usf" class="grp"><label class="f">Bank reference or transaction number<input id="usc" required maxlength="40" autocapitalize="characters"></label><label class="f">Name of the person or account that paid<input id="usn" maxlength="80"></label>' +
+        '<button class="btn main" type="submit">Send for confirmation</button><p class="msg" id="usm" role="alert"></p><p class="small muted">International transfers can take 1 to 5 working days to arrive. Your premium starts as soon as the admin sees the money and confirms it.</p></form>';
+      box.querySelector('#usf').onsubmit = function (e) { e.preventDefault(); var m = box.querySelector('#usm'), b = this.querySelector('button'); b.disabled = true; m.className = 'msg'; m.textContent = 'Sending…';
+        S.db.rpc('submit_manual_payment', { plan_id: p.code, how: 'usd_bank', code: box.querySelector('#usc').value, payer: box.querySelector('#usn').value }).then(function (r) {
+          b.disabled = false; if (r.error) { m.textContent = /Choose a way to pay|submit_manual_payment|schema cache/i.test(r.error.message || '') ? 'Bank transfers are being set up. Please pay by M-Pesa for now, or try again later.' : S.nice(r.error); return; }
+          m.className = 'msg ok'; m.textContent = 'Received. You will get premium access as soon as the admin confirms the money has arrived.'; setTimeout(function () { location.reload(); }, 2500); }); };
+    };
+    app.querySelectorAll('input[name=plan]').forEach(function (r) { r.onchange = function () { mp(); if (USD) us(); else if (PYR) py(); else pp(); ot(); }; });
+    mp(); ot(); if (USD) { us(); return; } if (PYR) { py(); return; }
     // PayPal Smart Buttons: the order is created and captured by the server (supabase/functions/paypal), so the price cannot be changed here
     var ppReady = false;
     function pp() {
