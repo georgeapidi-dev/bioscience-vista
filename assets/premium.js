@@ -11,7 +11,9 @@
   }).catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
   function money(a, c) { return c + ' ' + Number(a).toLocaleString(undefined, { minimumFractionDigits: c === 'KES' ? 0 : 2, maximumFractionDigits: 2 }); }
+  var PYR = false;   // Payoneer replaces PayPal when the admin has saved a Payoneer link
   function draw(me, plans, set, pays) {
+    PYR = !!(set.payoneer_link || Object.keys(set).some(function (k) { return /^payoneer_/.test(k) && set[k]; }));
     var a = me.access || {}, who = me.school ? 'teacher' : 'student';
     plans = plans.filter(function (p) { return p.audience === who && (+p.amount > 0 || +p.amount_kes > 0); });
     var h = '<section class="panel tint"><h2>' + (a.premium ? '⭐ You have premium access' : 'Premium access') + '</h2><p>' +
@@ -22,12 +24,12 @@
     if (!plans.length) h += '<p class="emptybox">Prices have not been set yet. Ask your teacher or the admin about access.</p>';
     else h += '<div class="grp"><h3 class="sec-h">1. Choose a plan</h3>' + plans.map(function (p, i) {
       return '<label class="panel" style="display:flex;gap:10px;align-items:center;cursor:pointer"><input type="radio" name="plan" value="' + E(p.code) + '"' + (i ? '' : ' checked') + '><span><b>' + E(p.name) + '</b><br><span class="small">' +
-        [+p.amount > 0 ? money(p.amount, p.currency) + ' by PayPal or card' : '', +p.amount_kes > 0 ? money(p.amount_kes, 'KES') + ' by M-Pesa' : ''].filter(Boolean).join(' · ') + '</span></span></label>'; }).join('') +
-      '<h3 class="sec-h">2. Pay</h3><div class="two"><section class="panel grp"><h3>💳 PayPal or card (USD)</h3><div id="ppbox"><p class="small muted">Loading PayPal…</p></div><p class="msg" id="ppm" role="alert"></p></section>' +
+        [+p.amount > 0 ? money(p.amount, p.currency) + (PYR ? ' by card or bank (Payoneer)' : ' by PayPal or card') : '', +p.amount_kes > 0 ? money(p.amount_kes, 'KES') + ' by M-Pesa' : ''].filter(Boolean).join(' · ') + '</span></span></label>'; }).join('') +
+      '<h3 class="sec-h">2. Pay</h3><div class="two">' + (PYR ? '<section class="panel grp"><h3>💳 Card or bank (Payoneer, USD)</h3><div id="pybox"></div></section>' : '<section class="panel grp"><h3>💳 PayPal or card (USD)</h3><div id="ppbox"><p class="small muted">Loading PayPal…</p></div><p class="msg" id="ppm" role="alert"></p></section>') +
       '<section class="panel grp"><h3>📱 M-Pesa (KES)</h3><div id="mpbox"></div></section></div>' +
       (set.paypalme || set.bank_details || set.pay_link ? '<section class="panel grp"><h3>🔁 Other ways to pay</h3><p class="small muted">If PayPal checkout does not work for you, use one of these. Then type the transaction ID from your receipt so the admin can confirm it.</p><div id="otbox"></div></section>' : '') + '</div>';
     if (pays.length) h += '<section class="grp"><h3 class="sec-h">My payments</h3>' + pays.map(function (y) {
-      return '<p class="small">' + E(new Date(y.created_at).toLocaleDateString()) + ' · ' + E(({ mpesa: 'M-Pesa ', paypalme: 'PayPal.Me ', bank: 'Bank transfer ', link: (set.pay_link_name || 'Online payment') + ' ' }[y.method] || 'PayPal ') + (y.method === 'paypal' ? '' : (y.mpesa_code || ''))) + ' · ' + E(money(y.amount, y.currency)) + ' · <b>' +
+      return '<p class="small">' + E(new Date(y.created_at).toLocaleDateString()) + ' · ' + E(({ mpesa: 'M-Pesa ', payoneer: 'Payoneer ', paypalme: 'PayPal.Me ', bank: 'Bank transfer ', link: (set.pay_link_name || 'Online payment') + ' ' }[y.method] || 'PayPal ') + (y.method === 'paypal' ? '' : (y.mpesa_code || ''))) + ' · ' + E(money(y.amount, y.currency)) + ' · <b>' +
         E({ pending: y.method === 'paypal' ? 'not finished' : 'waiting for the admin to confirm', paid: 'paid ✓', failed: 'not accepted' }[y.status] || y.status) + '</b></p>'; }).join('') + '</section>';
     app.innerHTML = h;
     if (!plans.length) return;
@@ -68,8 +70,24 @@
           b.disabled = false; if (r.error) { m.textContent = /submit_manual_payment|schema cache/i.test(r.error.message || '') ? 'This way of paying is being set up. Please pay by M-Pesa for now, or try again later.' : S.nice(r.error); return; }
           m.className = 'msg ok'; m.textContent = 'Received. You will get premium access as soon as the admin confirms it.'; setTimeout(function () { location.reload(); }, 2500); }); };
     };
-    app.querySelectorAll('input[name=plan]').forEach(function (r) { r.onchange = function () { mp(); pp(); ot(); }; });
-    mp(); ot();
+
+    // Payoneer (migration 056): the payer pays the admin's Payoneer payment link, then types the transaction ID; the admin confirms it
+    var py = function () {
+      var box = app.querySelector('#pybox'); if (!box) return;
+      var p = plan(); if (!p || !(+p.amount > 0)) { box.innerHTML = '<p class="small muted">This plan cannot be paid with Payoneer.</p>'; return; }
+      var link = set['payoneer_' + p.code] || set.payoneer_link;
+      if (!link) { box.innerHTML = '<p class="small muted">Payoneer is not set up for this plan yet. Please pay by M-Pesa.</p>'; return; }
+      box.innerHTML = '<ol class="small"><li>Press the button and pay <b>' + E(money(p.amount, p.currency || 'USD')) + '</b> by card or bank transfer on Payoneer.</li><li>In the note, write your name and "' + E(p.name) + '".</li><li>Copy the <b>transaction or receipt ID</b> and type it below.</li></ol>' +
+        '<p><a class="btn main" href="' + E(link) + '" target="_blank" rel="noopener">Pay with Payoneer →</a></p>' +
+        '<form id="pyf" class="grp"><label class="f">Payoneer transaction or receipt ID<input id="pyc" required maxlength="40" autocapitalize="characters"></label><label class="f">Name on the card or account<input id="pyn" maxlength="80"></label>' +
+        '<button class="btn main" type="submit">Send for confirmation</button><p class="msg" id="pym" role="alert"></p><p class="small muted">The admin checks the payment in Payoneer and your premium starts as soon as it is confirmed, usually the same day.</p></form>';
+      box.querySelector('#pyf').onsubmit = function (e) { e.preventDefault(); var m = box.querySelector('#pym'), b = this.querySelector('button'); b.disabled = true; m.className = 'msg'; m.textContent = 'Sending…';
+        S.db.rpc('submit_manual_payment', { plan_id: p.code, how: 'payoneer', code: box.querySelector('#pyc').value, payer: box.querySelector('#pyn').value }).then(function (r) {
+          b.disabled = false; if (r.error) { m.textContent = /submit_manual_payment|schema cache/i.test(r.error.message || '') ? 'Payoneer payments are being set up. Please pay by M-Pesa for now.' : S.nice(r.error); return; }
+          m.className = 'msg ok'; m.textContent = 'Received. You will get premium access as soon as the admin confirms it.'; setTimeout(function () { location.reload(); }, 2500); }); };
+    };
+    app.querySelectorAll('input[name=plan]').forEach(function (r) { r.onchange = function () { mp(); if (PYR) py(); else pp(); ot(); }; });
+    mp(); ot(); if (PYR) { py(); return; }
     // PayPal Smart Buttons: the order is created and captured by the server (supabase/functions/paypal), so the price cannot be changed here
     var ppReady = false;
     function pp() {
