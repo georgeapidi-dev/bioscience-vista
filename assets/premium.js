@@ -24,10 +24,11 @@
       return '<label class="panel" style="display:flex;gap:10px;align-items:center;cursor:pointer"><input type="radio" name="plan" value="' + E(p.code) + '"' + (i ? '' : ' checked') + '><span><b>' + E(p.name) + '</b><br><span class="small">' +
         [+p.amount > 0 ? money(p.amount, p.currency) + ' by PayPal or card' : '', +p.amount_kes > 0 ? money(p.amount_kes, 'KES') + ' by M-Pesa' : ''].filter(Boolean).join(' · ') + '</span></span></label>'; }).join('') +
       '<h3 class="sec-h">2. Pay</h3><div class="two"><section class="panel grp"><h3>💳 PayPal or card (USD)</h3><div id="ppbox"><p class="small muted">Loading PayPal…</p></div><p class="msg" id="ppm" role="alert"></p></section>' +
-      '<section class="panel grp"><h3>📱 M-Pesa (KES)</h3><div id="mpbox"></div></section></div></div>';
+      '<section class="panel grp"><h3>📱 M-Pesa (KES)</h3><div id="mpbox"></div></section></div>' +
+      (set.paypalme || set.bank_details || set.pay_link ? '<section class="panel grp"><h3>🔁 Other ways to pay</h3><p class="small muted">If PayPal checkout does not work for you, use one of these. Then type the transaction ID from your receipt so the admin can confirm it.</p><div id="otbox"></div></section>' : '') + '</div>';
     if (pays.length) h += '<section class="grp"><h3 class="sec-h">My payments</h3>' + pays.map(function (y) {
-      return '<p class="small">' + E(new Date(y.created_at).toLocaleDateString()) + ' · ' + E(y.method === 'mpesa' ? 'M-Pesa ' + (y.mpesa_code || '') : 'PayPal') + ' · ' + E(money(y.amount, y.currency)) + ' · <b>' +
-        E({ pending: y.method === 'mpesa' ? 'waiting for the admin to confirm' : 'not finished', paid: 'paid ✓', failed: 'not accepted' }[y.status] || y.status) + '</b></p>'; }).join('') + '</section>';
+      return '<p class="small">' + E(new Date(y.created_at).toLocaleDateString()) + ' · ' + E(({ mpesa: 'M-Pesa ', paypalme: 'PayPal.Me ', bank: 'Bank transfer ', link: (set.pay_link_name || 'Online payment') + ' ' }[y.method] || 'PayPal ') + (y.method === 'paypal' ? '' : (y.mpesa_code || ''))) + ' · ' + E(money(y.amount, y.currency)) + ' · <b>' +
+        E({ pending: y.method === 'paypal' ? 'not finished' : 'waiting for the admin to confirm', paid: 'paid ✓', failed: 'not accepted' }[y.status] || y.status) + '</b></p>'; }).join('') + '</section>';
     app.innerHTML = h;
     if (!plans.length) return;
     var plan = function () { var r = app.querySelector('input[name=plan]:checked'); return plans.filter(function (p) { return p.code === (r && r.value); })[0]; };
@@ -44,8 +45,31 @@
           b.disabled = false; if (r.error) { m.textContent = S.nice(r.error); return; }
           m.className = 'msg ok'; m.textContent = 'Received. You will get premium access as soon as the admin confirms it.'; setTimeout(function () { location.reload(); }, 2500); }); };
     };
-    app.querySelectorAll('input[name=plan]').forEach(function (r) { r.onchange = function () { mp(); pp(); }; });
-    mp();
+
+    // other ways to pay (migration 056): PayPal.Me, bank transfer and the admin's own payment link; the admin confirms each one, like M-Pesa
+    var ot = function () {
+      var box = app.querySelector('#otbox'); if (!box) return;
+      var p = plan(); if (!p) { box.innerHTML = ''; return; }
+      var usd = +p.amount > 0 ? money(p.amount, p.currency || 'USD') : '', kes = +p.amount_kes > 0 ? money(p.amount_kes, 'KES') : '';
+      var ways = [];
+      if (set.paypalme && +p.amount > 0) { var u = /^https?:/i.test(set.paypalme) ? set.paypalme.replace(/\/+$/, '') : 'https://paypal.me/' + set.paypalme.replace(/^@/, '');
+        ways.push(['paypalme', '💳 PayPal.Me', '<p class="small">Send <b>' + E(usd) + '</b> with PayPal (balance or card): <a class="btn main sm" href="' + E(u + '/' + (+p.amount).toFixed(2) + 'USD') + '" target="_blank" rel="noopener">Open PayPal.Me →</a></p><p class="small muted">In the note, write your name and "' + E(p.name) + '". Then copy the <b>transaction ID</b> from the PayPal receipt.</p>']); }
+      if (set.bank_details) ways.push(['bank', '🏦 Bank transfer', '<p class="small">Pay <b>' + E(kes || usd) + '</b> to:</p><pre class="small" style="white-space:pre-wrap;background:var(--surface);padding:8px;border-radius:8px">' + E(set.bank_details) + '</pre><p class="small muted">Use your name as the reference, then type the bank reference below.</p>']);
+      if (set.pay_link && +p.amount > 0) ways.push(['link', '🌐 ' + (set.pay_link_name || 'Pay online'), '<p class="small">Pay <b>' + E(usd) + '</b> (card or mobile money): <a class="btn main sm" href="' + E(set.pay_link) + '" target="_blank" rel="noopener">Open the payment page →</a></p><p class="small muted">Then type the receipt or transaction number below.</p>']);
+      if (!ways.length) { box.innerHTML = '<p class="small muted">No other way to pay is set for this plan.</p>'; return; }
+      box.innerHTML = '<div class="cta" role="tablist">' + ways.map(function (w, i) { return '<button type="button" class="btn sm' + (i ? '' : ' main') + '" data-way="' + w[0] + '">' + E(w[1]) + '</button>'; }).join('') + '</div><div id="otw"></div>' +
+        '<form id="otf" class="grp"><label class="f">Transaction ID or reference<input id="oc" required maxlength="40" autocapitalize="characters"></label><label class="f">Name on the payment<input id="on" maxlength="80"></label>' +
+        '<button class="btn main" type="submit">Send for confirmation</button><p class="msg" id="otm" role="alert"></p><p class="small muted">The admin checks the payment and your premium starts as soon as it is confirmed, usually the same day.</p></form>';
+      var cur = ways[0][0], show = function () { box.querySelector('#otw').innerHTML = ways.filter(function (w) { return w[0] === cur; })[0][2];
+        box.querySelectorAll('[data-way]').forEach(function (b) { b.classList.toggle('main', b.getAttribute('data-way') === cur); }); };
+      box.querySelectorAll('[data-way]').forEach(function (b) { b.onclick = function () { cur = b.getAttribute('data-way'); show(); }; }); show();
+      box.querySelector('#otf').onsubmit = function (e) { e.preventDefault(); var m = box.querySelector('#otm'), b = this.querySelector('button'); b.disabled = true; m.className = 'msg'; m.textContent = 'Sending…';
+        S.db.rpc('submit_manual_payment', { plan_id: p.code, how: cur, code: box.querySelector('#oc').value, payer: box.querySelector('#on').value }).then(function (r) {
+          b.disabled = false; if (r.error) { m.textContent = /submit_manual_payment|schema cache/i.test(r.error.message || '') ? 'This way of paying is being set up. Please pay by M-Pesa for now, or try again later.' : S.nice(r.error); return; }
+          m.className = 'msg ok'; m.textContent = 'Received. You will get premium access as soon as the admin confirms it.'; setTimeout(function () { location.reload(); }, 2500); }); };
+    };
+    app.querySelectorAll('input[name=plan]').forEach(function (r) { r.onchange = function () { mp(); pp(); ot(); }; });
+    mp(); ot();
     // PayPal Smart Buttons: the order is created and captured by the server (supabase/functions/paypal), so the price cannot be changed here
     var ppReady = false;
     function pp() {
@@ -69,7 +93,7 @@
       var sc = document.createElement('script');
       sc.src = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(set.paypal_client_id) + '&currency=USD&intent=capture&components=buttons';
       sc.onload = function () { ppReady = true; pp(); };
-      sc.onerror = function () { app.querySelector('#ppbox').innerHTML = '<p class="small muted">PayPal did not load. Check your connection, or pay by M-Pesa.</p>'; };
+      sc.onerror = function () { app.querySelector('#ppbox').innerHTML = '<p class="small muted">PayPal did not load. Pay by M-Pesa or one of the other ways below.</p>'; };
       document.head.appendChild(sc);
     } else pp();
   }
