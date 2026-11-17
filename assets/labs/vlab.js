@@ -19,6 +19,7 @@
     '.vl-ctl input[type=range]{width:100%}.vl-ctl select{padding:6px;border-radius:8px;border:1px solid var(--vl-line);font:inherit}' +
     '.vl-btns{display:flex;gap:8px;flex-wrap:wrap}.vl-btn{border:1px solid var(--vl-line);background:#fff;border-radius:999px;padding:8px 16px;font:inherit;font-weight:600;cursor:pointer;color:inherit}' +
     '.vl-btn.main{background:var(--vl-acc);border-color:var(--vl-acc);color:#fff}.vl-btn:disabled{opacity:.55;cursor:not-allowed}.vl-btn:focus-visible,.vl-tabs button:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}' +
+    '.vl-bar{position:sticky;top:0;z-index:5;background:var(--vl-card,#fff);padding:4px 0 8px;margin-bottom:6px;border-bottom:1px solid var(--vl-line)}.vl-bar .vl-btns{margin:0}.vl-bar .vl-note{margin:6px 0 0;min-height:1.2em}' +
     '.vl-stage{width:100%;display:block;border-radius:12px;background:var(--vl-soft)}.vl-chart{width:100%;height:280px;display:block}' +
     '.vl-read{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.vl-read div{background:var(--vl-soft);border-radius:10px;padding:8px 10px}.vl-read b{display:block;font-size:1.15rem}.vl-read span{font-size:.8rem;color:#475569}' +
     '.vl-tbl{width:100%;border-collapse:collapse;font-size:.9rem}.vl-tbl th,.vl-tbl td{border:1px solid var(--vl-line);padding:5px 8px;text-align:center}.vl-tbl th{background:var(--vl-soft)}.vl-tw{overflow-x:auto}' +
@@ -105,14 +106,14 @@
       '<div class="vl-card"><h3>Apparatus and materials</h3><ul>' + spec.apparatus.map(function (v) { return '<li>' + E(v) + '</li>'; }).join('') + '</ul><h3>Safety</h3><ul>' + spec.safety.map(function (v) { return '<li>' + E(v) + '</li>'; }).join('') + '</ul></div></div>' +
       '<div class="vl-card"><h3>Method</h3><ol>' + spec.method.map(function (v) { return '<li>' + v + '</li>'; }).join('') + '</ol></div></section>' +
       // 3 experiment
-      '<section class="vl-sec" data-sec="exp"><div class="vl-two"><div class="vl-card"><div id="vl-stage"></div></div>' +
-      '<div class="vl-card"><h3>Controls</h3><div class="vl-ctl">' + ctl.map(function (c) {
+      // the run / record buttons sit right on top of the animation, with the live readings beside it (17 Nov 2026, admin)
+      '<section class="vl-sec" data-sec="exp"><div class="vl-two"><div class="vl-card"><div class="vl-bar"><div class="vl-btns" id="vl-acts"></div><p class="vl-note" id="vl-status" role="status"></p></div><div id="vl-stage"></div></div>' +
+      '<div><div class="vl-card"><h3>Live readings</h3><div class="vl-read" id="vl-read"></div></div><div class="vl-card" style="margin-top:14px"><h3>Controls</h3><div class="vl-ctl">' + ctl.map(function (c) {
         if (c.type === 'select') return '<label>' + E(c.label) + '<select id="c-' + c.id + '">' + c.options.map(function (o) { return '<option value="' + E(o[0]) + '"' + (o[0] === c.value ? ' selected' : '') + '>' + E(o[1]) + '</option>'; }).join('') + '</select></label>';
         if (c.type === 'check') return '<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="c-' + c.id + '"' + (c.value ? ' checked' : '') + '> ' + E(c.label) + '</label>';
         return '<label>' + E(c.label) + ' <output id="o-' + c.id + '"></output><input type="range" id="c-' + c.id + '" min="' + c.min + '" max="' + c.max + '" step="' + (c.step || 1) + '" value="' + c.value + '"></label>';
-      }).join('') + '</div><div class="vl-btns" style="margin-top:10px" id="vl-acts"></div><p class="vl-note" id="vl-status" role="status"></p>' +
-      '<div class="vl-btns"><button class="vl-btn" type="button" id="vl-hint">💡 Hint</button></div><div id="vl-hints"></div></div></div>' +
-      '<div class="vl-card"><h3>Live readings</h3><div class="vl-read" id="vl-read"></div></div></section>' +
+      }).join('') + '</div>' +
+      '<div class="vl-btns" style="margin-top:10px"><button class="vl-btn" type="button" id="vl-hint">💡 Hint</button></div><div id="vl-hints"></div></div></div></div></section>' +
       // 4 results
       '<section class="vl-sec" data-sec="res"><div class="vl-card"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><h3>Results table</h3><div class="vl-btns"><button class="vl-btn" type="button" id="vl-csv">⬇ Download CSV</button><button class="vl-btn" type="button" id="vl-clear">Clear table</button></div></div>' +
       '<div class="vl-tw" id="vl-table"></div><p class="vl-note">Each row is one recorded trial. Repeat trials with the same settings, and change one variable at a time.</p></div>' +
