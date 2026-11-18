@@ -23,7 +23,19 @@
   IA.bind = bind; IA.ta = ta;
   function page(k, main) {
     var m = RH.shell(RH.p && RH.p.kind === 'ee' ? 'EE' : 'IA', RH.stageHead(k) + main + supBox(k) + RH.stageNav(k), RH.ctx(k));
-    bind(m); wireSup(m, k); return m;
+    bind(m); wireSup(m, k); gate(m); return m;
+  }
+  function gate(m) {   // automatic feedback before moving on: list the open ✘ items of this stage's checks
+    var nx = m.querySelector('[data-next]'); if (!nx || !RH.owner) return;
+    nx.addEventListener('click', function (e) {
+      var open = Array.prototype.map.call(m.querySelectorAll('.rh-meter .mrow'), function (r) { var i = r.querySelector('.no'); return i ? r.textContent.replace(/^✘/, '').trim() : null; }).filter(Boolean);
+      if (!open.length || nx.dataset.ok) return;
+      e.preventDefault();
+      var box = m.querySelector('#rh-gate') || document.createElement('div'); box.id = 'rh-gate'; box.className = 'rh-card warn fadein';
+      box.innerHTML = '<h3>Before you move on</h3><p class="small">The automatic checks on this stage still show ' + open.length + ' gap(s):</p><ul class="small">' + open.slice(0, 8).map(function (t) { return '<li>' + E(t) + '</li>'; }).join('') + '</ul><p class="small">You can fix them now, or carry on and come back later: your work is saved.</p><div class="btns"><button class="btn sm" type="button" id="gate-stay">Stay and fix</button><a class="btn main sm" href="' + nx.getAttribute('href') + '" id="gate-go">Continue anyway →</a></div>';
+      nx.closest('.btns').before(box); box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      box.querySelector('#gate-stay').onclick = function () { box.remove(); var first = m.querySelector('.rh-meter .no'); if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+    });
   }
   IA.page = page;
   function supBox(k) {   // supervisors comment on any stage; the comment appears in the student's feedback centre
@@ -222,7 +234,7 @@
   STAGES.conclusion = function () {
     var saved = (RH.get('analysis.saved', []) || []);
     var m = page('conclusion', (saved.length ? '<div class="rh-card tint"><h3>Your processed results</h3><ul class="small">' + saved.map(function (s) { return '<li>' + E(s.summary) + '</li>'; }).join('') + '</ul></div>' : '<div class="rh-card warn"><p class="small">No saved analysis yet. A conclusion must rest on your processed data: run and save an analysis in <a href="#/p/' + RH.p.id + '/analysis">Data analysis</a> first.</p></div>') +
-      '<div class="rh-card">' + ta('conclusion.answer', 'Answer the research question', 'One or two sentences that directly answer your question.') + ta('conclusion.quant', 'Quantitative findings', 'The key numbers: means with uncertainties, the size of the change, and the trend.') + ta('conclusion.pattern', 'Patterns, relationships and anomalies', '') + ta('conclusion.stats', 'Statistical result', 'The test, statistic, p-value, and what it means for H₀. Significance is not importance or proof.') + ta('conclusion.mechanism', 'Biological explanation', 'Explain the result with the biology.', { tall: true }) + ta('conclusion.literature', 'Comparison with the scientific context', 'Compare with published values or findings and cite them so they are traceable.', { tall: true }) + ta('conclusion.hypothesis', 'Is the hypothesis supported?', 'Supported, partly supported or not supported, and why, with the uncertainty in mind.') + '</div><div id="co-res"></div>' +
+      '<div class="rh-card">' + ta('conclusion.answer', 'Answer the research question', 'One or two sentences that directly answer your question.') + ta('conclusion.quant', 'Quantitative findings', 'The key numbers: means with uncertainties, the size of the change, and the trend.') + ta('conclusion.pattern', 'Patterns, relationships and anomalies', '') + ta('conclusion.stats', 'Statistical result', 'The test, statistic, p-value, and what it means for H₀. Significance is not importance or proof.') + ta('conclusion.mechanism', 'Biological explanation', 'Explain the result with the biology.', { tall: true }) + ta('conclusion.literature', 'Comparison with the scientific context', 'Compare with published values or findings and cite them so they are traceable.', { tall: true }) + ta('conclusion.hypothesis', 'Is the hypothesis supported?', 'Supported, partly supported or not supported, and why, with the uncertainty in mind.') + ta('conclusion.references', 'Reference list', 'Every source you cited in the background and the conclusion, in one consistent style (e.g. Harvard or APA): author, year, title, journal or publisher, DOI or URL with the date accessed.', { tall: true }) + '</div><div id="co-res"></div>' +
       '<div class="rh-card">' + RH.mentorBox('conclusion', 'Is my conclusion supported by my evidence?', function () { return JSON.stringify({ conclusion: RH.get('conclusion', {}), analyses: saved }); }) + '</div>');
     var upd = function () {
       var c = RH.get('conclusion', {}), all = Object.keys(c).map(function (k) { return c[k]; }).join(' '), rows = [];

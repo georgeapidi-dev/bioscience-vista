@@ -129,9 +129,9 @@
   };
 
   /* ---------- layout ---------- */
-  var NAV_STUDENT = [['#/', '🏠', 'Research dashboard'], ['IA', '🧬', 'Biology IA Studio'], ['EE', '📝', 'Extended Essay Studio'], ['#/rqlab', '❓', 'Research question lab'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'],
-    ['P:submit', '📤', 'Submission centre'], ['P:feedback', '💬', 'Feedback centre'], ['P:meetings', '🗓️', 'Supervision'], ['P:notebook', '📓', 'Research notebook'], ['P:integrity', '🛡️', 'Academic integrity'], ['P:versions', '🕘', 'Version history'], ['#/library', '📚', 'Templates and samples'], ['#/help', '🎓', 'Research academy']];
-  var NAV_TEACHER = [['#/teacher', '🧑‍🏫', 'Supervisor dashboard'], ['#/teacher/milestones', '📅', 'Milestones and deadlines'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'], ['#/library', '📚', 'Templates and samples'], ['#/help', '🎓', 'Research academy']];
+  var NAV_STUDENT = [['#/', '🏠', 'Research dashboard'], ['IA', '🧬', 'Biology IA Studio'], ['EE', '📝', 'Extended Essay Studio'], ['#/rqlab', '❓', 'Research question lab'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'], ['#/worksheets', '🧭', 'Interactive worksheets'],
+    ['P:check', '✅', 'Pre-submission check'], ['P:submit', '📤', 'Submission centre'], ['P:feedback', '💬', 'Feedback centre'], ['P:meetings', '🗓️', 'Supervision'], ['P:notebook', '📓', 'Research notebook'], ['P:integrity', '🛡️', 'Academic integrity'], ['P:versions', '🕘', 'Version history'], ['#/library', '📚', 'Templates and samples'], ['#/help', '🎓', 'Research academy']];
+  var NAV_TEACHER = [['#/teacher', '🧑‍🏫', 'Supervisor dashboard'], ['#/teacher/milestones', '📅', 'Milestones and deadlines'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'], ['#/worksheets', '🧭', 'Interactive worksheets'], ['#/library', '📚', 'Templates and samples'], ['#/help', '🎓', 'Research academy']];
   RH.shell = function (active, mainHtml, ctxHtml) {
     var nav = RH.teacher ? NAV_TEACHER.slice() : NAV_STUDENT.slice(); if (RH.me.admin) nav.push(['#/admin', '🛠️', 'Curriculum and admin']);
     var pid = RH.p && RH.owner ? RH.p.id : RH.lastPid;
@@ -159,6 +159,8 @@
       if (r === 'lab') return RH.data.statsLab();
       if (r === 'graph') return RH.data.graphLab();
       if (r === 'rqlab') return RH.ia.rqLab();
+      if (r === 'worksheets') return RH.ws.page();
+      if (r === 'ws' && h[1]) return RH.ws.open(h[1]);
       if (r === 'library') return library();
       if (r === 'help') return academy();
       if (r === 'ee') { location.hash = RH.lastEe ? '#/p/' + RH.lastEe + '/' : '#/new/ee'; return; }
@@ -174,6 +176,7 @@
     var m = RH.shell('', '<p class="muted">Opening the project…</p>');
     return RH.load(id).then(function (p) {
       if (RH.owner) { RH.lastPid = p.id; if (p.kind === 'ee') RH.lastEe = p.id; else RH.lastIa = p.id; try { localStorage.setItem('rh-last', p.id); localStorage.setItem('rh-last-' + p.kind, p.id); } catch (e) {} }
+      if (view === 'check') return RH.check.page();
       if (['submit', 'feedback', 'meetings', 'notebook', 'integrity', 'versions'].indexOf(view) >= 0) return PAGES[view]();
       var L = RH.stagesOf(p), valid = function (k) { return L.some(function (s) { return s.k === k; }) || ['data', 'analysis', 'graphs'].indexOf(k) >= 0; };
       var stage = view && valid(view) ? view : (RH.sup ? RH.lastStage(p) : (valid(p.stage) ? p.stage : RH.firstStage(p)));
@@ -194,7 +197,7 @@
     var p = RH.p, L = RH.stagesOf(p), i = L.map(function (s) { return s.k; }).indexOf(k), prev = i > 0 ? L[i - 1] : null, next = i >= 0 ? L[i + 1] : null;
     return '<div class="btns" style="justify-content:space-between">' + (prev ? '<a class="btn sm" href="#/p/' + p.id + '/' + prev.k + '">← ' + E(prev.n) + '</a>' : '<span></span>') +
       (RH.owner ? '<button class="btn sm" type="button" onclick="RH.snapshot(\'' + k + '\', RH.p.data[\'' + k + '\']||{}, \'Saved by student\')">🕘 Save a version of this stage</button>' : '') +
-      (next ? '<a class="btn main sm" href="#/p/' + p.id + '/' + next.k + '">' + E(next.n) + ' →</a>' : '') + '</div>';
+      (next ? '<a class="btn main sm" data-next href="#/p/' + p.id + '/' + next.k + '">' + E(next.n) + ' →</a>' : '') + '</div>';
   };
   RH.ctx = function (k) {   // contextual sidebar: what the criterion expects at this stage, and supervisor feedback
     var s = RH.IA.concat(RH.EE || []).filter(function (x) { return x.k === k; })[0] || {}, c = RH.cur && (RH.cur.criteria || []).filter(function (x) { return x.key === s.crit; })[0];
@@ -286,8 +289,14 @@
         var decide = function (id, status) { var note = prompt(status === 'approved' ? 'Comment for the student (optional):' : 'What should the student revise?') ; if (note === null) return; S.db.from('research_submissions').update({ status: status, decision_note: note || null }).eq('id', id).then(function (r) { if (r.error) return RH.err(r.error); RH.toast(status === 'approved' ? 'Approved' : 'Returned for revision'); S.db.from('research_projects').select('status').eq('id', p.id).single().then(function (x) { if (x.data) p.status = x.data.status; load(); }); }); };
         box.querySelectorAll('[data-ok]').forEach(function (b) { b.onclick = function () { decide(b.dataset.ok, 'approved'); }; });
         box.querySelectorAll('[data-ret]').forEach(function (b) { b.onclick = function () { decide(b.dataset.ret, 'returned'); }; });
+        var fileIn = box.querySelector('#sb-file'), autoRep = null;
+        if (fileIn) { var ck = document.createElement('div'); ck.id = 'sb-check'; fileIn.closest('.two').after(ck);
+          fileIn.onchange = function () { var f = fileIn.files[0]; autoRep = null; ck.innerHTML = ''; if (!f || !/\.(docx|pdf)$/i.test(f.name) || box.querySelector('#sb-stage').value === 'data') return; ck.innerHTML = '<p class="small muted">Checking ' + E(f.name) + ' automatically…</p>';
+            RH.check.read(f).then(function (doc) { autoRep = RH.check.analyse(doc, p.kind); RH.check.save(autoRep); ck.innerHTML = RH.check.reportHtml(autoRep) + (autoRep.counts.no ? '<label class="chk small"><input type="checkbox" id="sb-ack"> I have read the automatic check. I understand ' + autoRep.counts.no + ' item(s) are marked "fix before submitting" and I still want to submit.</label>' : ''); })
+              .catch(function (e) { ck.innerHTML = '<p class="small muted">The automatic check could not read this file (' + E(S.nice(e)) + '). You can still submit it.</p>'; }); }; }
         var go = box.querySelector('#sb-go'); if (go) go.onclick = function () {
           var f = box.querySelector('#sb-file').files[0], msg = box.querySelector('#sb-msg'), stage = box.querySelector('#sb-stage').value;
+          if (autoRep && autoRep.counts.no && !(box.querySelector('#sb-ack') || {}).checked) { msg.textContent = 'Read the automatic check first, then tick the box under it (or fix the file and choose it again).'; return; }
           if (!f) { msg.textContent = 'Choose a file first.'; return; }
           if (!/\.(docx|pdf|csv|xlsx)$/i.test(f.name)) { msg.textContent = 'Use a DOCX, PDF, CSV or XLSX file.'; return; }
           if (f.size > 25 * 1024 * 1024) { msg.textContent = 'The file is larger than 25 MB.'; return; }
@@ -296,7 +305,7 @@
           var path = p.id + '/' + Date.now() + '-' + f.name.replace(/[^A-Za-z0-9._-]+/g, '_');
           RH.saveNow().then(function () { return S.db.storage.from('research-files').upload(path, f, { contentType: f.type || 'application/octet-stream', upsert: false }); }).then(function (u) {
             if (u.error) throw u.error;
-            return S.db.from('research_submissions').insert({ project_id: p.id, stage: stage, file_path: path, file_name: f.name, mime: f.type, size_bytes: f.size, word_count: p.word_count || null, note: box.querySelector('#sb-note').value.trim() || null });
+            return S.db.from('research_submissions').insert({ project_id: p.id, stage: stage, file_path: path, file_name: f.name, mime: f.type, size_bytes: f.size, word_count: p.word_count || null, note: ((box.querySelector('#sb-note').value.trim() || '') + (autoRep ? ' [Automatic check: ' + autoRep.counts.no + ' to fix, ' + autoRep.counts.mid + ' to check, about ' + autoRep.words + ' words]' : '')).trim() || null });
           }).then(function (r) { if (r.error) throw r.error; RH.toast('Submitted'); if (p.kind === 'ee' && stage === 'draft') RH.set('ee_flags.draft', true); if (stage === 'proposal') p.status = 'proposal_submitted'; if (stage === 'final') p.status = 'final_submitted'; RH.snapshot('submission:' + stage, p.data, 'Snapshot at ' + stage + ' submission').catch(function () {}); load(); })
             .catch(function (e) { go.disabled = false; msg.textContent = S.nice(e); });
         };
@@ -490,6 +499,12 @@
     ['how-to-use-statistical-tests.pdf', 'How to use statistical tests', 'Student\'s t-test, Spearman\'s rank, chi-squared (independence and goodness of fit) and ANOVA, with worked examples, practice activities and critical-value tables.', 'Data and statistics', 'Both', 'yours'],
     ['ecology-beach-practical-guide.pdf', 'Ecology beach practical guide', 'Random and systematic sampling in the field, and interpreting the data.', 'Practicals', 'IA', 'yours'],
     ['ecology-beach-practical-objectives.pdf', 'Ecology beach practical objectives', 'The task: three questions answered with a t-test, Spearman\'s rank and chi-squared.', 'Practicals', 'IA', 'yours'],
+    ['ia-exemplar-ph-enzyme-activity.docx', 'Exemplar IA: pH and catalase activity', 'A short (5-page) teacher-created IA showing every stage, with data from the enzyme simulator. Goes with the guided worksheet “pH and enzyme activity”.', 'Samples', 'IA', 'sample'],
+    ['ee-exemplar-biology.docx', 'Exemplar EE: Biology (temperature and photosynthesis)', 'A shortened teacher-created extended essay with every section, illustrative data, statistics and an evaluation against a model.', 'Samples', 'EE', 'sample'],
+    ['ee-exemplar-chemistry.docx', 'Exemplar EE: Chemistry (ethanoic acid concentration and pH)', 'A shortened teacher-created essay testing the weak-acid approximation, with uncertainties and a linearised graph.', 'Samples', 'EE', 'sample'],
+    ['ee-exemplar-physics.docx', 'Exemplar EE: Physics (squash ball temperature and bounce)', 'A shortened teacher-created essay on the coefficient of restitution, with gradient uncertainty and systematic error.', 'Samples', 'EE', 'sample'],
+    ['ee-exemplar-ess.docx', 'Exemplar EE: ESS (ecotourism and mangroves, Mida Creek)', 'A shortened teacher-created essay linking an ecological survey with a visitor questionnaire and value systems.', 'Samples', 'EE', 'sample'],
+    ['ee-exemplar-sehs.docx', 'Exemplar EE: SEHS (training status and heart-rate recovery)', 'A shortened teacher-created essay with human participants, ethics, recovery curves and a t-test.', 'Samples', 'EE', 'sample'],
     ['ia-annotated-samples.docx', 'Annotated IA samples', 'Research questions, a data table, a graph, a statistical interpretation, conclusions and an evaluation table, each annotated against the criteria (illustrative data).', 'Samples', 'IA', 'sample'],
     ['ee-annotated-samples.docx', 'Annotated EE samples', 'Research questions, an introduction, descriptive versus analytical writing, discussion and evaluation, and the difference between descriptive and evaluative reflection.', 'Samples', 'EE', 'sample']];
   var ORIGIN = { yours: ['BioscienceVista\'s classroom resource', 'ok'], 'new': ['Template by BioscienceVista, 'info'], sample: ['Teacher-created sample (not IB, not real student work)', 'ai'] };
