@@ -555,7 +555,7 @@
   }
   function keyFits(k, want) {
     if (k.loose && want.subj !== 'chemistry' && want.subj !== 'physics' && want.subj !== 'mathematics') return true;   // biology labs suit any biology or science class
-    if (k.anyChem && (want.any || !want.subj || want.subj === 'chemistry' || /science/.test(want.subj))) return true;   // chemistry labs and simulators suit any chemistry or science class, at any level
+    if (k.anyChem && want.prog !== 'MYP 1' && (want.any || !want.subj || want.subj === 'chemistry' || /science/.test(want.subj))) return true;   // chemistry labs and simulators suit any chemistry or science class, at any level
     if (want.any) return true;
     if (!sameProg(k.prog, want.prog)) return false;
     return !want.subj || !k.subj || k.subj.indexOf(want.subj) >= 0 || (k.subj.indexOf('science') >= 0 && want.prog.indexOf('MYP') === 0);
