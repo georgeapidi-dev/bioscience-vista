@@ -343,7 +343,7 @@
         '<label class="f">M-Pesa number students send money to<input id="s_mpesa_number" value="' + E(set.mpesa_number || '') + '" placeholder="e.g. 0712 345 678" inputmode="tel"></label>' +
         '<label class="f">Name shown on M-Pesa for that number<input id="s_mpesa_name" value="' + E(set.mpesa_name || '') + '" maxlength="60"></label>' +
         '<label class="f">PayPal client ID (public; from developer.paypal.com → Apps &amp; Credentials → Live)<input id="s_paypal_client_id" value="' + E(set.paypal_client_id || '') + '" autocomplete="off"></label>' +
-        '<label class="f">Card payments by Paystack (type yes to show the 💳 Card button; the secret key is kept in Supabase, never here)<input id="s_paystack_on" value="' + E(set.paystack_on || '') + '" autocomplete="off" placeholder="yes or blank"></label>' +
+        '<label class="f">Card payments by Paystack (yes = show the 💳 Card button to everyone; test = only on /premium/?pstest=1 for trying test cards; the secret key is kept in Supabase, never here)<input id="s_paystack_on" value="' + E(set.paystack_on || '') + '" autocomplete="off" placeholder="yes, test or blank"></label>' +
         '<label class="f">Charity line (shown on the premium and donate pages)<input id="s_charity_note" value="' + E(set.charity_note || '') + '" maxlength="200"></label>' +
         '<label class="f">Note on the premium page (optional)<input id="s_premium_note" value="' + E(set.premium_note || '') + '" maxlength="200"></label>' +
         '<button class="btn main sm" id="saves">Save settings</button><p class="msg" id="sm"></p>' +
