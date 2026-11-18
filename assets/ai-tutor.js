@@ -15,7 +15,7 @@
   ];
   var KEY = 'bv-ait-v1', st = { mode: 'teach', topic: '', log: [] };
   try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && sv.log) st = sv; } catch (e) { }
-  var q = new URLSearchParams(location.search); if (q.get('topic')) st.topic = q.get('topic').slice(0, 120); if (q.get('mode') && MODES.some(function (m) { return m[0] === q.get('mode'); })) st.mode = q.get('mode');
+  var q = new URLSearchParams(location.search); if (q.get('topic')) { var nt = q.get('topic').slice(0, 120); if (nt !== st.topic) { st.log = []; st.sid = null; st.flag = false; } st.topic = nt; } if (q.get('mode') && MODES.some(function (m) { return m[0] === q.get('mode'); })) st.mode = q.get('mode');
   function save() { try { st.log = st.log.slice(-40); localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } }
   function md(t) {   // safe minimal formatting: escape first, then **bold**, line breaks and simple lists
     var h = E(t).replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>').replace(/(^|\s)\*([^*\n]+)\*(?=\s|$|[.,;:!?])/g, '$1<i>$2</i>');
