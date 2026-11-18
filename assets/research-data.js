@@ -1,4 +1,4 @@
-/* BioscienceVista · VISA Research Hub · data collection workspace, statistics lab and graph studio (loaded before research.js).
+/* BioscienceVista · VISTA Research Hub · data collection workspace, statistics lab and graph studio (loaded before research.js).
    Data sets live in research_datasets: the original raw rows are locked once recorded (never changed or deleted), and the
    working copy keeps a version history. Validation flags problems but never removes a value. Statistics: research-stats.js. */
 (function () {

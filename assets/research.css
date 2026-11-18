@@ -1,4 +1,4 @@
-/* VISA Research Hub · BioscienceVista (site_assets/research.css). Uses the site's colour variables, so light and dark themes follow bv.css. */
+/* VISTA Research Hub · BioscienceVista (site_assets/research.css). Uses the site's colour variables, so light and dark themes follow bv.css. */
 body.t-research{--c:var(--accent)}
 body.t-research .wrap{max-width:1360px}
 .rh{display:grid;grid-template-columns:230px minmax(0,1fr);gap:22px;align-items:start}
@@ -96,3 +96,4 @@ body.t-research .wrap{max-width:1360px}
 @media (prefers-reduced-motion:reduce){.rh .fadein{animation:none}.rh-prog i{transition:none}}
 @media print{.rh-nav,.rh-ctx,.top,footer,.btns{display:none!important}.rh{display:block}}
 .rh-head .btns select{width:auto;max-width:240px}
+body.rh-focus .top,body.rh-focus footer,body.rh-focus .rh-nav,body.rh-focus .rh-ctx,body.rh-focus .rh-steps{display:none!important}body.rh-focus .rh,body.rh-focus .rh.ctx{grid-template-columns:minmax(0,860px);justify-content:center}

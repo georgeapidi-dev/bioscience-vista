@@ -1,4 +1,4 @@
-/* BioscienceVista · VISA Research Hub · statistics library (pure functions, no page code).
+/* BioscienceVista · VISTA Research Hub · statistics library (pure functions, no page code).
    Descriptive statistics, uncertainty, correlation, regression and significance tests with exact p-values from the
    regularised incomplete beta and gamma functions. Checked against SciPy 1.18 by tests/research_stats_check.js.
    Every test returns {name, stat, df, p, ...} and never decides biology for the student: it only reports numbers. */

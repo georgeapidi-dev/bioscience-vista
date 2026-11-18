@@ -1,4 +1,4 @@
-/* BioscienceVista · VISA Research Hub (/research/): IB research, investigation and academic excellence.
+/* BioscienceVista · VISTA Research Hub (/research/): IB research, investigation and academic excellence.
    Core: sign-in, layout, navigation, dashboards (student, teacher, admin), saving with autosave and version history,
    submissions with an audit trail, supervision meetings, notebook, AI-assistance record and the Research Mentor.
    The IA Studio stages are in research-ia.js; data, statistics and graphs in research-data.js; statistics in research-stats.js.
@@ -15,7 +15,8 @@
     { k: 'variables', n: 'Variables and design', ic: '🎛️', crit: 'rd' }, { k: 'method', n: 'Methodology', ic: '🧪', crit: 'rd' }, { k: 'safety', n: 'Safety and ethics', ic: '🦺', crit: 'rd' },
     { k: 'data', n: 'Data collection', ic: '📋', crit: 'da' }, { k: 'analysis', n: 'Data analysis', ic: '🧮', crit: 'da' }, { k: 'graphs', n: 'Graphs', ic: '📈', crit: 'da' },
     { k: 'conclusion', n: 'Conclusion', ic: '✅', crit: 'co' }, { k: 'evaluation', n: 'Evaluation', ic: '🔍', crit: 'ev' }, { k: 'assess', n: 'Rubric and feedback', ic: '🏁' }];
-  RH.stageName = function (k) { var s = RH.IA.filter(function (x) { return x.k === k; })[0]; return s ? s.n : k; };
+  RH.stagesOf = function (p) { return p && p.kind === 'ee' ? (RH.EE || []) : RH.IA; };
+  RH.stageName = function (k) { var s = RH.IA.concat(RH.EE || []).filter(function (x) { return x.k === k; })[0]; return s ? s.n : { ee_draft: 'Draft submission', ee_viva: 'Viva voce' }[k] || k; };
   RH.STATUS = { active: ['In progress', ''], proposal_submitted: ['Proposal with supervisor', 'info'], proposal_approved: ['Proposal approved', 'ok'], returned: ['Returned for revision', 'warn'], final_submitted: ['Final submitted', 'info'], completed: ['Completed', 'ok'], archived: ['Archived', ''] };
   RH.badge = function (st) { var s = RH.STATUS[st] || [st, '']; return '<span class="rh-badge ' + s[1] + '">' + E(s[0]) + '</span>'; };
   RH.date = function (d, time) { if (!d) return ''; var x = new Date(d); return x.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) + (time ? ' ' + x.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : ''); };
@@ -31,12 +32,13 @@
     if (d.topic && d.topic.background) push(d.topic.background);
     return parts.join(' ');
   };
-  RH.wordCount = function (d) { return RH.words(RH.reportText(d)); };
+  RH.wordCount = function (d, kind) { return kind === 'ee' && RH.ee ? RH.ee.essayWords(d) : RH.words(RH.reportText(d)); };
 
   /* ---------- how complete each stage is (0–1), used for the progress cards and next steps ---------- */
   var filled = function (s, n) { return RH.words(s) >= (n || 3); };
   RH.stageDone = function (k, p, extra) {
     var d = p.data || {}; extra = extra || {};
+    if (/^ee_/.test(k)) return RH.ee ? RH.ee.done(k, p) : 0;
     switch (k) {
       case 'topic': return d.topic && d.topic.area && filled(d.topic.background, 30) ? 1 : d.topic && d.topic.area ? 0.5 : 0;
       case 'rq': return d.rq && filled(d.rq.text, 8) ? (d.rq.quality >= 5 ? 1 : 0.6) : 0;
@@ -53,8 +55,11 @@
     }
     return 0;
   };
-  RH.progress = function (p, extra) { var t = 0; RH.IA.forEach(function (s) { t += RH.stageDone(s.k, p, extra); }); return Math.round(t / RH.IA.length * 100); };
-  RH.nextStage = function (p, extra) { for (var i = 0; i < RH.IA.length; i++) if (RH.stageDone(RH.IA[i].k, p, extra) < 1) return RH.IA[i]; return RH.IA[RH.IA.length - 1]; };
+  RH.progress = function (p, extra) { var L = RH.stagesOf(p), t = 0; L.forEach(function (s) { t += RH.stageDone(s.k, p, extra); }); return Math.round(t / L.length * 100); };
+  RH.nextStage = function (p, extra) { var L = RH.stagesOf(p); for (var i = 0; i < L.length; i++) if (RH.stageDone(L[i].k, p, extra) < 1) return L[i]; return L[L.length - 1]; };
+  RH.journeyOf = function (p) { return p && p.kind === 'ee' ? RH.ee.JOURNEY : RH.JOURNEY; };
+  RH.firstStage = function (p) { return p && p.kind === 'ee' ? 'ee_subject' : 'topic'; };
+  RH.lastStage = function (p) { return p && p.kind === 'ee' ? 'ee_assess' : 'assess'; };
   // the journey shown on the dashboard card, as named in the brief
   RH.JOURNEY = [['Research question', ['topic', 'rq']], ['Proposal', ['hypothesis']], ['Research design', ['variables', 'method', 'safety']], ['Data collection', ['data']], ['Data analysis', ['analysis', 'graphs']], ['Conclusion', ['conclusion']], ['Evaluation', ['evaluation']], ['Final submission', ['assess']]];
 
@@ -68,12 +73,12 @@
       var p = x[0].data; p.data = p.data || {};
       RH.p = p; RH.extra = { datasets: (x[1].data || []).length, locked: (x[1].data || []).some(function (d) { return d.raw_locked; }), list: x[1].data || [] };
       RH.owner = p.student_id === RH.me.user.id; RH.sup = !RH.owner;
-      return RH.curriculum(p.curriculum_id).then(function () { return p; });
+      return RH.curriculum(p.curriculum_id, p.kind).then(function () { return p; });
     });
   };
-  RH.curriculum = function (id) {
-    if (RH.cur && RH.cur.id === id) return Promise.resolve(RH.cur);
-    var q = S.db.from('research_curricula').select('*'); q = id ? q.eq('id', id) : q.eq('kind', 'ia').eq('active', true).order('created_at', { ascending: false }).limit(1);
+  RH.curriculum = function (id, kind) {
+    if (RH.cur && (id ? RH.cur.id === id : RH.cur.kind === (kind || 'ia'))) return Promise.resolve(RH.cur);
+    var q = S.db.from('research_curricula').select('*'); q = id ? q.eq('id', id) : q.eq('kind', kind || 'ia').eq('active', true).order('created_at', { ascending: false }).limit(1);
     return q.then(function (r) { RH.cur = (r.data || [])[0] || null; return RH.cur; });
   };
   var saveTimer = null, saving = null;
@@ -86,7 +91,7 @@
   RH.dirty = function () { var m = document.getElementById('rh-save'); if (m) m.textContent = 'Saving…'; clearTimeout(saveTimer); saveTimer = setTimeout(RH.saveNow, 1200); };
   RH.saveNow = function () {
     if (!RH.p || !RH.owner) return Promise.resolve(); clearTimeout(saveTimer);
-    var p = RH.p, wc = RH.wordCount(p.data);
+    var p = RH.p, wc = RH.wordCount(p.data, p.kind);
     saving = S.db.from('research_projects').update({ data: p.data, title: p.title, rq: (p.data.rq && p.data.rq.text) || p.rq, stage: p.stage, word_count: wc }).eq('id', p.id).then(function (r) {
       var m = document.getElementById('rh-save');
       if (r.error) { if (m) m.textContent = 'Not saved: ' + S.nice(r.error); return; }
@@ -96,7 +101,7 @@
     return saving;
   };
   window.addEventListener('beforeunload', function (e) { if (saveTimer) { RH.saveNow(); e.preventDefault(); e.returnValue = ''; } });
-  function wcText(wc) { var lim = (RH.cur && RH.cur.word_limit) || 3000; return '<b>' + wc + '</b> / ' + lim + ' words' + (wc > lim ? ' <span class="rh-badge warn">over the limit</span>' : ''); }
+  function wcText(wc) { var lim = (RH.cur && RH.cur.word_limit) || (RH.p && RH.p.kind === 'ee' ? 4000 : 3000); return '<b>' + wc + '</b> / ' + lim + ' words' + (wc > lim ? ' <span class="rh-badge warn">over the limit</span>' : ''); }
   RH.wcText = wcText;
   RH.snapshot = function (section, data, note) {   // a named version the student (or supervisor) can return to
     return S.db.from('research_versions').insert({ project_id: RH.p.id, section: section, data: data, note: note || null }).then(function (r) { if (r.error) throw r.error; RH.toast('Version saved'); });
@@ -124,20 +129,21 @@
   };
 
   /* ---------- layout ---------- */
-  var NAV_STUDENT = [['#/', '🏠', 'Research dashboard'], ['IA', '🧬', 'Biology IA Studio'], ['#/rqlab', '❓', 'Research question lab'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'],
-    ['P:submit', '📤', 'Submission centre'], ['P:feedback', '💬', 'Feedback centre'], ['P:meetings', '🗓️', 'Supervision'], ['P:notebook', '📓', 'Research notebook'], ['P:integrity', '🛡️', 'Academic integrity'], ['P:versions', '🕘', 'Version history'], ['#/library', '📚', 'Templates and library'], ['#/ee', '📝', 'Extended Essay Studio'], ['#/help', '🎓', 'Research academy']];
-  var NAV_TEACHER = [['#/teacher', '🧑‍🏫', 'Supervisor dashboard'], ['#/teacher/milestones', '📅', 'Milestones and deadlines'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'], ['#/library', '📚', 'Templates and library'], ['#/help', '🎓', 'Research academy']];
+  var NAV_STUDENT = [['#/', '🏠', 'Research dashboard'], ['IA', '🧬', 'Biology IA Studio'], ['EE', '📝', 'Extended Essay Studio'], ['#/rqlab', '❓', 'Research question lab'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'],
+    ['P:submit', '📤', 'Submission centre'], ['P:feedback', '💬', 'Feedback centre'], ['P:meetings', '🗓️', 'Supervision'], ['P:notebook', '📓', 'Research notebook'], ['P:integrity', '🛡️', 'Academic integrity'], ['P:versions', '🕘', 'Version history'], ['#/library', '📚', 'Templates and samples'], ['#/help', '🎓', 'Research academy']];
+  var NAV_TEACHER = [['#/teacher', '🧑‍🏫', 'Supervisor dashboard'], ['#/teacher/milestones', '📅', 'Milestones and deadlines'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'], ['#/library', '📚', 'Templates and samples'], ['#/help', '🎓', 'Research academy']];
   RH.shell = function (active, mainHtml, ctxHtml) {
     var nav = RH.teacher ? NAV_TEACHER.slice() : NAV_STUDENT.slice(); if (RH.me.admin) nav.push(['#/admin', '🛠️', 'Curriculum and admin']);
     var pid = RH.p && RH.owner ? RH.p.id : RH.lastPid;
     var links = nav.map(function (n) {
       var href = n[0], cur = active === n[0];
-      if (href === 'IA') { href = pid ? '#/p/' + pid + '/' + ((RH.p && RH.p.stage) || 'topic') : '#/'; cur = active === 'IA'; }
+      if (href === 'IA') { href = RH.lastIa ? '#/p/' + RH.lastIa + '/' + (RH.p && RH.p.id === RH.lastIa ? RH.p.stage : '') : '#/new/ia'; cur = active === 'IA'; }
+      else if (href === 'EE') { href = RH.lastEe ? '#/p/' + RH.lastEe + '/' + (RH.p && RH.p.id === RH.lastEe ? RH.p.stage : '') : '#/new/ee'; cur = active === 'EE'; }
       else if (href.indexOf('P:') === 0) { var v = href.slice(2); cur = active === v; href = pid ? '#/p/' + pid + '/' + v : '#/'; }
       return '<a href="' + href + '"' + (cur ? ' aria-current="page"' : '') + '><span class="ic" aria-hidden="true">' + n[1] + '</span>' + E(n[2]) + '</a>';
     });
-    if (RH.teacher && RH.p && !RH.owner) links.splice(1, 0, '<span class="sep">Open project</span><a href="#/p/' + RH.p.id + '/assess"' + (active === 'IA' ? ' aria-current="page"' : '') + '><span class="ic">🧬</span>' + E(RH.p.title) + '</a>');
-    el.innerHTML = '<div class="rh' + (ctxHtml ? ' ctx' : '') + '"><nav class="rh-nav" aria-label="Research Hub"><div class="rh-brand">VISA RESEARCH HUB<small>IB Research, Investigation &amp; Academic Excellence</small></div>' + links.join('') + '</nav>' +
+    if (RH.teacher && RH.p && !RH.owner) links.splice(1, 0, '<span class="sep">Open project</span><a href="#/p/' + RH.p.id + '/' + RH.lastStage(RH.p) + '"' + (active === 'IA' || active === 'EE' ? ' aria-current="page"' : '') + '><span class="ic">' + (RH.p.kind === 'ee' ? '📝' : '🧬') + '</span>' + E(RH.p.title) + '</a>');
+    el.innerHTML = '<div class="rh' + (ctxHtml ? ' ctx' : '') + '"><nav class="rh-nav" aria-label="Research Hub"><div class="rh-brand">VISTA RESEARCH HUB<small>IB Research, Investigation &amp; Academic Excellence</small></div>' + links.join('') + '</nav>' +
       '<div class="rh-main fadein" id="rh-main">' + mainHtml + '</div>' + (ctxHtml ? '<aside class="rh-ctx" aria-label="Guidance">' + ctxHtml + '</aside>' : '') + '</div>';
     window.scrollTo(0, 0);
     return document.getElementById('rh-main');
@@ -155,44 +161,45 @@
       if (r === 'rqlab') return RH.ia.rqLab();
       if (r === 'library') return library();
       if (r === 'help') return academy();
-      if (r === 'ee') return eeSoon();
+      if (r === 'ee') { location.hash = RH.lastEe ? '#/p/' + RH.lastEe + '/' : '#/new/ee'; return; }
       if (r === 'admin') return RH.me.admin ? admin() : home();
       if (r === 'teacher') return RH.teacher ? (h[1] === 'milestones' ? milestonesPage() : teacherHome()) : home();
-      if (r === 'new') return newProject();
+      if (r === 'new') return newProject(h[1] === 'ee' ? 'ee' : 'ia');
       return RH.teacher ? teacherHome() : home();
     };
     try { go(); } catch (e) { RH.err(e); }
   }
   RH.route = route;
   RH.openProject = function (id, view) {
-    var m = RH.shell('IA', '<p class="muted">Opening the project…</p>');
+    var m = RH.shell('', '<p class="muted">Opening the project…</p>');
     return RH.load(id).then(function (p) {
-      if (RH.owner) { RH.lastPid = p.id; try { localStorage.setItem('rh-last', p.id); } catch (e) {} }
+      if (RH.owner) { RH.lastPid = p.id; if (p.kind === 'ee') RH.lastEe = p.id; else RH.lastIa = p.id; try { localStorage.setItem('rh-last', p.id); localStorage.setItem('rh-last-' + p.kind, p.id); } catch (e) {} }
       if (['submit', 'feedback', 'meetings', 'notebook', 'integrity', 'versions'].indexOf(view) >= 0) return PAGES[view]();
-      var stage = view || (RH.sup ? 'assess' : p.stage || 'topic');
-      if (RH.owner && stage !== p.stage && RH.IA.some(function (s) { return s.k === stage; })) { p.stage = stage; RH.dirty(); }
-      return RH.ia.stage(stage);
+      var L = RH.stagesOf(p), valid = function (k) { return L.some(function (s) { return s.k === k; }) || ['data', 'analysis', 'graphs'].indexOf(k) >= 0; };
+      var stage = view && valid(view) ? view : (RH.sup ? RH.lastStage(p) : (valid(p.stage) ? p.stage : RH.firstStage(p)));
+      if (RH.owner && stage !== p.stage && L.some(function (s) { return s.k === stage; })) { p.stage = stage; RH.dirty(); }
+      return /^ee_/.test(stage) ? RH.ee.stage(stage) : RH.ia.stage(stage);
     }).catch(function (e) { m.innerHTML = '<div class="rh-card warn"><h2>Cannot open this project</h2><p>' + E(S.nice(e)) + '</p><p><a class="btn sm" href="#/">Back to the dashboard</a></p></div>'; });
   };
 
   /* ---------- the stage header shared by every IA page ---------- */
   RH.stageHead = function (k) {
-    var p = RH.p, i = RH.IA.map(function (s) { return s.k; }).indexOf(k);
-    var steps = RH.IA.map(function (s) { var d = RH.stageDone(s.k, p, RH.extra); return '<li class="' + (s.k === k ? 'now' : d >= 1 ? 'done' : '') + '"><a href="#/p/' + p.id + '/' + s.k + '" title="' + E(s.n) + '">' + s.ic + ' <span>' + (s.k === k ? E(s.n) : (d >= 1 ? '✓' : '')) + '</span></a></li>'; }).join('');
-    return '<div class="rh-card"><div class="rh-head"><div><p class="label">Biology IA Studio · stage ' + (i + 1) + ' of ' + RH.IA.length + (RH.sup ? ' · viewing as supervisor' : '') + '</p><h2>' + E(RH.IA[i] ? RH.IA[i].ic + ' ' + RH.IA[i].n : k) + '</h2></div>' +
-      '<div style="text-align:right"><div id="rh-wc" class="small">' + wcText(p.word_count || RH.wordCount(p.data)) + '</div><div id="rh-save" class="rh-save" aria-live="polite">' + (RH.owner ? 'All changes save automatically' : 'Read-only: ' + E(p.title)) + '</div></div></div>' +
+    var p = RH.p, L = RH.stagesOf(p), i = L.map(function (s) { return s.k; }).indexOf(k), cur = L[i] || RH.IA.filter(function (s) { return s.k === k; })[0];
+    var steps = L.map(function (s) { var d = RH.stageDone(s.k, p, RH.extra); return '<li class="' + (s.k === k ? 'now' : d >= 1 ? 'done' : '') + '"><a href="#/p/' + p.id + '/' + s.k + '" title="' + E(s.n) + '">' + s.ic + ' <span>' + (s.k === k ? E(s.n) : (d >= 1 ? '✓' : '')) + '</span></a></li>'; }).join('');
+    return '<div class="rh-card"><div class="rh-head"><div><p class="label">' + (p.kind === 'ee' ? 'Extended Essay Studio' : 'Biology IA Studio') + (i >= 0 ? ' · stage ' + (i + 1) + ' of ' + L.length : ' · tool') + (RH.sup ? ' · viewing as supervisor' : '') + '</p><h2>' + E(cur ? cur.ic + ' ' + cur.n : k) + '</h2></div>' +
+      '<div style="text-align:right"><div id="rh-wc" class="small">' + wcText(RH.wordCount(p.data, p.kind)) + '</div><div id="rh-save" class="rh-save" aria-live="polite">' + (RH.owner ? 'All changes save automatically' : 'Read-only: ' + E(p.title)) + '</div></div></div>' +
       '<ul class="rh-steps" aria-label="Stages">' + steps + '</ul></div>';
   };
   RH.stageNav = function (k) {
-    var i = RH.IA.map(function (s) { return s.k; }).indexOf(k), p = RH.p, prev = RH.IA[i - 1], next = RH.IA[i + 1];
+    var p = RH.p, L = RH.stagesOf(p), i = L.map(function (s) { return s.k; }).indexOf(k), prev = i > 0 ? L[i - 1] : null, next = i >= 0 ? L[i + 1] : null;
     return '<div class="btns" style="justify-content:space-between">' + (prev ? '<a class="btn sm" href="#/p/' + p.id + '/' + prev.k + '">← ' + E(prev.n) + '</a>' : '<span></span>') +
       (RH.owner ? '<button class="btn sm" type="button" onclick="RH.snapshot(\'' + k + '\', RH.p.data[\'' + k + '\']||{}, \'Saved by student\')">🕘 Save a version of this stage</button>' : '') +
       (next ? '<a class="btn main sm" href="#/p/' + p.id + '/' + next.k + '">' + E(next.n) + ' →</a>' : '') + '</div>';
   };
   RH.ctx = function (k) {   // contextual sidebar: what the criterion expects at this stage, and supervisor feedback
-    var s = RH.IA.filter(function (x) { return x.k === k; })[0] || {}, c = RH.cur && (RH.cur.criteria || []).filter(function (x) { return x.key === s.crit; })[0];
+    var s = RH.IA.concat(RH.EE || []).filter(function (x) { return x.k === k; })[0] || {}, c = RH.cur && (RH.cur.criteria || []).filter(function (x) { return x.key === s.crit; })[0];
     var h = '';
-    if (c) h += '<div class="rh-card tint"><p class="label">Criterion this stage builds</p><h3>' + E(c.name) + ' (' + c.max + ' marks)</h3><p class="small">' + E(c.assesses) + '</p><details><summary>Top markband (' + c.bands[c.bands.length - 1].min + '–' + c.max + ')</summary><ul class="small">' + c.bands[c.bands.length - 1].d.map(function (x) { return '<li>' + E(x) + '</li>'; }).join('') + '</ul></details><p class="small muted">From the ' + E(RH.cur.guide) + '.</p></div>';
+    if (c) h += '<div class="rh-card tint"><p class="label">Criterion this stage builds</p><h3>' + E(c.name) + ' (' + c.max + ' marks)</h3><p class="small">' + E(c.assesses) + '</p><details><summary>Top markband (' + (c.bands[c.bands.length - 1].min === c.max ? c.max : c.bands[c.bands.length - 1].min + '–' + c.max) + ')</summary><ul class="small">' + c.bands[c.bands.length - 1].d.map(function (x) { return '<li>' + E(x) + '</li>'; }).join('') + '</ul></details><p class="small muted">From the ' + E(RH.cur.guide) + '.</p></div>';
     h += '<div class="rh-card" id="rh-ctx-fb"><p class="label">Latest supervisor feedback</p><p class="small muted">Loading…</p></div>';
     setTimeout(function () {
       S.db.from('research_feedback').select('*').eq('project_id', RH.p.id).eq('source', 'teacher').order('created_at', { ascending: false }).limit(3).then(function (r) {
@@ -215,28 +222,24 @@
       S.db.from('research_feedback').select('id,project_id,source,criterion,stage,comment,created_at').order('created_at', { ascending: false }).limit(5)
     ]).then(function (x) {
       var ps = x[0].data || [], ms = x[1].data || [], fb = (x[2].data || []).filter(function (f) { return ps.some(function (p) { return p.id === f.project_id; }); });
-      var ia = ps.filter(function (p) { return p.kind === 'ia'; })[0];
+      var ia = ps.filter(function (p) { return p.kind === 'ia'; })[0], ee = ps.filter(function (p) { return p.kind === 'ee'; })[0];
+      if (ia) RH.lastIa = ia.id; if (ee) RH.lastEe = ee.id;
       var ids = ps.map(function (p) { return p.id; });
       return (ids.length ? S.db.from('research_datasets').select('project_id,raw_locked').in('project_id', ids) : Promise.resolve({ data: [] })).then(function (dr) {
         var ds = dr.data || []; var ex = function (p) { var mine = ds.filter(function (d) { return d.project_id === p.id; }); return { datasets: mine.length, locked: mine.some(function (d) { return d.raw_locked; }) }; };
         var sup = ia && ia.class_id ? (me.classes || []).filter(function (c) { return c.id === ia.class_id; })[0] : null;
-        var h = '<section class="rh-hero"><p class="label">VISA Research Hub</p><h1>Welcome, ' + E(name) + '</h1><p>IB Diploma Programme · ' + (ia ? 'Biology internal assessment' : 'start your Biology IA when you are ready') + (sup ? ' · supervised in <b>' + E(sup.name) + '</b>' : '') + '</p></section>';
-        if (!ia) {
-          h += '<div class="rh-card tint"><h2>Start your Biology IA</h2><p>The Studio takes you from a topic to a submitted scientific investigation in twelve guided stages. Your work saves as you type, and your supervisor can see it and give feedback.</p><div class="btns"><a class="btn main" href="#/new">🧬 Start my Biology IA</a></div></div>';
-        } else {
-          var e1 = ex(ia), pr = RH.progress(ia, e1), nx = RH.nextStage(ia, e1);
-          var jr = RH.JOURNEY.map(function (j) { var done = j[1].every(function (k) { return RH.stageDone(k, ia, e1) >= 1; }), now = j[1].indexOf(nx.k) >= 0; return '<li class="' + (now ? 'now' : done ? 'done' : '') + '"><span>' + (done ? '✓ ' : '') + E(j[0]) + '</span></li>'; }).join('');
-          h += '<div class="rh-grid"><div class="rh-card"><div class="rh-head"><p class="label">🧬 Biology IA</p>' + RH.badge(ia.status) + '</div><h2>' + E(ia.title) + '</h2>' +
-            '<p class="small"><b>Research question:</b> ' + (ia.rq ? E(ia.rq) : '<span class="muted">not written yet</span>') + '</p>' +
-            '<div class="rh-prog" role="progressbar" aria-valuenow="' + pr + '" aria-valuemin="0" aria-valuemax="100"><i style="width:' + pr + '%"></i></div><p class="small muted">' + pr + '% of the stages complete · ' + (ia.word_count || 0) + ' / 3000 words · last saved ' + RH.date(ia.updated_at, true) + '</p>' +
-            '<ul class="rh-steps">' + jr + '</ul><div class="rh-card tint" style="padding:12px"><b>Next step: ' + nx.ic + ' ' + E(nx.n) + '</b><span class="small">' + E(NEXT_TIP[nx.k] || '') + '</span><div class="btns"><a class="btn main sm" href="#/p/' + ia.id + '/' + nx.k + '">Continue where I stopped →</a></div></div></div>' +
-            '<div class="rh-card"><p class="label">📝 Extended Essay</p><h2>Extended Essay Studio</h2><p class="small">The EE Studio (subject and topic, research question, proposal, sources, writing, the three reflection sessions and the 2027 criteria) opens in the next phase of the Hub.</p><a class="btn sm" href="#/ee">What is coming</a></div></div>';
-          RH.lastPid = ia.id;
-        }
+        var h = '<section class="rh-hero"><p class="label">VISTA Research Hub</p><h1>Welcome, ' + E(name) + '</h1><p>IB Diploma Programme · Biology internal assessment and Extended Essay' + (sup ? ' · IA supervised in <b>' + E(sup.name) + '</b>' : '') + '</p></section>';
+        var card = function (p, label) { var e1 = ex(p), pr = RH.progress(p, e1), nx = RH.nextStage(p, e1), lim = p.kind === 'ee' ? 4000 : 3000;
+          var jr = RH.journeyOf(p).map(function (j) { var done = j[1].every(function (k) { return RH.stageDone(k, p, e1) >= 1; }), now = j[1].indexOf(nx.k) >= 0; return '<li class="' + (now ? 'now' : done ? 'done' : '') + '"><span>' + (done ? '✓ ' : '') + E(j[0]) + '</span></li>'; }).join('');
+          return '<div class="rh-card"><div class="rh-head"><p class="label">' + label + '</p>' + RH.badge(p.status) + '</div><h2>' + E(p.title) + '</h2><p class="small"><b>Research question:</b> ' + (p.rq ? E(p.rq) : '<span class="muted">not written yet</span>') + '</p>' +
+            '<div class="rh-prog" role="progressbar" aria-valuenow="' + pr + '" aria-valuemin="0" aria-valuemax="100"><i style="width:' + pr + '%"></i></div><p class="small muted">' + pr + '% of the stages complete · ' + (p.word_count || 0) + ' / ' + lim + ' words · last saved ' + RH.date(p.updated_at, true) + '</p>' +
+            '<ul class="rh-steps">' + jr + '</ul><div class="rh-card tint" style="padding:12px"><b>Next step: ' + nx.ic + ' ' + E(nx.n) + '</b><span class="small">' + E((p.kind === 'ee' ? RH.ee.TIP : NEXT_TIP)[nx.k] || '') + '</span><div class="btns"><a class="btn main sm" href="#/p/' + p.id + '/' + nx.k + '">Continue where I stopped →</a></div></div></div>'; };
+        h += '<div class="rh-grid">' + (ia ? card(ia, '🧬 Biology IA') : '<div class="rh-card tint"><p class="label">🧬 Biology IA</p><h2>Start your Biology IA</h2><p class="small">Twelve guided stages from a topic to a submitted scientific investigation (24 marks, 3,000 words). Your work saves as you type, and your supervisor can see it and give feedback.</p><div class="btns"><a class="btn main sm" href="#/new/ia">🧬 Start my Biology IA</a></div></div>') +
+          (ee ? card(ee, '📝 Extended Essay') : '<div class="rh-card tint"><p class="label">📝 Extended Essay</p><h2>Start your Extended Essay</h2><p class="small">Ten stages from subject and pathway to the viva voce and final submission, following the Extended essay guide for first assessment 2027: 4,000 words, a 500-word reflective statement and three reflection sessions.</p><div class="btns"><a class="btn main sm" href="#/new/ee">📝 Start my Extended Essay</a></div></div>') + '</div>';
         var mine = ms.filter(function (x) { return !x.project_id || ids.indexOf(x.project_id) >= 0; });
         var today = new Date().toISOString().slice(0, 10);
-        h += '<div class="rh-grid"><div class="rh-card"><p class="label">📅 Deadlines and milestones</p>' + (mine.length ? '<div class="rh-list">' + mine.slice(0, 6).map(function (x) { var late = x.due_on < today && !(ia && RH.stageDone(x.stage, ia, ex(ia)) >= 1); return '<div class="rh-item"><b>' + E(x.title) + '</b><span class="meta">' + RH.date(x.due_on) + ' · ' + E(RH.stageName(x.stage)) + (late ? ' · <span class="rh-badge warn">overdue</span>' : '') + '</span></div>'; }).join('') + '</div>' : '<p class="small muted">Your supervisor has not set deadlines yet.</p>') + '</div>' +
-          '<div class="rh-card"><p class="label">💬 Recent feedback</p>' + (fb.length ? '<div class="rh-list">' + fb.map(function (f) { return '<div class="rh-item"><span class="meta">' + (f.source === 'ai' ? '<span class="rh-badge ai">AI</span>' : '<span class="rh-badge ok">Supervisor</span>') + ' ' + E(critName(f.criterion) || RH.stageName(f.stage) || '') + ' · ' + RH.date(f.created_at) + '</span><span class="small">' + E(f.comment.slice(0, 220)) + (f.comment.length > 220 ? '…' : '') + '</span></div>'; }).join('') + '</div>' : '<p class="small muted">No feedback yet.</p>') + (ia ? '<a class="small" href="#/p/' + ia.id + '/feedback">Feedback centre →</a>' : '') + '</div></div>';
+        h += '<div class="rh-grid"><div class="rh-card"><p class="label">📅 Deadlines and milestones</p>' + (mine.length ? '<div class="rh-list">' + mine.slice(0, 6).map(function (x) { var pp = x.kind === 'ee' ? ee : ia, late = x.due_on < today && !(pp && RH.stageDone(x.stage, pp, ex(pp)) >= 1); return '<div class="rh-item"><b>' + E(x.title) + '</b><span class="meta">' + RH.date(x.due_on) + ' · ' + E(RH.stageName(x.stage)) + (late ? ' · <span class="rh-badge warn">overdue</span>' : '') + '</span></div>'; }).join('') + '</div>' : '<p class="small muted">Your supervisor has not set deadlines yet.</p>') + '</div>' +
+          '<div class="rh-card"><p class="label">💬 Recent feedback</p>' + (fb.length ? '<div class="rh-list">' + fb.map(function (f) { return '<div class="rh-item"><span class="meta">' + (f.source === 'ai' ? '<span class="rh-badge ai">AI</span>' : '<span class="rh-badge ok">Supervisor</span>') + ' ' + E(critName(f.criterion) || RH.stageName(f.stage) || '') + ' · ' + RH.date(f.created_at) + '</span><span class="small">' + E(f.comment.slice(0, 220)) + (f.comment.length > 220 ? '…' : '') + '</span></div>'; }).join('') + '</div>' : '<p class="small muted">No feedback yet.</p>') + ((ia || ee) ? '<a class="small" href="#/p/' + (ia || ee).id + '/feedback">Feedback centre →</a>' : '') + '</div></div>';
         m.innerHTML = h;
         if (!RH.cur) RH.curriculum();
       });
@@ -244,18 +247,18 @@
   }
   var NEXT_TIP = { topic: 'Choose an area that interests you and read the background.', rq: 'Build a focused question with a named IV, range, DV and organism.', hypothesis: 'Write null and alternative hypotheses with a biological reason.', variables: 'Decide how you will change, measure and control each variable.', method: 'Write a method someone else could repeat exactly.', safety: 'Check safety, ethics and environmental issues before you collect data.', data: 'Enter your raw data with units and uncertainties, then lock the original.', analysis: 'Process your data and choose a suitable statistical test.', graphs: 'Draw a graph that answers your research question, with error bars.', conclusion: 'Answer the question using your numbers and the scientific context.', evaluation: 'Explain specific weaknesses and realistic improvements.', assess: 'Check the rubric, read your feedback and submit.' };
 
-  function newProject() {
-    var me = RH.me, cls = (me.classes || []);
-    var m = RH.shell('#/', '<div class="rh-card"><h2>Start your Biology IA</h2><p>Choose the class whose teacher will supervise your investigation. They will see your work and give feedback.</p>' +
+  function newProject(kind) {
+    var me = RH.me, cls = (me.classes || []), isEE = kind === 'ee';
+    var m = RH.shell(isEE ? 'EE' : 'IA', '<div class="rh-card"><h2>' + (isEE ? 'Start your Extended Essay' : 'Start your Biology IA') + '</h2><p>Choose the class whose teacher will supervise your ' + (isEE ? 'extended essay' : 'investigation') + '. They will see your work and give feedback.' + (isEE ? ' (If your school has given you a different EE supervisor, ask them to add you to one of their classes on BioscienceVista.)' : '') + '</p>' +
       '<div class="rh-field"><label for="rh-cls">Supervising class</label><select id="rh-cls">' + (cls.length ? cls.map(function (c) { return '<option value="' + c.id + '">' + E(c.name) + '</option>'; }).join('') : '<option value="">No class yet</option>') + '</select>' +
       (cls.length ? '' : '<span class="tip">You have not joined a class yet. <a href="/dashboard/">Join your teacher\'s class</a> first, or start now and choose a class later.</span>') + '</div>' +
-      '<div class="rh-field"><label for="rh-title">Working title</label><input type="text" id="rh-title" value="My Biology investigation" maxlength="160"></div>' +
-      '<div class="btns"><button class="btn main" id="rh-go" type="button">Create my IA project</button><a class="btn" href="#/">Cancel</a></div><p class="msg" id="rh-msg"></p></div>');
+      '<div class="rh-field"><label for="rh-title">Working title</label><input type="text" id="rh-title" value="' + (isEE ? 'My extended essay' : 'My Biology investigation') + '" maxlength="160"></div>' +
+      '<div class="btns"><button class="btn main" id="rh-go" type="button">' + (isEE ? 'Create my EE project' : 'Create my IA project') + '</button><a class="btn" href="#/">Cancel</a></div><p class="msg" id="rh-msg"></p></div>');
     m.querySelector('#rh-go').onclick = function () {
       var b = this; b.disabled = true;
-      RH.curriculum().then(function (cur) {
-        return S.db.from('research_projects').insert({ kind: 'ia', subject: 'Biology', curriculum_id: cur && cur.id, class_id: m.querySelector('#rh-cls').value || null, title: m.querySelector('#rh-title').value.trim() || 'My Biology investigation', data: {} }).select('id').single();
-      }).then(function (r) { if (r.error) throw r.error; location.hash = '#/p/' + r.data.id + '/topic'; }).catch(function (e) { b.disabled = false; m.querySelector('#rh-msg').textContent = S.nice(e); });
+      RH.curriculum(null, isEE ? 'ee' : 'ia').then(function (cur) {
+        return S.db.from('research_projects').insert({ kind: isEE ? 'ee' : 'ia', subject: isEE ? 'Extended essay' : 'Biology', curriculum_id: cur && cur.id, class_id: m.querySelector('#rh-cls').value || null, title: m.querySelector('#rh-title').value.trim() || (isEE ? 'My extended essay' : 'My Biology investigation'), stage: isEE ? 'ee_subject' : 'topic', data: {} }).select('id').single();
+      }).then(function (r) { if (r.error) throw r.error; location.hash = '#/p/' + r.data.id + '/' + (isEE ? 'ee_subject' : 'topic'); }).catch(function (e) { b.disabled = false; m.querySelector('#rh-msg').textContent = S.nice(e); });
     };
   }
 
@@ -269,11 +272,13 @@
     var load = function () {
       S.db.from('research_submissions').select('*').eq('project_id', p.id).order('submitted_at', { ascending: false }).then(function (r) {
         var subs = r.data || [];
-        var form = RH.owner ? '<h3>New submission</h3><div class="two"><div class="rh-field"><label for="sb-stage">What is it?</label><select id="sb-stage"><option value="proposal">Proposal</option><option value="draft">Draft report</option><option value="data">Data file</option><option value="final">Final report</option></select></div>' +
+        var drafts = subs.filter(function (x) { return x.stage === 'draft'; });
+        var eeNote = p.kind === 'ee' ? '<div class="rh-card tint" style="padding:12px"><p class="small"><b>Extended essay rules:</b> your supervisor reads and comments on <b>one draft only</b> (after the interim reflection, before the viva voce), and the <b>final version is handed in before the viva voce</b>; it cannot be changed afterwards.' + (RH.sup && drafts.some(function (x) { return x.status !== 'submitted'; }) ? ' <b>You have already responded to a draft: further drafts should not receive comments.</b>' : '') + '</p></div>' : '';
+        var form = (RH.owner ? '<h3>New submission</h3><div class="two"><div class="rh-field"><label for="sb-stage">What is it?</label><select id="sb-stage"><option value="proposal">Proposal</option><option value="draft">Draft report</option><option value="data">Data file</option><option value="final">Final report</option></select></div>' +
           '<div class="rh-field"><label for="sb-file">File (DOCX, PDF, CSV or XLSX, up to 25 MB)</label><input type="file" id="sb-file" accept=".docx,.pdf,.csv,.xlsx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></div></div>' +
           '<div class="rh-field"><label for="sb-note">Note to your supervisor (optional)</label><textarea id="sb-note" maxlength="2000"></textarea></div>' +
           '<label class="chk small"><input type="checkbox" id="sb-own"> This is my own work. I have acknowledged every source and recorded any AI assistance in my <a href="#/p/' + p.id + '/integrity">integrity record</a>.</label>' +
-          '<div class="btns"><button class="btn main" id="sb-go" type="button">Submit</button><span class="small muted" id="sb-msg"></span></div><hr style="border:0;border-top:1px solid var(--line)">' : '';
+          '<div class="btns"><button class="btn main" id="sb-go" type="button">Submit</button><span class="small muted" id="sb-msg"></span></div><hr style="border:0;border-top:1px solid var(--line)">' : '') + eeNote;
         box.innerHTML = form + '<h3>History</h3>' + (subs.length ? '<div class="scroll"><table class="dt"><thead><tr><th>Stage</th><th>Version</th><th>File</th><th>Words</th><th>Submitted</th><th>Status</th><th>Supervisor</th></tr></thead><tbody>' + subs.map(function (s) {
           return '<tr><td>' + E(s.stage) + '</td><td>v' + s.version + '</td><td>' + (s.file_path ? '<a href="#" data-f="' + E(s.file_path) + '">' + E(s.file_name) + '</a>' : '—') + (s.note ? '<div class="small muted">' + E(s.note) + '</div>' : '') + '</td><td>' + (s.word_count || '') + '</td><td>' + RH.date(s.submitted_at, true) + '</td><td>' + (s.status === 'approved' ? '<span class="rh-badge ok">Approved</span>' : s.status === 'returned' ? '<span class="rh-badge warn">Returned</span>' : '<span class="rh-badge info">Submitted</span>') + (s.decision_note ? '<div class="small">' + E(s.decision_note) + '</div>' : '') + '</td><td>' +
             (RH.sup && s.status === 'submitted' ? '<div class="btns"><button class="btn xs" data-ok="' + s.id + '" type="button">Approve</button><button class="btn xs bad" data-ret="' + s.id + '" type="button">Return for revision</button></div>' : (s.decided_at ? RH.date(s.decided_at) : '')) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<p class="small muted">Nothing submitted yet.</p>');
@@ -292,7 +297,7 @@
           RH.saveNow().then(function () { return S.db.storage.from('research-files').upload(path, f, { contentType: f.type || 'application/octet-stream', upsert: false }); }).then(function (u) {
             if (u.error) throw u.error;
             return S.db.from('research_submissions').insert({ project_id: p.id, stage: stage, file_path: path, file_name: f.name, mime: f.type, size_bytes: f.size, word_count: p.word_count || null, note: box.querySelector('#sb-note').value.trim() || null });
-          }).then(function (r) { if (r.error) throw r.error; RH.toast('Submitted'); if (stage === 'proposal') p.status = 'proposal_submitted'; if (stage === 'final') p.status = 'final_submitted'; RH.snapshot('submission:' + stage, p.data, 'Snapshot at ' + stage + ' submission').catch(function () {}); load(); })
+          }).then(function (r) { if (r.error) throw r.error; RH.toast('Submitted'); if (p.kind === 'ee' && stage === 'draft') RH.set('ee_flags.draft', true); if (stage === 'proposal') p.status = 'proposal_submitted'; if (stage === 'final') p.status = 'final_submitted'; RH.snapshot('submission:' + stage, p.data, 'Snapshot at ' + stage + ' submission').catch(function () {}); load(); })
             .catch(function (e) { go.disabled = false; msg.textContent = S.nice(e); });
         };
       });
@@ -306,7 +311,8 @@
       var f = r.data || [], box = m.querySelector('#rh-fb'), crit = (RH.cur && RH.cur.criteria) || [];
       var latest = {}; f.filter(function (x) { return x.source === 'teacher' && x.mark != null; }).forEach(function (x) { if (!latest[x.criterion]) latest[x.criterion] = x; });
       var tot = crit.reduce(function (s, c) { return s + (latest[c.key] ? latest[c.key].mark : 0); }, 0), any = crit.some(function (c) { return latest[c.key]; });
-      var h = '<div class="rh-card"><h3>Supervisor\'s criterion marks</h3><div class="rh-kpi">' + crit.map(function (c) { return '<div><b>' + (latest[c.key] ? latest[c.key].mark : '–') + '<small style="font-size:.9rem">/' + c.max + '</small></b><span>' + E(c.name) + '</span></div>'; }).join('') + '<div><b>' + (any ? tot : '–') + '<small style="font-size:.9rem">/' + crit.reduce(function (s, c) { return s + c.max; }, 0) + '</small></b><span>Total (school assessment, not final)</span></div></div><p class="small muted">Marks are your supervisor\'s best-fit judgement against the markbands. They are not guaranteed: IB moderation can change them.</p></div>';
+      var pg = f.filter(function (x) { return x.criterion === 'predicted'; })[0];
+      var h = p.kind === 'ee' ? '<div class="rh-card"><h3>Predicted grade</h3><p>' + (pg ? '<b>' + E(pg.comment) + '</b> <span class="small muted">(' + RH.date(pg.created_at) + ')</span>' : '<span class="muted">Not recorded yet.</span>') + '</p><p class="small muted">Your extended essay is marked by IB examiners out of 30. Your supervisor does not mark it; they predict a grade from the grade descriptors.</p></div>' : '<div class="rh-card"><h3>Supervisor\'s criterion marks</h3><div class="rh-kpi">' + crit.map(function (c) { return '<div><b>' + (latest[c.key] ? latest[c.key].mark : '–') + '<small style="font-size:.9rem">/' + c.max + '</small></b><span>' + E(c.name) + '</span></div>'; }).join('') + '<div><b>' + (any ? tot : '–') + '<small style="font-size:.9rem">/' + crit.reduce(function (s, c) { return s + c.max; }, 0) + '</small></b><span>Total (school assessment, not final)</span></div></div><p class="small muted">Marks are your supervisor\'s best-fit judgement against the markbands. They are not guaranteed: IB moderation can change them.</p></div>';
       var tabs = [['all', 'All'], ['teacher', 'Supervisor'], ['ai', 'AI mentor']];
       h += '<div class="rh-tabs" role="tablist">' + tabs.map(function (t, i) { return '<button type="button" role="tab" aria-selected="' + (i === 0) + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="fb-list" class="rh-list"></div>';
       box.innerHTML = h;
@@ -344,8 +350,8 @@
 
   PAGES.notebook = function () {
     var p = RH.p, nb = RH.get('notebook', []);
-    var m = RH.shell('notebook', projHead('📓 Research notebook', 'A dated record of your decisions, observations, problems and discoveries. It is the evidence of your own thinking, and helps when you write the evaluation.') +
-      (RH.owner ? '<div class="rh-card"><div class="two"><div class="rh-field"><label for="nb-kind">Type</label><select id="nb-kind"><option>Decision</option><option>Observation</option><option>Challenge</option><option>Discovery</option><option>Idea</option></select></div></div><div class="rh-field"><label for="nb-text">Entry</label><textarea id="nb-text"></textarea></div><div class="btns"><button class="btn main sm" id="nb-add" type="button">Add entry</button></div></div>' : '') +
+    var m = RH.shell('notebook', projHead(p.kind === 'ee' ? '📓 Researcher\'s reflection space (RRS)' : '📓 Research notebook', p.kind === 'ee' ? 'Your ongoing record of reading, ideas, decisions, challenges and emerging questions, as the guide recommends. Share extracts in your reflection sessions; it is the best source for your reflective statement.' : 'A dated record of your decisions, observations, problems and discoveries. It is the evidence of your own thinking, and helps when you write the evaluation.') +
+      (RH.owner ? '<div class="rh-card"><div class="two"><div class="rh-field"><label for="nb-kind">Type</label><select id="nb-kind"><option>Decision</option><option>Observation</option><option>Challenge</option><option>Discovery</option><option>Idea</option><option>Reading</option><option>Emerging question</option><option>Reflection</option></select></div></div><div class="rh-field"><label for="nb-text">Entry</label><textarea id="nb-text"></textarea></div><div class="btns"><button class="btn main sm" id="nb-add" type="button">Add entry</button></div></div>' : '') +
       '<div class="rh-list" id="nb-list"></div>');
     var draw = function () { m.querySelector('#nb-list').innerHTML = nb.slice().reverse().map(function (x) { return '<div class="rh-item"><span class="meta"><b>' + E(x.kind) + '</b> · ' + RH.date(x.at, true) + '</span><span style="white-space:pre-wrap">' + E(x.text) + '</span></div>'; }).join('') || '<p class="small muted">No entries yet.</p>'; };
     draw();
@@ -400,10 +406,10 @@
       return Promise.all([sids.length ? S.db.from('profiles').select('id,full_name').in('id', sids) : { data: [] }, cids.length ? S.db.from('classes').select('id,name').in('id', cids) : { data: [] }]).then(function (y) {
         var names = {}, cls = {}; (y[0].data || []).forEach(function (r) { names[r.id] = r.full_name || 'Student'; }); (y[1].data || []).forEach(function (r) { cls[r.id] = r.name; });
         var today = new Date().toISOString().slice(0, 10), weekAgo = new Date(Date.now() - 14 * 864e5).toISOString();
-        var late = function (p) { return ms.some(function (q) { return q.class_id === p.class_id && q.due_on < today && RH.stageDone(q.stage, p, {}) < 1; }); };
+        var late = function (p) { return ms.some(function (q) { return q.class_id === p.class_id && (q.kind || 'ia') === p.kind && q.due_on < today && RH.stageDone(q.stage, p, {}) < 1; }); };
         var awaitingP = subs.filter(function (s) { return s.stage === 'proposal'; }).length, awaitingF = subs.length - awaitingP;
         var needs = ps.filter(function (p) { return late(p) || concern.some(function (c) { return c.project_id === p.id; }) || p.updated_at < weekAgo || p.status === 'returned'; });
-        var h = '<section class="rh-hero"><p class="label">Supervisor dashboard</p><h1>Research supervision</h1><p>Every IA your students have started in the classes you teach.</p></section>' +
+        var h = '<section class="rh-hero"><p class="label">Supervisor dashboard</p><h1>Research supervision</h1><p>Every IA and extended essay your students have started in the classes you teach.</p></section>' +
           '<div class="rh-kpi"><div><b>' + sids.length + '</b><span>Students</span></div><div><b>' + ps.filter(function (p) { return p.kind === 'ia'; }).length + '</b><span>IA projects</span></div><div><b>' + ps.filter(function (p) { return p.kind === 'ee'; }).length + '</b><span>EE projects</span></div><div><b>' + awaitingP + '</b><span>Proposals awaiting approval</span></div><div><b>' + awaitingF + '</b><span>Drafts and finals awaiting feedback</span></div><div><b>' + ps.filter(late).length + '</b><span>Past a deadline</span></div><div><b>' + needs.length + '</b><span>May need intervention</span></div></div>';
         h += '<div class="rh-card"><div class="rh-head"><h2>Students</h2><div class="btns"><select id="tf-cls" aria-label="Class"><option value="">All classes</option>' + cids.map(function (c) { return '<option value="' + c + '">' + E(cls[c] || 'Class') + '</option>'; }).join('') + '</select><select id="tf-st" aria-label="Status"><option value="">Any status</option>' + Object.keys(RH.STATUS).map(function (k) { return '<option value="' + k + '">' + RH.STATUS[k][0] + '</option>'; }).join('') + '<option value="needs">Needs intervention</option></select><button class="btn sm" id="tf-csv" type="button">Download class report (CSV)</button></div></div><div class="scroll" id="tf-tab"></div></div>';
         m.innerHTML = h;
@@ -412,7 +418,7 @@
           var rs = rowsFor();
           m.querySelector('#tf-tab').innerHTML = rs.length ? '<table class="dt"><thead><tr><th>Student</th><th>Class</th><th>Project</th><th>Stage</th><th>Progress</th><th>Words</th><th>Status</th><th>Waiting for you</th><th>Updated</th></tr></thead><tbody>' + rs.map(function (p) {
             var pr = RH.progress(p, {}), wait = subs.filter(function (s) { return s.project_id === p.id; }).map(function (s) { return s.stage; });
-            return '<tr><td><a href="#/p/' + p.id + '/assess">' + E(names[p.student_id] || 'Student') + '</a>' + (needs.indexOf(p) >= 0 ? ' <span class="rh-badge warn">check in</span>' : '') + '</td><td>' + E(cls[p.class_id] || '—') + '</td><td>' + E(p.title) + '<div class="small muted">' + E((p.rq || '').slice(0, 90)) + '</div></td><td>' + E(RH.stageName(p.stage)) + '</td><td><div class="rh-prog" style="min-width:70px"><i style="width:' + pr + '%"></i></div><span class="small">' + pr + '%</span></td><td class="num">' + (p.word_count || 0) + '</td><td>' + RH.badge(p.status) + '</td><td>' + (wait.length ? '<a class="rh-badge info" href="#/p/' + p.id + '/submit">' + E(wait.join(', ')) + '</a>' : '') + '</td><td>' + RH.date(p.updated_at) + '</td></tr>'; }).join('') + '</tbody></table>'
+            return '<tr><td><a href="#/p/' + p.id + '/' + RH.lastStage(p) + '">' + E(names[p.student_id] || 'Student') + '</a>' + (needs.indexOf(p) >= 0 ? ' <span class="rh-badge warn">check in</span>' : '') + '</td><td>' + E(cls[p.class_id] || '—') + '</td><td><span class="rh-badge ' + (p.kind === 'ee' ? 'ai' : 'info') + '">' + (p.kind === 'ee' ? 'EE' : 'IA') + '</span> ' + E(p.title) + '<div class="small muted">' + E((p.rq || '').slice(0, 90)) + '</div></td><td>' + E(RH.stageName(p.stage)) + '</td><td><div class="rh-prog" style="min-width:70px"><i style="width:' + pr + '%"></i></div><span class="small">' + pr + '%</span></td><td class="num">' + (p.word_count || 0) + '</td><td>' + RH.badge(p.status) + '</td><td>' + (wait.length ? '<a class="rh-badge info" href="#/p/' + p.id + '/submit">' + E(wait.join(', ')) + '</a>' : '') + '</td><td>' + RH.date(p.updated_at) + '</td></tr>'; }).join('') + '</tbody></table>'
             : '<p class="small muted">' + (ps.length ? 'No projects match the filter.' : 'None of your students has started an IA yet. Ask them to open <b>/research/</b> and choose your class as their supervising class.') + '</p>';
         };
         m.querySelector('#tf-cls').onchange = draw; m.querySelector('#tf-st').onchange = draw; draw();
@@ -426,16 +432,16 @@
   }
 
   function milestonesPage() {
-    var m = RH.shell('#/teacher/milestones', '<div class="rh-card"><h2>📅 Milestones and deadlines</h2><p class="small muted">Set a due date for each IA stage per class. Students see them on their dashboard, and overdue stages show on your supervisor dashboard.</p></div><div id="ms-box" class="grp"><p class="muted">Loading…</p></div>');
+    var m = RH.shell('#/teacher/milestones', '<div class="rh-card"><h2>📅 Milestones and deadlines</h2><p class="small muted">Set a due date for each IA or EE stage per class. Students see them on their dashboard, and overdue stages show on your supervisor dashboard.</p></div><div id="ms-box" class="grp"><p class="muted">Loading…</p></div>');
     var box = m.querySelector('#ms-box');
     var load = function () {
       S.db.from('classes').select('id,name').is('deleted_at', null).order('name').then(function (cr) {
         var mineCls = (cr.data || []);   // RLS returns the classes this teacher can see; teaches_class decides who can write milestones
         return S.db.from('research_milestones').select('*').not('class_id', 'is', null).order('due_on').then(function (r) {
           var ms = r.data || [];
-          box.innerHTML = '<div class="rh-card"><h3>Add a milestone</h3><div class="two"><div class="rh-field"><label for="ms-c">Class</label><select id="ms-c">' + mineCls.map(function (c) { return '<option value="' + c.id + '">' + E(c.name) + '</option>'; }).join('') + '</select></div><div class="rh-field"><label for="ms-s">IA stage</label><select id="ms-s">' + RH.IA.map(function (s) { return '<option value="' + s.k + '">' + E(s.n) + '</option>'; }).join('') + '</select></div><div class="rh-field"><label for="ms-d">Due</label><input type="date" id="ms-d"></div><div class="rh-field"><label for="ms-t">Title</label><input type="text" id="ms-t" placeholder="e.g. Proposal and research question"></div></div><div class="btns"><button class="btn main sm" id="ms-add" type="button">Add milestone</button></div></div>' +
-            '<div class="rh-card"><h3>Current milestones</h3>' + (ms.length ? '<table class="dt"><thead><tr><th>Class</th><th>Stage</th><th>Title</th><th>Due</th><th></th></tr></thead><tbody>' + ms.map(function (x) { var c = mineCls.filter(function (q) { return q.id === x.class_id; })[0]; return '<tr><td>' + E(c ? c.name : '') + '</td><td>' + E(RH.stageName(x.stage)) + '</td><td>' + E(x.title) + '</td><td>' + RH.date(x.due_on) + '</td><td><button class="btn xs bad" data-del="' + x.id + '" type="button">Remove</button></td></tr>'; }).join('') + '</tbody></table>' : '<p class="small muted">None yet.</p>') + '</div>';
-          box.querySelector('#ms-add').onclick = function () { var d = box.querySelector('#ms-d').value; if (!d) return RH.toast('Choose a date'); S.db.from('research_milestones').insert({ class_id: box.querySelector('#ms-c').value, kind: 'ia', stage: box.querySelector('#ms-s').value, title: box.querySelector('#ms-t').value.trim() || RH.stageName(box.querySelector('#ms-s').value), due_on: d }).then(function (r) { if (r.error) return RH.err(r.error); load(); }); };
+          box.innerHTML = '<div class="rh-card"><h3>Add a milestone</h3><div class="two"><div class="rh-field"><label for="ms-c">Class</label><select id="ms-c">' + mineCls.map(function (c) { return '<option value="' + c.id + '">' + E(c.name) + '</option>'; }).join('') + '</select></div><div class="rh-field"><label for="ms-s">IA stage</label><select id="ms-s"><optgroup label="Biology IA">' + RH.IA.map(function (s) { return '<option value="ia:' + s.k + '">' + E(s.n) + '</option>'; }).join('') + '</optgroup><optgroup label="Extended Essay">' + (RH.EE || []).concat([{ k: 'ee_draft', n: 'Draft submission' }, { k: 'ee_viva', n: 'Viva voce' }]).map(function (s) { return '<option value="ee:' + s.k + '">' + E(s.n) + '</option>'; }).join('') + '</optgroup></select></div><div class="rh-field"><label for="ms-d">Due</label><input type="date" id="ms-d"></div><div class="rh-field"><label for="ms-t">Title</label><input type="text" id="ms-t" placeholder="e.g. Proposal and research question"></div></div><div class="btns"><button class="btn main sm" id="ms-add" type="button">Add milestone</button></div></div>' +
+            '<div class="rh-card"><h3>Current milestones</h3>' + (ms.length ? '<table class="dt"><thead><tr><th>Class</th><th>Stage</th><th>Title</th><th>Due</th><th></th></tr></thead><tbody>' + ms.map(function (x) { var c = mineCls.filter(function (q) { return q.id === x.class_id; })[0]; return '<tr><td>' + E(c ? c.name : '') + '</td><td>' + (x.kind === 'ee' ? 'EE · ' : 'IA · ') + E(RH.stageName(x.stage)) + '</td><td>' + E(x.title) + '</td><td>' + RH.date(x.due_on) + '</td><td><button class="btn xs bad" data-del="' + x.id + '" type="button">Remove</button></td></tr>'; }).join('') + '</tbody></table>' : '<p class="small muted">None yet.</p>') + '</div>';
+          box.querySelector('#ms-add').onclick = function () { var d = box.querySelector('#ms-d').value; if (!d) return RH.toast('Choose a date'); var ks = box.querySelector('#ms-s').value.split(':'); S.db.from('research_milestones').insert({ class_id: box.querySelector('#ms-c').value, kind: ks[0], stage: ks[1], title: box.querySelector('#ms-t').value.trim() || (ks[0] === 'ee' ? 'EE: ' : 'IA: ') + RH.stageName(ks[1]), due_on: d }).then(function (r) { if (r.error) return RH.err(r.error); load(); }); };
           box.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { if (!confirm('Remove this milestone?')) return; S.db.from('research_milestones').delete().eq('id', b.dataset.del).then(function (r) { if (r.error) return RH.err(r.error); load(); }); }; });
         });
       });
@@ -460,26 +466,65 @@
   }
 
   /* ---------- library, academy, EE ---------- */
+  /* ---------- resources library: downloadable templates, guides, data sheets and annotated samples (site_assets/research-resources) ---------- */
+  var RES = [
+    // [file, title, description, group, for, origin]
+    ['ia-report-template.docx', 'IA report template', 'The full report structure with guidance under each heading: research question, background, hypothesis, variables, method, risk assessment, data analysis, uncertainty, conclusion, evaluation and references.', 'Templates', 'IA', 'yours'],
+    ['ia-proposals-tracker.xlsx', 'IA proposal sheet (class tracker)', 'One row per student: research question, hypotheses, variables, levels, measurement, controls, statistical test, apparatus, dates, feedback and approval. Includes a worked example.', 'Templates', 'IA', 'yours'],
+    ['ia-variables-design-template.docx', 'Variables and experimental design', 'Independent, dependent, controlled and confounding variables with how each is changed, measured and controlled; design table and flowchart box.', 'Templates', 'IA', 'new'],
+    ['ia-risk-assessment.docx', 'Risk assessment: safety, ethics and environment', 'Likelihood × severity risk table, ethics checklist (animals, human participants, microorganisms) and disposal plan, with a teacher approval line.', 'Templates', 'IA', 'new'],
+    ['research-question-worksheet.docx', 'Research question worksheet', 'Topic to focused question in four steps, with a checklist and weak, improved and strong examples. For the IA and the EE.', 'Templates', 'Both', 'new'],
+    ['ia-final-checklist.docx', 'IA final submission checklist', 'Every requirement of the four criteria plus presentation and integrity, to tick before submitting.', 'Checklists', 'IA', 'new'],
+    ['ia-marking-rubric.xlsx', 'IA marking rubric', 'The four criteria with their markband descriptors, mark boxes, comments, automatic total and indicative grade, and the command terms.', 'Assessment', 'IA', 'yours'],
+    ['ee-subject-pathway-guide.docx', 'EE subject and pathway guide', 'Subject-focused or interdisciplinary, the rule for ESS and literature and performance, and a planning sheet for your choice.', 'Templates', 'EE', 'new'],
+    ['ee-proposal-template.docx', 'EE research proposal', 'Title, pathway, question, rationale, objectives, methodology, preliminary sources, challenges, ethics and a timeline with the three reflection sessions.', 'Templates', 'EE', 'new'],
+    ['ee-research-log-rrs.docx', "Research log (researcher's reflection space)", 'A dated log of reading, ideas, decisions, challenges and emerging questions, plus questions to bring to your next session.', 'Templates', 'EE', 'new'],
+    ['ee-source-evaluation-worksheet.docx', 'Source evaluation worksheet', 'Score a source on eight credibility criteria and record its findings, limitations and how you will use it.', 'Templates', 'Both', 'new'],
+    ['ee-literature-review-template.docx', 'Literature review planner', 'Compare studies side by side, then synthesise agreements, disagreements and the gap your essay addresses.', 'Templates', 'EE', 'new'],
+    ['ee-academic-writing-and-referencing-guide.docx', 'Academic writing, citing and referencing', 'EE structure, what counts towards the 4,000 words, analytical writing, citing while writing (APA examples) and AI and integrity.', 'Guides', 'Both', 'new'],
+    ['ee-rpf-preparation.docx', 'RPF preparation', 'How criterion E works, records of the three sessions, and a planning grid for your 500-word reflective statement.', 'Templates', 'EE', 'new'],
+    ['ee-viva-voce-preparation.docx', 'Viva voce preparation', 'What to do before the viva, the guide\'s questions to prepare, other common questions and notes for your reflective statement.', 'Guides', 'EE', 'new'],
+    ['ee-final-checklist.docx', 'EE final checklist', 'Criteria A to E and the integrity and presentation rules, to tick before handing in the final version.', 'Checklists', 'EE', 'new'],
+    ['raw-data-and-statistics-template.xlsx', 'Raw data and statistics template', 'Raw data with automatic mean, SD, SE, half range and % uncertainty, a graph with ± SD error bars, and sheets for Welch\'s t-test and chi-squared.', 'Data and statistics', 'Both', 'new'],
+    ['how-to-add-sd-error-bars.xlsx', 'How to add standard deviation error bars', 'Step-by-step spreadsheet showing how to graph means with SD error bars.', 'Data and statistics', 'IA', 'yours'],
+    ['how-to-use-statistical-tests.pdf', 'How to use statistical tests', 'Student\'s t-test, Spearman\'s rank, chi-squared (independence and goodness of fit) and ANOVA, with worked examples, practice activities and critical-value tables.', 'Data and statistics', 'Both', 'yours'],
+    ['ecology-beach-practical-guide.pdf', 'Ecology beach practical guide', 'Random and systematic sampling in the field, and interpreting the data.', 'Practicals', 'IA', 'yours'],
+    ['ecology-beach-practical-objectives.pdf', 'Ecology beach practical objectives', 'The task: three questions answered with a t-test, Spearman\'s rank and chi-squared.', 'Practicals', 'IA', 'yours'],
+    ['ia-annotated-samples.docx', 'Annotated IA samples', 'Research questions, a data table, a graph, a statistical interpretation, conclusions and an evaluation table, each annotated against the criteria (illustrative data).', 'Samples', 'IA', 'sample'],
+    ['ee-annotated-samples.docx', 'Annotated EE samples', 'Research questions, an introduction, descriptive versus analytical writing, discussion and evaluation, and the difference between descriptive and evaluative reflection.', 'Samples', 'EE', 'sample']];
+  var ORIGIN = { yours: ['BioscienceVista\'s classroom resource', 'ok'], 'new': ['Template by BioscienceVista, 'info'], sample: ['Teacher-created sample (not IB, not real student work)', 'ai'] };
   function library() {
-    var T = [['IA planning and proposal', 'Topic, research question, hypothesis, variables and method in one plan: the Studio stages 1 to 6 are this template, saved for you.', '#/'], ['Research question worksheet', 'The Research question lab checks the five parts of a focused question and explains each.', '#/rqlab'], ['Variables table and experimental design', 'Stage 4 of the Studio: IV, DV, controlled and confounding variables with how each is changed, measured and controlled.', ''], ['Raw and processed data templates', 'Stage 7: a data table with units and uncertainties, CSV and Excel import, validation and a locked original.', ''], ['Graphing guide', 'The Graph studio draws scatter, line, bar, box and histogram graphs with error bars, trend lines and captions, and checks them.', '#/graph'], ['Statistical analysis guide', 'The Statistics lab chooses a test from your design, runs it and explains the result and its assumptions.', '#/lab'], ['Conclusion and evaluation guides', 'Stages 10 and 11 guide each part and build the limitation-and-improvement table.', ''], ['Final submission checklist', 'Stage 12 runs a readiness check against the four criteria before you submit.', '']];
-    RH.shell('#/library', '<div class="rh-card"><h2>📚 Templates and research library</h2><p class="small">Every template is an interactive tool that saves your work. Teacher-created guidance by BioscienceVista; IB criteria are quoted from the IB Biology guide with their source. Official IB exemplars are not reproduced here: ask your teacher for the teacher support material.</p></div><div class="rh-grid">' +
-      T.map(function (t) { return '<div class="rh-card"><h3>' + E(t[0]) + '</h3><p class="small">' + E(t[1]) + '</p>' + (t[2] ? '<a class="btn sm" href="' + t[2] + '">Open</a>' : '<span class="small muted">Inside your IA project</span>') + '</div>'; }).join('') + '</div>' +
-      '<div class="rh-card"><h3>Finding reliable sources</h3><p class="small">Search these yourself and cite exactly what you read:</p><ul class="small"><li><a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener">PubMed</a>: biomedical and life-science research articles.</li><li><a href="https://scholar.google.com/" target="_blank" rel="noopener">Google Scholar</a>: peer-reviewed papers across all sciences.</li><li><a href="https://doaj.org/" target="_blank" rel="noopener">DOAJ</a>: open-access, peer-reviewed journals.</li><li><a href="https://search.crossref.org/" target="_blank" rel="noopener">Crossref search</a>: check a DOI and the full reference.</li></ul></div>');
+    var m = RH.shell('#/library', '<div class="rh-card"><h2>📚 Templates, guides and samples</h2><p class="small">Everything you need to plan, carry out and write your IA and extended essay. Download a template, fill it in, and use the matching Studio stage for checks and feedback. All resources are by BioscienceVista; IB criteria are quoted from the IB guides with their source. Official IB exemplars are not published here: ask your teacher.</p>' +
+      '<div class="btns" style="flex-wrap:nowrap"><input type="text" id="lib-q" placeholder="Search the library" aria-label="Search the library"></div><div class="rh-tabs" role="tablist" id="lib-for">' + ['All', 'IA', 'EE'].map(function (x, i) { return '<button type="button" role="tab" aria-selected="' + (i === 0) + '" data-for="' + x + '">' + (x === 'All' ? 'IA and EE' : x === 'IA' ? 'Biology IA' : 'Extended Essay') + '</button>'; }).join('') + '</div></div><div id="lib-out" class="grp"></div>' +
+      '<div class="rh-card"><h3>Finding reliable sources</h3><p class="small">Search these yourself and cite exactly what you read:</p><ul class="small"><li><a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener">PubMed</a>: biomedical and life-science research.</li><li><a href="https://scholar.google.com/" target="_blank" rel="noopener">Google Scholar</a>: peer-reviewed papers across all subjects.</li><li><a href="https://doaj.org/" target="_blank" rel="noopener">DOAJ</a>: open-access, peer-reviewed journals.</li><li><a href="https://search.crossref.org/" target="_blank" rel="noopener">Crossref</a>: check a DOI and its full reference.</li></ul></div>');
+    var who = 'All';
+    var draw = function () {
+      var q = m.querySelector('#lib-q').value.trim().toLowerCase(), groups = ['Templates', 'Checklists', 'Guides', 'Data and statistics', 'Assessment', 'Practicals', 'Samples'];
+      var hit = RES.filter(function (r) { return (who === 'All' || r[4] === who || r[4] === 'Both') && (!q || (r[1] + ' ' + r[2] + ' ' + r[3]).toLowerCase().indexOf(q) >= 0); });
+      m.querySelector('#lib-out').innerHTML = hit.length ? groups.map(function (g) { var items = hit.filter(function (r) { return r[3] === g; }); if (!items.length) return '';
+        return '<div class="rh-card"><h3>' + E(g) + '</h3><div class="rh-grid">' + items.map(function (r) { var ext = r[0].split('.').pop().toUpperCase(), o = ORIGIN[r[5]];
+          return '<div class="rh-item"><div class="rh-head"><b>' + E(r[1]) + '</b><span class="rh-badge">' + ext + '</span></div><span class="small">' + E(r[2]) + '</span><span class="meta"><span class="rh-badge ' + o[1] + '">' + E(o[0]) + '</span> <span class="rh-badge">' + (r[4] === 'Both' ? 'IA and EE' : r[4]) + '</span></span><div class="btns"><a class="btn sm main" href="/assets/research-resources/' + r[0] + '" download>Download</a>' + (ext === 'PDF' ? '<a class="btn sm" href="/assets/research-resources/' + r[0] + '" target="_blank" rel="noopener">Open</a>' : '') + '</div></div>'; }).join('') + '</div></div>'; }).join('') : '<p class="small muted">Nothing matches.</p>';
+    };
+    m.querySelector('#lib-q').oninput = draw;
+    m.querySelectorAll('[data-for]').forEach(function (b) { b.onclick = function () { who = b.dataset.for; m.querySelectorAll('[data-for]').forEach(function (x) { x.setAttribute('aria-selected', x === b); }); draw(); }; });
+    draw();
   }
   function academy() {
     var A = [['What makes a focused research question?', 'It names the independent variable with its range and units, the dependent variable and how it is measured, and the organism or system. "How does temperature affect enzymes?" is a topic; a research question says which enzyme, which temperatures, and how the rate is measured.'], ['Prediction or hypothesis?', 'A prediction says what you expect to happen ("the rate will increase up to 40 °C"). A hypothesis also explains why, using biology ("because more kinetic energy means more enzyme–substrate collisions, until the active site denatures"). Statistical tests use a null hypothesis (no difference or no relationship) and an alternative hypothesis.'],
       ['Uncertainty in Biology', 'Record the instrument uncertainty (± half the smallest division for analogue scales, ± the last digit for digital), show variation between trials (standard deviation or range), and carry uncertainties into processed values. Error bars on graphs show the spread of the data.'], ['Choosing a statistical test', 'The test follows from the design: comparing groups or looking for a relationship; two groups or more; independent or paired; normal or skewed; counts or measurements. Never pick a test because it is available or because it gives a smaller p-value.'],
-      ['Significance is not importance', 'p < 0.05 means a result this extreme would be unlikely if the null hypothesis were true. It does not tell you how big or biologically important the effect is, and a correlation does not show cause and effect.'], ['Writing an evaluation', 'For each specific weakness: what it was, how it affected the results (in which direction and how much), why it happened, a realistic improvement, and how that improvement would make the conclusion more reliable.'], ['Using AI responsibly', 'AI can explain, question and give feedback. It must not write your work, invent data or create references. Record every use in your integrity record, as your school and the IB require.']];
+      ['Significance is not importance', 'p < 0.05 means a result this extreme would be unlikely if the null hypothesis were true. It does not tell you how big or biologically important the effect is, and a correlation does not show cause and effect.'], ['Writing an evaluation', 'For each specific weakness: what it was, how it affected the results (in which direction and how much), why it happened, a realistic improvement, and how that improvement would make the conclusion more reliable.'], ['Using AI responsibly', 'AI can explain, question and give feedback. It must not write your work, invent data or create references. Record every use in your integrity record, as your school and the IB require.'],
+      ['EE: subject-focused or interdisciplinary?', 'Subject-focused: one DP subject, ideally one you study. Interdisciplinary: two DP subjects whose knowledge, concepts, theories, perspectives or methods are integrated. ESS and literature and performance are cross-disciplinary and can only be taken on the subject-focused pathway.'],
+      ['EE: the three reflection sessions', 'First reflection: your initial explorations. Interim reflection: progress, challenges and a completed piece of writing. Final reflection (viva voce): a 20–30 minute interview after you hand in the final version. Attendance is recorded on the RPF; check-ins in between are encouraged but not recorded.'],
+      ['EE: drafts and the final version', 'Your supervisor reads and comments on one draft only (no direct editing), after the interim reflection and before the viva voce. The final version is handed in before the viva voce and cannot be changed afterwards.'],
+      ['EE: how it is assessed', 'IB examiners mark the essay out of 30 by best fit: A Framework 6, B Knowledge and understanding 6, C Analysis and line of argument 6, D Discussion and evaluation 8, E Reflection 4 (the 500-word statement on the RPF only). Your supervisor predicts a grade A–E; a D or higher is needed for the diploma.']];
     RH.shell('#/help', '<div class="rh-card"><h2>🎓 Research academy</h2><p class="small">Short guides to the ideas behind a strong investigation. Each Studio stage also has its own guidance in the side panel.</p></div>' + A.map(function (a) { return '<details class="rh-card"><summary>' + E(a[0]) + '</summary><p class="small" style="margin-top:8px">' + E(a[1]) + '</p></details>'; }).join(''));
   }
-  function eeSoon() {
-    RH.shell('#/ee', '<div class="rh-card tint"><p class="label">Next phase</p><h2>📝 Extended Essay Studio</h2><p>The EE Studio is the next phase of the Hub. It will follow the Extended Essay guide for first assessment 2027 (five criteria, 4,000 words, a 500-word RPF and three reflection sessions ending with the viva voce), checked against the guide before it opens.</p><p class="small muted">It will include subject and topic selection, a research question builder, the proposal for your supervisor, a source library with credibility checks, a writing studio with word counts and draft comparison, the reflection sessions, and the five-criterion rubric.</p><a class="btn sm" href="#/">Back to the dashboard</a></div>');
-  }
+
 
   /* ---------- start ---------- */
   S.guard(el, { anyone: true, school: true, allowPending: true }).then(function (me) {
     RH.me = me; RH.teacher = !!(me.staff || me.school || (me.roles || []).indexOf('teacher') >= 0);
-    try { RH.lastPid = localStorage.getItem('rh-last'); } catch (e) {}
+    try { RH.lastPid = localStorage.getItem('rh-last'); RH.lastIa = localStorage.getItem('rh-last-ia'); RH.lastEe = localStorage.getItem('rh-last-ee'); } catch (e) {}
     if (!RH.teacher && !(me.classes || []).length) {
       // students without a class can still explore the tools, and start a project once they join a class
     }

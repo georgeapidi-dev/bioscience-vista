@@ -1,4 +1,4 @@
-/* BioscienceVista · VISA Research Hub · Biology IA Studio stages (loaded before research.js, which provides RH's core).
+/* BioscienceVista · VISTA Research Hub · Biology IA Studio stages (loaded before research.js, which provides RH's core).
    Topic exploration, research question builder, hypothesis, variables and design, methodology, safety and ethics,
    conclusion, evaluation, and the rubric with supervisor marking. Data, analysis and graphs are in research-data.js.
    Checks on this page are rule-based and explain themselves; the Research Mentor (AI) is optional and always labelled. */
@@ -22,7 +22,7 @@
   }
   IA.bind = bind; IA.ta = ta;
   function page(k, main) {
-    var m = RH.shell('IA', RH.stageHead(k) + main + supBox(k) + RH.stageNav(k), RH.ctx(k));
+    var m = RH.shell(RH.p && RH.p.kind === 'ee' ? 'EE' : 'IA', RH.stageHead(k) + main + supBox(k) + RH.stageNav(k), RH.ctx(k));
     bind(m); wireSup(m, k); return m;
   }
   IA.page = page;
