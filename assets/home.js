@@ -30,7 +30,7 @@
       enz.forEach(function (e) {
         var gap = 0.35 + 0.45 * shape;
         ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.a);
-        ctx.fillStyle = 'rgba(47,158,116,.85)'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 30, gap, Math.PI * 2 - gap); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = 'rgba(22,163,74,.9)'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 30, gap, Math.PI * 2 - gap); ctx.closePath(); ctx.fill();
         ctx.restore();
         if (!reduce) e.a += 0.003;
       });
@@ -39,18 +39,18 @@
       parts.forEach(function (p) {
         if (!reduce) { p.x += p.vx * speed; p.y += p.vy * speed; if (p.x < 0 || p.x > W) p.vx *= -1; if (p.y < 0 || p.y > H) p.vy *= -1; }
         enz.forEach(function (e) { var dx = p.x - e.x, dy = p.y - e.y; if (dx * dx + dy * dy < 1300 && Math.random() < r / 2500) { prods.push({ x: e.x + 34, y: e.y, l: 60 }); p.x = Math.random() * W; p.y = Math.random() < .5 ? 0 : H; } });
-        ctx.fillStyle = '#F2A93B'; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, 7); ctx.fill();
+        ctx.fillStyle = '#F59E0B'; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, 7); ctx.fill();
       });
-      prods = prods.filter(function (q) { q.l--; if (!reduce) { q.x += 1.2; q.y -= .4; } ctx.fillStyle = 'rgba(34,211,238,' + (q.l / 60) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 7); ctx.arc(q.x + 7, q.y, 4, 0, 7); ctx.fill(); return q.l > 0; });
+      prods = prods.filter(function (q) { q.l--; if (!reduce) { q.x += 1.2; q.y -= .4; } ctx.fillStyle = 'rgba(2,132,199,' + (q.l / 60) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 7); ctx.arc(q.x + 7, q.y, 4, 0, 7); ctx.fill(); return q.l > 0; });
       // mini graph: rate against pH, with the current point
       var gx = 18, gy = H - 18, gw = 170, gh = 70;
-      ctx.fillStyle = 'rgba(11,20,38,.7)'; ctx.fillRect(gx - 8, gy - gh - 22, gw + 16, gh + 30);
-      ctx.strokeStyle = 'rgba(159,231,242,.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(gx, gy - gh); ctx.lineTo(gx, gy); ctx.lineTo(gx + gw, gy); ctx.stroke();
-      ctx.strokeStyle = '#22D3EE'; ctx.lineWidth = 2; ctx.beginPath();
+      ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fillRect(gx - 8, gy - gh - 22, gw + 16, gh + 30);
+      ctx.strokeStyle = '#94A3B8'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(gx, gy - gh); ctx.lineTo(gx, gy); ctx.lineTo(gx + gw, gy); ctx.stroke();
+      ctx.strokeStyle = '#7C3AED'; ctx.lineWidth = 2.5; ctx.beginPath();
       for (var k = 0; k <= 60; k++) { var ph = 1 + k * 13 / 60, y = gy - gh * pHf(ph) * Tf(+T.value) / Tf(40); if (k) ctx.lineTo(gx + k * gw / 60, y); else ctx.moveTo(gx, y); }
       ctx.stroke();
-      var cx = gx + (+pH.value - 1) / 13 * gw, cy = gy - gh * r / 100; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, 7); ctx.fill();
-      ctx.fillStyle = '#A9B6C9'; ctx.font = '11px Inter, sans-serif'; ctx.fillText('rate against pH', gx, gy - gh - 8);
+      var cx = gx + (+pH.value - 1) / 13 * gw, cy = gy - gh * r / 100; ctx.fillStyle = '#DB2777'; ctx.beginPath(); ctx.arc(cx, cy, 5, 0, 7); ctx.fill();
+      ctx.fillStyle = '#334155'; ctx.font = '11px Inter, sans-serif'; ctx.fillText('rate against pH', gx, gy - gh - 8);
       meter.textContent = Math.round(r) + ' %';
       if (!reduce) requestAnimationFrame(draw);
     }
