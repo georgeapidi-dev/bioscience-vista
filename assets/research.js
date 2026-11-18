@@ -521,6 +521,17 @@
           return '<div class="rh-item"><div class="rh-head"><b>' + E(r[1]) + '</b><span class="rh-badge">' + ext + '</span></div><span class="small">' + E(r[2]) + '</span><span class="meta"><span class="rh-badge ' + o[1] + '">' + E(o[0]) + '</span> <span class="rh-badge">' + (r[4] === 'Both' ? 'IA and EE' : r[4]) + '</span></span><div class="btns"><a class="btn sm main" href="/assets/research-resources/' + r[0] + '" download>Download</a>' + (ext === 'PDF' ? '<a class="btn sm" href="/assets/research-resources/' + r[0] + '" target="_blank" rel="noopener">Open</a>' : '') + '</div></div>'; }).join('') + '</div></div>'; }).join('') : '<p class="small muted">Nothing matches.</p>';
     };
     m.querySelector('#lib-q').oninput = draw;
+    // IB-owned examples and guidelines (migration 060): listed only to students and co-teachers of BioscienceVista's classes
+    S.db.rpc('research_private_list').then(function (r) {
+      var L = r.data || []; if (!L.length) return;
+      var box = document.createElement('div'); box.className = 'rh-card';
+      box.innerHTML = '<h3>🔒 IB materials (your classes only)</h3><p class="small">Official IB examples with examiner comments and the IB experimentation guidelines. They are for students in BioscienceVista\'s classes only: do not share or upload them anywhere else.</p><div class="rh-grid">' + L.map(function (f) { return '<div class="rh-item"><div class="rh-head"><b>' + E(f.title) + '</b><span class="rh-badge">PDF</span></div><span class="small">' + E(f.description || '') + '</span><span class="meta"><span class="rh-badge info">' + E(f.source) + '</span> ' + Math.round((f.size_bytes || 0) / 1024) + ' KB</span><div class="btns"><button class="btn sm main" type="button" data-pf="' + E(f.name) + '">Download</button></div></div>'; }).join('') + '</div>';
+      m.querySelector('#lib-out').parentNode.insertBefore(box, m.querySelector('#lib-out'));
+      box.querySelectorAll('[data-pf]').forEach(function (b) { b.onclick = function () { b.disabled = true; b.textContent = 'Preparing…';
+        S.db.rpc('research_private_get', { fname: b.dataset.pf }).then(function (x) { b.disabled = false; b.textContent = 'Download'; if (x.error) throw x.error;
+          var bin = atob(x.data), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+          var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([u], { type: 'application/pdf' })); a.download = b.dataset.pf + '.pdf'; document.body.appendChild(a); a.click(); a.remove(); }).catch(function (e) { b.disabled = false; b.textContent = 'Download'; RH.err(e); }); }; });
+    }, function () {});
     m.querySelectorAll('[data-for]').forEach(function (b) { b.onclick = function () { who = b.dataset.for; m.querySelectorAll('[data-for]').forEach(function (x) { x.setAttribute('aria-selected', x === b); }); draw(); }; });
     draw();
   }
