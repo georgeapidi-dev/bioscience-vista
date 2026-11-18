@@ -524,7 +524,7 @@
     return Promise.all([S.db.from('lessons').select('id,title,url,external_id,topic_id').eq('published', true).order('sort_order'),
       S.db.from('quizzes').select('id,title,category,published, quiz_classes(class_id,published)').is('deleted_at', null).order('created_at', { ascending: false }),
       S.db.from('resources').select('id,title,url,topic_id').eq('published', true).order('sort_order'),
-      S.db.from('simulations').select('id,title,url,topic_id').eq('published', true).order('sort_order')]).then(function (x) {
+      S.db.from('simulations').select('id,title,url,topic_id,description').eq('published', true).order('sort_order')]).then(function (x) {
       PICK = { lesson: x[0].data || [], quiz: x[1].data || [], resource: x[2].data || [], sim: x[3].data || [] }; return PICK; });
   }
   function progOf(tid) { var tp = {}; TOPICS.forEach(function (t) { tp[t.id] = t; }); var t = tp[tid]; return t ? (t.programme || (tp[t.parent_id] || {}).programme || '') : ''; }
@@ -548,13 +548,14 @@
     return { prog: t.programme || p.programme || '', subj: subj, sname: (t.subjects || p.subjects || {}).name || '' };
   }
   function guessKey(it) {   // simulations and links with no topic: read the subject from the title
-    var t = (it.title || '') + ' ' + (it.url || '');
-    if (/titration|acid|chromatograph|separating|mixture|enthalpy|redox/i.test(t)) return { prog: /chromatograph|separating|mixture/i.test(t) ? 'MYP 1' : 'IB DP', subj: 'chemistry' };
-    if (/circuit|force|wave|motion|projectile/i.test(t)) return { prog: 'IB DP', subj: 'physics' };
+    var t = (it.title || '') + ' ' + (it.url || ''), all = t + ' ' + (it.description || '');
+    if (/titration|acid|chromatograph|separating|mixture|enthalpy|redox|rates? of reaction|electroly|equilibri|combustion|calorim|\batom\b|bonding|gas laws|flame test|periodic|maxwell|energy profile|\bph\b|particle model|dissolv|elephant toothpaste|molecule|heating ice|squash test|drop test/i.test(t)) return { prog: /Grade 6|MYP 1\b|chromatograph|separating|mixture/i.test(all) ? 'MYP 1' : 'IB DP', subj: 'chemistry', anyChem: !/Grade 6|MYP 1\b/i.test(all) };
+    if (/circuit|force|wave|motion|projectile|density|mass and weight/i.test(t)) return { prog: 'IB DP', subj: 'physics' };
     return { prog: 'IB DP', subj: 'biology', loose: true };
   }
   function keyFits(k, want) {
     if (k.loose && want.subj !== 'chemistry' && want.subj !== 'physics' && want.subj !== 'mathematics') return true;   // biology labs suit any biology or science class
+    if (k.anyChem && (want.any || !want.subj || want.subj === 'chemistry' || /science/.test(want.subj))) return true;   // chemistry labs and simulators suit any chemistry or science class, at any level
     if (want.any) return true;
     if (!sameProg(k.prog, want.prog)) return false;
     return !want.subj || !k.subj || k.subj.indexOf(want.subj) >= 0 || (k.subj.indexOf('science') >= 0 && want.prog.indexOf('MYP') === 0);
