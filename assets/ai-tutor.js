@@ -19,14 +19,14 @@
   function save() { try { st.log = st.log.slice(-40); localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } }
   function md(t) {   // safe minimal formatting: escape first, then **bold**, line breaks and simple lists
     var h = E(t).replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>').replace(/(^|\s)\*([^*\n]+)\*(?=\s|$|[.,;:!?])/g, '$1<i>$2</i>');
-    return h.split(/\n{2,}/).map(function (p) {
-      var lines = p.split('\n');
-      if (lines.every(function (l) { return /^\s*([-•*]|\d+[.)])\s+/.test(l); })) {
-        var ol = /^\s*\d/.test(lines[0]);
-        return (ol ? '<ol>' : '<ul>') + lines.map(function (l) { return '<li>' + l.replace(/^\s*([-•*]|\d+[.)])\s+/, '') + '</li>'; }).join('') + (ol ? '</ol>' : '</ul>');
-      }
-      return '<p>' + lines.join('<br>') + '</p>';
-    }).join('');
+    var out = [], para = [], list = null, BUL = /^\s*([-•*]|\d+[.)])\s+/;
+    function flush() { if (para.length) { out.push('<p>' + para.join('<br>') + '</p>'); para = []; } if (list) { out.push('<' + list.t + '>' + list.i.join('') + '</' + list.t + '>'); list = null; } }
+    h.split('\n').forEach(function (l) {   // consecutive bullet or numbered lines become a list, the rest paragraphs
+      if (!l.trim()) { flush(); return; }
+      if (BUL.test(l)) { var t = /^\s*\d/.test(l) ? 'ol' : 'ul'; if (para.length) { var keep = list; list = null; flush(); list = keep; } if (list && list.t !== t) flush(); if (!list) list = { t: t, i: [] }; list.i.push('<li>' + l.replace(BUL, '') + '</li>'); return; }
+      if (list) flush(); para.push(l.replace(/^#{1,4}\s+(.*)$/, '<b>$1</b>'));
+    });
+    flush(); return out.join('');
   }
   var mode = function () { return MODES.filter(function (m) { return m[0] === st.mode; })[0] || MODES[0]; };
 
