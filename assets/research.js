@@ -129,9 +129,9 @@
   };
 
   /* ---------- layout ---------- */
-  var NAV_STUDENT = [['#/', '🏠', 'Research dashboard'], ['IA', '🧬', 'Biology IA Studio'], ['EE', '📝', 'Extended Essay Studio'], ['#/rqlab', '❓', 'Research question lab'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'], ['#/worksheets', '🧭', 'Interactive worksheets'],
+  var NAV_STUDENT = [['#/', '🏠', 'Research dashboard'], ['IA', '🧬', 'Biology IA Studio'], ['EE', '📝', 'Extended Essay Studio'], ['#/rqlab', '❓', 'Research question lab'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'], ['/poster/', '🖼️', 'Poster creator'], ['#/worksheets', '🧭', 'Interactive worksheets'],
     ['P:check', '✅', 'Pre-submission check'], ['P:submit', '📤', 'Submission centre'], ['P:feedback', '💬', 'Feedback centre'], ['P:meetings', '🗓️', 'Supervision'], ['P:notebook', '📓', 'Research notebook'], ['P:integrity', '🛡️', 'Academic integrity'], ['P:versions', '🕘', 'Version history'], ['#/library', '📚', 'Templates and samples'], ['#/help', '🎓', 'Research academy']];
-  var NAV_TEACHER = [['#/teacher', '🧑‍🏫', 'Supervisor dashboard'], ['#/teacher/milestones', '📅', 'Milestones and deadlines'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'], ['#/worksheets', '🧭', 'Interactive worksheets'], ['#/library', '📚', 'Templates and samples'], ['#/help', '🎓', 'Research academy']];
+  var NAV_TEACHER = [['#/teacher', '🧑‍🏫', 'Supervisor dashboard'], ['#/teacher/milestones', '📅', 'Milestones and deadlines'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'], ['/poster/', '🖼️', 'Poster creator'], ['#/worksheets', '🧭', 'Interactive worksheets'], ['#/library', '📚', 'Templates and samples'], ['#/help', '🎓', 'Research academy']];
   RH.shell = function (active, mainHtml, ctxHtml) {
     var nav = RH.teacher ? NAV_TEACHER.slice() : NAV_STUDENT.slice(); if (RH.me.admin) nav.push(['#/admin', '🛠️', 'Curriculum and admin']);
     var pid = RH.p && RH.owner ? RH.p.id : RH.lastPid;
