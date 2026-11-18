@@ -148,3 +148,11 @@ header.top .brand,.mainnav{font-family:var(--vx-font-body)}
 .ait-note{margin:12px 0 0;font-size:.85rem;color:var(--vx-text-2,#555)}.ait-in{display:flex;gap:8px}
 .ait-hd{margin:6px 0 10px}.ait-hd h2{margin:0 0 6px}
 @media (prefers-color-scheme:dark){.ait-log{background:transparent}.ait-msg.tut{background:transparent}}
+
+.ait-past{margin-top:12px;border:1px solid #DDD6FE;border-radius:12px;padding:8px 12px;background:#FAF5FF}.ait-past summary{cursor:pointer;font-weight:700;color:#5B21B6}
+.ait-past button{display:block;width:100%;text-align:left;margin:6px 0 0;padding:8px 10px;border-radius:10px;border:1px solid #E9D5FF;background:#fff;cursor:pointer;color:inherit}.ait-past button:hover{border-color:#7C3AED}
+
+/* results tables: short task names (full title on hover) */
+table.marks td.task-c{max-width:260px;font-size:.92rem;line-height:1.3}
+table.marks td.task-c .tk-code{display:inline-block;padding:1px 6px;border-radius:6px;background:#E0F2FE;color:#075985;font:700 .74rem/1.4 var(--vx-font-mono);white-space:nowrap}
+table.marks td.task-c .tk-kind{display:inline-block;padding:1px 6px;border-radius:6px;background:#FCE7F3;color:#9D174D;font-size:.74rem;font-weight:700;white-space:nowrap}

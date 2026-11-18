@@ -38,7 +38,8 @@
     '<div class="ait-log" id="ait-log" aria-live="polite"></div>' +
     '<form class="ait-form" id="ait-form"><label for="ait-in" class="sr-only">Your message</label><textarea id="ait-in" rows="2" maxlength="1500" placeholder="Ask a question, give an answer or describe what you are stuck on…"></textarea>' +
     '<div class="ait-act"><button type="submit" class="vx-btn">Send</button><button type="button" class="vx-btn ghost" id="ait-new">New chat</button><span class="vx-muted" id="ait-left" role="status"></span></div></form>' +
-    '<p class="ait-note">Your tutor helps you learn; it will not write assessed work (IA, EE, reports, homework to hand in) for you. AI can make mistakes: check important facts with your notes or your teacher.</p>';
+    '<details class="ait-past" id="ait-past" hidden><summary>🗂️ Your saved chats</summary><div id="ait-plist"></div></details>' +
+    '<p class="ait-note">Your chats are saved to your account so you can come back to them on any device; your teachers can read them too. Your tutor helps you learn; it will not write assessed work (IA, EE, reports, homework to hand in) for you. AI can make mistakes: check important facts with your notes or your teacher.</p>';
   var log = box.querySelector('#ait-log'), inp = box.querySelector('#ait-in'), tp = box.querySelector('#ait-topic'), left = box.querySelector('#ait-left'), busy = false;
   tp.value = st.topic || '';
   function paint() {
@@ -55,9 +56,38 @@
   }
   [].forEach.call(box.querySelectorAll('.ait-modes button'), function (b) { b.onclick = function () { st.mode = b.getAttribute('data-m'); save(); paint(); }; });
   tp.oninput = function () { st.topic = tp.value; save(); };
-  box.querySelector('#ait-new').onclick = function () { st.log = []; save(); paint(); inp.focus(); };
+  box.querySelector('#ait-new').onclick = function () { st.log = []; st.sid = null; st.flag = false; save(); paint(); past(); inp.focus(); };
   inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); box.querySelector('#ait-form').requestSubmit(); } });
 
+  /* saved chats (tutor_sessions, migration 063). If that table is not there yet, chats stay on this device only. */
+  var INTEG = /\b(write|do|complete|finish|rewrite|paraphrase|make|give me)\b.{0,40}\b(my|the|an?|this)\b.{0,25}\b(ia|internal assessment|extended essay|ee|lab report|essay|homework|assignment|coursework|personal project|report|conclusion|evaluation|research question)\b/i;
+  var SAVE = true;
+  function db() { var S = window.BVS; return S && S.db ? S.db : null; }
+  function persist() {
+    var D = db(); if (!SAVE || !D || !st.log.some(function (h) { return h.who === 'tutor'; })) return;
+    var msgs = st.log.filter(function (h) { return h.who !== 'err'; }).slice(-60), first = (msgs.filter(function (h) { return h.who === 'me'; })[0] || {}).text || 'Tutor chat';
+    var row = { mode: st.mode, topic: (st.topic || '').slice(0, 120) || null, title: first.slice(0, 160), messages: msgs, flagged: !!st.flag };
+    var p = st.sid ? D.from('tutor_sessions').update(row).eq('id', st.sid).select('id') : D.from('tutor_sessions').insert(row).select('id');
+    p.then(function (r) {
+      if (r.error) { if (/tutor_sessions|PGRST205|42P01|schema cache/i.test((r.error.code || '') + ' ' + (r.error.message || ''))) SAVE = false; return; }
+      var id = r.data && r.data[0] && r.data[0].id; if (id && !st.sid) { st.sid = id; save(); }
+    }, function () { });
+  }
+  function past() {
+    var D = db(); if (!D) return;
+    D.auth.getSession().then(function (s) {
+      if (!s || !s.data || !s.data.session) return;
+      D.from('tutor_sessions').select('id,mode,topic,title,messages,updated_at').eq('user_id', s.data.session.user.id).order('updated_at', { ascending: false }).limit(12).then(function (r) {
+        if (r.error) { SAVE = !/tutor_sessions|PGRST205|42P01|schema cache/i.test((r.error.code || '') + ' ' + (r.error.message || '')); return; }
+        var rows = r.data || [], box2 = box.querySelector('#ait-past'), list = box.querySelector('#ait-plist'); if (!rows.length) return;
+        list.innerHTML = rows.map(function (x, i) { var m = MODES.filter(function (y) { return y[0] === x.mode; })[0] || MODES[0];
+          return '<button type="button" data-i="' + i + '"><span aria-hidden="true">' + m[1] + '</span> <b>' + E(x.title || 'Tutor chat') + '</b><span class="vx-muted"> · ' + E(m[2]) + ' · ' + new Date(x.updated_at).toLocaleDateString() + '</span></button>'; }).join('');
+        [].forEach.call(list.querySelectorAll('button'), function (b) { b.onclick = function () { var x = rows[+b.getAttribute('data-i')];
+          st = { mode: x.mode, topic: x.topic || '', log: x.messages || [], sid: x.id, flag: false }; tp.value = st.topic; save(); paint(); box2.open = false; inp.focus(); }; });
+        box2.hidden = false;
+      });
+    });
+  }
   function call(body) {
     var S = window.BVS;
     if (!S || !S.db) return Promise.resolve({ ok: false, error: 'The site is still loading. Try again in a moment.' });
@@ -76,15 +106,15 @@
     e.preventDefault(); if (busy) return;
     var text = inp.value.trim(); if (!text) { inp.focus(); return; }
     var hist = st.log.filter(function (h) { return h.who !== 'err'; }).slice(-8).map(function (h) { return { who: h.who, text: h.text }; });
-    st.log.push({ who: 'me', text: text }); inp.value = ''; save(); paint();
+    st.log.push({ who: 'me', text: text }); if (INTEG.test(text)) st.flag = true; inp.value = ''; save(); paint();
     busy = true; log.insertAdjacentHTML('beforeend', '<div class="ait-msg tut wait"><span class="who">🤖 Tutor</span><p>Thinking…</p></div>'); log.scrollTop = log.scrollHeight;
     call({ mode: st.mode, message: text, topic: st.topic, history: hist }).then(function (d) {
       busy = false;
-      if (d && d.ok) { st.log.push({ who: 'tutor', text: d.text }); if (typeof d.left === 'number') left.textContent = d.left + ' free messages left today'; }
+      if (d && d.ok) { st.log.push({ who: 'tutor', text: d.text }); if (typeof d.left === 'number') left.textContent = d.left + ' free messages left today'; persist(); }
       else st.log.push({ who: 'err', text: (d && d.error) || 'The tutor could not answer. Try again.' });
       save(); paint();
       if (d && d.signin) log.insertAdjacentHTML('beforeend', '<p class="ait-in"><a class="vx-btn" href="/login/?next=/tutor/">Sign in</a> <a class="vx-btn ghost" href="/register/">Create a free account</a></p>');
     }, function () { busy = false; st.log.push({ who: 'err', text: 'The tutor could not be reached. Check your connection and try again.' }); save(); paint(); });
   };
-  paint();
+  paint(); setTimeout(past, 800);
 })();

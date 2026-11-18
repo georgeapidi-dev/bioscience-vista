@@ -3,6 +3,39 @@
    no service-role key or admin password is ever used in the browser. */
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), ME, TOPICS = [], CLASSES = [];
+  /* Short, specific task names for results tables (display only: the stored title is unchanged and shown on hover).
+     "Grade 8 · Biology · Nutrition and enzymes · Criteria B and C quiz" → "Nutrition and enzymes" + "quiz" */
+  function shortTask(t) {
+    var m;
+    t = String(t || '').replace(/\s+/g, ' ').trim(); if (!t) return { code: '', name: '–', kind: '' };
+    var parts = t.split(' · '), code = '', name = '', kind = [], late = /\(late\)/i.test(t), lvl = (/\((HL|SL)\b/i.exec(t) || [])[1];
+    var DROP = /^(grade|year|stage) ?\d+$|^(myp|dp) ?\d*$|^(biology|chemistry|physics|science|mathematics|maths|ess|environmental systems( and societies)?)$/i;
+    parts.forEach(function (p, i) {
+      p = p.replace(/\s*\((late|practice|hl|sl[^)]*|corrected[^)]*)\)/ig, '').trim();
+      var m;
+      if (DROP.test(p)) return;
+      if (/quiz/i.test(p) && /criteri|quiz$/i.test(p)) { kind.push('quiz'); return; }
+      if (/exam-style/i.test(p)) { kind.push('exam Qs'); return; }
+      if ((m = /^paper (\d+)$/i.exec(p))) { kind.push('P' + m[1]); return; }
+      if (/practice paper|^paper/i.test(p)) { if (!kind.length) kind.push(/exam-style/i.test(p) ? 'exam Qs' : 'paper'); return; }
+      if ((m = /^lesson (\d+)[^:]*:\s*(.*)$/i.exec(p))) { code = (code ? code + ' ' : '') + 'L' + m[1]; name = m[2]; return; }
+      if ((m = /^([A-E]\d\.\d)\b\s*(.*)$/.exec(p))) { code = m[1]; if (!name) name = m[2]; return; }
+      if (!name || (i < parts.length - 1 && !code)) { name = p; if (i < parts.length - 1 && /lesson \d/i.test(parts[i + 1] || '')) { code = p.split(/[,:]/)[0]; name = ''; } }
+    });
+    if (!name) name = parts[parts.length - 1];
+    name = name.replace(/^(understanding life \d+|introducing the unit|introduction)\s*:\s*/i, '').replace(/^(effects of|introducing|introduction to|using)\s+/i, '');
+    name = name.replace(/:\s*(investigating|practice|review|revision)$/i, '').replace(/^the\s+/i, '').replace(/\s+investigation$/i, '');
+    if (!code && (m = /^([^:]{2,12}):\s+(.{12,})$/.exec(name))) { code = m[1]; name = m[2]; }
+    var cw = (code.split(/\s/)[0] || '').toLowerCase(); if (cw.length > 3 && name.toLowerCase().indexOf(cw) === 0) name = name.slice(cw.length).replace(/^[\s,:;-]+/, '') || name;
+    name = name.replace(/,? and (how|why|what|the problem|measuring)\b.*$/i, '').replace(/, and .*$/, '');
+    if (name.length > 38) { name = name.slice(0, 38).replace(/[\s,;:]+\S*$/, '').replace(/[\s,]+(and|of|the|to|in|with|for)$/i, '') + '…'; }
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+    if (lvl) kind.unshift(lvl.toUpperCase());
+    if (late) kind.push('late');
+    return { code: code, name: name, kind: kind.join(' · ') };
+  }
+  function taskCell(t) { var s = shortTask(t);
+    return '<td class="task-c" title="' + E(t) + '">' + (s.code ? '<span class="tk-code">' + E(s.code) + '</span> ' : '') + E(s.name) + (s.kind ? ' <span class="tk-kind">' + E(s.kind) + '</span>' : '') + '</td>'; }
   var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['questions', '❓ Student questions'], ['labs', '🔬 Lab work'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['grading', '🎯 Grade boundaries'], ['bin', '🗑 Bin'], ['content', 'Site data'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
   var ADMIN_TABS = ['bookings', 'roles', 'activity', 'content'];   // Content (topics, link lists): admin only since 16 Nov 2026; teachers add lessons from the main site instead
   // the sections in four colourful groups (16 Nov 2026, admin: too many buttons): Students' work, Build and set, Classes and people, Site
@@ -375,7 +408,7 @@
         (x[5] && x[5].count ? '<p class="panel tint"><b>' + x[5].count + ' new lesson booking' + (x[5].count > 1 ? 's' : '') + '.</b> <a class="btn main sm" href="#bookings">Reply to bookings</a></p>' : '') +
         (nPend ? '<p class="panel tint"><b>' + nPend + ' new account' + (nPend > 1 ? 's are' : ' is') + ' waiting for approval.</b> <a class="btn main sm" href="' + (ME.admin ? '/admin/#approvals' : '#approvals') + '">Review and approve</a></p>' : '') +
         (!CLASSES.length ? '<p class="panel tint">Start by <a href="#classes">creating a class</a>. Each class gets a join code that students type when they register.</p>' : '') +
-        '<section class="panel"><h3>Latest results</h3>' + ((x[2].data || []).length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Task</th><th>Score</th><th>When</th></tr>' + x[2].data.map(function (r) { return '<tr><td>' + E(names[r.student_id] || '–') + '</td><td>' + E(r.title) + '</td><td>' + (r.score == null ? '–' : E(r.score) + '/' + E(r.max_score)) + '</td><td class="small">' + E(S.when(r.recorded_at)) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="muted">No results yet.</p>') +
+        '<section class="panel"><h3>Latest results</h3>' + ((x[2].data || []).length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Task</th><th>Score</th><th>When</th></tr>' + x[2].data.map(function (r) { return '<tr><td>' + E(names[r.student_id] || '–') + '</td>' + taskCell(r.title) + '<td>' + (r.score == null ? '–' : E(r.score) + '/' + E(r.max_score)) + '</td><td class="small">' + E(S.when(r.recorded_at)) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="muted">No results yet.</p>') +
         '<p class="small muted">' + (x[3].count || 0) + ' published quizzes · <a href="/teacher/">Classic teacher console (Google Sheets)</a></p></section>';
     });
   }
@@ -2019,7 +2052,7 @@
           (CLASSES.length ? '<h3>🏫 My classes</h3><div class="ccards">' + CLASSES.map(function (c) { var k = per[c.id] || { ok: 0, wait: 0 };
             return '<div class="ccard2" style="--k:' + hue(c.id) + '"><a href="#classes/' + c.id + '"><b>' + E(c.name) + '</b></a><span class="small">👥 ' + k.ok + ' student' + (k.ok === 1 ? '' : 's') + (k.wait ? ' · 🙋 ' + k.wait + ' waiting' : '') + '</span><span class="cc-main"><a href="#classes/' + c.id + '">Open class →</a><a href="#classes/' + c.id + '/status">🟢 Live work status</a><a href="#classes/' + c.id + '/todo">📌 Set work</a><a href="#classes/' + c.id + '/add">➕ Add lessons</a></span>' +
               '<details class="cc-more"><summary>More</summary><span><a href="#classes/' + c.id + '/lessons">🧪 Lessons</a><a href="#classes/' + c.id + '/quizzes">📝 Quizzes</a><a href="#classes/' + c.id + '/register">🗒 Register</a><a href="#classes/' + c.id + '/activity">👀 Activity</a><a href="' + '/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a><a href="/live/?class=' + c.id + '">🎥 Live</a></span></details></div>'; }).join('') + '</div>' : '') +
-                    '<section class="panel"><h3>Latest results</h3>' + (res.length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Task</th><th>Score</th></tr>' + res.map(function (r) { return '<tr><td>' + E(nm[r.student_id] || '–') + '</td><td>' + E(r.title) + '</td><td>' + E(r.score) + '/' + E(r.max_score) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="small muted">No results yet.</p>') + '</section>' + (ME.admin ? '' : '<section class="panel" id="rvbox"></section>');
+                    '<section class="panel"><h3>Latest results</h3>' + (res.length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Task</th><th>Score</th></tr>' + res.map(function (r) { return '<tr><td>' + E(nm[r.student_id] || '–') + '</td>' + taskCell(r.title) + '<td>' + E(r.score) + '/' + E(r.max_score) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="small muted">No results yet.</p>') + '</section>' + (ME.admin ? '' : '<section class="panel" id="rvbox"></section>');
         if (!ME.admin) reviewBox(p.querySelector('#rvbox'));
       });
     });
