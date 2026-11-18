@@ -257,7 +257,7 @@
   function report(body) {
     var g = (ST.guide && ST.guide.report) || {}, secs = (g.sections || []).filter(function (s) { return s.key !== 'references'; }), d = D(), rp = d.report || (d.report = {}), notes = g.notes || [];
     var final = ['final_submitted', 'completed'].indexOf(ST.p.status) >= 0;
-    body.innerHTML = '<section class="pp-card"><h3>Report rules</h3><ul>' + notes.map(function (n) { return '<li>' + E(n) + '</li>'; }).join('') + '</ul><p class="pp-muted">Source: ' + E(ST.guide ? ST.guide.source : '') + '</p></section>' +
+    body.innerHTML = (ST.p.status === 'proposal_submitted' ? '<p class="pp-tip">Your proposal is waiting for your supervisor. You can keep drafting; submit the final report after it has been approved.</p>' : '') + '<section class="pp-card"><h3>Report rules</h3><ul>' + notes.map(function (n) { return '<li>' + E(n) + '</li>'; }).join('') + '</ul><p class="pp-muted">Source: ' + E(ST.guide ? ST.guide.source : '') + '</p></section>' +
       '<section class="pp-card"><h3>Draft your report</h3><p class="pp-muted">Write each section in your own words. Use your journal, evidence and sources. Your draft saves as you type; use <b>Save a version</b> to keep a copy your supervisor can see.</p>' +
       secs.map(function (s) { return '<label class="pp-f"><span>' + E(s.label) + (s.criterion ? ' <span class="pp-chip">Criterion ' + E(s.criterion) + '</span>' : '') + '</span><textarea data-sec="' + E(s.key) + '" rows="5">' + E(rp[s.key] || '') + '</textarea><small data-wc="' + E(s.key) + '"></small></label>'; }).join('') +
       '<div class="pp-row"><button class="btn sm" id="rp-ver">💾 Save a version</button><span class="pp-muted" id="rp-tot"></span></div><div class="pp-meter" style="margin-top:8px"><i id="rp-bar" style="width:0"></i></div><p class="pp-muted" id="rp-pages"></p></section>' +
@@ -341,16 +341,196 @@
     });
   }
 
-  /* teachers: the projects they can see (the full supervisor tools come in part 2) */
+  /* =================== supervisors and coordinators (part 2) =================== */
+  var SVS = { proposal_submitted: 'Proposal to review', final_submitted: 'Final report to assess', returned: 'Returned to the student', active: 'Working' };
+  function svs(k) { return SVS[k] || STATUS[k] || k; }
+  var SV = { P: [], NM: {}, CO: [], T: [], filter: { st: '', co: '', mine: false, q: '' } };
   function supervisorList() {
     css();
-    S.db.from('pp_projects').select('id,title,status,updated_at,student_id').neq('status', 'archived').order('updated_at', { ascending: false }).limit(200).then(function (r) {
-      var P = (r.data || []).filter(function (p) { return p.student_id !== ST.me.user.id; });
-      return (P.length ? S.db.rpc('pp_names', { pids: P.map(function (p) { return p.id; }) }) : Promise.resolve({ data: [] })).then(function (n) {
-        var NM = {}; (n.data || []).forEach(function (x) { NM[x.project_id] = x; });
-        app.innerHTML = '<div id="pp">' + hero('Personal projects', 'Projects you supervise or coordinate. Full supervisor tools (approvals, feedback on each part, assessment) are being added next.') +
-          '<section class="pp-card"><h3>Projects (' + P.length + ')</h3>' + (P.length ? '<ul class="pp-list">' + P.map(function (p) { return '<li><b>' + E((NM[p.id] || {}).student_name || 'Student') + '</b> · ' + E(p.title) + '<br><span class="pp-chip">' + E(STATUS[p.status] || p.status) + '</span><small class="pp-muted">updated ' + new Date(p.updated_at).toLocaleDateString() + '</small></li>'; }).join('') + '</ul>' : '<p class="pp-muted">No personal projects yet. Students start theirs on this page.</p>') + '</section></div>';
+    Promise.all([S.db.from('pp_projects').select('id,title,status,updated_at,student_id,supervisor_id,cohort_id,class_id').neq('status', 'archived').order('updated_at', { ascending: false }).limit(500),
+      S.db.from('pp_cohorts').select('*').eq('archived', false).order('created_at', { ascending: false }), S.db.rpc('pp_teachers')]).then(function (x) {
+      SV.P = (x[0].data || []).filter(function (p) { return p.student_id !== ST.me.user.id; }); SV.CO = x[1].data || []; SV.T = x[2].data || [];
+      return (SV.P.length ? S.db.rpc('pp_names', { pids: SV.P.map(function (p) { return p.id; }) }) : Promise.resolve({ data: [] })).then(function (n) {
+        SV.NM = {}; (n.data || []).forEach(function (r) { SV.NM[r.project_id] = r; }); svList();
       });
+    });
+  }
+  function svList() {
+    var f = SV.filter, me = ST.me.user.id, coName = {}; SV.CO.forEach(function (c) { coName[c.id] = c.name; });
+    var P = SV.P.filter(function (p) { var n = SV.NM[p.id] || {}; return (!f.st || p.status === f.st) && (!f.co || p.cohort_id === f.co) && (!f.mine || p.supervisor_id === me) && (!f.q || ((n.student_name || '') + ' ' + p.title).toLowerCase().indexOf(f.q) >= 0); });
+    var waiting = SV.P.filter(function (p) { return p.status === 'proposal_submitted' || p.status === 'final_submitted'; }).length;
+    app.innerHTML = '<div id="pp">' + hero('Personal projects', 'Supervise, give feedback, approve proposals and assess with the official criteria. ' + (waiting ? waiting + ' waiting for you.' : '')) +
+      '<nav class="pp-tabs"><button aria-selected="true">📋 Projects (' + SV.P.length + ')</button><button id="sv-co">👥 Groups and deadlines (' + SV.CO.length + ')</button></nav><p id="pp-msg" role="status" class="pp-muted" style="min-height:1.2em"></p>' +
+      '<section class="pp-card"><div class="pp-row"><input id="sv-q" type="search" placeholder="Search student or title" value="' + E(f.q) + '" style="flex:1;min-width:200px;padding:8px;border-radius:10px;border:1px solid #cbd5e1">' +
+      '<select id="sv-st"><option value="">All statuses</option>' + Object.keys(STATUS).filter(function (k) { return k !== 'archived'; }).map(function (k) { return '<option value="' + k + '"' + (f.st === k ? ' selected' : '') + '>' + E(svs(k)) + '</option>'; }).join('') + '</select>' +
+      '<select id="sv-cf"><option value="">All groups</option>' + SV.CO.map(function (c) { return '<option value="' + c.id + '"' + (f.co === c.id ? ' selected' : '') + '>' + E(c.name) + '</option>'; }).join('') + '</select>' +
+      '<label class="pp-muted"><input type="checkbox" id="sv-mine"' + (f.mine ? ' checked' : '') + '> Only mine</label></div></section>' +
+      '<section class="pp-card">' + (P.length ? '<div style="overflow-x:auto"><table class="marks" style="width:100%"><tr><th>Student</th><th>Project</th><th>Status</th><th>Group</th><th>Supervisor</th><th>Updated</th><th></th></tr>' + P.map(function (p) { var n = SV.NM[p.id] || {};
+        return '<tr><td><b>' + E(n.student_name || 'Student') + '</b></td><td>' + E(p.title) + '</td><td><span class="pp-chip"' + (/submitted/.test(p.status) ? ' style="background:#FEF3C7;color:#92400E"' : '') + '>' + E(svs(p.status)) + '</span></td><td>' + E(coName[p.cohort_id] || '—') + '</td>' +
+          '<td><select data-sup="' + p.id + '" aria-label="Supervisor"><option value="">— none —</option>' + SV.T.map(function (t) { return '<option value="' + t.id + '"' + (p.supervisor_id === t.id ? ' selected' : '') + '>' + E(t.full_name || 'Teacher') + '</option>'; }).join('') + '</select></td>' +
+          '<td class="small">' + new Date(p.updated_at).toLocaleDateString() + '</td><td><button class="btn sm main" data-open="' + p.id + '">Open</button></td></tr>'; }).join('') + '</table></div>' : '<p class="pp-muted">No projects match. Students start their projects on this page.</p>') + '</section></div>';
+    var $ = function (q) { return app.querySelector(q); };
+    $('#sv-q').oninput = function () { f.q = this.value.trim().toLowerCase(); clearTimeout(svList.t); svList.t = setTimeout(svList, 300); };
+    $('#sv-st').onchange = function () { f.st = this.value; svList(); }; $('#sv-cf').onchange = function () { f.co = this.value; svList(); }; $('#sv-mine').onchange = function () { f.mine = this.checked; svList(); };
+    $('#sv-co').onclick = cohorts;
+    [].forEach.call(app.querySelectorAll('[data-sup]'), function (s) { s.onchange = function () { var id = s.getAttribute('data-sup');
+      S.db.from('pp_projects').update({ supervisor_id: s.value || null }).eq('id', id).then(function (r) { if (ok(r, 'Supervisor saved')) SV.P.forEach(function (p) { if (p.id === id) p.supervisor_id = s.value || null; }); }); }; });
+    [].forEach.call(app.querySelectorAll('[data-open]'), function (b) { b.onclick = function () { svOpen(b.getAttribute('data-open')); }; });
+  }
+
+  /* groups (cohorts) and their deadlines */
+  function cohorts() {
+    app.innerHTML = '<div id="pp">' + hero('Groups and deadlines', 'A group is one year\'s personal project students. Set its deadlines and exhibition; students choose their group when they start.') +
+      '<nav class="pp-tabs"><button id="sv-back">📋 Projects</button><button aria-selected="true">👥 Groups and deadlines</button></nav><p id="pp-msg" role="status" class="pp-muted" style="min-height:1.2em"></p>' +
+      '<section class="pp-card"><h3>New group</h3><div class="pp-row"><input id="co-n" placeholder="e.g. MYP 5 Personal Project 2026–27" style="flex:2;min-width:220px;padding:8px;border-radius:10px;border:1px solid #cbd5e1"><input id="co-y" placeholder="Year" style="width:110px;padding:8px;border-radius:10px;border:1px solid #cbd5e1"><button class="btn main sm" id="co-add">Create group</button></div></section>' +
+      SV.CO.map(function (c) { var dl = c.deadlines || [], ex = c.exhibition || {}, mineC = c.created_by === ST.me.user.id || ST.me.admin;
+        return '<section class="pp-card" data-co="' + c.id + '"><h3>' + E(c.name) + (c.year ? ' <small class="pp-muted">' + E(c.year) + '</small>' : '') + ' <small class="pp-muted">· ' + SV.P.filter(function (p) { return p.cohort_id === c.id; }).length + ' projects</small></h3>' +
+          '<ul class="pp-list" data-dl>' + dl.map(function (d, i) { return '<li class="pp-row"><input data-dlab="' + i + '" value="' + E(d.label) + '"' + (mineC ? '' : ' disabled') + ' style="flex:2;padding:6px;border-radius:8px;border:1px solid #cbd5e1"><input type="date" data-ddue="' + i + '" value="' + E(d.due || '') + '"' + (mineC ? '' : ' disabled') + '>' + (mineC ? '<button class="btn sm" data-drm="' + i + '">✕</button>' : '') + '</li>'; }).join('') + '</ul>' +
+          (mineC ? '<div class="pp-row" style="margin-top:8px"><button class="btn sm" data-dadd>➕ Add a deadline</button><button class="btn sm" data-dstd>Add the usual milestones</button></div>' +
+          '<div class="pp-g" style="margin-top:10px"><label class="pp-f"><span>Exhibition date</span><input type="date" data-exd value="' + E(ex.date || '') + '"></label><label class="pp-f"><span>Venue</span><input data-exv value="' + E(ex.venue || '') + '"></label></div>' +
+          '<div class="pp-row"><button class="btn main sm" data-csave>💾 Save group</button><button class="btn sm" data-carch>Archive group</button></div>' : '<p class="pp-muted">Only the teacher who created this group can change it.</p>') + '</section>'; }).join('') + '</div>';
+    app.querySelector('#sv-back').onclick = svList;
+    app.querySelector('#co-add').onclick = function () { var n = app.querySelector('#co-n').value.trim(); if (!n) { msg('Name the group first.', true); return; }
+      S.db.from('pp_cohorts').insert({ name: n, year: app.querySelector('#co-y').value.trim() || null, guide_id: GUIDE_ID, deadlines: [] }).select('*').single().then(function (r) { if (ok(r, 'Group created')) { SV.CO.unshift(r.data); cohorts(); } }); };
+    [].forEach.call(app.querySelectorAll('[data-co]'), function (sec) {
+      var c = SV.CO.filter(function (x) { return x.id === sec.getAttribute('data-co'); })[0], q = function (s) { return sec.querySelector(s); };
+      function collect() { c.deadlines = [].map.call(sec.querySelectorAll('[data-dlab]'), function (i) { var k = i.getAttribute('data-dlab'); return { label: i.value.trim(), due: (sec.querySelector('[data-ddue="' + k + '"]') || {}).value || '' }; }).filter(function (d) { return d.label; }); }
+      if (q('[data-dadd]')) q('[data-dadd]').onclick = function () { collect(); c.deadlines.push({ label: 'New deadline', due: '' }); cohorts(); };
+      if (q('[data-dstd]')) q('[data-dstd]').onclick = function () { collect(); ['Proposal: learning goal, product and success criteria', 'Plan and timeline checked by supervisor', 'Process journal check', 'Product finished', 'Report draft to supervisor', 'Final report submitted', 'Exhibition'].forEach(function (l) { if (!c.deadlines.some(function (d) { return d.label === l; })) c.deadlines.push({ label: l, due: '' }); }); cohorts(); };
+      [].forEach.call(sec.querySelectorAll('[data-drm]'), function (b) { b.onclick = function () { collect(); c.deadlines.splice(+b.getAttribute('data-drm'), 1); cohorts(); }; });
+      if (q('[data-csave]')) q('[data-csave]').onclick = function () { collect(); c.exhibition = { date: q('[data-exd]').value || null, venue: q('[data-exv]').value.trim() || null };
+        S.db.from('pp_cohorts').update({ deadlines: c.deadlines, exhibition: c.exhibition }).eq('id', c.id).then(function (r) { ok(r, 'Group saved'); }); };
+      if (q('[data-carch]')) q('[data-carch]').onclick = function () { if (!confirm('Archive this group? Students keep their projects; the group no longer appears for new students.')) return;
+        S.db.from('pp_cohorts').update({ archived: true }).eq('id', c.id).then(function (r) { if (ok(r, 'Archived')) { SV.CO = SV.CO.filter(function (x) { return x.id !== c.id; }); cohorts(); } }); };
+    });
+  }
+
+  /* one project, as the supervisor sees it */
+  var SVT = [['ov', '🏠 Overview'], ['plan', '🎯 Plan'], ['journal', '📓 Journal'], ['evidence', '📎 Evidence'], ['sources', '📚 Sources'], ['report', '📝 Report'], ['assess', '🧮 Assess'], ['feedback', '💬 Feedback']];
+  function svOpen(pid, tab) {
+    S.db.from('pp_projects').select('*').eq('id', pid).maybeSingle().then(function (r) {
+      var p = r.data; if (!p) { msg('Could not open that project.', true); return; }
+      var n = SV.NM[pid] || {}, co = SV.CO.filter(function (c) { return c.id === p.cohort_id; })[0];
+      tab = tab || 'ov';
+      app.innerHTML = '<div id="pp">' + hero(p.title, (n.student_name || 'Student') + ' · ' + svs(p.status) + (n.supervisor_name ? ' · Supervisor: ' + n.supervisor_name : '') + (co ? ' · ' + co.name : '')) +
+        '<nav class="pp-tabs"><button id="sv-back">← All projects</button>' + SVT.map(function (t) { return '<button data-svt="' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</button>'; }).join('') + '</nav>' +
+        '<p id="pp-msg" role="status" class="pp-muted" style="min-height:1.2em"></p><div id="sv-body"><p class="pp-muted">Loading…</p></div></div>';
+      app.querySelector('#sv-back').onclick = function () { supervisorList(); };
+      [].forEach.call(app.querySelectorAll('[data-svt]'), function (b) { b.onclick = function () { svOpen(pid, b.getAttribute('data-svt')); }; });
+      var body = app.querySelector('#sv-body');
+      ({ ov: svOverview, plan: svPlan, journal: svJournal, evidence: svEvidence, sources: svSources, report: svReport, assess: svAssess, feedback: svFeedback })[tab](body, p);
+    });
+  }
+  function fbBox(p, target, label) { return '<div class="pp-row" style="margin-top:8px" data-fbbox="' + E(target) + '"><input placeholder="' + E(label || 'Feedback on this part…') + '" style="flex:1;min-width:220px;padding:8px;border-radius:10px;border:1px solid #cbd5e1"><button class="btn sm">💬 Send feedback</button></div>'; }
+  function wireFb(body, p) { [].forEach.call(body.querySelectorAll('[data-fbbox]'), function (w) { var i = w.querySelector('input'), b = w.querySelector('button');
+    b.onclick = function () { var t = i.value.trim(); if (!t) return; S.db.from('pp_feedback').insert({ project_id: p.id, author_id: ST.me.user.id, target: w.getAttribute('data-fbbox'), comment: t }).then(function (r) { if (ok(r, 'Feedback sent to the student')) i.value = ''; }); }; }); }
+  function setStatus(p, st, note) {
+    return S.db.from('pp_projects').update({ status: st }).eq('id', p.id).then(function (r) {
+      if (!ok(r, 'Status: ' + svs(st))) return;
+      SV.P.forEach(function (x) { if (x.id === p.id) x.status = st; });
+      if (note) S.db.from('pp_feedback').insert({ project_id: p.id, author_id: ST.me.user.id, target: st === 'returned' ? 'proposal' : 'project', comment: note }).then(function () {});
+      svOpen(p.id, 'ov');
+    });
+  }
+  function svOverview(body, p) {
+    Promise.all([S.db.from('pp_journal').select('entry_date', { count: 'exact' }).eq('project_id', p.id).order('entry_date', { ascending: false }).limit(1), S.db.from('pp_evidence').select('id', { count: 'exact', head: true }).eq('project_id', p.id),
+      S.db.from('pp_sources').select('id', { count: 'exact', head: true }).eq('project_id', p.id), S.db.from('pp_tasks').select('status,due_on').eq('project_id', p.id), S.db.from('pp_submissions').select('*').eq('project_id', p.id).order('created_at', { ascending: false })]).then(function (x) {
+      var T = x[3].data || [], today = new Date().toISOString().slice(0, 10), late = T.filter(function (t) { return t.status !== 'done' && t.due_on && t.due_on < today; }).length, SUB = x[4].data || [], lastJ = (x[0].data || [])[0];
+      var act = p.status === 'proposal_submitted' ? '<section class="pp-card" style="border:2px solid #F59E0B"><h3>Proposal waiting for you</h3><p class="pp-muted">Read the <b>Plan</b> tab, then approve it or return it with feedback.</p><label class="pp-f"><span>Message to the student (needed to return it)</span><textarea id="ov-note" rows="2"></textarea></label><div class="pp-row"><button class="btn main sm" id="ov-ok">✓ Approve the proposal</button><button class="btn sm" id="ov-ret">↩ Return with feedback</button></div></section>'
+        : p.status === 'final_submitted' ? '<section class="pp-card" style="border:2px solid #7C3AED"><h3>Final report submitted</h3><p class="pp-muted">Open the <b>Report</b> tab to download it, then assess it in <b>Assess</b>. Mark the project complete when you have finished.</p><button class="btn main sm" id="ov-done">✓ Mark the project completed</button> <button class="btn sm" id="ov-reopen">↩ Return the final report</button></section>' : '';
+      body.innerHTML = act + '<div class="pp-g"><section class="pp-card"><h3>Activity</h3><p>📓 ' + (x[0].count || 0) + ' journal entries' + (lastJ ? ' (latest ' + E(lastJ.entry_date) + ')' : '') + '<br>📎 ' + (x[1].count || 0) + ' evidence<br>📚 ' + (x[2].count || 0) + ' sources<br>🗓 ' + T.filter(function (t) { return t.status === 'done'; }).length + ' / ' + T.length + ' tasks done' + (late ? ' · <b style="color:#B91C1C">' + late + ' late</b>' : '') + '</p></section>' +
+        '<section class="pp-card"><h3>Submissions</h3>' + (SUB.length ? '<ul class="pp-list">' + SUB.map(function (s) { return '<li><b>' + E({ proposal: 'Proposal', report_draft: 'Report draft', report_final: 'Final report', exhibition: 'Exhibition' }[s.kind] || s.kind) + '</b> · ' + new Date(s.created_at).toLocaleString() + (s.path ? ' <button class="btn sm" data-dl="' + E(s.path) + '">⬇ ' + E(s.filename || 'file') + '</button>' : '') + (s.note ? '<br><small class="pp-muted">' + E(s.note) + '</small>' : '') + (s.academic_honesty ? '<br><small>✓ Academic integrity statement ticked</small>' : '') + '</li>'; }).join('') + '</ul>' : '<p class="pp-muted">Nothing submitted yet.</p>') + '</section></div>' +
+        '<section class="pp-card"><h3>General feedback</h3>' + fbBox(p, 'project') + '</section>';
+      wireFb(body, p); wireDl(body);
+      var $ = function (q) { return body.querySelector(q); };
+      if ($('#ov-ok')) $('#ov-ok').onclick = function () { setStatus(p, 'proposal_approved', ($('#ov-note').value.trim() || null)); };
+      if ($('#ov-ret')) $('#ov-ret').onclick = function () { var t = $('#ov-note').value.trim(); if (!t) { msg('Write what the student should change.', true); return; } setStatus(p, 'returned', t); };
+      if ($('#ov-done')) $('#ov-done').onclick = function () { if (confirm('Mark this project as completed?')) setStatus(p, 'completed'); };
+      if ($('#ov-reopen')) $('#ov-reopen').onclick = function () { var t = prompt('What should the student change before submitting again?'); if (t) setStatus(p, 'returned', t); };
+    });
+  }
+  function wireDl(root) { [].forEach.call(root.querySelectorAll('[data-dl]'), function (b) { b.onclick = function () { S.db.storage.from('pp-files').createSignedUrl(b.getAttribute('data-dl'), 600).then(function (s) { if (s.error) msg(S.nice(s.error), true); else window.open(s.data.signedUrl, '_blank', 'noopener'); }); }; }); }
+  function svPlan(body, p) {
+    var d = p.data || {}, cx = d.context || {}, ctx = CONTEXTS.filter(function (c) { return c[0] === cx.key; })[0];
+    body.innerHTML = '<section class="pp-card"><h3>Learning goal</h3><p><b>Personal interest:</b> ' + E(d.interest || '—') + '</p><p><b>Learning goal:</b> ' + E(d.goal || '—') + '</p>' + fbBox(p, 'goal') + '</section>' +
+      '<section class="pp-card"><h3>Global context</h3><p><b>' + E(ctx ? ctx[1] : '—') + '</b></p><p>' + E(cx.exploration || '') + '</p></section>' +
+      '<section class="pp-card"><h3>Product and success criteria</h3><p><b>Product:</b> ' + E(d.product || '—') + '</p>' + ((d.criteria || []).length ? '<ol>' + d.criteria.map(function (c) { return '<li>' + E(c.c) + (c.how ? ' <small class="pp-muted">· checked by: ' + E(c.how) + '</small>' : '') + '</li>'; }).join('') + '</ol>' : '<p class="pp-muted">No success criteria yet.</p>') + fbBox(p, 'criteria') + '</section>' +
+      '<section class="pp-card"><h3>Plan</h3><p style="white-space:pre-wrap">' + E(d.plan_notes || '—') + '</p><p>' + (d.atl_plan || []).map(function (a) { return '<span class="pp-chip">' + E(a) + '</span>'; }).join('') + '</p>' + fbBox(p, 'plan') + '</section>';
+    wireFb(body, p);
+  }
+  function svJournal(body, p) {
+    S.db.from('pp_journal').select('*').eq('project_id', p.id).order('entry_date', { ascending: false }).then(function (r) {
+      var J = r.data || [];
+      body.innerHTML = '<section class="pp-card"><h3>Process journal (' + J.length + ' entries)</h3>' + (J.length ? '<ul class="pp-list">' + J.map(function (j) {
+        return '<li><b>' + E(j.entry_date) + '</b> <span class="pp-chip">' + E(j.stage || '') + '</span>' + ['activity', 'learning', 'challenges', 'decisions', 'next_steps'].filter(function (k) { return j[k]; }).map(function (k) { return '<p style="margin:4px 0"><b>' + { activity: 'Did', learning: 'Learned', challenges: 'Challenges', decisions: 'Decisions', next_steps: 'Next' }[k] + ':</b> ' + E(j[k]) + '</p>'; }).join('') +
+          (j.atl || []).map(function (a) { return '<span class="pp-chip">' + E(a) + '</span>'; }).join('') +
+          ((j.history || []).length ? '<details style="margin-top:6px"><summary class="pp-muted">Edited ' + j.history.length + '×: see earlier versions</summary>' + j.history.map(function (h) { return '<div class="pp-tip" style="background:#F8FAFC;border-color:#E2E8F0"><small>Before ' + E(String(h.at || '').slice(0, 16).replace('T', ' ')) + '</small><br>' + ['activity', 'learning', 'challenges', 'decisions', 'next_steps'].filter(function (k) { return h[k]; }).map(function (k) { return E(h[k]); }).join(' · ') + '</div>'; }).join('') + '</details>' : '') +
+          fbBox(p, 'journal:' + j.id, 'Comment on this entry…') + '</li>'; }).join('') + '</ul>' : '<p class="pp-muted">No entries yet.</p>') + '</section>';
+      wireFb(body, p);
+    });
+  }
+  function svEvidence(body, p) {
+    S.db.from('pp_evidence').select('*').eq('project_id', p.id).order('created_at', { ascending: false }).then(function (r) {
+      var EV = r.data || [];
+      body.innerHTML = '<section class="pp-card"><h3>Evidence (' + EV.length + ')</h3>' + (EV.length ? '<ul class="pp-list">' + EV.map(function (e) { return '<li><b>' + E(e.title) + '</b> <span class="pp-chip">' + E(e.area) + '</span>' + (e.stage ? '<span class="pp-chip">' + E(e.stage) + '</span>' : '') + (e.caption ? '<br>' + E(e.caption) : '') +
+        '<div class="pp-row" style="margin-top:6px">' + (e.path ? '<button class="btn sm" data-dl="' + E(e.path) + '">Open file</button>' : '') + (e.link ? '<a class="btn sm" href="' + E(e.link) + '" target="_blank" rel="noopener">Open link</a>' : '') + '</div></li>'; }).join('') + '</ul>' : '<p class="pp-muted">No evidence yet.</p>') + fbBox(p, 'product', 'Feedback on the product or evidence…') + '</section>';
+      wireDl(body); wireFb(body, p);
+    });
+  }
+  function svSources(body, p) {
+    S.db.from('pp_sources').select('*').eq('project_id', p.id).order('created_at').then(function (r) {
+      var SR = r.data || [];
+      body.innerHTML = '<section class="pp-card"><h3>Sources (' + SR.length + ')</h3>' + (SR.length ? '<ol>' + SR.map(function (s) { var ev = s.evaluation || {}, v = Object.keys(ev).map(function (k) { return +ev[k] || 0; }).filter(Boolean), avg = v.length ? (v.reduce(function (a, b) { return a + b; }, 0) / v.length).toFixed(1) : '';
+        return '<li>' + E(s.citation) + (s.url ? ' <a href="' + E(s.url) + '" target="_blank" rel="noopener">link</a>' : '') + (avg ? ' <span class="pp-chip">student rated ' + avg + '/3</span>' : '') + (s.notes ? '<br><small class="pp-muted">' + E(s.notes) + '</small>' : '') + '</li>'; }).join('') + '</ol>' : '<p class="pp-muted">No sources yet.</p>') + fbBox(p, 'sources', 'Feedback on sources and referencing…') + '</section>';
+      wireFb(body, p);
+    });
+  }
+  function svReport(body, p) {
+    var g = (ST.guide && ST.guide.report) || {}, secs = (g.sections || []).filter(function (s) { return s.key !== 'references'; }), rp = (p.data || {}).report || {};
+    Promise.all([S.db.from('pp_report_versions').select('id,label,words,created_at,sections').eq('project_id', p.id).order('created_at', { ascending: false }), S.db.from('pp_submissions').select('*').eq('project_id', p.id).eq('kind', 'report_final').order('created_at', { ascending: false })]).then(function (x) {
+      var V = x[0].data || [], F = x[1].data || [];
+      body.innerHTML = (F.length ? '<section class="pp-card"><h3>Final report</h3><ul class="pp-list">' + F.map(function (s) { var extra = (s.note || '').match(/(bibliography|recording): ([^ ·]+)/g) || [];
+        return '<li><button class="btn sm main" data-dl="' + E(s.path) + '">⬇ ' + E(s.filename || 'Report') + '</button> ' + extra.map(function (e) { var m = e.split(': '); return '<button class="btn sm" data-dl="' + E(m[1]) + '">⬇ ' + E(m[0]) + '</button>'; }).join(' ') + '<br><small class="pp-muted">' + new Date(s.created_at).toLocaleString() + ' · ' + E((s.note || '').split(' · ')[0]) + ' · ' + (s.words || 0) + ' words drafted in the hub</small></li>'; }).join('') + '</ul></section>' : '') +
+        '<section class="pp-card"><h3>Current draft in the hub</h3>' + secs.map(function (s) { return '<h4 style="margin:12px 0 4px">' + E(s.label) + (s.criterion ? ' <span class="pp-chip">' + E(s.criterion) + '</span>' : '') + ' <small class="pp-muted">' + words(rp[s.key]) + ' words</small></h4><p style="white-space:pre-wrap;margin:0">' + (rp[s.key] ? E(rp[s.key]) : '<span class="pp-muted">—</span>') + '</p>' + fbBox(p, 'report:' + s.key, 'Feedback on “' + s.label + '”…'); }).join('') + '</section>' +
+        '<section class="pp-card"><h3>Saved versions (' + V.length + ')</h3>' + (V.length ? '<ul class="pp-list">' + V.map(function (v) { return '<li>' + E(v.label || 'Version') + ' · ' + v.words + ' words <details><summary class="pp-muted">Show</summary>' + secs.map(function (s) { return (v.sections || {})[s.key] ? '<p><b>' + E(s.label) + ':</b> ' + E(v.sections[s.key]) + '</p>' : ''; }).join('') + '</details></li>'; }).join('') + '</ul>' : '<p class="pp-muted">No saved versions.</p>') + '</section>';
+      wireDl(body); wireFb(body, p);
+    });
+  }
+  function svAssess(body, p) {
+    var C = (ST.guide && ST.guide.criteria) || [];
+    S.db.from('pp_assessments').select('*').eq('project_id', p.id).then(function (r) {
+      var A = r.data || [], self = A.filter(function (a) { return a.kind === 'self'; })[0], mine = A.filter(function (a) { return a.kind === 'teacher' && a.assessor_id === ST.me.user.id; })[0] || { levels: {}, comments: {} }, others = A.filter(function (a) { return a.kind === 'teacher' && a.assessor_id !== ST.me.user.id; });
+      var L = Object.assign({}, mine.levels), K = Object.assign({}, mine.comments);
+      function draw() {
+        var y = window.scrollY;
+        body.innerHTML = '<section class="pp-card"><h3>Assess with the official criteria</h3><p class="pp-muted">Choose the band that best fits the report (best fit), then the level. Your levels and comments are shown to the student. Descriptors: ' + E(ST.guide ? ST.guide.source : '') + '.</p></section>' +
+          C.map(function (c) { var bands = (c.bands || []).slice().sort(function (a, b) { return b.min - a.min; }), lvl = L[c.key];
+            return '<section class="pp-card"><h3>Criterion ' + E(c.key) + ': ' + E(c.name) + ' <small class="pp-muted">/ ' + c.max + '</small></h3>' +
+              (self && self.levels && self.levels[c.key] != null ? '<p class="pp-tip">Student\'s self-assessment: level ' + self.levels[c.key] + (self.comments && self.comments[c.key] ? ' · “' + E(self.comments[c.key]) + '”' : '') + '</p>' : '') +
+              others.map(function (o) { return o.levels && o.levels[c.key] != null ? '<p class="pp-tip" style="background:#E0F2FE;border-color:#7DD3FC">Another assessor: level ' + o.levels[c.key] + '</p>' : ''; }).join('') +
+              bands.map(function (b) { var sel = lvl != null && lvl >= b.min && lvl <= b.max; return '<div class="pp-band' + (sel ? ' sel' : '') + '" data-c="' + c.key + '" data-min="' + b.min + '" data-max="' + b.max + '" tabindex="0" role="button" aria-pressed="' + sel + '"><b>' + b.min + '–' + b.max + '</b><ul style="margin:4px 0 0">' + (b.d || []).map(function (z) { return '<li>' + E(z) + '</li>'; }).join('') + '</ul>' +
+                (sel ? '<div class="pp-row" style="margin-top:6px">Level: ' + [b.min, b.max].map(function (v) { return '<label><input type="radio" name="tl-' + c.key + '" value="' + v + '"' + (lvl === v ? ' checked' : '') + '> ' + v + '</label>'; }).join(' ') + '</div>' : '') + '</div>'; }).join('') +
+              '<p class="pp-muted"><label><input type="radio" data-zero="' + c.key + '"' + (lvl === 0 ? ' checked' : '') + '> 0: does not reach a standard described by any of the descriptors</label></p>' +
+              '<label class="pp-f"><span>Comment for the student</span><textarea data-why="' + c.key + '" rows="2">' + E(K[c.key] || '') + '</textarea></label></section>'; }).join('') +
+          '<div class="pp-row"><button class="btn main sm" id="ta-save">💾 Save assessment</button><b id="ta-tot"></b></div>';
+        body.querySelector('#ta-tot').textContent = 'Total: ' + C.reduce(function (s, c) { return s + (+L[c.key] || 0); }, 0) + ' / ' + C.reduce(function (s, c) { return s + c.max; }, 0);
+        [].forEach.call(body.querySelectorAll('.pp-band'), function (b) { var pick = function (e) { if (e && e.target.tagName === 'INPUT') return; var c = b.getAttribute('data-c'), lo = +b.getAttribute('data-min'), hi = +b.getAttribute('data-max'); if (!(L[c] >= lo && L[c] <= hi)) { L[c] = hi; draw(); } };
+          b.onclick = pick; b.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } }; });
+        [].forEach.call(body.querySelectorAll('input[name^="tl-"]'), function (x) { x.onchange = function () { L[x.name.slice(3)] = +x.value; draw(); }; });
+        [].forEach.call(body.querySelectorAll('[data-zero]'), function (x) { x.onchange = function () { L[x.getAttribute('data-zero')] = 0; draw(); }; });
+        [].forEach.call(body.querySelectorAll('[data-why]'), function (t) { t.oninput = function () { K[t.getAttribute('data-why')] = t.value; }; });
+        body.querySelector('#ta-save').onclick = function () { S.db.from('pp_assessments').upsert({ project_id: p.id, assessor_id: ST.me.user.id, kind: 'teacher', levels: L, comments: K, updated_at: new Date().toISOString() }, { onConflict: 'project_id,assessor_id,kind' }).then(function (x) { ok(x, 'Assessment saved; the student can see it'); }); };
+        window.scrollTo(0, y);
+      }
+      draw();
+    });
+  }
+  function svFeedback(body, p) {
+    S.db.from('pp_feedback').select('*').eq('project_id', p.id).order('created_at', { ascending: false }).then(function (r) {
+      var F = r.data || [];
+      body.innerHTML = '<section class="pp-card"><h3>All feedback and questions</h3>' + (F.length ? '<ul class="pp-list">' + F.map(function (f) { var fromStudent = f.author_id === p.student_id;
+        return '<li style="' + (f.resolved ? 'opacity:.6' : '') + '"><span class="pp-chip">' + E(f.target) + '</span>' + (fromStudent ? '<span class="pp-chip" style="background:#FEF3C7;color:#92400E">from the student</span>' : '') + ' <small class="pp-muted">' + new Date(f.created_at).toLocaleString() + '</small><p style="margin:6px 0">' + E(f.comment) + '</p>' + (f.resolved ? '<small class="pp-muted">✓ Done</small>' : '') + '</li>'; }).join('') + '</ul>' : '<p class="pp-muted">No feedback yet.</p>') + fbBox(p, 'project', 'Write feedback or answer the student…') + '</section>';
+      wireFb(body, p);
     });
   }
 })();
