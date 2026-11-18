@@ -74,7 +74,7 @@
   }
 
   /* ---------- IA 1: pH and enzyme activity (matches the exemplar IA) ---------- */
-  IA({ id: 'ia-ph-enzyme', title: 'pH and enzyme activity (amylase or catalase)', summary: 'Your first IA assignment, stage by stage: how does pH affect the activity of amylase or catalase? Data come from the enzyme simulator. The exemplar is the short teacher-created IA you can download.', sim: ['/simulations/enzyme/', 'enzyme activity simulator'], download: 'ia-exemplar-ph-enzyme-activity.docx', minutes: 180,
+  IA({ id: 'ia-ph-enzyme', title: 'pH and enzyme activity (amylase or catalase)', summary: 'Your first IA assignment, stage by stage: how does pH affect the activity of amylase or catalase? Data come from the enzyme simulator. The exemplar is the complete teacher-created IA (about 3,000 words) you can download.', sim: ['/simulations/enzyme/', 'enzyme activity simulator'], download: 'ia-exemplar-ph-enzyme-activity.docx', minutes: 180,
     iv: 'pH', ivUnit: '', dv: 'Initial rate', dvUnit: 'mmol dm⁻³ min⁻¹', levels: [4, 5, 6, 7, 8, 9, 10], calc: 3, test: 'anova', graphTitle: 'Effect of pH on the initial rate of catalase activity',
     example: [[0.62, 0.64, 0.65, 0.63, 0.63], [2.19, 2.15, 2.16, 2.14, 2.2], [4.56, 4.39, 4.45, 4.31, 4.39], [5.47, 5.66, 5.61, 5.68, 5.55], [4.52, 4.41, 4.37, 4.32, 4.39], [2.18, 2.15, 2.22, 2.22, 2.19], [0.63, 0.63, 0.65, 0.62, 0.63]],
     rqOpts: ['How does pH affect enzymes?', 'What is the optimum pH of catalase?', 'How does pH (4.0–10.0) affect the initial rate of breakdown of hydrogen peroxide (mmol dm⁻³ min⁻¹) by potato catalase at 25 °C, investigated with an enzyme simulation?', 'Does catalase work better in acid or alkali?'], rqA: 2,
