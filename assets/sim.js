@@ -1322,6 +1322,195 @@
     }
   };
 
+
+  /* ================= Chemistry simulators and animations (18 Nov 2026) ================= */
+  function loop(r, frame) {   // one animation loop per simulator; stops when the simulator leaves the page
+    r._frame = frame; if (r._loop) return; r._loop = true;
+    (function tick() { if (!r.isConnected) { r._loop = false; return; } try { r._frame(); } catch (e) {} requestAnimationFrame(tick); })();
+  }
+  var EL = [null, ['H', 'Hydrogen', 1.008], ['He', 'Helium', 4.003], ['Li', 'Lithium', 6.94], ['Be', 'Beryllium', 9.012], ['B', 'Boron', 10.81], ['C', 'Carbon', 12.01], ['N', 'Nitrogen', 14.01], ['O', 'Oxygen', 16.00], ['F', 'Fluorine', 19.00], ['Ne', 'Neon', 20.18],
+    ['Na', 'Sodium', 22.99], ['Mg', 'Magnesium', 24.31], ['Al', 'Aluminium', 26.98], ['Si', 'Silicon', 28.09], ['P', 'Phosphorus', 30.97], ['S', 'Sulfur', 32.07], ['Cl', 'Chlorine', 35.45], ['Ar', 'Argon', 39.95], ['K', 'Potassium', 39.10], ['Ca', 'Calcium', 40.08]];
+  function shells(n) { var cap = [2, 8, 8, 2], out = []; for (var i = 0; i < 4 && n > 0; i++) { var k = Math.min(cap[i], n); out.push(k); n -= k; } return out; }
+
+  /* Build an atom: protons, neutrons, electrons → element, mass number, charge, electron arrangement */
+  M.atom = {
+    title: 'Build an atom: protons, neutrons and electrons',
+    html: function () { return '<div class="sim-c">' + slider('p', 'Protons', 1, 20, 6) + slider('n', 'Neutrons', 0, 24, 6) + slider('e', 'Electrons', 0, 20, 6) + '</div>' +
+      '<svg viewBox="0 0 420 240" role="img" aria-label="Bohr model of the atom"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var p = +$(r, 'p').value, n = +$(r, 'n').value, e = +$(r, 'e').value, el = EL[p], A = p + n, q = p - e, sh = shells(e);
+      var h = '<circle cx="130" cy="120" r="' + (14 + Math.sqrt(A) * 2.4) + '" fill="#fde68a" stroke="#b45309"/>';
+      var shown = Math.min(A, 40), red = Math.round(p / A * shown);
+      for (var i = 0; i < shown; i++) { var a = i * 2.4, rr = Math.sqrt(i) * 3.6; h += '<circle cx="' + (130 + rr * Math.cos(a)).toFixed(1) + '" cy="' + (120 + rr * Math.sin(a)).toFixed(1) + '" r="3.4" fill="' + (Math.floor((i + 1) * red / shown) > Math.floor(i * red / shown) ? '#dc2626' : '#64748b') + '"/>'; }
+      sh.forEach(function (k, s) { var R = 40 + s * 24; h += '<circle cx="130" cy="120" r="' + R + '" fill="none" stroke="#94a3b8" stroke-dasharray="3 3"/>'; for (var j = 0; j < k; j++) { var t = j / k * 6.283 + s; h += '<circle cx="' + (130 + R * Math.cos(t)).toFixed(1) + '" cy="' + (120 + R * Math.sin(t)).toFixed(1) + '" r="4.5" fill="#2563eb"/>'; } });
+      h += '<rect x="270" y="60" width="120" height="120" rx="10" fill="#fff" stroke="#334155" stroke-width="2"/><text x="285" y="85" font-size="14">' + A + '</text><text x="285" y="168" font-size="14">' + p + '</text>' +
+        '<text x="335" y="138" font-size="44" font-weight="700" text-anchor="middle">' + el[0] + '</text>' + (q ? '<text x="372" y="85" font-size="16" font-weight="700" fill="' + (q > 0 ? '#dc2626' : '#2563eb') + '">' + (Math.abs(q) > 1 ? Math.abs(q) : '') + (q > 0 ? '+' : '−') + '</text>' : '') +
+        '<text x="20" y="232" font-size="11" fill="#475569"><tspan fill="#dc2626">● proton</tspan>  <tspan fill="#64748b">● neutron</tspan>  <tspan fill="#2563eb">● electron</tspan></text>';
+      r.querySelector('svg').innerHTML = h;
+      r.querySelector('.sim-out').innerHTML = '<b>' + el[1] + (q === 0 ? ' atom' : q > 0 ? ' ion, charge ' + q + '+' : ' ion, charge ' + (-q) + '−') + '</b> · atomic number ' + p + ' · mass number ' + A + ' · electron arrangement ' + (sh.join(',') || 'none') + '.<br>' +
+        'The number of <b>protons</b> decides the element. Changing neutrons makes a different <b>isotope</b> (' + el[0] + '-' + A + '): same chemistry, different mass. Changing electrons makes an <b>ion</b>. ' +
+        (q === 0 && sh.length && sh[sh.length - 1] === (sh.length === 1 ? 2 : 8) ? 'The outer shell is full: a noble gas, very unreactive.' : q !== 0 && sh.length && (sh[sh.length - 1] === 8 || (sh.length === 1 && sh[0] === 2)) ? 'This ion has a full outer shell, like a noble gas: that is why it forms.' : '');
+    }
+  };
+
+  /* Gas laws: particles in a box */
+  M.gaslaws = {
+    title: 'Gas laws: pressure, volume and temperature',
+    html: function () { return '<div class="sim-c">' + slider('T', 'Temperature (K)', 100, 600, 300, 10) + slider('V', 'Volume (dm³)', 1, 5, 3, 0.5) + slider('n', 'Particles (amount)', 10, 60, 30, 5) + '</div>' +
+      '<canvas style="width:100%;height:220px;display:block;background:#f8fafc;border-radius:10px" aria-label="Gas particles moving in a box"></canvas><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var T = +$(r, 'T').value, V = +$(r, 'V').value, n = +$(r, 'n').value, molN = n / 30 * 0.12, P = molN * 8.314 * T / (V / 1000) / 1000;   // kPa
+      r._g = { T: T, V: V, n: n }; var cv = r.querySelector('canvas');
+      if (!r._parts) r._parts = [];
+      while (r._parts.length < n) r._parts.push({ x: Math.random(), y: Math.random(), a: Math.random() * 6.283 });
+      r._parts.length = n; r._hits = r._hits || 0;
+      loop(r, function () {
+        var g = r._g, dpr = window.devicePixelRatio || 1, W = cv.clientWidth || 400, H = 220; cv.width = W * dpr; cv.height = H * dpr; var c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+        var bw = (W - 40) * g.V / 5, sp = 0.0035 * Math.sqrt(g.T / 300);
+        c.strokeStyle = '#334155'; c.lineWidth = 3; c.strokeRect(20, 20, bw, H - 40); c.fillStyle = '#334155'; c.fillRect(20 + bw, 20, 8, H - 40);
+        r._parts.forEach(function (q) { q.x += Math.cos(q.a) * sp * (5 / g.V); q.y += Math.sin(q.a) * sp * 1.6; if (q.x < 0 || q.x > 1) { q.a = Math.PI - q.a; q.x = Math.max(0, Math.min(1, q.x)); r._hits++; } if (q.y < 0 || q.y > 1) { q.a = -q.a; q.y = Math.max(0, Math.min(1, q.y)); r._hits++; }
+          c.fillStyle = g.T > 450 ? '#dc2626' : g.T < 200 ? '#2563eb' : '#7c3aed'; c.beginPath(); c.arc(26 + q.x * (bw - 12), 26 + q.y * (H - 52), 4, 0, 7); c.fill(); });
+      });
+      r.querySelector('.sim-out').innerHTML = '<b>Pressure ≈ ' + P.toFixed(0) + ' kPa</b> (pV = nRT with n = ' + molN.toFixed(3) + ' mol, R = 8.31 J K⁻¹ mol⁻¹).<br>' +
+        'Hotter particles move faster and hit the walls harder and more often, so the pressure rises (<b>p ∝ T</b> at constant volume). A smaller volume means more collisions with each part of the wall (<b>p ∝ 1/V</b>, Boyle\'s law). More particles mean more collisions (<b>p ∝ n</b>). Temperature must be in kelvin: 0 K is absolute zero.';
+    }
+  };
+
+  /* Maxwell–Boltzmann distribution, activation energy and catalysts */
+  M.mboltz = {
+    title: 'Collision theory: the Maxwell–Boltzmann distribution',
+    html: function () { return '<div class="sim-c">' + slider('T', 'Temperature (°C)', 0, 100, 25, 5) + slider('ea', 'Activation energy (kJ/mol)', 20, 80, 50, 5) + select('cat', 'Catalyst', [['no', 'No catalyst'], ['yes', 'Catalyst added']]) + '</div>' +
+      '<svg viewBox="0 0 420 230" role="img" aria-label="Maxwell–Boltzmann energy distribution"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var Tc = +$(r, 'T').value, T = Tc + 273.15, T0 = 298.15, Ea = +$(r, 'ea').value, cat = $(r, 'cat').value === 'yes', Eu = cat ? Ea * 0.6 : Ea;
+      // the drawing is schematic (energies stretched so the tail is visible); the numbers below use the real distribution
+      function g(E, t) { var kt = 9 * t / 298.15; return 2 * Math.sqrt(E / Math.PI) * Math.pow(1 / kt, 1.5) * Math.exp(-E / kt); }
+      function frac(e, t) { var rt = 8.314e-3 * t, s = 0; for (var E = e; E < e + 60 * rt; E += rt / 20) s += 2 * Math.sqrt(E / Math.PI) * Math.pow(1 / rt, 1.5) * Math.exp(-E / rt) * rt / 20; return s; }
+      var top = g(4.5, 273.15) * 1.08, X = function (E) { return 40 + E * 3.6; }, Y = function (v) { return 200 - v / top * 170; }, pts = [], pts0 = [], fill = [];
+      for (var E = 0; E <= 100; E += 1) { pts.push(X(E).toFixed(1) + ',' + Y(g(E, T)).toFixed(1)); pts0.push(X(E).toFixed(1) + ',' + Y(g(E, T0)).toFixed(1)); if (E >= Eu) fill.push(X(E).toFixed(1) + ',' + Y(g(E, T)).toFixed(1)); }
+      var h = '<line x1="40" y1="200" x2="400" y2="200" stroke="#334155"/><line x1="40" y1="20" x2="40" y2="200" stroke="#334155"/><text x="220" y="222" font-size="12" text-anchor="middle">Energy of particles (kJ/mol, schematic)</text><text x="14" y="110" font-size="12" transform="rotate(-90 14 110)" text-anchor="middle">Number of particles</text>' +
+        (fill.length ? '<polygon points="' + X(Eu) + ',200 ' + fill.join(' ') + ' ' + X(100) + ',200" fill="#fca5a5" opacity=".8"/>' : '') +
+        (Math.abs(T - T0) > 2 ? '<polyline points="' + pts0.join(' ') + '" fill="none" stroke="#94a3b8" stroke-dasharray="5 4" stroke-width="2"/><text x="300" y="40" font-size="11" fill="#64748b">- - 25 °C</text>' : '') + '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#2563eb" stroke-width="2.5"/>' +
+        '<line x1="' + X(Ea) + '" y1="30" x2="' + X(Ea) + '" y2="200" stroke="#dc2626" stroke-dasharray="4 3"/><text x="' + (X(Ea) + 4) + '" y="40" font-size="11" fill="#dc2626">Ea</text>' +
+        (cat ? '<line x1="' + X(Eu) + '" y1="56" x2="' + X(Eu) + '" y2="200" stroke="#16a34a" stroke-dasharray="4 3"/><text x="' + (X(Eu) + 4) + '" y="66" font-size="11" fill="#16a34a">Ea with catalyst</text>' : '');
+      r.querySelector('svg').innerHTML = h;
+      var a = frac(Eu, T), a0 = frac(Ea, T0), say = function (x) { return x >= 0.01 ? (x * 100).toPrecision(2) + ' %' : 'about 1 in ' + Number((1 / x).toPrecision(2)).toLocaleString(); };
+      r.querySelector('.sim-out').innerHTML = '<b>Collisions with enough energy: ' + say(a) + '</b> (25 °C, no catalyst: ' + say(a0) + '). So about <b>' + Number((a / a0).toPrecision(3)).toLocaleString() + ' times</b> as many collisions can react.<br>' +
+        'The shaded area is the particles with energy ≥ the activation energy. Raising the temperature flattens the curve and moves the peak right; the total area (number of particles) stays the same, but the shaded tail grows a lot. With E<sub>a</sub> = 50 kJ/mol, a 10 °C rise roughly doubles it. A catalyst gives a pathway with a lower activation energy, so many more particles can react without changing the curve. (The curve is stretched so the tail is visible; the numbers use the real distribution.)';
+    }
+  };
+
+  /* Bonding: ionic, covalent or metallic from electronegativity */
+  var ENEG = { H: 2.2, Li: 1.0, Be: 1.6, B: 2.0, C: 2.6, N: 3.0, O: 3.4, F: 4.0, Na: 0.9, Mg: 1.3, Al: 1.6, Si: 1.9, P: 2.2, S: 2.6, Cl: 3.2, K: 0.8, Ca: 1.0, Br: 3.0, I: 2.7, Cu: 1.9, Fe: 1.8 };
+  var METAL = { Li: 1, Be: 1, Na: 1, Mg: 1, Al: 1, K: 1, Ca: 1, Cu: 1, Fe: 1 };
+  M.bonding = {
+    title: 'Ionic, covalent or metallic? Electronegativity and bonding',
+    html: function () { var o = Object.keys(ENEG).map(function (k) { return [k, k + ' (' + ENEG[k] + ')']; }); return '<div class="sim-c">' + select('a', 'First element', o) + select('b', 'Second element', o) + '</div>' +
+      '<svg viewBox="0 0 420 150" role="img" aria-label="Bonding triangle position"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r, first) {
+      if (first) { $(r, 'a').value = 'Na'; $(r, 'b').value = 'Cl'; }
+      var a = $(r, 'a').value, b = $(r, 'b').value, ea = ENEG[a], eb = ENEG[b], d = Math.abs(ea - eb), mean = (ea + eb) / 2, both = METAL[a] && METAL[b];
+      var type = both ? 'metallic' : d >= 1.8 ? 'ionic' : d >= 0.5 ? 'polar covalent' : 'non-polar covalent';
+      if (!both && METAL[a] !== METAL[b] && d >= 1.5 && d < 1.8) type = 'ionic (with some covalent character)';
+      var col = { metallic: '#64748b', ionic: '#dc2626', 'polar covalent': '#7c3aed', 'non-polar covalent': '#2563eb' }[type.split(' (')[0]] || '#dc2626';
+      var px = 40 + (mean - 0.8) / 3.2 * 340, py = 130 - d / 3.2 * 110;
+      r.querySelector('svg').innerHTML = '<polygon points="40,130 380,130 210,20" fill="#f1f5f9" stroke="#94a3b8"/><text x="40" y="146" font-size="11">metallic</text><text x="320" y="146" font-size="11">covalent</text><text x="214" y="16" font-size="11">ionic</text>' +
+        '<circle cx="' + Math.max(40, Math.min(380, px)).toFixed(1) + '" cy="' + Math.max(20, Math.min(130, py)).toFixed(1) + '" r="8" fill="' + col + '"/><text x="10" y="80" font-size="10" fill="#475569" transform="rotate(-90 10 80)">Δ electronegativity</text>';
+      var expl = type.indexOf('ionic') === 0 ? 'Electrons are <b>transferred</b> from ' + (ea < eb ? a : b) + ' to ' + (ea < eb ? b : a) + ', forming positive and negative ions held by strong electrostatic attraction in a giant lattice: high melting point, conducts when molten or dissolved.'
+        : type === 'metallic' ? 'Metal atoms lose their outer electrons into a <b>sea of delocalised electrons</b> around positive ions: conducts as a solid, malleable and ductile.'
+        : type === 'polar covalent' ? 'A <b>shared pair</b> of electrons is pulled towards ' + (ea > eb ? a : b) + ', the more electronegative atom, giving partial charges (δ+ and δ−): a polar bond.'
+        : 'Electrons are <b>shared equally</b> (or nearly so) between the atoms: a non-polar covalent bond.';
+      r.querySelector('.sim-out').innerHTML = '<b>' + a + '–' + b + ': ' + type + '</b> · electronegativity difference ' + d.toFixed(1) + ' · mean ' + mean.toFixed(1) + '.<br>' + expl + '<br><span style="color:#475569">Bonding is a continuum: the triangle (van Arkel–Ketelaar) places a bond by its mean electronegativity and the difference.</span>';
+    }
+  };
+
+  /* Flame tests */
+  var FLAME = { Li: ['Lithium', 'Li⁺', 'crimson red', '#dc143c', 671], Na: ['Sodium', 'Na⁺', 'yellow-orange', '#ffb000', 589], K: ['Potassium', 'K⁺', 'lilac', '#c8a2c8', 766], Ca: ['Calcium', 'Ca²⁺', 'orange-red (brick red)', '#e2583e', 622], Sr: ['Strontium', 'Sr²⁺', 'red', '#ff2a2a', 650], Ba: ['Barium', 'Ba²⁺', 'pale (apple) green', '#9acd32', 554], Cu: ['Copper', 'Cu²⁺', 'blue-green', '#0fb5a5', 515] };
+  M.flame = {
+    title: 'Flame tests: identify the metal ion',
+    html: function () { return '<div class="sim-c">' + select('m', 'Metal ion on the wire loop', Object.keys(FLAME).map(function (k) { return [k, FLAME[k][0] + ' (' + FLAME[k][1] + ')']; }).concat([['?', 'Unknown sample']])) + '</div>' +
+      '<svg viewBox="0 0 420 220" role="img" aria-label="Bunsen flame colour"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var k = $(r, 'm').value; if (k === '?') { if (!r._unk) r._unk = Object.keys(FLAME)[Math.floor(Math.random() * 7)]; k = r._unk; } var F = FLAME[k], sv = r.querySelector('svg'), unk = $(r, 'm').value === '?';
+      loop(r, function () {
+        var t = performance.now() / 160, w = 24 + Math.sin(t) * 3, h = 120 + Math.sin(t * 1.7) * 8;
+        sv.innerHTML = '<rect x="185" y="170" width="50" height="40" fill="#64748b"/><rect x="200" y="140" width="20" height="32" fill="#94a3b8"/>' +
+          '<path d="M210,140 q-' + w + ',-' + (h * 0.5) + ' 0,-' + h + ' q' + w + ',' + (h * 0.5) + ' 0,' + h + ' z" fill="' + F[3] + '" opacity=".85"/><path d="M210,140 q-9,-22 0,-40 q9,18 0,40 z" fill="#60a5fa" opacity=".8"/>' +
+          '<line x1="300" y1="60" x2="226" y2="96" stroke="#94a3b8" stroke-width="3"/><circle cx="222" cy="98" r="5" fill="none" stroke="#94a3b8" stroke-width="2"/>';
+      });
+      r.querySelector('.sim-out').innerHTML = unk ? '<b>Unknown sample: the flame is ' + F[2] + '.</b> Which ion is it? Change the menu to check each known ion, then compare. (Choose another option and back to Unknown for a new sample.)' :
+        '<b>' + F[0] + ' (' + F[1] + '): ' + F[2] + ' flame</b> · strongest line about ' + F[4] + ' nm.<br>Heat excites electrons in the metal ions to higher energy levels. When they fall back they emit light of particular energies (wavelengths), so each metal gives its own colour: this is <b>emission spectroscopy</b>. Clean the nichrome or platinum loop in hydrochloric acid between tests; sodium contamination can mask other colours.';
+      if (!unk) r._unk = null;
+    }
+  };
+
+  /* Periodic trends, elements 1–20 (IB data booklet style values) */
+  var TR = { rad: ['Atomic (covalent) radius', 'pm', [32, 37, 130, 99, 84, 75, 71, 64, 60, 62, 160, 140, 124, 114, 109, 104, 100, 101, 200, 174]],
+    ie: ['First ionisation energy', 'kJ/mol', [1312, 2372, 520, 900, 801, 1086, 1402, 1314, 1681, 2081, 496, 738, 578, 787, 1012, 1000, 1251, 1521, 419, 590]],
+    en: ['Electronegativity (Pauling)', '', [2.2, null, 1.0, 1.6, 2.0, 2.6, 3.0, 3.4, 4.0, null, 0.9, 1.3, 1.6, 1.9, 2.2, 2.6, 3.2, null, 0.8, 1.0]],
+    mp: ['Melting point', 'K', [14, null, 454, 1560, 2349, 3823, 63, 54, 53, 25, 371, 923, 934, 1687, 317, 388, 172, 84, 337, 1115]] };
+  M.trends = {
+    title: 'Periodic trends: radius, ionisation energy, electronegativity',
+    html: function () { return '<div class="sim-c">' + select('pr', 'Property', Object.keys(TR).map(function (k) { return [k, TR[k][0]]; })) + slider('z', 'Highlight element (atomic number)', 1, 20, 11) + '</div>' +
+      '<svg viewBox="0 0 440 240" role="img" aria-label="Graph of a property against atomic number"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var k = $(r, 'pr').value, z = +$(r, 'z').value, d = TR[k][2], max = Math.max.apply(null, d.filter(function (v) { return v != null; })), X = function (i) { return 50 + (i - 1) * 19; }, Y = function (v) { return 200 - v / max * 170; };
+      var h = '<line x1="40" y1="200" x2="430" y2="200" stroke="#334155"/><line x1="40" y1="20" x2="40" y2="200" stroke="#334155"/><text x="235" y="232" font-size="12" text-anchor="middle">Atomic number</text>', path = '';
+      [3, 11, 19].forEach(function (p) { h += '<line x1="' + (X(p) - 9) + '" y1="20" x2="' + (X(p) - 9) + '" y2="200" stroke="#e2e8f0"/>'; });
+      d.forEach(function (v, i) { if (v == null) return; path += (path ? ' L' : 'M') + X(i + 1) + ',' + Y(v).toFixed(1); });
+      h += '<path d="' + path + '" fill="none" stroke="#7c3aed" stroke-width="2"/>';
+      d.forEach(function (v, i) { if (v == null) return; var on = i + 1 === z; h += '<circle cx="' + X(i + 1) + '" cy="' + Y(v).toFixed(1) + '" r="' + (on ? 7 : 4) + '" fill="' + (on ? '#dc2626' : '#7c3aed') + '"/><text x="' + X(i + 1) + '" y="214" font-size="9" text-anchor="middle">' + EL[i + 1][0] + '</text>'; });
+      r.querySelector('svg').innerHTML = h;
+      var v = d[z - 1], why = { rad: 'Across a period the nuclear charge rises but electrons enter the same shell, so they are pulled closer: radius decreases. Down a group a new shell is added: radius increases.',
+        ie: 'Across a period ionisation energy generally rises (more protons, same shielding). Small dips at Group 13 (electron in a new p sub-level) and Group 16 (paired p electrons repel). It falls down a group (outer electron further away, more shielding).',
+        en: 'Electronegativity rises across a period and falls down a group, for the same reasons as ionisation energy. Noble gases have no value: they rarely form bonds.',
+        mp: 'Melting point rises to Group 14 (giant covalent C and Si), then falls sharply for simple molecular elements (N₂, O₂, Cl₂) and noble gases with weak London forces. Metals melt higher as more electrons are delocalised.' }[k];
+      r.querySelector('.sim-out').innerHTML = '<b>' + EL[z][1] + ' (' + EL[z][0] + '): ' + (v == null ? 'no value' : v + (TR[k][1] ? ' ' + TR[k][1] : '')) + '</b><br>' + why;
+    }
+  };
+
+  /* Energy profiles: exothermic, endothermic and catalysed */
+  M.profile = {
+    title: 'Energy profile diagrams: ΔH, activation energy and catalysts',
+    html: function () { return '<div class="sim-c">' + slider('dh', 'Enthalpy change ΔH (kJ/mol)', -300, 300, -100, 10) + slider('ea', 'Activation energy (kJ/mol)', 20, 300, 120, 10) + select('cat', 'Catalyst', [['no', 'No catalyst'], ['yes', 'With catalyst']]) + '</div>' +
+      '<svg viewBox="0 0 420 240" role="img" aria-label="Energy profile diagram"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var dh = +$(r, 'dh').value, ea = Math.max(+$(r, 'ea').value, dh + 10), cat = $(r, 'cat').value === 'yes', eac = Math.max(dh + 5, ea * 0.55, 10);
+      var Y = function (E) { return 150 - E * 0.33; }, top = Y(ea), topc = Y(eac);
+      var curve = function (peak) { return 'M30,' + Y(0) + ' L110,' + Y(0) + ' C170,' + Y(0) + ' 170,' + peak + ' 210,' + peak + ' C250,' + peak + ' 250,' + Y(dh) + ' 310,' + Y(dh) + ' L400,' + Y(dh); };
+      r.querySelector('svg').innerHTML = '<line x1="30" y1="10" x2="30" y2="235" stroke="#334155"/><text x="14" y="120" font-size="11" transform="rotate(-90 14 120)" text-anchor="middle">Enthalpy</text>' +
+        '<path d="' + curve(top) + '" fill="none" stroke="#2563eb" stroke-width="3"/>' + (cat ? '<path d="' + curve(topc) + '" fill="none" stroke="#16a34a" stroke-width="3" stroke-dasharray="6 4"/>' : '') +
+        '<text x="40" y="' + (Y(0) - 6) + '" font-size="11">reactants</text><text x="330" y="' + (Y(dh) - 6) + '" font-size="11">products</text>' +
+        '<line x1="210" y1="' + Y(0) + '" x2="210" y2="' + top + '" stroke="#dc2626" marker-end="url(#ar)"/><text x="214" y="' + ((Y(0) + top) / 2) + '" font-size="11" fill="#dc2626">Ea</text>' +
+        '<line x1="360" y1="' + Y(0) + '" x2="360" y2="' + Y(dh) + '" stroke="#7c3aed" stroke-width="2"/><text x="364" y="' + ((Y(0) + Y(dh)) / 2) + '" font-size="11" fill="#7c3aed">ΔH</text><line x1="110" y1="' + Y(0) + '" x2="400" y2="' + Y(0) + '" stroke="#cbd5e1" stroke-dasharray="3 3"/>';
+      r.querySelector('.sim-out').innerHTML = '<b>' + (dh < 0 ? 'Exothermic' : dh > 0 ? 'Endothermic' : 'Thermoneutral') + ': ΔH = ' + (dh > 0 ? '+' : '') + dh + ' kJ/mol</b> · Ea = ' + ea + ' kJ/mol' + (cat ? ' (with catalyst ≈ ' + Math.round(eac) + ')' : '') + ' · reverse reaction Ea = ' + (ea - dh) + ' kJ/mol.<br>' +
+        (dh < 0 ? 'Products are lower in enthalpy than reactants: energy is released to the surroundings, which get warmer.' : dh > 0 ? 'Products are higher in enthalpy: energy is absorbed from the surroundings, which get cooler.' : '') +
+        ' The activation energy is the minimum energy colliding particles need to react. ' + (cat ? 'The catalyst provides an alternative route with a lower activation energy; ΔH does not change.' : 'Add a catalyst to see an alternative pathway.');
+    }
+  };
+
+  /* pH scale: strong and weak acids on dilution */
+  M.phscale = {
+    title: 'pH of strong and weak acids and alkalis',
+    html: function () { return '<div class="sim-c">' + select('s', 'Substance', [['hcl', 'Hydrochloric acid (strong acid)'], ['eth', 'Ethanoic acid (weak acid, pKa 4.76)'], ['naoh', 'Sodium hydroxide (strong alkali)'], ['nh3', 'Ammonia (weak alkali, pKb 4.75)']]) +
+      slider('lg', 'Concentration: 10^x mol/dm³', -6, 0, -1, 0.5) + '</div><svg viewBox="0 0 420 120" role="img" aria-label="pH scale"></svg><div class="sim-out" aria-live="polite"></div>'; },
+    run: function (r) {
+      var s = $(r, 's').value, c = Math.pow(10, +$(r, 'lg').value), Kw = 1e-14, h;
+      if (s === 'hcl') h = (c + Math.sqrt(c * c + 4 * Kw)) / 2;
+      else if (s === 'naoh') h = Kw / ((c + Math.sqrt(c * c + 4 * Kw)) / 2);
+      else if (s === 'eth') { var Ka = 1.74e-5; h = (-Ka + Math.sqrt(Ka * Ka + 4 * Ka * c)) / 2; h = Math.max(h, 1e-7); }
+      else { var Kb = 1.78e-5, oh = (-Kb + Math.sqrt(Kb * Kb + 4 * Kb * c)) / 2; h = Kw / Math.max(oh, 1e-7); }
+      var pH = -Math.log10(h), col = ['#dc2626', '#ef4444', '#f97316', '#f59e0b', '#eab308', '#a3e635', '#22c55e', '#16a34a', '#14b8a6', '#0ea5e9', '#3b82f6', '#4f46e5', '#7c3aed', '#6d28d9', '#581c87'], g = '';
+      for (var i = 0; i <= 14; i++) g += '<rect x="' + (20 + i * 26) + '" y="30" width="26" height="30" fill="' + col[i] + '"/><text x="' + (33 + i * 26) + '" y="76" font-size="10" text-anchor="middle">' + i + '</text>';
+      g += '<path d="M' + (20 + pH * 26 + 13) + ',26 l-7,-12 l14,0 z" fill="#0f172a"/><text x="' + (20 + pH * 26 + 13) + '" y="104" font-size="13" font-weight="700" text-anchor="middle">pH ' + pH.toFixed(2) + '</text>';
+      r.querySelector('svg').innerHTML = g;
+      var weak = s === 'eth' || s === 'nh3', ion = s === 'eth' ? Math.min(100, h / c * 100) : s === 'nh3' ? Math.min(100, Kw / h / c * 100) : 100;
+      r.querySelector('.sim-out').innerHTML = '<b>pH = ' + pH.toFixed(2) + '</b> at ' + c.toExponential(1) + ' mol/dm³ · [H⁺] = ' + h.toExponential(2) + ' mol/dm³ · ionised: ' + ion.toPrecision(3) + ' %.<br>' +
+        (weak ? 'A <b>weak</b> ' + (s === 'eth' ? 'acid' : 'alkali') + ' is only partly ionised, so its pH is closer to 7 than a strong one at the same concentration. Diluting it ionises a larger fraction.' : 'A <b>strong</b> ' + (s === 'hcl' ? 'acid' : 'alkali') + ' is fully ionised. Each ten-fold dilution changes the pH by 1 unit, until it gets close to 7 (water\'s own ions matter).') +
+        ' pH = −log₁₀[H⁺], so one pH unit is a ten-fold change in [H⁺].';
+    }
+  };
+
   function mount(el) {
     if (el.getAttribute('data-mounted')) return;
     var name = el.getAttribute('data-sim'), m = M[name]; if (!m) return;
