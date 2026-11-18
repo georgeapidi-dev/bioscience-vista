@@ -105,6 +105,23 @@
       why.innerHTML = '<b>' + (ok ? 'Correct.' : 'Not quite.') + '</b> ' + E(C.w) + ' <a href="' + C.l + '">Test it in the Virtual Lab →</a>'; why.hidden = false; }; });
   }
 
+  /* For you: links chosen from the learner's own profile (learner_preferences, set on My dashboard). Nothing is guessed. */
+  var FOR = {
+    ib_myp: [['/myp/', '📘', 'MYP science lessons'], ['/quizzes/', '📝', 'Criterion-based assessments'], ['/simulations/', '🔬', 'Virtual Lab investigations']],
+    ib_dp: [['/biology/', '🧬', 'DP Biology course'], ['/research/', '🧪', 'Research Hub: IA and EE'], ['/exams/', '📝', 'Exam-style practice']],
+    cambridge_ks3: [['/cambridge/', '📗', 'Cambridge Lower Secondary'], ['/simulations/', '🔬', 'Virtual Lab investigations'], ['/practice/', '🃏', 'Practice and revision']],
+    igcse: [['/cambridge/', '📗', 'IGCSE courses'], ['/exams/', '📝', 'Exam-style practice'], ['/practice/', '🃏', 'Flashcards and practice']],
+    a_level: [['/a-level/', '📕', 'AS and A Level courses'], ['/exams/', '📝', 'Exam-style practice'], ['/research/', '🧪', 'Research and practical skills']],
+    other: [['/explore/', '🌍', 'Explore every topic'], ['/simulations/', '🔬', 'Virtual Lab'], ['/practice/', '🃏', 'Practice and revision']]
+  };
+  var TOPIC = { cells: 'Cells', molecular: 'Enzymes and molecules', genetics: 'Genetics', evolution: 'Evolution', ecology: 'Ecology', physiology: 'The human body', plants: 'Plants', biotech: 'Biotechnology', reactions: 'Chemical reactions', acids: 'Acids and bases', organic: 'Organic chemistry', 'ess-climate': 'Climate change', 'ess-biodiversity': 'Conservation', 'phys-motion': 'Forces and motion', 'phys-electric': 'Electricity', 'math-stats': 'Statistics', 'math-algebra': 'Algebra', 'general-investigation': 'Experiments and data' };
+  function forYou(p) {
+    if (!p || !p.programme) return '<p class="dx-fy-set">✨ <a href="/dashboard/">Set up your learning profile</a> (programme, subjects and interests) and this page will suggest what to do next.</p>';
+    var links = (FOR[p.programme] || FOR.other).map(function (l) { return '<a href="' + l[0] + '"><span aria-hidden="true">' + l[1] + '</span> ' + E(l[2]) + '</a>'; }).join('');
+    var ints = (p.interests || []).filter(function (k) { return TOPIC[k]; }).slice(0, 6).map(function (k) { return '<a class="chip" href="/explore/#' + k + '">' + E(TOPIC[k]) + '</a>'; }).join('');
+    return '<div class="dx-fy"><h3>For you</h3><div class="dx-fy-l">' + links + '</div>' + (ints ? '<p class="vx-muted">Your interests</p><div class="dx-fy-i">' + ints + '<a class="chip ask" href="/tutor/">🤖 Ask the tutor</a></div>' : '<p class="vx-muted"><a href="/dashboard/">Add your interests</a> to see topic shortcuts here.</p>') + '</div>';
+  }
+
   /* ---------- 4. signed in: continue learning, progress, teaching shortcuts (real records only) ---------- */
   var me = document.getElementById('dx-me');
   if (!me) return;
@@ -126,17 +143,18 @@
         S.db.from('learning_progress').select('lesson_id,status,percent,updated_at').eq('student_id', u.user.id).order('updated_at', { ascending: false }).limit(200),
         S.db.from('quiz_attempts').select('id', { count: 'exact', head: true }).eq('student_id', u.user.id).not('submitted_at', 'is', null),
         S.db.from('sim_attempts').select('id', { count: 'exact', head: true }).eq('student_id', u.user.id),
+        S.db.from('learner_preferences').select('programme,interests').eq('user_id', u.user.id).maybeSingle().then(function (r) { return r; }, function () { return { data: null }; }),
       ]).then(function (x) {
         var P = x[0].data || [], ids = P.slice(0, 40).map(function (p) { return p.lesson_id; });
-        return (ids.length ? S.db.from('lessons').select('id,title,url').in('id', ids) : Promise.resolve({ data: [] })).then(function (r) { var map = {}; (r.data || []).forEach(function (l) { if (l.url) map[l.id] = [l.url, l.title]; }); x.push(map); return x; });
+        return (ids.length ? S.db.from('lessons').select('id,title,url').in('id', ids) : Promise.resolve({ data: [] })).then(function (r) { var map = {}; (r.data || []).forEach(function (l) { if (l.url) map[l.id] = [l.url, l.title]; }); x[4] = map; return x; });
       }).then(function (x) {
-        var P = x[0].data || [], map = x[3] || {}, done = P.filter(function (p) { return p.status === 'completed' || p.percent >= 100; }).length;
+        var P = x[0].data || [], map = x[4] || {}, done = P.filter(function (p) { return p.status === 'completed' || p.percent >= 100; }).length;
         var last = P.filter(function (p) { return map[p.lesson_id] && !(p.status === 'completed' || p.percent >= 100); })[0] || P.filter(function (p) { return map[p.lesson_id]; })[0];
         me.innerHTML = '<header><div><p class="vx-eye">Your learning</p><h2>Welcome back' + (name ? ', ' + E(name) : '') + '</h2></div><a class="vx-btn ghost" href="/dashboard/">My dashboard →</a></header><div class="dx-me">' +
           (last ? '<a href="' + E(map[last.lesson_id][0]) + '"><span class="lbl">Continue where you left off</span><b>▶</b><span>' + E(map[last.lesson_id][1]) + (last.percent ? ' · ' + Math.round(last.percent) + ' %' : '') + '</span></a>' : '<a href="/learn/"><span class="lbl">Start learning</span><b>▶</b><span>Choose your first lesson</span></a>') +
           '<div><span class="lbl">Lessons completed</span><b>' + done + '</b><span>of ' + P.length + ' started</span></div>' +
           '<div><span class="lbl">Assessments submitted</span><b>' + (x[1].count || 0) + '</b><span>marked work and quizzes</span></div>' +
-          '<div><span class="lbl">Lab investigations</span><b>' + (x[2].count || 0) + '</b><span>recorded in the Virtual Lab</span></div></div>';
+          '<div><span class="lbl">Lab investigations</span><b>' + (x[2].count || 0) + '</b><span>recorded in the Virtual Lab</span></div></div>' + forYou((x[3] && x[3].data) || null);
         me.hidden = false;
       });
     }, function () {});
