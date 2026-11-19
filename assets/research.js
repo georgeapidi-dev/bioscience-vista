@@ -572,6 +572,7 @@
     var box = m.querySelector('#rv');
     if (ext === 'PDF' && !ib) { box.innerHTML = '<iframe class="rv-pdf" src="' + url + '#view=FitH" title="' + E(r[1]) + '"></iframe><p class="small muted">If the document does not show, <a href="' + url + '" target="_blank" rel="noopener">open it in a new tab</a>.</p>'; return; }
     if (ib) {
+      S.db.rpc('research_private_list').then(function (r) { var f = (r.data || []).filter(function (x) { return x.name === fn.slice(3); })[0], h1 = m.querySelector('.rv-head h1'); if (f && h1) { h1.textContent = f.title; if (f.description) h1.insertAdjacentHTML('afterend', '<p>' + E(f.description) + '</p>'); } }, function () {});
       S.db.rpc('research_private_get', { fname: fn.slice(3) }).then(function (x) { if (x.error) throw x.error;
         var bin = atob(x.data), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
         var src = URL.createObjectURL(new Blob([u], { type: 'application/pdf' })); box.innerHTML = '<iframe class="rv-pdf" src="' + src + '" title="IB material"></iframe><p class="small muted">For students in BioscienceVista\'s classes only. Do not share or upload it anywhere else.</p>';
