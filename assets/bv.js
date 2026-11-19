@@ -96,7 +96,7 @@
   BV.md = function (t) {
     var lines = BV.esc(t).split(/\n/), out = '', inl = false;
     lines.forEach(function (l) {
-      l = l.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[\s(])_([^_\n]+?)_(?=[\s).,;:!?]|$)/g, '$1<i>$2</i>');
+      l = l.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[\s(])_([^_\n]+?)_(?=[\s).,;:!?]|$)/g, '$1<i>$2</i>').replace(/(^|[\s(])\*([^*\s][^*\n]*?)\*(?=[\s).,;:!?]|$)/g, '$1<i>$2</i>');
       if (/^\s*[-•*]\s+/.test(l)) { if (!inl) { out += '<ul>'; inl = true; } out += '<li>' + l.replace(/^\s*[-•*]\s+/, '') + '</li>'; }
       else { if (inl) { out += '</ul>'; inl = false; } var hm = /^\s*(#{1,4})\s+(.*)$/.exec(l); if (hm) out += '<p class="md-h" style="margin:10px 0 4px;font-weight:800;font-size:' + (hm[1].length <= 2 ? '1.05' : '.98') + 'rem">' + hm[2] + '</p>'; else if (l.trim()) out += '<p>' + l + '</p>'; }
     });
