@@ -129,21 +129,39 @@
   };
 
   /* ---------- layout ---------- */
-  var NAV_STUDENT = [['#/', '🏠', 'Research dashboard'], ['IA', '🧬', 'Biology IA Studio'], ['EE', '📝', 'Extended Essay Studio'], ['#/rqlab', '❓', 'Research question lab'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'], ['/poster/', '🖼️', 'Poster creator'], ['/biodata/', '📊', 'BioData Lab'], ['#/worksheets', '🧭', 'Interactive worksheets'],
-    ['P:check', '✅', 'Pre-submission check'], ['P:submit', '📤', 'Submission centre'], ['P:feedback', '💬', 'Feedback centre'], ['P:meetings', '🗓️', 'Supervision'], ['P:notebook', '📓', 'Research notebook'], ['P:integrity', '🛡️', 'Academic integrity'], ['P:versions', '🕘', 'Version history'], ['#/library', '📚', 'Templates and samples'], ['#/help', '🎓', 'Research academy']];
-  var NAV_TEACHER = [['#/teacher', '🧑‍🏫', 'Supervisor dashboard'], ['#/teacher/milestones', '📅', 'Milestones and deadlines'], ['#/lab', '🧮', 'Statistics lab'], ['#/graph', '📈', 'Graph studio'], ['/poster/', '🖼️', 'Poster creator'], ['/biodata/', '📊', 'BioData Lab'], ['#/worksheets', '🧭', 'Interactive worksheets'], ['#/library', '📚', 'Templates and samples'], ['#/help', '🎓', 'Research academy']];
+  /* menu groups: [href, icon, label, colour]; a string starts a new group. P: items need an open project. */
+  var NAV_STUDENT = ['Start', ['#/', '🏠', 'Research dashboard', '#7C3AED'],
+    'My projects', ['IA', '🧬', 'Biology IA Studio', '#16A34A'], ['EE', '📝', 'Extended Essay Studio', '#0284C7'],
+    'This project', ['P:check', '✅', 'Pre-submission check', '#16A34A'], ['P:submit', '📤', 'Submission centre', '#0D9488'], ['P:feedback', '💬', 'Feedback centre', '#DB2777'], ['P:meetings', '🗓️', 'Supervision', '#EA580C'], ['P:notebook', '📓', 'Research notebook', '#7C3AED'], ['P:integrity', '🛡️', 'Academic integrity', '#0284C7'], ['P:versions', '🕘', 'Version history', '#475569'],
+    'Research toolkit', ['#/rqlab', '❓', 'Research question lab', '#E11D48'], ['#/lab', '🧮', 'Statistics lab', '#0D9488'], ['#/graph', '📈', 'Graph studio', '#2563EB'], ['/biodata/', '📊', 'BioData Lab', '#16A34A'], ['/poster/', '🖼️', 'Poster creator', '#DB2777'], ['#/worksheets', '🧭', 'Interactive worksheets', '#EA580C'],
+    'Learn', ['#/library', '📚', 'Templates and samples', '#7C3AED'], ['#/help', '🎓', 'Research academy', '#0284C7']];
+  var NAV_TEACHER = ['Supervise', ['#/teacher', '🧑‍🏫', 'Supervisor dashboard', '#7C3AED'], ['#/teacher/milestones', '📅', 'Milestones and deadlines', '#EA580C'],
+    'Research toolkit', ['#/lab', '🧮', 'Statistics lab', '#0D9488'], ['#/graph', '📈', 'Graph studio', '#2563EB'], ['/biodata/', '📊', 'BioData Lab', '#16A34A'], ['/poster/', '🖼️', 'Poster creator', '#DB2777'], ['#/worksheets', '🧭', 'Interactive worksheets', '#EA580C'],
+    'Learn', ['#/library', '📚', 'Templates and samples', '#7C3AED'], ['#/help', '🎓', 'Research academy', '#0284C7']];
+  /* colourful launch tiles for the dashboards */
+  RH.toolkit = function (teacher) {
+    var T = [['#/rqlab', '❓', 'Research question lab', 'Turn a topic into a focused, testable question.', '#E11D48'], ['#/lab', '🧮', 'Statistics lab', 'Descriptive statistics, t-tests, ANOVA, correlation, chi-squared.', '#0D9488'],
+      ['#/graph', '📈', 'Graph studio', 'Scatter, bar and line graphs with error bars and trend lines.', '#2563EB'], ['/biodata/', '📊', 'BioData Lab', 'Explore 10 real published datasets.', '#16A34A'],
+      ['/poster/', '🖼️', 'Poster creator', 'Turn your investigation into an A0–A3 poster.', '#DB2777'], ['#/worksheets', '🧭', 'Interactive worksheets', 'Guided IA and EE practice with simulators.', '#EA580C'],
+      ['#/library', '📚', 'Templates and samples', 'Full exemplars, templates and the IB guides.', '#7C3AED'], ['/tutor/?mode=guide', '🤖', 'AI Science Tutor', 'Talk your ideas through. It guides; it never writes your work.', '#E11D48']];
+    if (teacher) T = T.filter(function (t) { return t[0] !== '#/rqlab'; });
+    return '<section class="rh-tk" aria-label="Research toolkit"><h2 class="rh-tk-h">🧰 Research toolkit</h2><div class="rh-tk-g">' + T.map(function (t) { return '<a class="rh-tile" href="' + t[0] + '" style="--c:' + t[4] + '"><span class="ic" aria-hidden="true">' + t[1] + '</span><b>' + E(t[2]) + '</b><span>' + E(t[3]) + '</span></a>'; }).join('') + '</div></section>';
+  };
   RH.shell = function (active, mainHtml, ctxHtml) {
     var nav = RH.teacher ? NAV_TEACHER.slice() : NAV_STUDENT.slice(); if (RH.me.admin) nav.push(['#/admin', '🛠️', 'Curriculum and admin']);
     var pid = RH.p && RH.owner ? RH.p.id : RH.lastPid;
-    var links = nav.map(function (n) {
+    var links = [], grp = null, open = null;
+    nav.forEach(function (n) {
+      if (typeof n === 'string') { grp = n; open = null; return; }
       var href = n[0], cur = active === n[0];
       if (href === 'IA') { href = RH.lastIa ? '#/p/' + RH.lastIa + '/' + (RH.p && RH.p.id === RH.lastIa ? RH.p.stage : '') : '#/new/ia'; cur = active === 'IA'; }
       else if (href === 'EE') { href = RH.lastEe ? '#/p/' + RH.lastEe + '/' + (RH.p && RH.p.id === RH.lastEe ? RH.p.stage : '') : '#/new/ee'; cur = active === 'EE'; }
-      else if (href.indexOf('P:') === 0) { var v = href.slice(2); cur = active === v; href = pid ? '#/p/' + pid + '/' + v : '#/'; }
-      return '<a href="' + href + '"' + (cur ? ' aria-current="page"' : '') + '><span class="ic" aria-hidden="true">' + n[1] + '</span>' + E(n[2]) + '</a>';
+      else if (href.indexOf('P:') === 0) { if (!pid) return; var v = href.slice(2); cur = active === v; href = '#/p/' + pid + '/' + v; }
+      if (open !== grp) { links.push('<span class="sep">' + E(grp) + '</span>'); open = grp; }
+      links.push('<a href="' + href + '"' + (cur ? ' aria-current="page"' : '') + ' style="--c:' + (n[3] || '#7C3AED') + '"><span class="ic" aria-hidden="true">' + n[1] + '</span>' + E(n[2]) + '</a>');
     });
     if (RH.teacher && RH.p && !RH.owner) links.splice(1, 0, '<span class="sep">Open project</span><a href="#/p/' + RH.p.id + '/' + RH.lastStage(RH.p) + '"' + (active === 'IA' || active === 'EE' ? ' aria-current="page"' : '') + '><span class="ic">' + (RH.p.kind === 'ee' ? '📝' : '🧬') + '</span>' + E(RH.p.title) + '</a>');
-    el.innerHTML = '<div class="rh' + (ctxHtml ? ' ctx' : '') + '"><nav class="rh-nav" aria-label="Research Hub"><div class="rh-brand">VISTA RESEARCH HUB<small>IB Research, Investigation &amp; Academic Excellence</small></div>' + links.join('') + '</nav>' +
+    el.innerHTML = '<div class="rh' + (ctxHtml ? ' ctx' : '') + '"><nav class="rh-nav" aria-label="Research Hub"><a class="rh-brand" href="#/"><span class="rh-logo" aria-hidden="true">🔬</span><span>VISTA Research Hub<small>Research, investigation and academic excellence</small></span></a>' + links.join('') + '</nav>' +
       '<div class="rh-main fadein" id="rh-main">' + mainHtml + '</div>' + (ctxHtml ? '<aside class="rh-ctx" aria-label="Guidance">' + ctxHtml + '</aside>' : '') + '</div>';
     window.scrollTo(0, 0);
     return document.getElementById('rh-main');
@@ -243,7 +261,7 @@
         var today = new Date().toISOString().slice(0, 10);
         h += '<div class="rh-grid"><div class="rh-card"><p class="label">📅 Deadlines and milestones</p>' + (mine.length ? '<div class="rh-list">' + mine.slice(0, 6).map(function (x) { var pp = x.kind === 'ee' ? ee : ia, late = x.due_on < today && !(pp && RH.stageDone(x.stage, pp, ex(pp)) >= 1); return '<div class="rh-item"><b>' + E(x.title) + '</b><span class="meta">' + RH.date(x.due_on) + ' · ' + E(RH.stageName(x.stage)) + (late ? ' · <span class="rh-badge warn">overdue</span>' : '') + '</span></div>'; }).join('') + '</div>' : '<p class="small muted">Your supervisor has not set deadlines yet.</p>') + '</div>' +
           '<div class="rh-card"><p class="label">💬 Recent feedback</p>' + (fb.length ? '<div class="rh-list">' + fb.map(function (f) { return '<div class="rh-item"><span class="meta">' + (f.source === 'ai' ? '<span class="rh-badge ai">AI</span>' : '<span class="rh-badge ok">Supervisor</span>') + ' ' + E(critName(f.criterion) || RH.stageName(f.stage) || '') + ' · ' + RH.date(f.created_at) + '</span><span class="small">' + E(f.comment.slice(0, 220)) + (f.comment.length > 220 ? '…' : '') + '</span></div>'; }).join('') + '</div>' : '<p class="small muted">No feedback yet.</p>') + ((ia || ee) ? '<a class="small" href="#/p/' + (ia || ee).id + '/feedback">Feedback centre →</a>' : '') + '</div></div>';
-        m.innerHTML = h;
+        m.innerHTML = h + RH.toolkit(false);
         if (!RH.cur) RH.curriculum();
       });
     }).catch(function (e) { m.innerHTML = '<div class="rh-card warn"><p>' + E(S.nice(e)) + '</p></div>'; });
@@ -418,7 +436,7 @@
         var late = function (p) { return ms.some(function (q) { return q.class_id === p.class_id && (q.kind || 'ia') === p.kind && q.due_on < today && RH.stageDone(q.stage, p, {}) < 1; }); };
         var awaitingP = subs.filter(function (s) { return s.stage === 'proposal'; }).length, awaitingF = subs.length - awaitingP;
         var needs = ps.filter(function (p) { return late(p) || concern.some(function (c) { return c.project_id === p.id; }) || p.updated_at < weekAgo || p.status === 'returned'; });
-        var h = '<section class="rh-hero"><p class="label">Supervisor dashboard</p><h1>Research supervision</h1><p>Every IA and extended essay your students have started in the classes you teach.</p></section>' +
+        var h = '<section class="rh-hero"><p class="label">Supervisor dashboard</p><h1>Research supervision</h1><p>Every IA and extended essay your students have started in the classes you teach.</p></section>' + RH.toolkit(true) +
           '<div class="rh-kpi"><div><b>' + sids.length + '</b><span>Students</span></div><div><b>' + ps.filter(function (p) { return p.kind === 'ia'; }).length + '</b><span>IA projects</span></div><div><b>' + ps.filter(function (p) { return p.kind === 'ee'; }).length + '</b><span>EE projects</span></div><div><b>' + awaitingP + '</b><span>Proposals awaiting approval</span></div><div><b>' + awaitingF + '</b><span>Drafts and finals awaiting feedback</span></div><div><b>' + ps.filter(late).length + '</b><span>Past a deadline</span></div><div><b>' + needs.length + '</b><span>May need intervention</span></div></div>';
         h += '<div class="rh-card"><div class="rh-head"><h2>Students</h2><div class="btns"><select id="tf-cls" aria-label="Class"><option value="">All classes</option>' + cids.map(function (c) { return '<option value="' + c + '">' + E(cls[c] || 'Class') + '</option>'; }).join('') + '</select><select id="tf-st" aria-label="Status"><option value="">Any status</option>' + Object.keys(RH.STATUS).map(function (k) { return '<option value="' + k + '">' + RH.STATUS[k][0] + '</option>'; }).join('') + '<option value="needs">Needs intervention</option></select><button class="btn sm" id="tf-csv" type="button">Download class report (CSV)</button></div></div><div class="scroll" id="tf-tab"></div></div>';
         m.innerHTML = h;
