@@ -161,7 +161,12 @@
       links.push('<a href="' + href + '"' + (cur ? ' aria-current="page"' : '') + ' style="--c:' + (n[3] || '#7C3AED') + '"><span class="ic" aria-hidden="true">' + n[1] + '</span>' + E(n[2]) + '</a>');
     });
     if (RH.teacher && RH.p && !RH.owner) links.splice(1, 0, '<span class="sep">Open project</span><a href="#/p/' + RH.p.id + '/' + RH.lastStage(RH.p) + '"' + (active === 'IA' || active === 'EE' ? ' aria-current="page"' : '') + '><span class="ic">' + (RH.p.kind === 'ee' ? '📝' : '🧬') + '</span>' + E(RH.p.title) + '</a>');
-    el.innerHTML = '<div class="rh' + (ctxHtml ? ' ctx' : '') + '"><nav class="rh-nav" aria-label="Research Hub"><a class="rh-brand" href="#/"><span class="rh-logo" aria-hidden="true">🔬</span><span>VISTA Research Hub<small>Research, investigation and academic excellence</small></span></a>' + links.join('') + '</nav>' +
+    var meta = null; nav.forEach(function (n, i) { if (typeof n === 'string') return; var k = n[0]; if (k === active || (k.indexOf('P:') === 0 && k.slice(2) === active)) meta = [n[1], n[2], n[3], (function () { for (var j = i; j >= 0; j--) if (typeof nav[j] === 'string') return nav[j]; return ''; })()]; });
+    if (!meta && /^#\/p\//.test(location.hash)) meta = RH.p && RH.p.kind === 'ee' ? ['📝', 'Extended Essay Studio', '#0284C7', 'My projects'] : ['🧬', 'Biology IA Studio', '#16A34A', 'My projects'];
+    var pc = (meta && meta[2]) || '#7C3AED', band = meta && !/rh-hero|rv-head/.test(mainHtml) ? '<div class="rh-band"><span class="ic" aria-hidden="true">' + meta[0] + '</span><div><small>VISTA Research Hub · ' + E(meta[3]) + '</small><b>' + E(meta[1]) + '</b></div></div>' : '';
+    if (band && /^\s*<div class="rh-card"><h2>/.test(mainHtml)) { mainHtml = mainHtml.replace('<div class="rh-card">', '<div class="rh-card rh-lead"><small class="rh-lead-k">VISTA Research Hub · ' + E(meta[3]) + '</small>'); band = ''; }   // a page that opens with its own title card: colour that card instead of adding a banner
+    mainHtml = band + mainHtml;
+    el.innerHTML = '<div class="rh' + (ctxHtml ? ' ctx' : '') + '" style="--pc:' + pc + '"><nav class="rh-nav" aria-label="Research Hub"><a class="rh-brand" href="#/"><span class="rh-logo" aria-hidden="true">🔬</span><span>VISTA Research Hub<small>Research, investigation and academic excellence</small></span></a>' + links.join('') + '</nav>' +
       '<div class="rh-main fadein" id="rh-main">' + mainHtml + '</div>' + (ctxHtml ? '<aside class="rh-ctx" aria-label="Guidance">' + ctxHtml + '</aside>' : '') + '</div>';
     window.scrollTo(0, 0);
     return document.getElementById('rh-main');
@@ -180,6 +185,7 @@
       if (r === 'worksheets') return RH.ws.page();
       if (r === 'ws' && h[1]) return RH.ws.open(h[1]);
       if (r === 'library') return library();
+      if (r === 'view' && h[1]) return viewer(decodeURIComponent(h.slice(1).join('/')));
       if (r === 'help') return academy();
       if (r === 'ee') { location.hash = RH.lastEe ? '#/p/' + RH.lastEe + '/' : '#/new/ee'; return; }
       if (r === 'admin') return RH.me.admin ? admin() : home();
@@ -536,14 +542,14 @@
       var hit = RES.filter(function (r) { return (who === 'All' || r[4] === who || r[4] === 'Both') && (!q || (r[1] + ' ' + r[2] + ' ' + r[3]).toLowerCase().indexOf(q) >= 0); });
       m.querySelector('#lib-out').innerHTML = hit.length ? groups.map(function (g) { var items = hit.filter(function (r) { return r[3] === g; }); if (!items.length) return '';
         return '<div class="rh-card"><h3>' + E(g) + '</h3><div class="rh-grid">' + items.map(function (r) { var ext = r[0].split('.').pop().toUpperCase(), o = ORIGIN[r[5]];
-          return '<div class="rh-item"><div class="rh-head"><b>' + E(r[1]) + '</b><span class="rh-badge">' + ext + '</span></div><span class="small">' + E(r[2]) + '</span><span class="meta"><span class="rh-badge ' + o[1] + '">' + E(o[0]) + '</span> <span class="rh-badge">' + (r[4] === 'Both' ? 'IA and EE' : r[4]) + '</span></span><div class="btns"><a class="btn sm main" href="/assets/research-resources/' + r[0] + '" download>Download</a>' + (ext === 'PDF' ? '<a class="btn sm" href="/assets/research-resources/' + r[0] + '" target="_blank" rel="noopener">Open</a>' : '') + '</div></div>'; }).join('') + '</div></div>'; }).join('') : '<p class="small muted">Nothing matches.</p>';
+          return '<div class="rh-item"><div class="rh-head"><b>' + E(r[1]) + '</b><span class="rh-badge">' + ext + '</span></div><span class="small">' + E(r[2]) + '</span><span class="meta"><span class="rh-badge ' + o[1] + '">' + E(o[0]) + '</span> <span class="rh-badge">' + (r[4] === 'Both' ? 'IA and EE' : r[4]) + '</span></span><div class="btns"><a class="btn sm main" href="#/view/' + encodeURIComponent(r[0]) + '">📖 Open</a><a class="btn sm" href="/assets/research-resources/' + r[0] + '" download>⬇ Download</a></div></div>'; }).join('') + '</div></div>'; }).join('') : '<p class="small muted">Nothing matches.</p>';
     };
     m.querySelector('#lib-q').oninput = draw;
     // IB-owned examples and guidelines (migration 060): listed only to students and co-teachers of BioscienceVista's classes
     S.db.rpc('research_private_list').then(function (r) {
       var L = r.data || []; if (!L.length) return;
       var box = document.createElement('div'); box.className = 'rh-card';
-      box.innerHTML = '<h3>🔒 IB materials (your classes only)</h3><p class="small">Official IB examples with examiner comments and the IB experimentation guidelines. They are for students in BioscienceVista\'s classes only: do not share or upload them anywhere else.</p><div class="rh-grid">' + L.map(function (f) { return '<div class="rh-item"><div class="rh-head"><b>' + E(f.title) + '</b><span class="rh-badge">PDF</span></div><span class="small">' + E(f.description || '') + '</span><span class="meta"><span class="rh-badge info">' + E(f.source) + '</span> ' + Math.round((f.size_bytes || 0) / 1024) + ' KB</span><div class="btns"><button class="btn sm main" type="button" data-pf="' + E(f.name) + '">Download</button></div></div>'; }).join('') + '</div>';
+      box.innerHTML = '<h3>🔒 IB materials (your classes only)</h3><p class="small">Official IB examples with examiner comments and the IB experimentation guidelines. They are for students in BioscienceVista\'s classes only: do not share or upload them anywhere else.</p><div class="rh-grid">' + L.map(function (f) { return '<div class="rh-item"><div class="rh-head"><b>' + E(f.title) + '</b><span class="rh-badge">PDF</span></div><span class="small">' + E(f.description || '') + '</span><span class="meta"><span class="rh-badge info">' + E(f.source) + '</span> ' + Math.round((f.size_bytes || 0) / 1024) + ' KB</span><div class="btns"><a class="btn sm main" href="#/view/ib:' + encodeURIComponent(f.name) + '">📖 Open</a><button class="btn sm" type="button" data-pf="' + E(f.name) + '">Download</button></div></div>'; }).join('') + '</div>';
       m.querySelector('#lib-out').parentNode.insertBefore(box, m.querySelector('#lib-out'));
       box.querySelectorAll('[data-pf]').forEach(function (b) { b.onclick = function () { b.disabled = true; b.textContent = 'Preparing…';
         S.db.rpc('research_private_get', { fname: b.dataset.pf }).then(function (x) { b.disabled = false; b.textContent = 'Download'; if (x.error) throw x.error;
@@ -552,6 +558,31 @@
     }, function () {});
     m.querySelectorAll('[data-for]').forEach(function (b) { b.onclick = function () { who = b.dataset.for; m.querySelectorAll('[data-for]').forEach(function (x) { x.setAttribute('aria-selected', x === b); }); draw(); }; });
     draw();
+  }
+  /* read any template, guide or sample inside the site: PDFs in the browser's own viewer; Word and Excel files as converted pages
+     (research/convert/convert_resources.py writes /assets/research-resources/view/<name>.html); IB files from the private store */
+  function viewer(fn) {
+    var ib = fn.indexOf('ib:') === 0, r = ib ? null : RES.filter(function (x) { return x[0] === fn; })[0];
+    if (!ib && !r) { location.hash = '#/library'; return; }
+    var ext = ib ? 'PDF' : fn.split('.').pop().toUpperCase(), base = fn.replace(/\.[^.]+$/, ''), url = '/assets/research-resources/' + fn;
+    var col = { DOCX: '#2563EB', XLSX: '#16A34A', PDF: '#E11D48' }[ext] || '#7C3AED';
+    var m = RH.shell('#/library', '<section class="rv-head" style="--c:' + col + '"><div><p class="label">' + (ib ? '🔒 IB material · your classes only' : E(r[3]) + ' · ' + (r[4] === 'Both' ? 'IA and EE' : r[4])) + '</p><h1>' + E(ib ? fn.slice(3).replace(/-/g, ' ') : r[1]) + '</h1>' + (r ? '<p>' + E(r[2]) + '</p>' : '') + '</div>' +
+      '<div class="btns"><a class="btn sm" href="#/library">← Library</a>' + (ib ? '' : '<a class="btn sm" href="' + url + '" download>⬇ Download ' + ext + '</a>') + (ext !== 'PDF' ? '<button class="btn sm" type="button" id="rv-print">🖨 Print</button>' : '') + '</div></section>' +
+      '<div class="rh-card rv-body" id="rv"><p class="muted">Opening…</p></div>');
+    var box = m.querySelector('#rv');
+    if (ext === 'PDF' && !ib) { box.innerHTML = '<iframe class="rv-pdf" src="' + url + '#view=FitH" title="' + E(r[1]) + '"></iframe><p class="small muted">If the document does not show, <a href="' + url + '" target="_blank" rel="noopener">open it in a new tab</a>.</p>'; return; }
+    if (ib) {
+      S.db.rpc('research_private_get', { fname: fn.slice(3) }).then(function (x) { if (x.error) throw x.error;
+        var bin = atob(x.data), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+        var src = URL.createObjectURL(new Blob([u], { type: 'application/pdf' })); box.innerHTML = '<iframe class="rv-pdf" src="' + src + '" title="IB material"></iframe><p class="small muted">For students in BioscienceVista\'s classes only. Do not share or upload it anywhere else.</p>';
+      }).catch(function (e) { box.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
+      return;
+    }
+    fetch('/assets/research-resources/view/' + base + '.html?v=' + (window.BV_VER || '')).then(function (x) { if (!x.ok) throw new Error('This file cannot be shown here yet. Download it instead.'); return x.text(); }).then(function (h) {
+      box.innerHTML = '<article class="rv-doc' + (ext === 'XLSX' ? ' xl' : '') + '">' + h + '</article>' + (ext === 'XLSX' ? '<p class="small muted">Values as last calculated. Download the spreadsheet to enter your own data: the formulas recalculate in Excel, Google Sheets or LibreOffice.</p>' : '<p class="small muted">Download the Word file to fill it in or edit it.</p>');
+      [].forEach.call(box.querySelectorAll('a[href^="http"]'), function (a) { a.target = '_blank'; a.rel = 'noopener'; });
+      var pr = m.querySelector('#rv-print'); if (pr) pr.onclick = function () { window.print(); };
+    }).catch(function (e) { box.innerHTML = '<p class="msg">' + E(e.message || S.nice(e)) + ' <a class="btn sm" href="' + url + '" download>Download</a></p>'; });
   }
   function academy() {
     var A = [['What makes a focused research question?', 'It names the independent variable with its range and units, the dependent variable and how it is measured, and the organism or system. "How does temperature affect enzymes?" is a topic; a research question says which enzyme, which temperatures, and how the rate is measured.'], ['Prediction or hypothesis?', 'A prediction says what you expect to happen ("the rate will increase up to 40 °C"). A hypothesis also explains why, using biology ("because more kinetic energy means more enzyme–substrate collisions, until the active site denatures"). Statistical tests use a null hypothesis (no difference or no relationship) and an alternative hypothesis.'],
