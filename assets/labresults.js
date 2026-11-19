@@ -9,7 +9,7 @@
     '.lr-fb{padding:8px 12px;border-radius:10px;background:#EEF2FF;border:1px solid #C7D2FE;margin:6px 0}.lr-muted{color:#64748b;font-size:.88rem}';
   var LC = {};
   function dps(a) { var D = {}; ((a.answers && a.answers._cols) || LC[a.sim] || []).forEach(function (c) { if (c && c[2] != null) D[c[0]] = c[2]; }); return D; }
-  function fmt(v, d) { if (v == null) return ''; if (typeof v === 'number') return d != null ? v.toFixed(d) : String(Math.round(v * 1e4) / 1e4); return typeof v === 'object' ? JSON.stringify(v) : String(v); }
+  function fmt(v, d) { if (v == null) return ''; if (typeof v === 'number') return d != null ? v.toFixed(d) : String(Number.isInteger(v) ? v : Number(v.toPrecision(4))); return typeof v === 'object' ? JSON.stringify(v) : String(v); }
   function heads(a) { var H = {}; (LC[a.sim] || []).forEach(function (c) { H[c[0]] = c[1]; }); ((a.answers && a.answers._cols) || []).forEach(function (c) { if (c && c[0]) H[c[0]] = c[1]; }); return H; }
   function colsOf(a) { var cols = ((a.answers && a.answers._cols) || LC[a.sim] || []).map(function (c) { return c[0]; }); a.data.forEach(function (row) { Object.keys(row || {}).forEach(function (k) { if (k[0] !== '_' && cols.indexOf(k) < 0) cols.push(k); }); });
     return cols.filter(function (k) { return a.data.some(function (r) { return r && r[k] != null && r[k] !== ''; }); }); }
