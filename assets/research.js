@@ -73,6 +73,7 @@
       var p = x[0].data; p.data = p.data || {};
       RH.p = p; RH.extra = { datasets: (x[1].data || []).length, locked: (x[1].data || []).some(function (d) { return d.raw_locked; }), list: x[1].data || [] };
       RH.owner = p.student_id === RH.me.user.id; RH.sup = !RH.owner;
+      if (RH.owner) setTimeout(function () { RH.syncTodo(p, RH.extra, true); }, 1500);
       return RH.curriculum(p.curriculum_id, p.kind).then(function () { return p; });
     });
   };
@@ -89,6 +90,17 @@
   };
   RH.get = function (path, dflt) { var o = RH.p && RH.p.data; path.split('.').forEach(function (k) { o = o == null ? undefined : o[k]; }); return o == null ? dflt : o; };
   RH.dirty = function () { var m = document.getElementById('rh-save'); if (m) m.textContent = 'Saving…'; clearTimeout(saveTimer); saveTimer = setTimeout(RH.saveNow, 1200); };
+  /* Work set on the teacher dashboard for a Research Hub stage (assignment ref research:<ia|ee>:<stage>) ticks itself off
+     on the student's dashboard as soon as this project completes that stage (19 Nov 2026). */
+  var syncAt = 0;
+  RH.syncTodo = function (p, extra, now) {
+    if (!p || !RH.owner || !RH.me || (!now && Date.now() - syncAt < 20000)) return; syncAt = Date.now();
+    S.db.rpc('my_todo').then(function (r) {
+      (r.data || []).forEach(function (t) { var m = /^research:(ia|ee):(.+)$/.exec(t.ref || '');
+        if (!m || t.state === 'done' || m[1] !== (p.kind || 'ia')) return;
+        if (RH.stageDone(m[2], p, extra || {}) >= 1) S.db.from('assignment_done').insert({ assignment_id: t.id, student_id: RH.me.user.id }).then(function (z) { if (!z.error) RH.toast('✓ "' + t.title + '" is ticked off on your dashboard'); }); });
+    }, function () {});
+  };
   RH.saveNow = function () {
     if (!RH.p || !RH.owner) return Promise.resolve(); clearTimeout(saveTimer);
     var p = RH.p, wc = RH.wordCount(p.data, p.kind);
@@ -96,6 +108,7 @@
       var m = document.getElementById('rh-save');
       if (r.error) { if (m) m.textContent = 'Not saved: ' + S.nice(r.error); return; }
       p.word_count = wc; if (m) m.textContent = 'Saved ' + new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+      RH.syncTodo(p, RH.extra);
       var w = document.getElementById('rh-wc'); if (w) w.innerHTML = wcText(wc);
     });
     return saving;
@@ -465,7 +478,7 @@
   }
 
   function milestonesPage() {
-    var m = RH.shell('#/teacher/milestones', '<div class="rh-card"><h2>📅 Milestones and deadlines</h2><p class="small muted">Set a due date for each IA or EE stage per class. Students see them on their dashboard, and overdue stages show on your supervisor dashboard.</p></div><div id="ms-box" class="grp"><p class="muted">Loading…</p></div>');
+    var m = RH.shell('#/teacher/milestones', '<div class="rh-card"><h2>📅 Milestones and deadlines</h2><p class="small muted">Set a due date for each IA or EE stage per class. Each deadline is also put on every student\'s dashboard (To do) and ticks itself off when they finish the stage; overdue stages show on your supervisor dashboard. You can also set these from your teacher dashboard: <b>📌 Set work → 🔬 Research Hub</b>.</p></div><div id="ms-box" class="grp"><p class="muted">Loading…</p></div>');
     var box = m.querySelector('#ms-box');
     var load = function () {
       S.db.from('classes').select('id,name').is('deleted_at', null).order('name').then(function (cr) {
@@ -474,8 +487,13 @@
           var ms = r.data || [];
           box.innerHTML = '<div class="rh-card"><h3>Add a milestone</h3><div class="two"><div class="rh-field"><label for="ms-c">Class</label><select id="ms-c">' + mineCls.map(function (c) { return '<option value="' + c.id + '">' + E(c.name) + '</option>'; }).join('') + '</select></div><div class="rh-field"><label for="ms-s">IA stage</label><select id="ms-s"><optgroup label="Biology IA">' + RH.IA.map(function (s) { return '<option value="ia:' + s.k + '">' + E(s.n) + '</option>'; }).join('') + '</optgroup><optgroup label="Extended Essay">' + (RH.EE || []).concat([{ k: 'ee_draft', n: 'Draft submission' }, { k: 'ee_viva', n: 'Viva voce' }]).map(function (s) { return '<option value="ee:' + s.k + '">' + E(s.n) + '</option>'; }).join('') + '</optgroup></select></div><div class="rh-field"><label for="ms-d">Due</label><input type="date" id="ms-d"></div><div class="rh-field"><label for="ms-t">Title</label><input type="text" id="ms-t" placeholder="e.g. Proposal and research question"></div></div><div class="btns"><button class="btn main sm" id="ms-add" type="button">Add milestone</button></div></div>' +
             '<div class="rh-card"><h3>Current milestones</h3>' + (ms.length ? '<table class="dt"><thead><tr><th>Class</th><th>Stage</th><th>Title</th><th>Due</th><th></th></tr></thead><tbody>' + ms.map(function (x) { var c = mineCls.filter(function (q) { return q.id === x.class_id; })[0]; return '<tr><td>' + E(c ? c.name : '') + '</td><td>' + (x.kind === 'ee' ? 'EE · ' : 'IA · ') + E(RH.stageName(x.stage)) + '</td><td>' + E(x.title) + '</td><td>' + RH.date(x.due_on) + '</td><td><button class="btn xs bad" data-del="' + x.id + '" type="button">Remove</button></td></tr>'; }).join('') + '</tbody></table>' : '<p class="small muted">None yet.</p>') + '</div>';
-          box.querySelector('#ms-add').onclick = function () { var d = box.querySelector('#ms-d').value; if (!d) return RH.toast('Choose a date'); var ks = box.querySelector('#ms-s').value.split(':'); S.db.from('research_milestones').insert({ class_id: box.querySelector('#ms-c').value, kind: ks[0], stage: ks[1], title: box.querySelector('#ms-t').value.trim() || (ks[0] === 'ee' ? 'EE: ' : 'IA: ') + RH.stageName(ks[1]), due_on: d }).then(function (r) { if (r.error) return RH.err(r.error); load(); }); };
-          box.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { if (!confirm('Remove this milestone?')) return; S.db.from('research_milestones').delete().eq('id', b.dataset.del).then(function (r) { if (r.error) return RH.err(r.error); load(); }); }; });
+          box.querySelector('#ms-add').onclick = function () { var d = box.querySelector('#ms-d').value; if (!d) return RH.toast('Choose a date'); var ks = box.querySelector('#ms-s').value.split(':'); S.db.from('research_milestones').insert({ class_id: box.querySelector('#ms-c').value, kind: ks[0], stage: ks[1], title: box.querySelector('#ms-t').value.trim() || (ks[0] === 'ee' ? 'EE: ' : 'IA: ') + RH.stageName(ks[1]), due_on: d }).then(function (r) { if (r.error) return RH.err(r.error);
+              var cid = box.querySelector('#ms-c').value, ttl = box.querySelector('#ms-t').value.trim() || (ks[0] === 'ee' ? 'Extended essay: ' : 'IA: ') + RH.stageName(ks[1]);   // the same work on every student's dashboard (To do), ticked off when they finish the stage
+              S.db.rpc('assign_work', { cls: cid, title: ttl, kind: 'task', ref: 'research:' + ks[0] + ':' + ks[1], url: '/research/', instructions: 'Open the Research Hub, choose your project and complete this stage.', due: new Date(d + 'T23:59').toISOString(), students: null }).then(function (z) {
+                RH.toast(z.error ? 'Deadline saved; it could not be added to the to-do list: ' + S.nice(z.error) : 'Deadline saved and added to every student\'s to-do list'); load(); }); }); };
+          box.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { if (!confirm('Remove this milestone? It is also taken off the students\' to-do lists.')) return; var x = ms.filter(function (q) { return q.id === b.dataset.del; })[0];
+            S.db.from('research_milestones').delete().eq('id', b.dataset.del).then(function (r) { if (r.error) return RH.err(r.error);
+              (x && x.class_id ? S.db.from('assignments').delete().eq('class_id', x.class_id).eq('ref', 'research:' + (x.kind || 'ia') + ':' + x.stage) : Promise.resolve()).then(function () { load(); }, function () { load(); }); }); }; });
         });
       });
     };

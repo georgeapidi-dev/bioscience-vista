@@ -63,11 +63,17 @@
         '<section class="in-card"><h3>Starter challenges</h3><div class="in-g">' + STARTERS.map(function (c) { return chal(c); }).join('') + '</div><div class="in-row" style="margin-top:10px"><button class="btn sm" data-start="own">✏️ Start my own design challenge</button></div></section></div>';
       [].forEach.call(app.querySelectorAll('[data-open]'), function (b) { b.onclick = function () { openP(b.getAttribute('data-open')); }; });
       [].forEach.call(app.querySelectorAll('[data-start]'), function (b) { b.onclick = function () { start(b.getAttribute('data-start'), CH); }; });
+      var want = new URLSearchParams(location.search).get('challenge'), mineP = (x[1].data || []).filter(function (p) { return p.owner_id === ST.me.user.id || (p.team || []).indexOf(ST.me.user.id) >= 0; });
+      mineP.filter(function (p) { return p.status === 'submitted' || p.status === 'reviewed'; }).forEach(tickTodo);   // work set on the teacher dashboard ticks off once the project is handed in
+      if (want && !ST.staff) { var have = mineP.filter(function (p) { return p.challenge_id === want; })[0], btn = app.querySelector('[data-start="c:' + want + '"]');
+        if (have) openP(have.id); else if (btn) { var card = btn.parentNode; card.style.outline = '3px solid #DB2777'; card.style.outlineOffset = '3px'; card.scrollIntoView({ behavior: 'smooth', block: 'center' }); msg('Your teacher set this challenge: press "Start this challenge".'); } }
       var ncg = document.getElementById('nc-go'); if (ncg) ncg.onclick = function () { var g = function (i) { return document.getElementById(i).value.trim(); }; if (!g('nc-t') || !g('nc-b')) { msg('Give the challenge a title and a brief.', true); return; }
         S.db.from('innovation_challenges').insert({ title: g('nc-t'), brief: g('nc-b'), context: g('nc-x') || null, subject: g('nc-s') || null, constraints: g('nc-k') || null, class_id: g('nc-c') || null, due_on: g('nc-d') || null }).then(function (r) { if (ok(r, 'Challenge published')) home(); }); };
       if (others.length) S.db.rpc('innov_names', { pids: others.map(function (p) { return p.id; }) }).then(function (r) { (r.data || []).forEach(function (n) { var el = app.querySelector('[data-nm="' + n.project_id + '"]'); if (el) el.textContent = '· ' + [n.owner_name].concat(n.team_names || []).filter(Boolean).join(', '); }); });
     });
   }
+  function tickTodo(p) { if (!p || !p.challenge_id || ST.staff) return;
+    S.db.rpc('my_todo').then(function (r) { (r.data || []).forEach(function (t) { if (t.ref === 'innovation:' + p.challenge_id && t.state !== 'done') S.db.from('assignment_done').insert({ assignment_id: t.id, student_id: ST.me.user.id }).then(function () {}, function () {}); }); }, function () {}); }
   function start(src, CH) {
     var row = { title: 'My design project', data: {} }, cls = (ST.me.classes || [])[0];
     if (src.indexOf('s:') === 0) { var s = STARTERS.filter(function (c) { return c[0] === src.slice(2); })[0]; row.title = s[2]; row.challenge_key = s[0]; row.data.problem = s[3]; }
@@ -191,6 +197,6 @@
     var fs = body.querySelector('#fb-send'); if (fs) fs.onclick = function () { var t = body.querySelector('#fb-new').value.trim(); if (!t) return; S.db.from('innovation_feedback').insert({ project_id: ST.p.id, stage: fs.getAttribute('data-stage'), comment: t }).then(function (r) { if (ok(r, 'Feedback sent')) openP(ST.p.id, ST.tab); }); };
     var rv = body.querySelector('#in-reviewed'); if (rv) rv.onclick = function () { S.db.from('innovation_projects').update({ status: 'reviewed' }).eq('id', ST.p.id).then(function (r) { if (ok(r, 'Marked reviewed')) openP(ST.p.id, ST.tab); }); };
     var rt = body.querySelector('#in-return'); if (rt) rt.onclick = function () { S.db.from('innovation_projects').update({ status: 'active' }).eq('id', ST.p.id).then(function (r) { if (ok(r, 'Returned to the student')) openP(ST.p.id, ST.tab); }); };
-    var sb = body.querySelector('#in-submit'); if (sb) sb.onclick = function () { save(true); S.db.from('innovation_projects').update({ status: 'submitted' }).eq('id', ST.p.id).then(function (r) { if (ok(r, 'Submitted for review')) { ST.p.status = 'submitted'; openTab('share'); } }); };
+    var sb = body.querySelector('#in-submit'); if (sb) sb.onclick = function () { save(true); S.db.from('innovation_projects').update({ status: 'submitted' }).eq('id', ST.p.id).then(function (r) { if (ok(r, 'Submitted for review')) { ST.p.status = 'submitted'; tickTodo(ST.p); openTab('share'); } }); };
   }
 })();

@@ -572,6 +572,27 @@
     if (MATS[cid]) return Promise.resolve(MATS[cid]);
     return S.db.from('class_materials').select('path,sort').eq('class_id', cid).order('sort').then(function (r) { MATS[cid] = (r.data || []).map(function (x) { return x.path; }); return MATS[cid]; });
   }
+  // Research Hub stages and Innovation Studio challenges are set here too (19 Nov 2026): the to-do item and the hub's own deadline are made together
+  var RSTAGES = [['Biology IA', 'ia', [['topic', 'Topic exploration'], ['rq', 'Research question'], ['hypothesis', 'Hypothesis'], ['variables', 'Variables and design'], ['method', 'Methodology'], ['safety', 'Safety and ethics'], ['data', 'Data collection'], ['analysis', 'Data analysis'], ['graphs', 'Graphs'], ['conclusion', 'Conclusion'], ['evaluation', 'Evaluation'], ['assess', 'Rubric and feedback (full draft)']]],
+    ['Extended essay', 'ee', [['ee_subject', 'Subject and pathway'], ['ee_topic', 'Topic exploration'], ['ee_rq', 'Research question'], ['ee_proposal', 'Research proposal'], ['ee_sources', 'Sources and library'], ['ee_method', 'Methods and analysis'], ['ee_write', 'Writing studio'], ['ee_reflect', 'Reflection sessions'], ['ee_rpf', 'Reflective statement (RPF)'], ['ee_assess', 'Criteria and submission'], ['ee_draft', 'Draft submission'], ['ee_viva', 'Viva voce']]]];
+  function linkedWork(k, c, title, who, m, after) {
+    var host = m.closest('section'), $ = function (q) { return host.querySelector(q); }, due = iso($('#ad').value), day = $('#ad').value.slice(0, 10), ins = $('#ain').value.trim(), go = $('#ago');
+    go.disabled = true; m.textContent = 'Saving…';
+    var fail = function (e) { go.disabled = false; m.textContent = S.nice(e); };
+    if (k === 'research') {
+      var rs = $('#ars').value.split(':');   // ia:rq
+      return S.db.rpc('assign_work', { cls: c.id, title: title, kind: 'task', ref: 'research:' + rs[0] + ':' + rs[1], url: '/research/', instructions: ins || 'Open the Research Hub, choose your project and complete this stage.', due: due, students: who }).then(function (r) {
+        if (r.error) return fail(r.error);
+        var ms = who ? Promise.resolve({}) : S.db.from('research_milestones').insert({ class_id: c.id, kind: rs[0], stage: rs[1], title: title.replace(/^(IA|Extended essay): /, ''), due_on: day });
+        return ms.then(function (x) { toast('Added to the to-do list' + (who ? ' of ' + who.length + ' student' + (who.length === 1 ? '' : 's') : ' and as a Research Hub deadline for ' + c.name) + (x && x.error ? ' (the Research Hub deadline could not be saved: ' + S.nice(x.error) + ')' : '')); after(); });
+      }, fail);
+    }
+    return S.db.from('innovation_challenges').insert({ title: title, brief: $('#aib').value.trim(), context: $('#aic').value.trim() || null, class_id: c.id, due_on: day, published: true }).select('id').single().then(function (r) {
+      if (r.error) return fail(/innovation_/.test(r.error.message || '') ? { message: 'The Innovation Studio is not set up yet.' } : r.error);
+      return S.db.rpc('assign_work', { cls: c.id, title: title, kind: 'task', ref: 'innovation:' + r.data.id, url: '/innovation/?challenge=' + r.data.id, instructions: ins || 'Open the Innovation Studio, start this challenge and submit your project.', due: due, students: who }).then(function (z) {
+        if (z.error) return fail(z.error); toast('Challenge published in the Innovation Studio and added to the to-do list'); after(); }, fail);
+    }, fail);
+  }
   function assignForm(host, c, kids, pre, done) {
     Promise.all([pickLists(), classMats(c.id)]).then(function (x) { return x[0]; }).then(function (L) {
       // Only this class's lessons by default (its programme and subject), grouped by topic; "other classes" is opt-in.
@@ -603,8 +624,9 @@
       };
       host.innerHTML = '<section class="panel tint"><h3 style="margin-top:0">📌 Set work' + (pre.length === 1 ? ' for ' + E((kids.filter(function (k) { return k.id === pre[0]; })[0] || {}).full_name || 'this student') : ' for ' + E(c.name)) + '</h3>' +
         '<div class="row2" style="flex-wrap:wrap;justify-content:flex-start;align-items:flex-end">' +
-        '<label class="f">What<select id="ak"><option value="lesson">🧪 Lesson (interactive or Learning centre)</option><option value="quiz">📝 Quiz or exam</option><option value="resource">📄 Notes or file</option><option value="sim">🔬 Simulation</option><option value="link">🔗 Web link</option><option value="task">✏️ Other task (book, homework…)</option></select></label>' +
-        '<label class="f" id="aiw" style="min-width:280px;flex:1">Which <span class="small muted" id="aif"></span><input id="aq" type="search" placeholder="Search…" style="margin-bottom:6px"><select id="ai"></select></label><label class="f" id="auw" hidden style="flex:1">Link<input id="au" type="url" placeholder="https://"></label></div>' +
+        '<label class="f">What<select id="ak"><option value="lesson">🧪 Lesson (interactive or Learning centre)</option><option value="quiz">📝 Quiz or exam</option><option value="resource">📄 Notes or file</option><option value="sim">🔬 Simulation</option><option value="link">🔗 Web link</option><option value="task">✏️ Other task (book, homework…)</option><option value="research">🔬 Research Hub: IA or EE stage</option><option value="innov">💡 Innovation Studio challenge</option></select></label>' +
+        '<label class="f" id="aiw" style="min-width:280px;flex:1">Which <span class="small muted" id="aif"></span><input id="aq" type="search" placeholder="Search…" style="margin-bottom:6px"><select id="ai"></select></label><label class="f" id="auw" hidden style="flex:1">Link<input id="au" type="url" placeholder="https://"></label><label class="f" id="arw" hidden style="flex:1;min-width:260px">Stage <span class="small muted">· students see it in the Research Hub too; it ticks off when they finish the stage</span><select id="ars">' + RSTAGES.map(function (g) { return '<optgroup label="' + g[0] + '">' + g[2].map(function (x) { return '<option value="' + g[1] + ':' + x[0] + '">' + E(x[1]) + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select></label></div>' +
+        '<div id="aiv" hidden><label class="f">The challenge brief <span class="small muted">· the problem students solve; it appears in the Innovation Studio for this class</span><textarea id="aib" rows="3" maxlength="4000" placeholder="e.g. Design a low-cost way to keep vaccines cool without electricity."></textarea></label><label class="f">Context (optional)<input id="aic" maxlength="200" placeholder="e.g. SDG 3 Good health"></label></div>' +
         '<div class="row2" style="flex-wrap:wrap;justify-content:flex-start"><label class="f" style="flex:1;min-width:240px">Title<input id="at" maxlength="160"></label><label class="f">Due<input id="ad" type="datetime-local"></label></div>' +
         '<label class="f">Instructions for students (optional)<textarea id="ain" rows="2" placeholder="e.g. Finish steps 1–3 and correct your answers in your book."></textarea></label>' +
         '<fieldset style="border:1px solid var(--line);border-radius:10px;padding:8px 12px"><legend class="small"><b>Who</b></legend>' +
@@ -614,10 +636,12 @@
         '<div class="acts"><button type="button" class="btn main sm" id="ago">📌 Add to the to-do list</button><button type="button" class="btn sm" id="ax">Cancel</button><span class="small" id="am"></span></div></section>';
       var $ = function (q) { return host.querySelector(q); };
       function fill() { var k = $('#ak').value, picks = ['lesson', 'quiz', 'resource', 'sim'].indexOf(k) >= 0;
-        $('#aiw').hidden = !picks; $('#auw').hidden = k !== 'link';
+        $('#aiw').hidden = !picks; $('#auw').hidden = k !== 'link'; $('#arw').hidden = k !== 'research'; $('#aiv').hidden = k !== 'innov';
+        if (k === 'research' && !$('#at').value) $('#ars').onchange();
         if (picks) { var o = opts(k), n = (o.match(/<option /g) || []).length;
           $('#ai').innerHTML = '<option value="">' + (n ? 'Choose… (' + n + ' for ' + E(c.name) + ')' : q ? 'Nothing matches your search' : k === 'quiz' ? 'No quizzes or exams set for this class yet' : 'Nothing for this class yet') + '</option>' + o;
           $('#aif').textContent = '· ' + c.name + (want.label ? ' (' + want.label + (want.level ? ' ' + want.level : '') + ')' : ''); } }
+      $('#ars').onchange = function () { var o = this.options[this.selectedIndex]; if (o) $('#at').value = (this.value.indexOf('ee:') === 0 ? 'Extended essay: ' : 'IA: ') + o.textContent; };
       $('#aq').oninput = function () { q = this.value.trim().toLowerCase(); fill(); };
       $('#ak').onchange = function () { fill(); $('#at').value = ''; };
       $('#ai').onchange = function () { var k = $('#ak').value, it = (L[k] || []).filter(function (x) { return x.id === $('#ai').value; })[0]; if (it) $('#at').value = it.title; };
@@ -634,6 +658,9 @@
         if (k === 'link' && !/^https?:\/\//.test($('#au').value.trim())) { m.textContent = 'Paste the web address (starting https://).'; return; }
         if (!title) { m.textContent = 'Give the work a title.'; $('#at').focus(); return; }
         if (some && !who.length) { m.textContent = 'Tick at least one student, or choose the whole class.'; return; }
+        if ((k === 'research' || k === 'innov') && !$('#ad').value) { m.textContent = 'Give a due date: it becomes the deadline in the ' + (k === 'research' ? 'Research Hub' : 'Innovation Studio') + ' too.'; $('#ad').focus(); return; }
+        if (k === 'innov' && $('#aib').value.trim().length < 10) { m.textContent = 'Write the challenge brief.'; $('#aib').focus(); return; }
+        if (k === 'research' || k === 'innov') { linkedWork(k, c, title, some ? who : null, m, function () { host.innerHTML = ''; if (done) done(); }); return; }
         var ref = !it ? null : k === 'lesson' ? (it.external_id || it.id) : it.id, url = k === 'link' ? $('#au').value.trim() : it ? urlFor(k, it) : null;
         $('#ago').disabled = true; m.textContent = 'Saving…';
         S.db.rpc('assign_work', { cls: c.id, title: title, kind: k, ref: ref, url: url, instructions: $('#ain').value.trim(), due: iso($('#ad').value), students: some ? who : null }).then(function (r) {
@@ -685,7 +712,11 @@
       body.querySelector('#anew').onclick = function () { assignForm(body.querySelector('#aform'), c, kids, [], function () { state.reload(); }); };
       body.querySelectorAll('[data-adel]').forEach(function (b) { b.onclick = function () {
         if (!confirm('Remove this work from every student\'s to-do list?')) return;
-        S.db.from('assignments').delete().eq('id', b.getAttribute('data-adel')).then(function (r) { if (ok(r, 'Removed from the to-do list')) state.reload(); }); }; });
+        var a = list.filter(function (x) { return x.id === b.getAttribute('data-adel'); })[0] || {}, rr = /^research:(ia|ee):(.+)$/.exec(a.ref || ''), iv = /^innovation:(.+)$/.exec(a.ref || '');
+        S.db.from('assignments').delete().eq('id', b.getAttribute('data-adel')).then(function (r) { if (!ok(r, 'Removed from the to-do list')) return;
+          var tail = rr ? (function (q) { if (!a.due_at) return q; var t = new Date(a.due_at).getTime(), f = function (x) { return new Date(x).toISOString().slice(0, 10); }; return q.gte('due_on', f(t - 864e5)).lte('due_on', f(t + 864e5)); })(S.db.from('research_milestones').delete().eq('class_id', c.id).eq('kind', rr[1]).eq('stage', rr[2]))
+            : iv ? S.db.from('innovation_challenges').update({ published: false }).eq('id', iv[1]) : null;
+          (tail || Promise.resolve()).then(function () { state.reload(); }, function () { state.reload(); }); }); }; });
       body.querySelector('#pgsave').onclick = function () {
         var pick = Array.prototype.map.call(body.querySelectorAll('[data-pg]:checked'), function (x) { return x.getAttribute('data-pg'); });
         S.db.from('classes').update({ content_programmes: pick }).eq('id', c.id).then(function (r) { if (ok(r, 'Saved: ' + c.name + ' sees ' + (pick.join(', ') || 'only work you set'))) c.content_programmes = pick; }); };

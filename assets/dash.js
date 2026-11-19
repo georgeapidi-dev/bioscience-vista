@@ -259,9 +259,10 @@
     var now = new Date(), open = items.filter(function (t) { return t.state !== 'done'; }), done = items.filter(function (t) { return t.state === 'done'; });
     var row = function (t) {
       var late = t.state !== 'done' && t.due_at && new Date(t.due_at) < now, soon = !late && t.state !== 'done' && t.due_at && (new Date(t.due_at) - now) < 2 * 864e5;
-      var tick = t.state === 'done' ? '<span class="pill ok">✓ Done</span>' : t.kind === 'quiz' || t.kind === 'lesson' ? (t.state === 'started' ? '<span class="pill t">✎ Started</span>' : '') :
+      var hub = /^research:/.test(t.ref || '') ? 'Research Hub' : /^innovation:/.test(t.ref || '') ? 'Innovation Studio' : '';
+      var tick = t.state === 'done' ? '<span class="pill ok">✓ Done</span>' : hub ? '<span class="pill t" title="Ticks itself off when you finish this in the ' + hub + '">⚙ Ticks off in the ' + hub + '</span>' : t.kind === 'quiz' || t.kind === 'lesson' ? (t.state === 'started' ? '<span class="pill t">✎ Started</span>' : '') :
         '<button type="button" class="btn sm" data-done="' + t.id + '">✓ Mark as done</button>';
-      return '<div class="todo' + (t.state === 'done' ? ' done' : '') + '" style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><div>' + (ICON[t.kind] || '📌') + ' ' +
+      return '<div class="todo' + (t.state === 'done' ? ' done' : '') + '" style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><div>' + (/^research:/.test(t.ref || '') ? '🔬' : /^innovation:/.test(t.ref || '') ? '💡' : ICON[t.kind] || '📌') + ' ' +
         (t.url ? '<a href="' + E(t.url) + '"' + (/^https?:/.test(t.url) && t.url.indexOf(location.origin) !== 0 ? ' target="_blank" rel="noopener"' : '') + '><b>' + E(t.title) + '</b></a>' : '<b>' + E(t.title) + '</b>') +
         (t.due_at ? ' <span class="small" style="color:' + (late ? '#c2410c' : soon ? '#b45309' : 'var(--muted)') + '">' + (late ? '⚠ was due ' : 'due ') + E(S.when(t.due_at)) + '</span>' : '') +
         (t.instructions ? '<div class="small muted">' + E(t.instructions) + '</div>' : '') + '</div><div>' + tick + '</div></div>';
@@ -350,7 +351,7 @@
     // To do (16 Nov 2026): what the teacher set for the class, kept apart from my own to-do list; inside each, interactive lessons, examinations and exam-style questions are separate
     var CAT = {}; quizzes.forEach(function (q) { CAT[q.id] = q.category; });
     var typeOf = function (kind, cat) { return kind === 'lesson' || cat === 'lesson' ? 'les' : cat === 'exam' ? 'exam' : kind === 'quiz' || cat === 'quiz' ? 'qs' : 'oth'; };
-    var TYPES = [['les', '📘 Interactive lessons', '#2563eb'], ['exam', '🧪 Examinations', '#7c3aed'], ['qs', '📝 Exam-style questions', '#ea580c'], ['oth', '📎 Other tasks', '#0d9488']];
+    var TYPES = [['les', '📘 Interactive lessons', '#2563eb'], ['exam', '🧪 Examinations', '#7c3aed'], ['qs', '📝 Exam-style questions', '#ea580c'], ['proj', '🔬 Research and projects', '#0891b2'], ['oth', '📎 Other tasks', '#0d9488']];
     // inside each type: sorted A to Z, and IB Biology themes A to D kept apart (16 Nov 2026), each theme with its own colour
     var THEME = {}; Object.keys(BV.THEMES).forEach(function (k) { var t = BV.THEMES[k]; THEME[k] = [k + ' · ' + t[1], t[2]]; });
     var themeOf = function (t) { var m = /(?:^|[^A-Za-z0-9])([A-D])([1-4])\.(\d)/.exec(t || ''); return m ? m[1] : ''; };
@@ -372,7 +373,7 @@
           (done.length ? '<details><summary class="small muted">Done (' + done.length + ')</summary>' + done.map(function (x) { return x.html; }).join('') + '</details>' : '') + '</div>'; }).join('');
       return out || '<p class="emptybox">' + empty + '</p>';
     };
-    var setRows = tasks.map(function (t) { return { title: t.title, type: typeOf(t.kind, CAT[t.ref]), done: t.state === 'done', html: todoHtml([t]).replace(/^<details>.*<\/summary>/, '').replace(/<\/details>$/, '') }; });
+    var setRows = tasks.map(function (t) { return { title: t.title, type: /^(research|innovation):/.test(t.ref || '') ? 'proj' : typeOf(t.kind, CAT[t.ref]), done: t.state === 'done', html: todoHtml([t]).replace(/^<details>.*<\/summary>/, '').replace(/<\/details>$/, '') }; });
     var myRows = todo.map(function (q) { return { title: q.title, type: typeOf('', q.category), done: false, html: '<div class="todo td-row">' + stag('quiz', q.id, q.title) + '<a href="' + ({ exam: '/exams/', lesson: '/lesson/' }[q.category] || '/quizzes/') + '#' + q.id + '"><b>' + E(q.title) + '</b></a>' + (q.due_at ? ' <span class="small muted">due ' + E(S.when(q.due_at)) + '</span>' : '') + '</div>' }; })
       .concat(prog.filter(function (p) { return p.status !== 'completed'; }).slice(0, 8).map(function (p) { return { title: p.lessons && p.lessons.title, type: 'les', done: false, html: '<div class="todo td-row">' + stag('lesson', p.lesson_id, p.lessons && p.lessons.title) + '<a href="' + E(p.lessons && p.lessons.url || '/learn/') + '"><b>' + E(p.lessons ? p.lessons.title : 'Lesson') + '</b></a> <span class="small muted">' + p.percent + '% done · Continue</span></div>' }; }));
     h += '<style>.td-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:14px;margin:14px 0}.td-col{border-radius:18px;padding:14px 16px;background:#fff;border:1px solid var(--line,#e2e8f0)}.td-col>h3{margin:0 0 4px;display:flex;align-items:center;gap:8px}.td-col>p{margin:0 0 8px}' +
