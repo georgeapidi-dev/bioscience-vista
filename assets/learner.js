@@ -61,7 +61,7 @@
     root.innerHTML = '<style>#lx{--lx:#0F766E;margin:8px 0 22px}#lx .lx-top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:22px;border-radius:22px;color:#fff;background:radial-gradient(420px 220px at 95% 0%,rgba(250,204,21,.55),transparent 70%),radial-gradient(420px 220px at 0% 100%,rgba(236,72,153,.4),transparent 70%),var(--lx)}#lx .lx-top h2{margin:0;font:700 1.7rem/1.15 var(--vx-font-head);color:#fff}#lx .lx-top p{margin:4px 0 0;color:rgba(255,255,255,.9)}#lx .chip{display:inline-block;font-size:.8rem;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.18);margin:6px 6px 0 0}' +
       '#lx .lx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}#lx .lx-c{background:var(--vx-card);border:1px solid var(--vx-line);border-radius:16px;padding:18px;box-shadow:var(--vx-shadow)}#lx .lx-c h3{margin:0 0 10px;font:700 1.08rem/1.2 var(--vx-font-head);display:flex;gap:8px;align-items:center}#lx .bar{height:8px;border-radius:99px;background:var(--vx-line);overflow:hidden;margin:4px 0 10px}#lx .bar i{display:block;height:100%;border-radius:99px}' +
       '#lx ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}#lx li{font-size:.94rem}#lx .muted{color:var(--vx-text-2);font-size:.88rem}#lx .badges{display:flex;flex-wrap:wrap;gap:8px}#lx .badge{display:flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid var(--vx-line);font-size:.86rem}#lx .badge.off{opacity:.38}#lx form{display:grid;gap:12px}#lx fieldset{border:1px solid var(--vx-line);border-radius:12px;padding:10px 12px}#lx legend{font-weight:700;font-size:.92rem}#lx .opts{display:flex;flex-wrap:wrap;gap:6px}#lx .opts label{display:flex;gap:6px;align-items:center;padding:6px 10px;border:1px solid var(--vx-line);border-radius:999px;font-size:.88rem;cursor:pointer}#lx select,#lx input[type=text]{padding:9px 10px;border-radius:10px;border:1px solid var(--vx-line);font:inherit;background:var(--vx-card);color:var(--vx-text)}#lx .goal{display:flex;gap:8px;align-items:center}#lx .goal.done span{text-decoration:line-through;opacity:.6}</style>' +
-      '<div class="lx-top"><div><h2>Welcome back' + (D.name ? ', ' + E(D.name) : '') + '</h2><p>' + (progName ? E(progName) + (P.year_level ? ' · ' + E(P.year_level) : '') : 'Tell us about your learning to personalise this page') + '</p><div>' + (P.subjects || []).map(function (s) { return '<span class="chip">' + E(s) + '</span>'; }).join('') + '</div></div>' +
+      '<div class="lx-top"><div><h2>🚀 My learning journey</h2><p>' + (progName ? E(progName) + (P.year_level ? ' · ' + E(P.year_level) : '') : 'Tell us about your learning to personalise this page') + '</p><div>' + (P.subjects || []).map(function (s) { return '<span class="chip">' + E(s) + '</span>'; }).join('') + '</div></div>' +
       '<div><button class="vx-btn light" type="button" id="lx-edit">' + (D.P ? 'Edit my learning profile' : 'Set up my learning profile') + '</button></div></div><div id="lx-form"></div>' +
       '<div class="lx-grid">' +
       // what to do next
@@ -92,7 +92,7 @@
     drawGoals();
     root.querySelector('#lx-gadd').onclick = function () { var inp = root.querySelector('#lx-g'), v = inp.value.trim(); if (!v) return; goals.push({ id: Date.now().toString(36), text: v.slice(0, 200), done: false, at: new Date().toISOString() }); inp.value = ''; drawGoals(); save({ goals: goals }); };
     // profile form (onboarding)
-    var openForm = function () {
+    var openForm = function (auto) {
       var f = root.querySelector('#lx-form'), p = D.P || {};
       var box = function (name, list, sel) { return '<div class="opts">' + list.map(function (x) { var v = Array.isArray(x) ? x[0] : x, l = Array.isArray(x) ? x[1] : x; return '<label><input type="checkbox" name="' + name + '" value="' + E(v) + '"' + ((sel || []).indexOf(v) >= 0 ? ' checked' : '') + '>' + E(l) + '</label>'; }).join('') + '</div>'; };
       f.innerHTML = '<div class="lx-c" style="margin-top:14px"><h3>✏️ My learning profile</h3><p class="muted">Used only to personalise your homepage and this dashboard. Only you and your teachers can see it.</p><form>' +
@@ -110,10 +110,10 @@
       f.querySelector('form').onsubmit = function (ev) { ev.preventDefault();
         var acc = f.querySelector('input[name=acc]:checked');
         save({ programme: prog.value || null, year_level: yr.value || null, subjects: vals('subj'), interests: vals('int'), approach: vals('appr'), accent: acc ? acc.value : null, onboarded_at: (D.P && D.P.onboarded_at) || new Date().toISOString(), goals: goals }).then(function () { render(D); }); };
-      f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (auto !== true) f.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
-    root.querySelector('#lx-edit').onclick = openForm;
-    if (!D.P && !D.prefsMissing && !sessionStorage.getItem('lx-skip')) { openForm(); sessionStorage.setItem('lx-skip', '1'); }
+    root.querySelector('#lx-edit').onclick = function () { openForm(); };
+    if (!D.P && !D.prefsMissing && !sessionStorage.getItem('lx-skip')) { openForm(true); sessionStorage.setItem('lx-skip', '1'); }
     root.hidden = false;
   }
 

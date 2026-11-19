@@ -30,7 +30,7 @@
         if (m && m.data) cls.push({ id: m.data.id, name: m.data.name, programme: m.data.programme, status: 'approved' });
         VIEW = { id: asId, name: p.full_name || 'Student' };
         var bar = document.createElement('div'); bar.className = 'panel tint row2'; bar.id = 'viewbar'; bar.setAttribute('role', 'status');
-        bar.innerHTML = '<span>👁 <b>Admin view.</b> This is <b>' + E(VIEW.name) + '</b>\'s dashboard as they see it. It is view only: nothing here changes their work. Their to-do list is not shown in this view.</span><span class="cta"><span class="small" id="viewmsg"></span><a class="btn sm" href="/admin/#members">← Back to Admin</a></span>';
+        bar.innerHTML = '<span>👁 <b>Admin view.</b> This is <b>' + E(VIEW.name) + '</b>\'s dashboard as they see it. It is view only: nothing here changes their work.</span><span class="cta"><span class="small" id="viewmsg"></span><a class="btn sm" href="/admin/#members">← Back to Admin</a></span>';
         app.before(bar);
         var block = '[data-done],[data-join],[data-leave],[data-retry],#addc,#joinbox,#pf,#rvf,#aip,#so';
         ['click', 'submit'].forEach(function (ev) { app.addEventListener(ev, function (e) { var t = e.target && e.target.closest ? e.target.closest(block) : null; if (!t) return; e.preventDefault(); e.stopPropagation(); bar.querySelector('#viewmsg').textContent = 'View only: that button works for the student, not here.'; }, true); });
@@ -64,7 +64,7 @@
           return { data: (r.data || []).filter(function (q) { return (q.quiz_classes || []).some(function (k) { return ids.indexOf(k.class_id) >= 0; }); }) }; })   // the admin can read every quiz, so keep only those set for this student's classes
         : (function (q) { return (me.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? q.eq('published', true) : q; })(S.db.from('quizzes').select('id,title,due_at,opens_at,time_limit_minutes,max_attempts,category')),   // students: quizzes published for their classes (per class, migration 025)
       S.db.from('quiz_attempts').select('quiz_id,status,score,max_score,submitted_at').eq('student_id', me.user.id),
-      me.view ? Promise.resolve({ data: [] }) : S.db.rpc('my_todo').then(function (r) { return r; }, function () { return { data: [] }; })
+      me.view ? viewTodo(me) : S.db.rpc('my_todo').then(function (r) { return r; }, function () { return { data: [] }; })
     ]).then(function (x) {
       // Grade 6 to 10 science: every result, lesson and question set is shown under its own subject (Biology, Chemistry or Physics).
       // The subject comes from the set itself (migration 036) or from the topic the lesson or set belongs to.
@@ -79,6 +79,17 @@
 
   // My classes, joining a class (school or teacher first, then the class; no codes) and premium access
   /* Missed and unfinished tasks (migration 037). The same list is sent once as a message; here it stays until the task is done. */
+  /* Admin view (?as=) and teacher preview (?preview=): the work set for the student's classes, built from the assignments and class_todo (migration 015), view only */
+  function viewTodo(me) {
+    var ids = (me.classes || []).map(function (c) { return c.id; }); if (!ids.length) return Promise.resolve({ data: [] });
+    return S.db.from('assignments').select('id,title,kind,ref,url,instructions,due_at,created_at,everyone,class_id').in('class_id', ids).then(function (r) {
+      var A = r.data || []; if (me.preview) return { data: A.filter(function (a) { return a.everyone; }).map(function (a) { a.state = 'open'; return a; }) };
+      return Promise.all(ids.map(function (c) { return S.db.rpc('class_todo', { cls: c }).then(function (x) { return x.data || []; }, function () { return []; }); })).then(function (all) {
+        var st = {}; all.forEach(function (rows) { rows.forEach(function (x) { if (x.student_id === me.user.id) st[x.assignment_id] = x.state; }); });
+        return { data: A.filter(function (a) { return st[a.id]; }).map(function (a) { a.state = st[a.id]; return a; }).sort(function (a, b) { return (a.due_at ? new Date(a.due_at) : 8.64e15) - (b.due_at ? new Date(b.due_at) : 8.64e15); }) };
+      });
+    }, function () { return { data: [] }; });
+  }
   function reminders(box) {
     if (!box) return;
     S.db.rpc('my_reminders').then(function (r) {
@@ -175,8 +186,8 @@
   }
   // a review of BioscienceVista, shown on the home page once the admin approves it
   function reviewBox(me) {
-    var sec = document.createElement('section'); sec.className = 'panel'; sec.id = 'review';
-    var plan = app.querySelector('#plan'); if (!plan) return; plan.after(sec);
+    var sec = document.createElement('section'); sec.className = 'panel db-sec'; sec.id = 'review'; sec.style.setProperty('--c', '#f59e0b');
+    var at = app.querySelector('#anbox'); if (!at) return; at.after(sec);
     S.db.from('reviews').select('rating,body,status').eq('user_id', me.user.id).maybeSingle().then(function (r) {
       var mine = r.data;
       sec.innerHTML = '<h3>⭐ Review BioscienceVista</h3>' + (mine ? '<p class="small">Your review is <b>' + E(mine.status === 'approved' ? 'published' : mine.status === 'hidden' ? 'not shown' : 'waiting for approval') + '</b>. You can change it below.</p>' : '<p class="small muted">Tell other students and teachers what helps you most. Reviews appear on the home page after a check.</p>') +
@@ -313,17 +324,29 @@
     var todo = quizzes.filter(function (q) { var a = att.filter(function (t) { return t.quiz_id === q.id; }); return !setQ[q.id] && !a.some(function (t) { return t.status !== 'in_progress'; }) && (!q.due_at || new Date(q.due_at) > new Date()); });
     var openTasks = tasks.filter(function (t) { return t.state !== 'done'; }).length;
     var fb = res.filter(function (r) { return r.teacher_feedback || r.ai_feedback; });
-    var h = '<div class="row2"><div><p class="label">My dashboard</p><h2>Hello, ' + E(first) + ' 👋</h2><p class="muted small">' + E(me.classes.map(function (c) { return c.name; }).join(', ') || 'No class yet') + ' · ' + E(me.user.email) + '</p></div>' +
-      '<button class="btn sm" type="button" id="so">Log out</button></div>' +
-      '<style>.dq{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:12px 0}.dq>div{border-radius:16px;padding:10px 12px;color:#fff;box-shadow:0 4px 12px rgba(15,23,42,.12)}.dq h4{margin:0 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;opacity:.9}.dq a{display:block;color:#fff;font-weight:800;text-decoration:none;padding:3px 0}.dq a:hover{text-decoration:underline}</style>' +
-      '<div class="dq"><div style="background:linear-gradient(135deg,#2563eb,#0ea5e9)"><h4>Learn</h4><a href="/learn/">📘 Learning centre</a><a href="/library/">🔬 Virtual labs</a><a href="/games/">🎮 Games</a></div>' +
-      '<div style="background:linear-gradient(135deg,#f97316,#ef4444)"><h4>Assessments</h4><a href="/quizzes/">📝 Exam-style questions</a><a href="/exams/">🧪 Examinations</a><a href="/practice/">🎯 Practice and revision</a></div>' +
-      '<div style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)"><h4>Live with my teacher</h4><a href="/live/">🎥 Live lessons</a><a href="/check/" title="Answer the question your teacher sends during a lesson">⚡ Live Check</a><a href="/board/">🖊 Whiteboard</a><a href="/research/" title="IB Biology IA: research question, data, statistics, graphs and feedback">🔬 Research Hub (IA)</a></div></div>';
-    h += '<div id="wblive"></div><div id="bv-news"></div><div id="remind"></div><div id="mycl"></div>';
-    h += '<div class="stats"><div class="stat"><span class="small muted">Overall score</span><b>' + (max ? Math.round(100 * got / max) + '%' : '–') + '</b></div>' +
-      '<div class="stat"><span class="small muted">Lessons completed</span><b>' + done + ' / ' + prog.length + '</b></div>' +
-      '<div class="stat"><span class="small muted">To do</span><b>' + (openTasks + todo.length) + '</b></div>' +
-      '<div class="stat"><span class="small muted">Feedback received</span><b>' + fb.length + '</b></div></div>';
+    var now = new Date(), wk = new Date(now.getTime() + 7 * 864e5);
+    var openT = tasks.filter(function (t) { return t.state !== 'done'; }), doneT = tasks.length - openT.length;
+    var overdue = openT.filter(function (t) { return t.due_at && new Date(t.due_at) < now; }), soonT = openT.filter(function (t) { return t.due_at && new Date(t.due_at) >= now && new Date(t.due_at) < wk; });
+    var nextT = openT.slice().sort(function (a, b) { return (a.due_at ? new Date(a.due_at) : 8.64e15) - (b.due_at ? new Date(b.due_at) : 8.64e15); })[0];
+    var h = '<style>' +
+      '.db-hero{position:relative;overflow:hidden;border-radius:24px;padding:22px 24px;margin:6px 0 12px;color:#fff;background:radial-gradient(380px 200px at 100% 0%,rgba(250,204,21,.55),transparent 70%),radial-gradient(420px 240px at 0% 100%,rgba(236,72,153,.5),transparent 70%),linear-gradient(120deg,#4f46e5,#7c3aed 45%,#db2777)}' +
+      '.db-hero h1{margin:2px 0 4px;color:#fff;font-size:clamp(1.5rem,3.4vw,2.1rem)}.db-hero p{margin:0;color:#fff;opacity:.92}.db-hero .db-eye{font-size:.76rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85}.db-hero .db-so{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.45)}' +
+      '.db-stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.db-stats a,.db-stats span{display:inline-flex;align-items:baseline;gap:6px;padding:7px 12px;border-radius:14px;background:rgba(255,255,255,.17);border:1px solid rgba(255,255,255,.3);color:#fff;text-decoration:none;font-size:.85rem}.db-stats b{font-size:1.15rem}.db-stats .hot{background:#fff;color:#b91c1c}' +
+      '.db-jump{position:sticky;top:64px;z-index:6;display:flex;gap:8px;overflow-x:auto;padding:8px 2px;margin:0 0 6px;background:color-mix(in srgb,var(--bg,#fff) 90%,transparent);backdrop-filter:blur(6px);scrollbar-width:thin}' +
+      '.db-jump a{flex:0 0 auto;display:inline-flex;gap:6px;align-items:center;padding:7px 13px;border-radius:999px;font-weight:700;font-size:.86rem;text-decoration:none;color:var(--c);background:color-mix(in srgb,var(--c) 11%,#fff);border:1px solid color-mix(in srgb,var(--c) 32%,#fff)}.db-jump a:hover,.db-jump a.on{background:var(--c);color:#fff}.db-jump a i{font-style:normal;background:var(--c);color:#fff;border-radius:999px;padding:0 7px;font-size:.75rem}.db-jump a:hover i,.db-jump a.on i{background:#fff;color:var(--c)}' +
+      '.db-sec{scroll-margin-top:130px;border-radius:20px;padding:16px 18px;margin:14px 0;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 9%,#fff),#fff 110px);border:1px solid color-mix(in srgb,var(--c) 22%,#fff);border-top:6px solid var(--c)}' +
+      '.db-sec>h2,.db-sec>h3,.db-sec .db-h{margin:0 0 6px;color:color-mix(in srgb,var(--c) 85%,#0f172a);font-size:1.25rem}.db-sec>h2{font-size:1.45rem}' +
+      '.db-sum{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 10px}.db-sum span{padding:5px 11px;border-radius:999px;font-weight:700;font-size:.84rem;background:#fff;border:1px solid var(--line,#e2e8f0)}.db-sum .r{background:#fee2e2;color:#b91c1c;border-color:#fecaca}.db-sum .a{background:#fef3c7;color:#92400e;border-color:#fde68a}.db-sum .b{background:#e0e7ff;color:#3730a3;border-color:#c7d2fe}.db-sum .g{background:#dcfce7;color:#166534;border-color:#bbf7d0}' +
+      '.db-next{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:14px;background:linear-gradient(120deg,#4f46e5,#7c3aed);color:#fff;margin:6px 0 12px}.db-next a.btn{background:#fff;color:#4338ca;border:0}.db-next small{opacity:.9}' +
+      '.db-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:14px}.db-two>.db-sec{margin:0}#db-wrap .panel.db-sec{box-shadow:none}' +
+      '.dq{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:8px 0 0}.dq>div{border-radius:16px;padding:10px 12px;color:#fff;box-shadow:0 4px 12px rgba(15,23,42,.12)}.dq h4{margin:0 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;opacity:.9;color:#fff}.dq a{display:block;color:#fff;font-weight:800;text-decoration:none;padding:3px 0}.dq a:hover{text-decoration:underline}' +
+      '#db-wrap #lx{margin:14px 0;scroll-margin-top:130px}@media (max-width:600px){.db-hero{padding:18px}.db-hero .db-so{position:static;margin-top:10px}}</style>';
+    h += '<div id="db-wrap"><section class="db-hero"><span class="db-eye">My dashboard</span><h1>Hello, ' + E(first) + ' 👋</h1><p>' + E(me.classes.map(function (c) { return c.name; }).join(' · ') || 'No class yet') + '</p>' +
+      '<button class="btn sm db-so" type="button" id="so">Log out</button>' +
+      '<div class="db-stats"><a href="#db-set"' + (overdue.length ? ' class="hot"' : '') + '>🧑‍🏫 <b>' + openT.length + '</b> set work to do' + (overdue.length ? ' · ' + overdue.length + ' overdue' : '') + '</a>' +
+      '<a href="#db-todo">✅ <b>' + todo.length + '</b> on my list</a><a href="#db-res">📊 <b>' + (max ? Math.round(100 * got / max) + '%' : '–') + '</b> overall</a><a href="#db-res">💬 <b>' + fb.length + '</b> feedback</a><a href="#db-prog">📘 <b>' + done + '/' + prog.length + '</b> lessons done</a></div></section>';
+    var J = [['db-set', '🧑‍🏫 Set work', '#4f46e5', openT.length], ['db-todo', '✅ My to-do', '#059669', todo.length], ['db-res', '📊 Results & feedback', '#9333ea', fb.length], ['revise', '🎯 Revise next', '#db2777'], ['plan', '🧭 Learning plan', '#0284c7'], ['mylessons', '📘 My lessons', '#2563eb'], ['lx', '🚀 My journey', '#0d9488'], ['db-tools', '🧰 Tools', '#ea580c'], ['mycl', '🏫 My classes', '#0f766e'], ['anbox', '📈 Learning profile', '#7c3aed']];
+    h += '<nav class="db-jump" aria-label="Jump to a part of my dashboard">' + J.map(function (j) { return '<a href="#' + j[0] + '" style="--c:' + j[2] + '">' + j[1] + (j[3] ? ' <i>' + j[3] + '</i>' : '') + '</a>'; }).join('') + '</nav><div id="wblive"></div>';
     // To do (16 Nov 2026): what the teacher set for the class, kept apart from my own to-do list; inside each, interactive lessons, examinations and exam-style questions are separate
     var CAT = {}; quizzes.forEach(function (q) { CAT[q.id] = q.category; });
     var typeOf = function (kind, cat) { return kind === 'lesson' || cat === 'lesson' ? 'les' : cat === 'exam' ? 'exam' : kind === 'quiz' || cat === 'quiz' ? 'qs' : 'oth'; };
@@ -358,24 +381,42 @@
       '.td-col{font-family:Outfit,system-ui,sans-serif}.td-row a{color:color-mix(in srgb,var(--hc,var(--tc)) 78%,#0f172a);text-decoration:none;font-weight:700}.td-row a b{font-weight:700}.td-row a:hover{text-decoration:underline}.td-row .small{font-family:system-ui,sans-serif}.td-col .todo a{color:color-mix(in srgb,var(--hc,var(--tc)) 78%,#0f172a);text-decoration:none}' +
       '.td-th{margin:8px 0 10px;border-radius:12px;padding:6px 10px 4px;background:color-mix(in srgb,var(--hc) 7%,#fff);border:1px solid color-mix(in srgb,var(--hc) 25%,#fff)}.td-thh{margin:0 0 2px;display:flex;align-items:center;gap:8px;font-weight:800;color:color-mix(in srgb,var(--hc) 80%,#000);font-size:.9rem}.td-thh span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:var(--hc);color:#fff;font-size:.8rem}.td-thh b{margin-left:auto;background:#fff;border-radius:999px;padding:0 8px;font-size:.78rem;color:#334155}.td-th .td-row:last-child{border-bottom:0}' +
       '.td-grp{margin:10px 0;border-left:4px solid var(--tc);padding-left:10px}.td-grp h4{margin:0 0 4px;color:var(--tc);display:flex;align-items:center;gap:6px}.td-grp h4 span{background:var(--tc);color:#fff;border-radius:999px;padding:0 8px;font-size:.8rem}.td-row{overflow-wrap:anywhere;padding:6px 0;border-bottom:1px solid var(--line,#e2e8f0)}</style>';
-    h += '<section class="td-wrap" aria-label="To do"><div class="td-col td-set"><h3>🧑‍🏫 Set by my teacher</h3><p class="small muted">Work your teacher set for your class, with its due date.</p>' + groups(setRows, 'Your teacher has not set any work right now.') + '</div>' +
-      '<div class="td-col td-mine"><h3>✅ My to-do list</h3><p class="small muted">Lessons you have started and other sets open for your class.</p>' + groups(myRows, 'Nothing else to do right now. Well done! 🎉') + '</div></section>';
-    h += '<div class="two">' +
-      '<section class="panel"><h3>My progress</h3>' + (prog.length ? prog.slice(0, 8).map(function (p) { return '<div class="grp" style="gap:4px"><div class="row2"><span class="small">' + stag('lesson', p.lesson_id, p.lessons && p.lessons.title) + E(p.lessons ? p.lessons.title : '') + '</span><span class="small muted">' + p.percent + '%</span></div><div class="bar"><i style="width:' + p.percent + '%"></i></div></div>'; }).join('') : '<p class="muted">Open a lesson from the <a href="/learn/">Learning centre</a> to start.</p>') + '</section></div>';
-    h += '<section class="panel" id="mylessons"><h3>📘 My interactive lessons</h3><p class="small muted">Loading…</p></section>';
-    h += '<section class="panel" id="revise" style="border-left:6px solid #db2777"><h3>🎯 Revise next</h3><p class="small muted">Looking at your results…</p></section>';
-    h += '<section class="panel" id="plan"><h3>🧭 My learning plan</h3><p class="small muted">Loading…</p></section>';
-    h += '<section class="panel" id="anbox"><h3>📊 My learning profile</h3><p class="muted small">Loading…</p></section>';
+    h += '<section class="db-sec" id="db-set" style="--c:#4f46e5"><h2>🧑‍🏫 Work set by my teacher</h2><p class="small muted" style="margin:0">Everything your teacher set for your class, most urgent first. Tick off tasks when you finish them.</p>' +
+      (tasks.length ? '<div class="db-sum">' + (overdue.length ? '<span class="r">⚠ ' + overdue.length + ' overdue</span>' : '') + (soonT.length ? '<span class="a">⏰ ' + soonT.length + ' due this week</span>' : '') + '<span class="b">📌 ' + openT.length + ' to do</span>' + (doneT ? '<span class="g">✓ ' + doneT + ' done</span>' : '') + '</div>' : '') +
+      (nextT ? '<div class="db-next"><span><small>' + (nextT.due_at && new Date(nextT.due_at) < now ? '⚠ Overdue, do this first' : '⏭ Due next') + '</small><br><b>' + E(nextT.title) + '</b>' + (nextT.due_at ? ' <small>· ' + (new Date(nextT.due_at) < now ? 'was due ' : 'due ') + E(S.when(nextT.due_at)) + '</small>' : '') + '</span>' + (nextT.url ? '<a class="btn sm" href="' + E(nextT.url) + '">Start now →</a>' : '') + '</div>' : '') +
+      '<div class="db-setlist">' + groups(setRows, 'Your teacher has not set any work right now. 🎉 Check your own to-do list below.') + '</div></section>';
+    h += '<div id="bv-news"></div><div id="remind"></div>';
+    h += '<section class="db-sec" id="db-todo" style="--c:#059669"><h3>✅ My to-do list</h3><p class="small muted">Lessons you have started and other question sets open for your class.</p><div class="db-mylist">' + groups(myRows, 'Nothing else to do right now. Well done! 🎉') + '</div></section>';
     var resOf = function (r) { return SUBJ ? (r.quiz_id ? SUBJ.quiz(r.quiz_id, r.title) : SUBJ.lesson(r.lesson_id, r.title)) : ''; };
-    h += '<section class="grp"><h3 class="sec-h">My results and feedback</h3>' + (res.length ? BV.subj.split(res, resOf, function (part) { return part.map(function (r) { var pc = S.pct(+r.score, +r.max_score);
+    var resHtml = function (part) { return part.map(function (r) { var pc = S.pct(+r.score, +r.max_score);
       return '<article class="task"><div class="top2"><b>' + E(r.title || 'Task') + '</b><span class="score">' + (r.score == null ? 'Being marked' : E(r.score) + ' / ' + E(r.max_score) + (pc != null ? ' (' + pc + '%)' : '')) + '</span></div>' +
         '<div class="bar"><i style="width:' + (pc || 0) + '%"></i></div><span class="small muted">' + E(S.when(r.recorded_at)) + '</span>' +
-        (r.teacher_feedback ? '<div class="fb tch"><h4>Teacher feedback</h4>' + BV.md(r.teacher_feedback) + '</div>' : '') + (r.ai_feedback ? '<div class="fb ai"><h4>Feedback</h4>' + BV.md(String(r.ai_feedback).replace(/_🤖 Automatic AI feedback from your marks on each question\./, '_📝 Feedback from your marks on each question.').replace(/_⚙ Automatic feedback from your marks on each question\._/, '_📝 Feedback from your marks on each question._')) + '</div>' : '') + '</article>'; }).join(''); }) :
+        (r.teacher_feedback ? '<div class="fb tch"><h4>Teacher feedback</h4>' + BV.md(r.teacher_feedback) + '</div>' : '') + (r.ai_feedback ? '<div class="fb ai"><h4>Feedback</h4>' + BV.md(String(r.ai_feedback).replace(/_🤖 Automatic AI feedback from your marks on each question\./, '_📝 Feedback from your marks on each question.').replace(/_⚙ Automatic feedback from your marks on each question\._/, '_📝 Feedback from your marks on each question._')) + '</div>' : '') + '</article>'; }).join(''); };
+    var recent = res.slice(0, 6), older = res.slice(6);
+    h += '<section class="db-sec grp" id="db-res" style="--c:#9333ea"><h3>📊 My results and feedback</h3>' + (res.length ? BV.subj.split(recent, resOf, resHtml) +
+        (older.length ? '<details><summary style="cursor:pointer;font-weight:700;color:#7e22ce">Show ' + older.length + ' older result' + (older.length === 1 ? '' : 's') + '</summary>' + BV.subj.split(older, resOf, resHtml) + '</details>' : '') :
       '<p class="emptybox">No results yet. Results appear here when you finish lessons and quizzes.</p>') + '</section>';
-    h += '<details class="panel"><summary><b>My profile</b></summary><form id="pf" class="grp" style="margin-top:10px"><label class="f">Full name<input id="pn" value="' + E(me.profile.full_name) + '"></label><button class="btn sm" type="submit">Save</button><p class="msg" id="pm"></p></form>' +
-      '</details>';
+    h += '<div class="db-two"><section class="panel db-sec" id="revise" style="--c:#db2777"><h3>🎯 Revise next</h3><p class="small muted">Looking at your results…</p></section>' +
+      '<section class="panel db-sec" id="plan" style="--c:#0284c7"><h3>🧭 My learning plan</h3><p class="small muted">Loading…</p></section></div>';
+    h += '<div class="db-two"><section class="panel db-sec" id="mylessons" style="--c:#2563eb"><h3>📘 My interactive lessons</h3><p class="small muted">Loading…</p></section>' +
+      '<section class="panel db-sec" id="db-prog" style="--c:#0891b2"><h3>📈 My progress</h3>' + (prog.length ? prog.slice(0, 8).map(function (p) { return '<div class="grp" style="gap:4px"><div class="row2"><span class="small">' + stag('lesson', p.lesson_id, p.lessons && p.lessons.title) + E(p.lessons ? p.lessons.title : '') + '</span><span class="small muted">' + p.percent + '%</span></div><div class="bar"><i style="width:' + p.percent + '%"></i></div></div>'; }).join('') : '<p class="muted">Open a lesson from the <a href="/learn/">Learning centre</a> to start.</p>') + '</section></div>';
+    h += '<div id="lx-slot"></div>';
+    h += '<section class="db-sec" id="db-tools" style="--c:#ea580c"><h3>🧰 Tools and places</h3><div class="dq"><div style="background:linear-gradient(135deg,#2563eb,#0ea5e9)"><h4>Learn</h4><a href="/learn/">📘 Learning centre</a><a href="/simulations/">🔬 Virtual labs</a><a href="/lab-results/">📋 My lab results</a><a href="/tutor/">🤖 AI tutor</a><a href="/games/">🎮 Games</a></div>' +
+      '<div style="background:linear-gradient(135deg,#f97316,#ef4444)"><h4>Assessments</h4><a href="/quizzes/">📝 Exam-style questions</a><a href="/exams/">🧪 Examinations</a><a href="/practice/">🎯 Practice and revision</a><a href="/mastery/">🔥 My mastery</a></div>' +
+      '<div style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)"><h4>Live with my teacher</h4><a href="/live/">🎥 Live lessons</a><a href="/check/" title="Answer the question your teacher sends during a lesson">⚡ Live Check</a><a href="/board/">🖊 Whiteboard</a><a href="/messages/">💬 Messages</a></div>' +
+      '<div style="background:linear-gradient(135deg,#059669,#0d9488)"><h4>Projects</h4><a href="/research/" title="IB Biology IA: research question, data, statistics, graphs and feedback">🔬 Research Hub (IA)</a><a href="/personal-project/">🧭 Personal Project</a><a href="/innovation/">💡 Innovation Studio</a><a href="/biodata/">📊 BioData Lab</a></div></div></section>';
+    h += '<div id="mycl"></div>';
+    h += '<section class="panel db-sec" id="anbox" style="--c:#7c3aed"><h3>📈 My learning profile</h3><p class="muted small">Loading…</p></section>';
+    h += '<details class="panel db-sec" style="--c:#64748b"><summary><b>⚙ My profile</b></summary><form id="pf" class="grp" style="margin-top:10px"><label class="f">Full name<input id="pn" value="' + E(me.profile.full_name) + '"></label><button class="btn sm" type="submit">Save</button><p class="msg" id="pm"></p></form>' +
+      '</details></div>';
+    var lx = document.getElementById('lx'); if (lx && app.contains(lx)) app.parentNode.insertBefore(lx, app);   // keep the learner panel safe while the dashboard redraws
     app.innerHTML = h; boardWatch(me); news(me);
-    var tdw = app.querySelector('.td-wrap'); if (tdw && BV.findBox) { var fw = document.createElement('div'); tdw.parentNode.insertBefore(fw, tdw); fw.appendChild(tdw); BV.findBox(fw, '.td-row, .todo', '.td-lv, .td-th, .td-grp', 'Find in my To do: a topic, code or title…'); }
+    var slot = app.querySelector('#lx-slot'); if (lx && slot) slot.parentNode.replaceChild(lx, slot);
+    [['#db-set', '.db-setlist', 'Find in work set by my teacher: a topic, code or title…'], ['#db-todo', '.db-mylist', 'Find in my to-do list…']].forEach(function (f) { var sec = app.querySelector(f[0]), list = sec && sec.querySelector(f[1]);
+      if (list && BV.findBox && list.querySelectorAll('.td-row, .todo').length > 5) { var fw = document.createElement('div'); list.parentNode.insertBefore(fw, list); fw.appendChild(list); BV.findBox(fw, '.td-row, .todo', '.td-lv, .td-th, .td-grp', f[2]); } });
+    var jl = [].slice.call(app.querySelectorAll('.db-jump a'));
+    if ('IntersectionObserver' in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (!e.isIntersecting) return; jl.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); }); }); }, { rootMargin: '-140px 0px -60% 0px' });
+      jl.forEach(function (a) { var t = document.getElementById(a.getAttribute('href').slice(1)); if (t) io.observe(t); }); }
     app.querySelector('#so').onclick = S.signOut;
     myProfile(me);
     app.querySelectorAll('[data-done]').forEach(function (b) { b.onclick = function () {
