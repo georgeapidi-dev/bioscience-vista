@@ -133,3 +133,4 @@ body.t-research{background:radial-gradient(1200px 500px at 0% 0%,color-mix(in sr
 .rh-tile b{font-size:1rem;color:var(--c)}.rh-tile span:last-child{font-size:.85rem;color:var(--muted)}
 .rh-tile:focus-visible,.rh-nav a:focus-visible{outline:3px solid var(--c,#7C3AED);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.rh-tile,.rh-nav a{transition:none}.rh-tile:hover,.rh-nav a:hover{transform:none}}
+.rh-kpi{grid-template-columns:repeat(auto-fit,minmax(112px,1fr))}
