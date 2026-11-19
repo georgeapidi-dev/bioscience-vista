@@ -14,6 +14,11 @@
     '.ms-row{display:grid;grid-template-columns:minmax(160px,1.4fr) 2fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #F1F5F9}.ms-bar{height:12px;border-radius:99px;background:#F1F5F9;overflow:hidden}.ms-bar i{display:block;height:100%;border-radius:99px}' +
     '.ms-pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78rem;font-weight:700}.ms-muted{color:#64748b;font-size:.88rem}.ms-mis li{margin:0 0 8px}' +
     '.ms-heat{border-collapse:collapse;font-size:.82rem}.ms-heat th,.ms-heat td{border:1px solid #fff;padding:5px 6px;text-align:center;min-width:46px}.ms-heat th{background:#F8FAFC;font-weight:700;max-width:120px;vertical-align:bottom}.ms-heat td:first-child,.ms-heat th:first-child{text-align:left;min-width:150px;background:#F8FAFC}';
+  function classOpts(C, pick) {   // the teacher's own classroom first, then the main-site course classes (as on /teach/ and /staff/)
+    var live = C.filter(function (c) { return !c.archived_at; }), mine = live.filter(function (c) { return c.owner_kind !== 'main'; }), main = live.filter(function (c) { return c.owner_kind === 'main'; });
+    var o = function (c) { return '<option value="' + E(c.id) + '"' + (c.id === pick ? ' selected' : '') + '>' + E(c.name) + '</option>'; };
+    return (mine.length && main.length ? '<optgroup label="My classroom">' + mine.map(o).join('') + '</optgroup><optgroup label="Main site courses">' + main.map(o).join('') + '</optgroup>' : live.map(o).join(''));
+  }
   function css() { if (!document.getElementById('ms-css')) { var s = document.createElement('style'); s.id = 'ms-css'; s.textContent = CSS; document.head.appendChild(s); } }
   function hero(h, p) { return '<section class="ms-hero"><p class="vx-eye">Assessment for mastery</p><h1>' + E(h) + '</h1><p>' + E(p) + '</p></section>'; }
 
@@ -72,15 +77,16 @@
   /* ---------- teacher: class heatmap ---------- */
   function teacher(me) {
     app.innerHTML = hero('Class mastery', 'Loading your classes…');
-    Promise.all([S.db.from('classes').select('id,name').eq('teacher_id', me.user.id).is('deleted_at', null).order('name'), S.db.from('class_teachers').select('class_id').eq('teacher_id', me.user.id)]).then(function (x) {
+    Promise.all([S.db.from('classes').select('id,name,owner_kind,archived_at').eq('teacher_id', me.user.id).is('deleted_at', null).order('name'), S.db.from('class_teachers').select('class_id').eq('teacher_id', me.user.id)]).then(function (x) {
       var C = x[0].data || [], extra = (x[1].data || []).map(function (r) { return r.class_id; }).filter(function (id) { return !C.some(function (c) { return c.id === id; }); });
-      return (extra.length ? S.db.from('classes').select('id,name').in('id', extra) : Promise.resolve({ data: [] })).then(function (y) { C = C.concat(y.data || []);
-        if (!C.length && me.admin) return S.db.from('classes').select('id,name').is('deleted_at', null).order('name').limit(200).then(function (z) { return z.data || []; });
+      return (extra.length ? S.db.from('classes').select('id,name,owner_kind,archived_at').in('id', extra) : Promise.resolve({ data: [] })).then(function (y) { C = C.concat(y.data || []);
+        if (!C.length && me.admin) return S.db.from('classes').select('id,name,owner_kind,archived_at').is('deleted_at', null).order('name').limit(200).then(function (z) { return z.data || []; });
         return C; });
     }).then(function (C) {
-      var pick = new URLSearchParams(location.search).get('class') || (C[0] && C[0].id);
+      var first = C.filter(function (c) { return !c.archived_at && c.owner_kind !== 'main'; })[0] || C.filter(function (c) { return !c.archived_at; })[0] || C[0];
+      var pick = new URLSearchParams(location.search).get('class') || (first && first.id);
       app.innerHTML = hero('Class mastery', 'Each cell is a student\'s weighted score in a topic from their marked lessons and assessments (recent work counts more). Use it to plan reteaching and target practice.') +
-        '<section class="ms-card"><label>Class <select id="ms-c">' + C.map(function (c) { return '<option value="' + c.id + '"' + (c.id === pick ? ' selected' : '') + '>' + E(c.name) + '</option>'; }).join('') + '</select></label> <a class="btn sm" href="#student" id="ms-me">See my own mastery page</a></section><div id="ms-body"></div>';
+        '<section class="ms-card"><label>Class <select id="ms-c">' + classOpts(C, pick) + '</select></label> <a class="btn sm" href="#student" id="ms-me">See my own mastery page</a></section><div id="ms-body"></div>';
       document.getElementById('ms-c').onchange = function () { history.replaceState(null, '', '?class=' + this.value); heat(this.value); };
       document.getElementById('ms-me').onclick = function () { setTimeout(function () { location.reload(); }, 50); };
       if (pick) heat(pick); else document.getElementById('ms-body').innerHTML = '<p class="ms-card">You have no classes yet.</p>';

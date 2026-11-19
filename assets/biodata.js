@@ -87,7 +87,7 @@
 
   function home() {
     css();
-    app.innerHTML = '<section class="bd-hero"><p class="vx-eye" style="color:#FDE68A">Phase 8 · Data science for biology</p><h1>📊 BioData Lab</h1><p>Explore real, published biological data. Choose a dataset, ask a question, draw the graph and run the right statistical test, then use what you find in your own investigation.</p></section>' +
+    app.innerHTML = '<section class="bd-hero"><p class="vx-eye" style="color:#FDE68A">Data science for biology</p><h1>📊 BioData Lab</h1><p>Explore real, published biological data. Choose a dataset, ask a question, draw the graph and run the right statistical test, then use what you find in your own investigation.</p></section>' +
       '<div class="bd-sets" role="group" aria-label="Datasets">' + SETS.map(function (s) { return '<button class="bd-set" data-k="' + s.key + '" aria-pressed="' + (ST.set && ST.set.key === s.key) + '"><span class="ic" aria-hidden="true">' + s.icon + '</span><b>' + E(s.name) + '</b><small>' + E(s.topic) + '</small><small>' + E(s.lv) + '</small></button>'; }).join('') + '</div><div id="bd-ws"></div>';
     [].forEach.call(app.querySelectorAll('.bd-set'), function (b) { b.onclick = function () { open(b.getAttribute('data-k')); }; });
     var k = new URLSearchParams(location.search).get('d') || (location.hash.slice(1) || ''); if (k && SETS.some(function (s) { return s.key === k; })) open(k);
