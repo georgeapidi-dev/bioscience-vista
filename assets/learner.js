@@ -67,7 +67,7 @@
       // what to do next
       '<div class="lx-c"><h3>🧭 What to do next</h3><ul>' + (open[0] ? '<li>▶ <a href="' + E(D.LS[open[0].lesson_id].url) + '">Continue: ' + E(D.LS[open[0].lesson_id].title) + '</a> <span class="muted">' + Math.round(open[0].percent || 0) + ' %</span></li>' : '') +
         weak.slice(0, 2).map(function (w) { return '<li>🎯 Strengthen <b>' + E(w.topic) + '</b> (' + w.pct + ' %): <a href="/explore/?q=' + encodeURIComponent(w.topic.split(':')[0].split(' ')[0]) + '">lessons and labs</a> · <a href="/quizzes/">practice questions</a></li>'; }).join('') +
-        (!open[0] && !weak.length ? '<li>🌌 <a href="/explore/">Explore a new topic in the Science Universe</a></li>' : '') + '<li>🔬 <a href="/simulations/">Run a Virtual Lab investigation</a></li></ul></div>' +
+        (!open[0] && !weak.length ? '<li>🌌 <a href="/explore/">Explore a new topic in the Science Universe</a></li>' : '') + '<li>🔬 <a href="/simulations/">Run a Virtual Lab investigation</a> · <a href="/lab-results/">my recorded results</a></li></ul></div>' +
       // mastery
       '<div class="lx-c"><h3>📊 Topic mastery <a href="/mastery/" style="font-size:.8rem;font-weight:600">see all and practise →</a></h3>' + (M.length ? M.slice(0, 6).map(function (o) { var c = o.pct >= 80 ? '#2F9E74' : o.pct >= 60 ? '#D9861A' : '#E25C4B'; return '<div><b style="font-size:.92rem">' + E(o.topic) + '</b> <span class="muted">' + o.pct + ' % of ' + o.max + ' marks</span><div class="bar" role="img" aria-label="' + o.pct + ' percent"><i style="width:' + o.pct + '%;background:' + c + '"></i></div></div>'; }).join('') : '<p class="muted">Your mastery appears here after your first marked questions.</p>') + '</div>' +
       // weak areas and misconceptions

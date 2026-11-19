@@ -1580,7 +1580,13 @@
       box.innerHTML = '<p class="sim-cap"><b>My recorded results</b> (' + S.rows.length + ')</p><div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:.85rem;width:100%"><tr>' +
         '<th style="border:1px solid #cbd5e1;padding:4px">#</th>' + cols.map(function (c) { return '<th style="border:1px solid #cbd5e1;padding:4px;text-align:left">' + E(c) + '</th>'; }).join('') + '</tr>' +
         S.rows.map(function (r, i) { return '<tr><td style="border:1px solid #cbd5e1;padding:4px">' + (i + 1) + '</td>' + cols.map(function (c) { return '<td style="border:1px solid #cbd5e1;padding:4px">' + E(r[c]) + '</td>'; }).join('') + '</tr>'; }).join('') +
-        '</table></div>' + (msg ? '<p class="sim-cap">' + E(msg) + '</p>' : '');
+        '</table></div><div class="sim-run-row" style="margin-top:6px"><button type="button" class="sim-run" data-rec="csv" style="background:#0d9488">⬇ Download CSV</button><button type="button" class="sim-run" data-rec="undo" style="background:#64748b">↶ Remove last</button><button type="button" class="sim-run" data-rec="clear" style="background:#b91c1c">Clear table</button></div>' + (msg ? '<p class="sim-cap">' + E(msg) + '</p>' : '');
+      box.querySelectorAll('[data-rec]').forEach(function (x) { x.onclick = function () { var a = x.getAttribute('data-rec');
+        if (a === 'csv') { var q = function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }, lines = [['Trial'].concat(cols).map(q).join(',')].concat(S.rows.map(function (r, i) { return [i + 1].concat(cols.map(function (c) { return r[c]; })).map(q).join(','); }));
+          var a2 = document.createElement('a'); a2.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv' })); a2.download = name + '-results.csv'; document.body.appendChild(a2); a2.click(); setTimeout(function () { URL.revokeObjectURL(a2.href); a2.remove(); }, 500); return; }
+        if (a === 'clear' && !confirm('Clear all your recorded results for this simulation?')) return;
+        if (a === 'undo') S.rows.pop(); else S.rows = [];
+        kset(KEY, S); draw('Saving…'); send().then(function (msg) { draw(msg); }); }; });
     }
     function send() {
       var db = (window.BVS && window.BVS.db) || window.BV_DB || window.BV_LDB;
@@ -1595,8 +1601,16 @@
     el.querySelectorAll('.sim-c input,.sim-c select').forEach(function (c) { c.addEventListener('change', function () {
       var l = c.closest('label'); S.log.push([new Date().toISOString(), l ? (l.childNodes[0] && l.childNodes[0].textContent || '').trim() : c.id, c.value]); if (S.log.length > 300) S.log = S.log.slice(-200); kset(KEY, S);
     }); });
+    if (!S.rows.length) setTimeout(function () {   // signed in on another device: bring back this page's saved results
+      var db = (window.BVS && window.BVS.db) || window.BV_DB || window.BV_LDB; if (!db || !db.auth) return;
+      db.auth.getSession().then(function (r) { var u = r.data && r.data.session && r.data.session.user; if (!u) return;
+        db.from('sim_attempts').select('id,data,started_at,answers').eq('student_id', u.id).eq('sim', 'sim:' + name).order('updated_at', { ascending: false }).limit(5).then(function (x) {
+          var hit = (x.data || []).filter(function (a) { return a.answers && a.answers.Page === location.pathname && Array.isArray(a.data) && a.data.length; })[0];
+          if (hit && !S.rows.length) { S.id = hit.id; S.rows = hit.data; S.started = hit.started_at || S.started; kset(KEY, S); draw('Your saved results.'); }
+        }); }).catch(function () {});
+    }, 1200);
     b.addEventListener('click', function () {
-      var out = el.querySelector('.sim-out'), r = controls(); r.Result = out ? out.textContent.replace(/\s+/g, ' ').trim().slice(0, 400) : '';
+      var out = el.querySelector('.sim-out'), r = controls(), key = out && out.querySelector('b'); r.Result = out ? ((key && key.textContent.trim().length > 3 ? key.textContent : out.textContent).replace(/\s+/g, ' ').trim().slice(0, key ? 200 : 260)) : '';   // the headline result (bold), not the whole explanation
       S.rows.push(r); if (S.rows.length > 60) S.rows = S.rows.slice(-60); kset(KEY, S); draw('Saving…');
       send().then(function (msg) { draw(msg); });
     });
