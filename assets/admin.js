@@ -7,13 +7,64 @@
     draw();
   }).catch(function () {});
   if (TAB === 'requests' || TAB === 'teachers') TAB = 'approvals';
-  var TABS = [['approvals', '✅ Approvals'], ['members', '👥 Members & access'], ['payments', '💳 Payments'], ['settings', '⚙️ Prices & settings'], ['schools', '🏫 Schools'], ['reviews', '⭐ Reviews'], ['admins', '🔑 Admins']];
+  var TABS = [['approvals', '✅ Approvals'], ['members', '👥 Members & access'], ['payments', '💳 Payments'], ['settings', '⚙️ Prices & settings'], ['codes', '🎟 Website codes'], ['schools', '🏫 Schools'], ['reviews', '⭐ Reviews'], ['admins', '🔑 Admins']];
   function draw() {
     app.innerHTML = '<div class="row2 cband" style="--k:#7c3aed"><div><p class="label">Admin</p><h2 style="margin:0">BioscienceVista admin</h2><p class="small">Approvals, members, teachers, payments and settings</p></div><div class="cta"><a class="btn sm" href="/staff/">🌐 Main site</a><a class="btn sm" href="/teach/">🏫 My classes</a></div></div>' +
       '<div class="cta" role="tablist">' + TABS.map(function (t) { return '<button type="button" class="btn sm' + (TAB === t[0] ? ' main' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="ais" class="small" style="margin:10px 0;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:#f8fafc"></div><div id="ems" class="small" style="margin:10px 0;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:#f8fafc"></div><section class="panel grp" id="tab"><p class="muted small">Loading…</p></section>';
     aiStatus(false); mailStatus(null);
     app.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { TAB = b.getAttribute('data-t'); history.replaceState(null, '', '#' + TAB); draw(); }; });
-    ({ approvals: approvals, members: members, payments: payments, settings: settings, schools: schools, reviews: reviews, admins: admins })[TAB](app.querySelector('#tab'));
+    ({ approvals: approvals, members: members, payments: payments, settings: settings, codes: codes, schools: schools, reviews: reviews, admins: admins })[TAB](app.querySelector('#tab'));
+  }
+  /* Website codes (migration 071): one personal code per student, used once at /join/ to make their place on the site.
+     Using it counts as the admin's approval (free access, as every current class student has). Afterwards it is their sign-in ID with their PIN. */
+  function codes(box) {
+    box.innerHTML = '<section class="panel tint grp"><h3 style="margin:0">🎟 Make website codes</h3><p class="small">Type one student per line with their two official names, first name then family name (the names are fixed to the code), or choose a number of unnamed codes (the student types both names). The student creates a 4-digit PIN when they use the code. Each code works once to join; after that it is the student\'s sign-in ID with their PIN. Students then need a joining code from their teacher for each class.</p>' +
+      '<label class="f">Names (one per line)<textarea id="scn" rows="5" placeholder="Amani Otieno&#10;Brian Kip"></textarea></label>' +
+      '<div class="row2" style="gap:8px;flex-wrap:wrap;justify-content:flex-start"><label class="f" style="margin:0">or how many unnamed<input id="scq" type="number" min="1" max="300" style="width:90px"></label>' +
+      '<label class="f" style="margin:0">Note (e.g. school)<input id="sco" maxlength="120" style="width:200px"></label><label class="f" style="margin:0">Expires after (days, optional)<input id="scd" type="number" min="1" max="365" style="width:90px"></label>' +
+      '<button type="button" class="btn main sm" id="scm">＋ Make codes</button><button type="button" class="btn sm" id="scp">🖨 Print unused codes</button></div><p class="msg" id="scmsg" role="status"></p></section>' +
+      '<section class="panel grp"><div class="row2"><h3 style="margin:0">Codes</h3><input id="scf" type="search" placeholder="🔎 Find a name, code or note" style="max-width:260px"></div><div id="scl"><p class="small muted">Loading…</p></div></section>';
+    var L = [], NM = {};
+    function load() {
+      S.db.from('site_invites').select('code,full_name,note,created_at,expires_at,used_by,used_at').order('created_at', { ascending: false }).limit(2000).then(function (r) {
+        var l = box.querySelector('#scl');
+        if (r.error) { l.innerHTML = '<p class="msg">' + E(S.nice(r.error)) + '</p>'; return; }
+        L = r.data || []; var ids = L.filter(function (x) { return x.used_by; }).map(function (x) { return x.used_by; });
+        (ids.length ? S.db.rpc('code_users', { ids: ids }) : Promise.resolve({ data: [] })).then(function (u) { NM = {}; ((u && u.data) || []).forEach(function (x) { NM[x.id] = x.full_name; }); list(); });
+      });
+    }
+    function fmt(c) { return c.slice(0, 4) + '-' + c.slice(4); }
+    function list() {
+      var q = (box.querySelector('#scf').value || '').trim().toLowerCase(), now = Date.now();
+      var rows = L.filter(function (x) { return !q || (x.code + ' ' + (x.full_name || '') + ' ' + (x.note || '') + ' ' + (NM[x.used_by] || '')).toLowerCase().indexOf(q) >= 0; });
+      var unused = L.filter(function (x) { return !x.used_by; }).length;
+      box.querySelector('#scl').innerHTML = '<p class="small"><b>' + unused + '</b> unused · <b>' + (L.length - unused) + '</b> used</p>' + (rows.length ? '<div class="tablewrap"><table class="marks"><tr><th>Code</th><th>For</th><th>Note</th><th>Status</th><th></th></tr>' + rows.slice(0, 400).map(function (x) {
+        var exp = !x.used_by && x.expires_at && new Date(x.expires_at) < now;
+        return '<tr><td style="font-family:ui-monospace,monospace;letter-spacing:.1em"><b>' + E(fmt(x.code)) + '</b></td><td>' + E(x.full_name || '—') + '</td><td class="small">' + E(x.note || '') + '</td><td>' +
+          (x.used_by ? '<span class="pill ok">✓ used by ' + E(NM[x.used_by] || 'a student') + '</span> <span class="small muted">' + new Date(x.used_at).toLocaleDateString() + '</span>' : exp ? '<span class="pill">expired</span>' : '<span class="pill t">unused</span>' + (x.expires_at ? ' <span class="small muted">until ' + new Date(x.expires_at).toLocaleDateString() + '</span>' : '')) + '</td><td>' +
+          (x.used_by ? '' : '<button type="button" class="btn sm" data-sdel="' + E(x.code) + '">🗑</button>') + '</td></tr>'; }).join('') + '</table></div>' : '<p class="small muted">No codes match.</p>');
+      box.querySelectorAll('[data-sdel]').forEach(function (b) { b.onclick = function () { if (b.disabled) return; b.disabled = true;
+        S.db.from('site_invites').delete().eq('code', b.getAttribute('data-sdel')).is('used_by', null).then(function (r) { if (r.error) { b.disabled = false; alert(S.nice(r.error)); return; } load(); }); }; });
+    }
+    box.querySelector('#scf').oninput = list;
+    box.querySelector('#scm').onclick = function () { var b = this, m = box.querySelector('#scmsg'); if (b.disabled) return;
+      var names = box.querySelector('#scn').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean), q = +box.querySelector('#scq').value || 0;
+      if (!names.length && q > 0) for (var i = 0; i < Math.min(q, 300); i++) names.push('');
+      var bad = names.filter(function (x) { return x && x.split(/\s+/).length < 2; });
+      if (bad.length) { m.className = 'msg'; m.textContent = 'Give each student two official names (first and family name): ' + bad.slice(0, 5).join(', '); return; }
+      if (!names.length) { m.className = 'msg'; m.textContent = 'Type the students\' names, one per line, or a number of unnamed codes.'; return; }
+      b.disabled = true; m.className = 'msg'; m.textContent = 'Making codes…';
+      S.db.rpc('make_site_codes', { names: names, note: box.querySelector('#sco').value.trim() || null, days: +box.querySelector('#scd').value || null }).then(function (r) { b.disabled = false;
+        if (r.error) { m.textContent = S.nice(r.error); return; }
+        m.className = 'msg ok'; m.textContent = (r.data || []).length + ' code' + ((r.data || []).length === 1 ? '' : 's') + ' made. Print them, or copy them from the list.';
+        box.querySelector('#scn').value = ''; box.querySelector('#scq').value = ''; load(); }); };
+    box.querySelector('#scp').onclick = function () {
+      var un = L.filter(function (x) { return !x.used_by && !(x.expires_at && new Date(x.expires_at) < Date.now()); }); if (!un.length) { alert('No unused codes to print.'); return; }
+      var w = window.open('', '_blank'); if (!w) { alert('Allow pop-ups to print the codes.'); return; }
+      w.document.write('<!doctype html><meta charset="utf-8"><title>Website codes · BioscienceVista</title><style>body{font-family:system-ui,sans-serif;margin:16px}.g{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.k{border:2px dashed #94a3b8;border-radius:12px;padding:12px;break-inside:avoid}.k b{display:block;font:800 1.6rem ui-monospace,monospace;letter-spacing:.18em;margin:6px 0}small{color:#475569}</style>' +
+        '<div class="g">' + un.map(function (x) { return '<div class="k"><small>BioscienceVista · your website code' + (x.note ? ' · ' + E(x.note) : '') + '</small><div>' + E(x.full_name || '') + '</div><b>' + E(fmt(x.code)) + '</b><small>Go to ' + E(location.host) + '/join and type this code. The first time you choose a PIN; after that this code and your PIN sign you in. Keep it safe.</small></div>'; }).join('') + '</div><script>print()<\/script>');
+      w.document.close(); };
+    load();
   }
   // AI helper status: one tiny server-side check, remembered for this visit; "Check again" repeats it
   var AIS = null;

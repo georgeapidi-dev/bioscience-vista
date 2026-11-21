@@ -92,11 +92,11 @@
   S.pendingBox = function (me) {
     var a = me.access || {}, waiting = (a.classes || []).filter(function (c) { return c.status === 'pending'; });
     var need = [];
-    if (!me.classes || !me.classes.length) need.push(waiting.length ? 'your teacher to approve you for <b>' + waiting.map(function (c) { return S.E(c.name); }).join(', ') + '</b>' : 'you to <a href="/dashboard/">join a class</a>');
+    if (!me.classes || !me.classes.length) need.push(waiting.length ? 'your teacher to approve you for <b>' + waiting.map(function (c) { return S.E(c.name); }).join(', ') + '</b>' : 'your class: <a href="/join/">type the joining code your teacher gave you</a>');
     if (!a.premium) need.push('<a href="/premium/">premium access</a>');
     return '<section class="panel tint"><p class="label">Almost there</p><h2>Not open yet</h2><p>Lessons, quizzes and simulations open when your account has ' + (need.length ? 'these: ' + need.join(' and ') : 'an approved class and premium access') + '.</p>' +
       '<div class="cta"><a class="btn main sm" href="/dashboard/">My dashboard</a>' + (a.premium ? '' : '<a class="btn sm" href="/premium/">Get premium</a>') + '</div>' +
-      '<p class="small muted">Signed in as ' + S.E(me.user.email) + ' · <a href="#" onclick="BVS.signOut();return false">Log out</a></p></section>';
+      '<p class="small muted">Signed in as ' + S.E(/@students\.biosciencevista\.com$/.test(me.user.email || '') ? ((me.profile && me.profile.full_name) || 'student') : me.user.email) + ' · <a href="#" onclick="BVS.signOut();return false">Log out</a></p></section>';
   };
   /* anonymous visit log: page, where they came from, device type; a random id in this browser counts unique visitors (no IP address is kept) */
   S.logVisit = function () {

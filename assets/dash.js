@@ -55,7 +55,7 @@
         .then(function () { return S.db.auth.updateUser({ data: { courses_applied: true } }); }).then(function () { location.reload(); }, function () { location.reload(); });
     }
     if (me.staff && !new URLSearchParams(location.search).get('student')) { location.href = '/staff/'; return; }
-    if (!me.ok) { app.innerHTML = '<div class="row2"><div><p class="label">My dashboard</p><h2>Hello, ' + E((me.profile.full_name || 'there').split(' ')[0]) + ' 👋</h2><p class="muted small">' + E(me.user.email) + '</p></div><div class="cta"><button class="btn sm" type="button" id="so">Log out</button></div></div><div id="mycl"></div>';
+    if (!me.ok) { app.innerHTML = '<div class="row2"><div><p class="label">My dashboard</p><h2>Hello, ' + E((me.profile.full_name || 'there').split(' ')[0]) + ' 👋</h2><p class="muted small">' + (/@students\.biosciencevista\.com$/.test(me.user.email || '') ? 'Signed in with your website code' : E(me.user.email)) + '</p></div><div class="cta"><button class="btn sm" type="button" id="so">Log out</button></div></div><div id="mycl"></div>';
       app.querySelector('#so').onclick = S.signOut; classesPanel(me, app.querySelector('#mycl')); return; }
     return Promise.all([
       S.db.from('student_results').select('*').eq('student_id', me.user.id).order('recorded_at', { ascending: false }),
@@ -120,7 +120,7 @@
     }
     box.innerHTML = '<section class="panel tint grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><span><button type="button" class="btn sm" id="chpin">🔑 Change my PIN</button> <button type="button" class="btn sm" id="addc">＋ Join a class</button></span></div>' + prem +
       (mine.length ? mine.map(function (c) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>' + (c.status === 'approved' ? '<a href="' + E(link(c)) + '"><b>' + E(c.name) + '</b></a>' : '<b>' + E(c.name) + '</b>') + ' ' + (st[c.status] || '') + '</span>' +
-        '<button type="button" class="btn sm" data-leave="' + E(c.id) + '" title="Leave this class">Leave</button></div>'; }).join('') : '<p class="small">You have not joined a class yet. Press <b>Join a class</b> and type the class code your teacher gave you.</p>') +
+        '<button type="button" class="btn sm" data-leave="' + E(c.id) + '" title="Leave this class">Leave</button></div>'; }).join('') : '<p class="small">You have not joined a class yet. Press <b>Join a class</b> and type the joining code your teacher gave you.</p>') +
       '<div id="joinbox"></div></section>';
     box.querySelectorAll('[data-leave]').forEach(function (b) { b.onclick = function () { if (!confirm('Leave this class? You can ask to join again later.')) return;
       S.db.rpc('leave_class', { cid: b.getAttribute('data-leave') }).then(function (r) { if (r.error) return alert(S.nice(r.error)); location.reload(); }); }; });
@@ -128,11 +128,12 @@
     box.querySelector('#chpin').onclick = function () { pinPrompt(me, true); };
     box.querySelector('#addc').onclick = function () {
       var jb = box.querySelector('#joinbox');
-      jb.innerHTML = '<form id="jcf" class="grp" style="margin-top:10px"><label class="f">Your teacher\'s class code<input id="jcc" maxlength="10" autocomplete="off" autocapitalize="characters" style="font:800 1.3rem ui-monospace,monospace;letter-spacing:.25em;text-transform:uppercase"></label>' +
+      jb.innerHTML = '<form id="jcf" class="grp" style="margin-top:10px"><label class="f">Joining code from your teacher (7 letters and numbers)<input id="jcc" maxlength="12" autocomplete="off" autocapitalize="characters" style="font:800 1.3rem ui-monospace,monospace;letter-spacing:.25em;text-transform:uppercase"></label>' +
         '<button class="btn main sm" type="submit">Join the class</button> <button class="btn sm" type="button" id="jind">🚀 Independent learners courses</button><p class="msg" id="jcm" role="alert"></p></form><div id="jdir"></div>';
       var jf = jb.querySelector('#jcf'), jc = jb.querySelector('#jcc'); jc.focus();
       jf.onsubmit = function (e) { e.preventDefault(); var c = jc.value.replace(/\s+/g, '').toUpperCase(), m = jb.querySelector('#jcm'), bt = jf.querySelector('[type=submit]');
-        if (!/^[A-Z0-9]{4,10}$/.test(c)) { m.className = 'msg'; m.textContent = 'Type the class code your teacher gave you.'; return; }
+        c = c.replace(/[^A-Z0-9]/g, '');
+        if (!/^[A-Z0-9]{6,8}$/.test(c)) { m.className = 'msg'; m.textContent = 'Type the joining code your teacher gave you.'; return; }
         if (bt.disabled) return; bt.disabled = true;
         S.db.rpc('join_class', { code: c }).then(function (x) { bt.disabled = false;
           if (x.error) { m.className = 'msg'; m.textContent = S.nice(x.error); return; }
@@ -389,16 +390,16 @@
       if (r.error || r.data) return;
       var at = document.getElementById('db-set'); if (!at || document.getElementById('db-pin')) return;
       var box = document.createElement('section'); box.className = 'db-sec'; box.id = 'db-pin'; box.style.setProperty('--c', '#ea580c');
-      box.innerHTML = '<h2>🔑 ' + (force ? 'Change' : 'Choose') + ' your sign-in PIN</h2><p>From now on you sign in with your <b>class code</b>, your <b>name</b> and a <b>PIN</b>: no email or password. Choose a PIN of 4 to 6 numbers and keep it secret.</p>' +
-        '<form id="pinf" class="grp" style="max-width:420px"><label class="f">New PIN<input id="pin1" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" style="font:800 1.4rem ui-monospace,monospace;letter-spacing:.4em"></label>' +
-        '<label class="f">Type it again<input id="pin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" style="font:800 1.4rem ui-monospace,monospace;letter-spacing:.4em"></label>' +
+      box.innerHTML = '<h2>🔑 ' + (force ? 'Change' : 'Choose') + ' your sign-in PIN</h2><p>From now on you sign in with your <b>class code</b>, your <b>name</b> and a <b>PIN</b>: no email or password. Create a 4-digit PIN and keep it secret.</p>' +
+        '<form id="pinf" class="grp" style="max-width:420px"><label class="f">New 4-digit PIN<input id="pin1" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" style="font:800 1.4rem ui-monospace,monospace;letter-spacing:.4em"></label>' +
+        '<label class="f">Type it again<input id="pin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" style="font:800 1.4rem ui-monospace,monospace;letter-spacing:.4em"></label>' +
         '<button class="btn main" type="submit">Save my PIN</button><p class="msg" id="pinm" role="alert"></p></form>' +
         '<p class="small muted">Your classes: ' + (me.classes || []).filter(function (c) { return !/Independent learners/.test(c.name || ''); }).map(function (c) { return '<b>' + E(c.name) + '</b>'; }).join(', ') + '. Your teacher can tell you the class code, and reset your PIN if you forget it.</p>';
       at.parentNode.insertBefore(box, at); if (force) { box.scrollIntoView({ block: 'center' }); box.querySelector('#pin1').focus(); }
       var f = box.querySelector('#pinf'), m = box.querySelector('#pinm');
       f.onsubmit = function (e) { e.preventDefault(); var p1 = box.querySelector('#pin1').value.trim(), p2 = box.querySelector('#pin2').value.trim(), b = f.querySelector('button');
         m.className = 'msg';
-        if (!/^[0-9]{4,6}$/.test(p1)) { m.textContent = 'Your PIN must be 4 to 6 numbers.'; return; }
+        if (!/^[0-9]{4}$/.test(p1)) { m.textContent = 'Your PIN must be exactly 4 numbers.'; return; }
         if (p1 !== p2) { m.textContent = 'The two PINs are not the same.'; return; }
         if (/^(\d)\1+$/.test(p1) || '0123456789'.indexOf(p1) >= 0 || '9876543210'.indexOf(p1) >= 0) { m.textContent = 'Choose a PIN that is harder to guess.'; return; }
         if (b.disabled) return; b.disabled = true;
