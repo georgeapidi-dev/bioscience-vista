@@ -25,13 +25,13 @@
     return '<fieldset class="grp" id="rcs" style="border:1px solid var(--line);border-radius:12px;padding:12px"><legend><b>' + label + '</b></legend>' + h + '</fieldset>';
   }
   function chosen() { var out = []; app.querySelectorAll('[data-course]:checked').forEach(function (b) { out.push(b.getAttribute('data-course')); }); return out; }
-  if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'student') return accountForm('student');
+  if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'student') { location.replace('/join/'); return; }   // students in a teacher's class need no account: class code + name + PIN
   if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'learner') return accountForm('learner');
   if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'teacher') return accountForm('teacher');
   if (mode === 'register') {   // no class codes: choose the kind of account first
     app.innerHTML = '<div class="form narrow"><h2>Who is signing up?</h2><p class="muted small">Learn on your own with the courses you choose, or join your teacher\'s class.</p>' +
+      '<a class="btn main" href="/join/" style="display:block;margin:10px 0;text-align:left;background:linear-gradient(120deg,#f97316,#db2777);border-color:transparent">🎒 I am a student in my teacher\'s class <span style="display:block;font-weight:600;font-size:.85rem">No account needed: just the class code from your teacher</span></a>' +
       '<a class="btn main" href="/register/?as=learner" style="display:block;margin:10px 0;text-align:left">🚀 I am learning on my own (I choose my courses)</a>' +
-      '<a class="btn main" href="/register/?as=student" style="display:block;margin:10px 0;text-align:left">🎓 I am a student joining my teacher\'s class</a>' +
       '<a class="btn main" href="/register/?as=teacher" style="display:block;margin:10px 0;text-align:left">🧑‍🏫 I am a teacher (my own school or private classes)</a>' +
       '<a class="btn main" href="/register/?as=parent" style="display:block;margin:10px 0;text-align:left">👪 I am a parent or carer</a>' +
       '<p class="small">Already registered? <a href="/login/' + (next ? '?next=' + encodeURIComponent(next) : '') + '">Log in</a></p></div>';
@@ -110,14 +110,15 @@
 
   // ---- login ----
   var ROLE = {
-    student: ['Student', 'Use the school email and password you chose when you signed up.', '<a href="/register/?as=student">New student? Create an account</a>'],
+    student: ['Independent learner', 'Use the email and password you chose when you signed up. In a teacher\'s class? <a href="/join/">Sign in with your class code</a> instead.', '<a href="/register/?as=learner">New independent learner? Create an account</a>'],
     parent: ['Parent or carer', 'Use the email and password you chose for your parent account.', '<a href="/register/?as=parent">New parent? Create a parent account</a>'],
     teacher: ['Teacher', 'Use the email and password of your teacher account.', '<a href="/register/?as=teacher">New teacher? Create a teacher account</a>']
   };
   // step 1: ask who is logging in, so the right account type and page are used
   function chooser() {
     app.innerHTML = '<div class="form narrow" id="rolepick"><h2>Who is logging in?</h2><p class="muted small">Choose one so we open the right page for you.</p>' +
-      '<button class="btn main" type="button" data-role="student" style="display:block;width:100%;margin:10px 0;text-align:left">🎓 I am a student</button>' +
+      '<a class="btn main" href="/join/" style="display:block;width:100%;margin:10px 0;text-align:left;background:linear-gradient(120deg,#f97316,#db2777);border-color:transparent">🎒 I am a student in a teacher\'s class <span style="display:block;font-weight:600;font-size:.85rem">Sign in with your class code, your name and your PIN</span></a>' +
+      '<button class="btn main" type="button" data-role="student" style="display:block;width:100%;margin:10px 0;text-align:left">🚀 I am an independent learner (email and password)</button>' +
       '<button class="btn main" type="button" data-role="parent" style="display:block;width:100%;margin:10px 0;text-align:left">👪 I am a parent or carer</button>' +
       '<button class="btn main" type="button" data-role="teacher" style="display:block;width:100%;margin:10px 0;text-align:left">🧑‍🏫 I am a teacher</button>' +
       '<p class="small" style="margin-top:12px"><a href="#" id="fp0">🔑 Forgot your password?</a></p></div>';
@@ -128,7 +129,7 @@
   function loginForm(msg, role) {
     role = ROLE[role] ? role : 'student';
     var info = ROLE[role];
-    app.innerHTML = '<form class="form narrow" id="lf"><h2>Log in as ' + E(info[0]) + '</h2><p class="muted small">' + E(info[1]) + ' <a href="#" id="chg">Not you? Change</a></p>' +
+    app.innerHTML = '<form class="form narrow" id="lf"><h2>Log in as ' + E(info[0]) + '</h2><p class="muted small">' + info[1] + ' <a href="#" id="chg">Not you? Change</a></p>' +
       '<label class="f">Email<input id="le" type="email" autocomplete="email" required></label>' +
       '<label class="f">Password<input id="lp" type="password" autocomplete="current-password" required></label>' +
       '<button class="btn main" type="submit">Log in</button><p class="msg" id="lm" role="alert">' + E(msg || '') + '</p>' +

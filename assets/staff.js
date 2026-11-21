@@ -511,27 +511,27 @@
   function classPage(p, cid, sub) {
     var c = CLASSES.filter(function (x) { return x.id === cid; })[0];
     if (!c) { p.innerHTML = '<p class="emptybox">This class was not found, or it is not one of your classes. <a href="#classes">All classes</a></p>'; return; }
-    sub = ['overview', 'lessons', 'todo', 'analysis', 'register', 'activity', 'news', 'status', 'quizzes'].indexOf(sub) >= 0 ? sub : 'overview';
+    sub = ['overview', 'lessons', 'todo', 'analysis', 'register', 'activity', 'news', 'status', 'quizzes', 'pins'].indexOf(sub) >= 0 ? sub : 'overview';
     var state = { filter: 'all', open: {}, lesson: null, live: true };
     try { state.lesson = sessionStorage.getItem('bv-cl-' + cid) || null; } catch (e) {}
     /* Class workspace (Command Centre phase 4, 21 Nov 2026): eight tabs; Students holds live status, register and roster */
-    var TABS8 = [['overview', '🏠', 'Overview', ['overview']], ['status', '👥', 'Students', ['status', 'register']], ['todo', '📌', 'Set work', ['todo']], ['lessons', '🧪', 'Lessons', ['lessons']], ['quizzes', '📝', 'Assessments', ['quizzes']], ['activity', '📥', 'Student work', ['activity']], ['analysis', '📊', 'Insights', ['analysis']], ['news', '📣', 'Messages', ['news']]];
+    var TABS8 = [['overview', '🏠', 'Overview', ['overview']], ['status', '👥', 'Students', ['status', 'register', 'pins']], ['todo', '📌', 'Set work', ['todo']], ['lessons', '🧪', 'Lessons', ['lessons']], ['quizzes', '📝', 'Assessments', ['quizzes']], ['activity', '📥', 'Student work', ['activity']], ['analysis', '📊', 'Insights', ['analysis']], ['news', '📣', 'Messages', ['news']]];
     var enc = encodeURIComponent(c.name);
     p.innerHTML = '<style>.cw-band{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:linear-gradient(120deg,#0f1f3d,#134e4a);color:#fff;border-radius:16px;padding:14px 16px;margin:0 0 10px;border-left:6px solid var(--k)}' +
       '.cw-band h2{margin:0;color:#fff;font-size:1.35rem}.cw-band .lab{font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:#99f6e4;font-weight:800}.cw-acts{display:flex;flex-wrap:wrap;gap:6px}.cw-acts a{display:inline-flex;gap:5px;align-items:center;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;text-decoration:none;font-weight:700;font-size:.84rem}.cw-acts a:hover{background:rgba(255,255,255,.22)}.cw-acts a.pri{background:#0d9488;border-color:#0d9488}' +
       '.cw-tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin;border-bottom:2px solid #e2e8f0;margin:0 0 12px}.cw-tabs a{flex:0 0 auto;padding:9px 12px;text-decoration:none;font-weight:700;font-size:.9rem;color:#475569;border-bottom:3px solid transparent;margin-bottom:-2px}.cw-tabs a.on{color:#0f1f3d;border-bottom-color:#0d9488}.cw-tabs a:hover{color:#0d9488}' +
       '.cw-sub{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px}.cw-sub a{padding:5px 11px;border-radius:999px;border:1px solid #cbd5e1;text-decoration:none;font-weight:700;font-size:.84rem;color:#334155}.cw-sub a.on{background:#0f1f3d;color:#fff;border-color:#0f1f3d}.cw-meta{display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:.8rem;color:#ccfbf1;margin-top:4px}.cw-meta label{display:inline-flex;gap:4px;align-items:center;margin:0}</style>' +
-      '<p class="small" style="margin:0 0 6px"><a href="#classes">← All classes</a></p><div class="cw-band" style="--k:' + hue(c.id) + '"><div><span class="lab">' + E(c.programme || 'Class') + '</span><h2>' + E(c.name) + '</h2><div class="cw-meta">' + (TEACH ? '' : '<span>Join code <b class="code">' + E(c.join_code) + '</b></span>') + '<label><input type="checkbox" id="lv" checked> Live updates</label><span id="stamp"></span></div></div>' +
+      '<p class="small" style="margin:0 0 6px"><a href="#classes">← All classes</a></p><div class="cw-band" style="--k:' + hue(c.id) + '"><div><span class="lab">' + E(c.programme || 'Class') + '</span><h2>' + E(c.name) + '</h2><div class="cw-meta">' + '<span>Class code <b class="code" id="cwcode" style="background:#fff;color:#0f1f3d;padding:1px 8px;border-radius:7px;letter-spacing:.12em">' + E(c.join_code) + '</b> <a href="#classes/' + cid + '/pins" style="color:#fff">change</a></span>' + '<label><input type="checkbox" id="lv" checked> Live updates</label><span id="stamp"></span></div></div>' +
       '<div class="cw-acts"><a class="pri" href="#classes/' + cid + '/todo/new">📌 Assign work</a><a href="/check/?class=' + cid + '&n=' + enc + '" title="Send one question to this class and watch the answers arrive">⚡ Live Check</a><a href="/live/?class=' + cid + '">🎥 Live lesson</a><a href="/board/?class=' + cid + '&n=' + enc + '">🖊 Whiteboard</a><a href="/time/?class=' + cid + '&n=' + enc + '" title="The time each student spent on each task">⏱ Time on tasks</a><a href="#classes/' + cid + '/add">➕ Add lessons</a></div></div>' +
       '<nav class="cw-tabs" aria-label="Class sections" data-cnav>' + TABS8.map(function (t) { return '<a href="#classes/' + cid + '/' + t[0] + '"' + (t[3].indexOf(sub) >= 0 ? ' class="on" aria-current="page"' : '') + '>' + t[1] + ' ' + t[2] + '</a>'; }).join('') + '</nav>' +
-      (sub === 'status' || sub === 'register' ? '<div class="cw-sub"><a href="#classes/' + cid + '/status"' + (sub === 'status' ? ' class="on"' : '') + '>🟢 Live work status</a><a href="#classes/' + cid + '/register"' + (sub === 'register' ? ' class="on"' : '') + '>🗒 Register</a><a href="#classes/' + cid + '/manage">⚙ Roster & settings</a></div>' : '') +
+      (sub === 'status' || sub === 'register' || sub === 'pins' ? '<div class="cw-sub"><a href="#classes/' + cid + '/status"' + (sub === 'status' ? ' class="on"' : '') + '>🟢 Live work status</a><a href="#classes/' + cid + '/register"' + (sub === 'register' ? ' class="on"' : '') + '>🗒 Register</a><a href="#classes/' + cid + '/pins"' + (sub === 'pins' ? ' class="on"' : '') + '>🔑 Class code & PINs</a><a href="#classes/' + cid + '/manage">⚙ Roster & settings</a></div>' : '') +
       '<div id="cbody"><p class="muted">Loading…</p></div>';
     var body = p.querySelector('#cbody'), busy = false;
     { var CH = { status: '#16a34a', quizzes: '#ca8a04', lessons: '#0d9488', todo: '#7c3aed', register: '#059669', activity: '#db2777', analysis: '#2563eb', news: '#ea580c' };
       p.querySelectorAll('[data-cnav] a').forEach(function (a) { var k = CH[a.getAttribute('href').split('/')[2]]; if (k) a.style.setProperty('--k', k); }); }
     function load() {
       if (busy) return; busy = true;
-      (sub === 'overview' ? overviewBoard : sub === 'status' ? statusBoard : sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'news' ? newsBoard : sub === 'register' ? registerBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
+      (sub === 'overview' ? overviewBoard : sub === 'status' ? statusBoard : sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'news' ? newsBoard : sub === 'register' ? registerBoard : sub === 'pins' ? pinsBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
         var miss = /class_(quiz|lesson)_board|class_todo|assign_work|class_analysis|announcements|schema cache|does not exist/i.test((e && (e.message || e.details)) || String(e));
         body.innerHTML = miss ? '<p class="emptybox">This part of the class page needs a database update (' + (sub === 'todo' ? 'migration 015' : sub === 'analysis' ? 'migration 016' : sub === 'news' ? 'migration 044' : 'migration 011') + ') before it can show results. Run it once in the Supabase SQL editor, then reload this page.</p>' : '<p class="msg">' + E(S.nice(e)) + '</p>'; });
     }
@@ -2870,6 +2870,41 @@
 
   /* ---------- class register: one register for every lesson, each student present / late / absent / excused ---------- */
   var REG = { P: ['present', '✓ Present', '#16a34a'], L: ['late', '⏰ Late', '#d97706'], A: ['absent', '✗ Absent', '#dc2626'], X: ['excused', '◌ Excused', '#64748b'] };
+  /* 21 Nov 2026: students in a teacher's class sign in at /join/ with the class code + their name + a PIN (no email or password).
+     Here the teacher shares or changes the class code and sets or resets PINs. Changing the code keeps everyone in the class. */
+  function pinsBoard(body, c, state) {
+    state.live = false; clearInterval(LIVE);
+    return Promise.all([roster(c.id), S.db.rpc('class_pins', { cid: c.id })]).then(function (x) {
+      var kids = x[0], P = {}; ((x[1] && x[1].data) || []).forEach(function (r) { P[r.student_id] = r; });
+      var withPin = kids.filter(function (k) { return P[k.id] && P[k.id].has_pin; }).length, link = location.origin + '/join/?code=' + encodeURIComponent(c.join_code || '');
+      body.innerHTML = '<div class="grp"><section class="panel tint"><h3 style="margin-top:0">🎒 Class code</h3><p style="font:800 2rem ui-monospace,monospace;letter-spacing:.3em;margin:4px 0" id="pcode">' + E(c.join_code || '') + '</p>' +
+        '<p class="small">Students go to <b>' + E(location.host) + '/join</b>, type this code, tap their name and type their PIN. New students tap <b>I am new in this class</b>, type their name and choose a PIN: they are in the class straight away (lessons and quizzes open once BioscienceVista approves them). No email or password.</p>' +
+        '<p class="cta" style="display:flex;flex-wrap:wrap;gap:6px"><button type="button" class="btn sm" id="pcopy">📋 Copy the join link</button><button type="button" class="btn sm" id="pnew">🔄 Change the code</button>' +
+        '<label class="chk" style="margin:0"><input type="checkbox" id="popen"' + (c.active ? ' checked' : '') + '> Open: the code works</label></p>' +
+        '<p class="small muted" id="pmsg" role="status">Change the code if it was shared outside the class. Everyone already in the class stays in; they use the new code to sign in from now on.</p></section>' +
+        '<section class="panel"><h3 style="margin-top:0">🔑 Sign-in PINs <span class="small muted">' + withPin + ' of ' + kids.length + ' students have a PIN</span></h3>' +
+        '<p class="small muted">A student without a PIN cannot sign in with the class code yet. Set one for them here and tell them in person, or they choose their own on their dashboard the next time they sign in with email. A PIN is 4 to 6 numbers; after 5 wrong tries the student waits 15 minutes, or you reset it.</p>' +
+        (kids.length ? '<style>.pn-row{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:8px 0;border-bottom:1px solid #e2e8f0}.pn-row>div:first-child{flex:1 1 180px;min-width:0;font-weight:700;overflow-wrap:anywhere}.pn-row>div:nth-child(2){flex:0 0 auto}.pn-row>div:last-child{display:flex;gap:6px;align-items:center;flex:0 1 auto}</style><div>' + kids.map(function (k) { var r = P[k.id] || {};
+          return '<div class="pn-row" data-sid="' + E(k.id) + '"><div>' + E(k.full_name || 'Student') + '</div><div>' + (r.has_pin ? (r.locked ? '<span class="pill" style="background:#fee2e2;color:#991b1b">🔒 locked (wrong PINs)</span>' : '<span class="pill ok">✓ set</span>') + ' <span class="small muted">' + (r.set_at ? new Date(r.set_at).toLocaleDateString() : '') + '</span>' : '<span class="pill t">none yet</span>') + '</div>' +
+            '<div><input class="pin-in" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="New PIN" style="width:120px;font-family:ui-monospace,monospace" aria-label="New PIN for ' + E(k.full_name || 'student') + '"> <button type="button" class="btn sm" data-setpin>Save</button> <button type="button" class="btn sm" data-randpin title="Make a random PIN">🎲</button></div></div>'; }).join('') + '</div>' : '<p class="emptybox">No students yet. Give them the class code.</p>') + '</section></div>';
+      var msg = body.querySelector('#pmsg');
+      body.querySelector('#pcopy').onclick = function () { (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function () { toast('Join link copied: ' + link); }, function () { toast(link); }); };
+      body.querySelector('#popen').onchange = function () { var on = this.checked; S.db.from('classes').update({ active: on }).eq('id', c.id).then(function (r) { if (ok(r, on ? 'The code works again' : 'The code is closed: nobody can join or sign in with it')) c.active = on; }); };
+      body.querySelector('#pnew').onclick = function () { var b = this; if (b.disabled) return; b.disabled = true;
+        var nc = code6();
+        S.db.from('classes').update({ join_code: nc }).eq('id', c.id).then(function (r) { b.disabled = false; if (!ok(r, 'New class code: ' + nc)) return; c.join_code = nc;
+          body.querySelector('#pcode').textContent = nc; var bc = document.getElementById('cwcode'); if (bc) bc.textContent = nc; link = location.origin + '/join/?code=' + nc;
+          msg.textContent = 'The code is now ' + nc + '. The old code no longer works. Tell your students the new one.'; }); };
+      body.querySelectorAll('[data-randpin]').forEach(function (b) { b.onclick = function () { var v = new Uint32Array(1); crypto.getRandomValues(v); var pin = String(1000 + v[0] % 9000);
+        if (/^(\d)\1+$/.test(pin)) pin = String((+pin + 1234) % 9000 + 1000); b.closest('.pn-row').querySelector('.pin-in').value = pin; }; });
+      body.querySelectorAll('[data-setpin]').forEach(function (b) { b.onclick = function () { var tr = b.closest('.pn-row'), inp = tr.querySelector('.pin-in'), pin = inp.value.trim();
+        if (!/^[0-9]{4,6}$/.test(pin)) { toast('A PIN is 4 to 6 numbers.', true); inp.focus(); return; }
+        if (b.disabled) return; b.disabled = true;
+        S.db.rpc('teacher_set_pin', { sid: tr.getAttribute('data-sid'), pin: pin }).then(function (r) { b.disabled = false; if (!ok(r)) return;
+          tr.children[1].innerHTML = '<span class="pill ok">✓ set</span> <span class="small muted">now</span>';
+          inp.value = ''; toast('PIN saved. Tell ' + tr.children[0].textContent + ' their PIN (' + pin + ') in person.'); }); }; });
+    });
+  }
   function registerBoard(body, c, state) {
     state.live = false; clearInterval(LIVE);
     return Promise.all([roster(c.id), S.db.from('class_sessions').select('id,held_on,title,lesson_path,created_at').eq('class_id', c.id).order('held_on', { ascending: false }).order('created_at', { ascending: false }).limit(200), classMats(c.id),

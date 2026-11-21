@@ -118,17 +118,32 @@
       if (!seen) S.db.from('messages').select('id').eq('recipient', me.user.id).like('body', '💳 Premium:%').limit(1).then(function (r) {
         if (r.data && r.data.length) { try { sessionStorage.setItem('bv-paygo', '1'); } catch (e) {} location.href = '/premium/'; } }, function () {});
     }
-    box.innerHTML = '<section class="panel tint grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><button type="button" class="btn sm" id="addc">＋ Join a class</button></div>' + prem +
+    box.innerHTML = '<section class="panel tint grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><span><button type="button" class="btn sm" id="chpin">🔑 Change my PIN</button> <button type="button" class="btn sm" id="addc">＋ Join a class</button></span></div>' + prem +
       (mine.length ? mine.map(function (c) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>' + (c.status === 'approved' ? '<a href="' + E(link(c)) + '"><b>' + E(c.name) + '</b></a>' : '<b>' + E(c.name) + '</b>') + ' ' + (st[c.status] || '') + '</span>' +
-        '<button type="button" class="btn sm" data-leave="' + E(c.id) + '" title="Leave this class">Leave</button></div>'; }).join('') : '<p class="small">You have not joined a class yet. Press <b>Join a class</b>.</p>') +
+        '<button type="button" class="btn sm" data-leave="' + E(c.id) + '" title="Leave this class">Leave</button></div>'; }).join('') : '<p class="small">You have not joined a class yet. Press <b>Join a class</b> and type the class code your teacher gave you.</p>') +
       '<div id="joinbox"></div></section>';
     box.querySelectorAll('[data-leave]').forEach(function (b) { b.onclick = function () { if (!confirm('Leave this class? You can ask to join again later.')) return;
       S.db.rpc('leave_class', { cid: b.getAttribute('data-leave') }).then(function (r) { if (r.error) return alert(S.nice(r.error)); location.reload(); }); }; });
+    /* 21 Nov 2026: a teacher's class is joined with its class code (in straight away); only Independent learners courses are chosen from a list */
+    box.querySelector('#chpin').onclick = function () { pinPrompt(me, true); };
     box.querySelector('#addc').onclick = function () {
-      var jb = box.querySelector('#joinbox'); jb.innerHTML = '<p class="small muted">Loading classes…</p>';
+      var jb = box.querySelector('#joinbox');
+      jb.innerHTML = '<form id="jcf" class="grp" style="margin-top:10px"><label class="f">Your teacher\'s class code<input id="jcc" maxlength="10" autocomplete="off" autocapitalize="characters" style="font:800 1.3rem ui-monospace,monospace;letter-spacing:.25em;text-transform:uppercase"></label>' +
+        '<button class="btn main sm" type="submit">Join the class</button> <button class="btn sm" type="button" id="jind">🚀 Independent learners courses</button><p class="msg" id="jcm" role="alert"></p></form><div id="jdir"></div>';
+      var jf = jb.querySelector('#jcf'), jc = jb.querySelector('#jcc'); jc.focus();
+      jf.onsubmit = function (e) { e.preventDefault(); var c = jc.value.replace(/\s+/g, '').toUpperCase(), m = jb.querySelector('#jcm'), bt = jf.querySelector('[type=submit]');
+        if (!/^[A-Z0-9]{4,10}$/.test(c)) { m.className = 'msg'; m.textContent = 'Type the class code your teacher gave you.'; return; }
+        if (bt.disabled) return; bt.disabled = true;
+        S.db.rpc('join_class', { code: c }).then(function (x) { bt.disabled = false;
+          if (x.error) { m.className = 'msg'; m.textContent = S.nice(x.error); return; }
+          m.className = 'msg ok'; m.textContent = '🎉 You are in ' + x.data + '.'; setTimeout(function () { location.reload(); }, 900); }); };
+      jb.querySelector('#jind').onclick = function () { dir(jb.querySelector('#jdir')); };
+    };
+    function dir(jb) {
+      jb.innerHTML = '<p class="small muted">Loading courses…</p>';
       S.db.rpc('class_directory').then(function (r) {
         if (r.error) { jb.innerHTML = '<p class="msg">' + E(S.nice(r.error)) + '</p>'; return; }
-        var list = r.data || [], schools = [], joined = false;
+        var list = (r.data || []).filter(function (c) { return /Independent learners/.test(c.school); }), schools = [], joined = false;   // teachers' classes: by class code only
         list.forEach(function (c) { if (schools.indexOf(c.school) < 0) schools.push(c.school); });
         var IND = function (n) { return /Independent learners/.test(n); };
         schools.sort(function (x, y) { return (IND(y) - IND(x)) || x.localeCompare(y); });   // Independent learners first, then the teachers by school
@@ -152,8 +167,9 @@
               m.className = 'msg ok'; m.textContent = x.data === 'approved' ? 'You are in. Choose another course if you wish, then press Done.' : 'Request sent. Your teacher will approve it soon. Press Done when you have finished.'; draw(); }); }; });
         };
         jb.querySelector('#jsch').onchange = draw; jb.querySelector('#jq').oninput = draw;
+        var only = jb.querySelector('#jsch'); if (only && only.options.length === 2) { only.selectedIndex = 1; draw(); }
       });
-    };
+    }
   }
   // Personalised next steps: lessons started but not finished, then the next lessons in each of my classes, in course order
   // every lesson the student has worked on: mark, answers and Try again
@@ -365,6 +381,33 @@
   }
   /* Student Learning Centre phase 6: choose what the dashboard shows (work set by the teacher and feedback always stay), a focus mode,
      and reading settings that apply on every page (BV.a11y). Saved on this device. */
+  /* 21 Nov 2026: students in a teacher's class sign in with class code + name + PIN (/join/). Anyone in such a class without a PIN chooses one here. */
+  function pinPrompt(me, force) {
+    if (me.view || me.preview || me.staff || me.school || me.parent) return;
+    if (!force && !(me.classes || []).some(function (c) { return !/Independent learners/.test(c.name || ''); })) return;
+    (force ? Promise.resolve({ data: false }) : S.db.rpc('my_pin_set')).then(function (r) {
+      if (r.error || r.data) return;
+      var at = document.getElementById('db-set'); if (!at || document.getElementById('db-pin')) return;
+      var box = document.createElement('section'); box.className = 'db-sec'; box.id = 'db-pin'; box.style.setProperty('--c', '#ea580c');
+      box.innerHTML = '<h2>🔑 ' + (force ? 'Change' : 'Choose') + ' your sign-in PIN</h2><p>From now on you sign in with your <b>class code</b>, your <b>name</b> and a <b>PIN</b>: no email or password. Choose a PIN of 4 to 6 numbers and keep it secret.</p>' +
+        '<form id="pinf" class="grp" style="max-width:420px"><label class="f">New PIN<input id="pin1" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" style="font:800 1.4rem ui-monospace,monospace;letter-spacing:.4em"></label>' +
+        '<label class="f">Type it again<input id="pin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" style="font:800 1.4rem ui-monospace,monospace;letter-spacing:.4em"></label>' +
+        '<button class="btn main" type="submit">Save my PIN</button><p class="msg" id="pinm" role="alert"></p></form>' +
+        '<p class="small muted">Your classes: ' + (me.classes || []).filter(function (c) { return !/Independent learners/.test(c.name || ''); }).map(function (c) { return '<b>' + E(c.name) + '</b>'; }).join(', ') + '. Your teacher can tell you the class code, and reset your PIN if you forget it.</p>';
+      at.parentNode.insertBefore(box, at); if (force) { box.scrollIntoView({ block: 'center' }); box.querySelector('#pin1').focus(); }
+      var f = box.querySelector('#pinf'), m = box.querySelector('#pinm');
+      f.onsubmit = function (e) { e.preventDefault(); var p1 = box.querySelector('#pin1').value.trim(), p2 = box.querySelector('#pin2').value.trim(), b = f.querySelector('button');
+        m.className = 'msg';
+        if (!/^[0-9]{4,6}$/.test(p1)) { m.textContent = 'Your PIN must be 4 to 6 numbers.'; return; }
+        if (p1 !== p2) { m.textContent = 'The two PINs are not the same.'; return; }
+        if (/^(\d)\1+$/.test(p1) || '0123456789'.indexOf(p1) >= 0 || '9876543210'.indexOf(p1) >= 0) { m.textContent = 'Choose a PIN that is harder to guess.'; return; }
+        if (b.disabled) return; b.disabled = true;
+        S.db.rpc('set_my_pin', { pin: p1 }).then(function (x) { b.disabled = false;
+          if (x.error) { m.textContent = S.nice(x.error); return; }
+          box.innerHTML = '<h2>✅ PIN saved</h2><p>Next time: open <a href="/join/">biosciencevista.com/join</a>, type your class code, tap your name and type your PIN.</p>';
+          setTimeout(function () { box.remove(); }, 9000); }); };
+    }, function () {});
+  }
   function custom(me, J) {
     var KEY = 'bv-dhide-' + me.user.id, P = { hide: [], focus: false };
     try { P = Object.assign(P, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
@@ -576,7 +619,7 @@
     app.innerHTML = h; boardWatch(me); news(me);
     var slot = app.querySelector('#lx-slot'); if (lx && slot) slot.parentNode.replaceChild(lx, slot);
     feedbackBox(me, res, prog); liveLoop(me, res, prog, quizzes, att, tasks);
-    custom(me, J);
+    custom(me, J); pinPrompt(me);
     var mn = document.getElementById('main'); if (mn) mn.classList.add('sl-wide');
     var sm = app.querySelector('#slmob'); if (sm) sm.onclick = function () { var o = app.querySelector('.sl-side').classList.toggle('open'); sm.setAttribute('aria-expanded', o); };
     priorities(me, res, prog, tasks);
