@@ -23,8 +23,8 @@
   BV.renderSections = function (sections) {
     return sections.map(function (s) {
       var id = s.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      return '<section class="grp" id="' + id + '"><h2 class="sec-h">' + E(s.name) + '</h2>' +
-        (s.items.length ? '<div class="res">' + s.items.map(BV.card).join('') + '</div>' : '<p class="emptybox">Coming soon.</p>') + '</section>';
+      if (!s.items.length) return '';   // empty sections are hidden, not "coming soon" (21 Nov 2026)
+      return '<section class="grp" id="' + id + '"><h2 class="sec-h">' + E(s.name) + '</h2><div class="res">' + s.items.map(BV.card).join('') + '</div></section>';
     }).join('');
   };
   /* The first backend (Google Sheet) was retired on 15 Nov 2026: page sections are built into the pages, and the home page

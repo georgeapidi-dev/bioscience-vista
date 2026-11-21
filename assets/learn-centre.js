@@ -104,7 +104,7 @@
         // MYP Science: one grade at a time (Grade 6 = MYP 1 … Grade 10 = MYP 5), not every grade on one page
         var grades = s.slug === 'myp-science' ? all0.map(function (t) { return t.programme; }).filter(function (g, i, a) { return g && a.indexOf(g) === i; }).sort() : [];
         if (grades.length > 1 && grades.indexOf(grade) < 0) grade = grades[0];
-        var tops = all0.filter(function (t) { return grades.length < 2 || q || t.programme === grade; }).filter(match).filter(function (t) { return !onlyLessons || count(t); });
+        var tops = all0.filter(function (t) { return grades.length < 2 || q || t.programme === grade; }).filter(match).filter(function (t) { return (me && me.staff) ? (!onlyLessons || count(t)) : count(t); });   // students only see topics with lessons (George, 21 Nov 2026: nothing "coming soon")
         var bar = '<div class="lc-bar"><b>' + E(s.name) + '</b><a class="btn sm" href="/quizzes/">📝 Exam-style questions</a><a class="btn sm" href="/exams/">🧪 Examinations</a><a class="btn sm" href="/simulations/">🔬 Virtual labs</a>' + (MORE[s.slug] ? '<a class="btn sm" href="' + MORE[s.slug] + '">📚 Subject page: all levels</a>' : '') + '</div>' +
           (grades.length > 1 ? '<div class="lc-grades" role="group" aria-label="Grade">' + grades.map(function (g) { var n = +String(g).replace(/\D/g, ''); return '<button type="button" data-grade="' + E(g) + '" aria-pressed="' + (g === grade) + '">Grade ' + (n + 5) + ' <span class="small">· ' + E(g) + '</span></button>'; }).join('') + '</div>' : '');
         var make = me.staff ? '<div class="panel tint row2 lmake"><span><b>Teachers:</b> turn any file (PDF, Word, PowerPoint, Excel, web page, text or pictures) into an interactive six-step lesson. Use <b>＋ Add lesson</b> in a subtopic to file it there.</span><a class="btn main sm" href="/staff/#lessons/new">✨ Create an interactive lesson from a file</a></div>' : '';
@@ -113,14 +113,14 @@
           bar + '<div class="row2"><input id="q" type="search" placeholder="Search topics and lessons" value="' + E(q) + '" style="max-width:340px" aria-label="Search topics and lessons">' +
           '<label class="chk small"><input type="checkbox" id="only"' + (onlyLessons ? ' checked' : '') + '> Only show topics with lessons</label></div>' +
           (tops.length ? tops.map(function (t) {
-            var kids = (KIDS[t.id] || []).filter(function (k) { return k.published && (!q || match(k) || match(t)) && (!onlyLessons || count(k)); }), n = count(t);
-            return '<details class="ltopic"' + (n || q ? ' open' : '') + '><summary><span class="lt-name">' + E(t.name) + '</span><span class="pill">' + (n ? n + ' item' + (n === 1 ? '' : 's') : 'coming soon') + '</span>' + (t.programme && t.programme !== 'IB DP' && t.programme !== 'IGCSE' ? '<span class="small muted">' + E(t.programme) + '</span>' : '') + '</summary>' +
+            var kids = (KIDS[t.id] || []).filter(function (k) { return k.published && (!q || match(k) || match(t)) && ((me && me.staff) ? (!onlyLessons || count(k)) : count(k)); }), n = count(t);
+            return '<details class="ltopic"' + (n || q ? ' open' : '') + '><summary><span class="lt-name">' + E(t.name) + '</span><span class="pill">' + (n ? n + ' item' + (n === 1 ? '' : 's') : 'empty') + '</span>' + (t.programme && t.programme !== 'IB DP' && t.programme !== 'IGCSE' ? '<span class="small muted">' + E(t.programme) + '</span>' : '') + '</summary>' +
               (t.summary ? '<p class="small muted">' + E(t.summary) + '</p>' : '') + (items(t) ? '<div class="lgrid">' + items(t) + '</div>' : '') +
               (function (subs) {   // MYP Science: the units of a grade are kept in their subjects (Biology, Chemistry, Physics), one tab each
                 return s.slug === 'myp-science' ? BV.subj.split(kids, function (k) { return BV.subj.of(k.name); }, subs) : subs(kids); })(function (list) { return list.map(function (k) { var inner = items(k);
                 return '<div class="lsub' + (inner ? '' : ' empty') + '"><h4>' + E(s.slug === 'myp-science' ? String(k.name).replace(/^(Biology|Chemistry|Physics) · /, '') : k.name) + (k.summary && /HL only/.test(k.summary) ? ' <span class="pill">HL</span>' : '') + addHere(k) + '</h4>' +
-                  (inner ? '<div class="lgrid">' + inner + '</div>' : '<p class="small muted">Interactive lessons coming soon.</p>') + '</div>'; }).join(''); }) +
-              (!kids.length && !items(t) ? '<p class="small muted">Interactive lessons coming soon.</p>' : '') + (!kids.length ? '<p>' + addHere(t) + '</p>' : '') + '</details>';
+                  (inner ? '<div class="lgrid">' + inner + '</div>' : '') + '</div>'; }).join(''); }) +
+              '' + (!kids.length ? '<p>' + addHere(t) + '</p>' : '') + '</details>';
           }).join('') : '<p class="emptybox">Nothing matches.</p>');
         app.querySelectorAll('[data-s]').forEach(function (b) { b.onclick = function () { cur = b.getAttribute('data-s'); history.replaceState(null, '', '#' + cur); draw(); }; });
         app.querySelector('#only').onchange = function () { onlyLessons = this.checked; try { localStorage.setItem('bv-only', onlyLessons ? '1' : '0'); } catch (e) {} draw(); };

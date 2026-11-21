@@ -12,16 +12,16 @@
     ['bio-sl', 'IB Diploma Biology SL', 'IB Diploma'], ['bio-hl', 'IB Diploma Biology HL', 'IB Diploma'], ['chem-sl', 'IB Diploma Chemistry SL', 'IB Diploma'], ['chem-hl', 'IB Diploma Chemistry HL', 'IB Diploma'],
     ['phys-sl', 'IB Diploma Physics SL', 'IB Diploma'], ['phys-hl', 'IB Diploma Physics HL', 'IB Diploma'], ['ess-sl', 'IB ESS SL', 'IB Diploma'], ['ess-hl', 'IB ESS HL', 'IB Diploma'],
     ['maths-aa-sl', 'IB Mathematics AA SL', 'IB Diploma'], ['maths-aa-hl', 'IB Mathematics AA HL', 'IB Diploma'], ['maths-ai-sl', 'IB Mathematics AI SL', 'IB Diploma'], ['maths-ai-hl', 'IB Mathematics AI HL', 'IB Diploma'],
-    ['igcse-bio-core', 'IGCSE Biology Core', 'Cambridge IGCSE', 1], ['igcse-bio-ext', 'IGCSE Biology Extended', 'Cambridge IGCSE', 1], ['igcse-chem-core', 'IGCSE Chemistry Core', 'Cambridge IGCSE', 1], ['igcse-chem-ext', 'IGCSE Chemistry Extended', 'Cambridge IGCSE', 1],
+    ['igcse-bio-core', 'IGCSE Biology Core', 'Cambridge IGCSE'], ['igcse-bio-ext', 'IGCSE Biology Extended', 'Cambridge IGCSE'], ['igcse-chem-core', 'IGCSE Chemistry Core', 'Cambridge IGCSE', 1], ['igcse-chem-ext', 'IGCSE Chemistry Extended', 'Cambridge IGCSE', 1],
     ['igcse-phys-core', 'IGCSE Physics Core', 'Cambridge IGCSE', 1], ['igcse-phys-ext', 'IGCSE Physics Extended', 'Cambridge IGCSE', 1],
     ['alevel-bio-as', 'AS Level Biology', 'Cambridge AS & A Level', 1], ['alevel-bio-a2', 'A Level Biology', 'Cambridge AS & A Level', 1],
-    ['alevel-chem-as', 'AS Level Chemistry', 'Cambridge AS & A Level'], ['alevel-chem-a2', 'A Level Chemistry', 'Cambridge AS & A Level', 1]];
+    ['alevel-chem-as', 'AS Level Chemistry', 'Cambridge AS & A Level'], ['alevel-chem-a2', 'A Level Chemistry', 'Cambridge AS & A Level']];
   function coursePicker(label, teacher) {   // tick as many as you like; a learner cannot tick a course that has no lessons yet
     var g = '', h = '';
     CAT.forEach(function (c) {
+      if (c[3] && !teacher) return;   // a course with no lessons yet is not offered to learners (no "coming soon", 21 Nov 2026)
       if (c[2] !== g) { g = c[2]; h += '<p class="small" style="margin:10px 0 2px"><b>' + E(g) + '</b></p>'; }
-      h += '<div style="padding:3px 0"><label class="chk"><input type="checkbox" data-course="' + c[0] + '"' + (c[3] && !teacher ? ' disabled' : '') + '> ' + E(c[1]) +
-        (c[3] ? ' <span class="small muted">(' + (teacher ? 'no BioscienceVista lessons yet' : 'lessons coming soon') + ')</span>' : '') + '</label></div>'; });
+      h += '<div style="padding:3px 0"><label class="chk"><input type="checkbox" data-course="' + c[0] + '"' + '> ' + E(c[1]) + '</label></div>'; });
     return '<fieldset class="grp" id="rcs" style="border:1px solid var(--line);border-radius:12px;padding:12px"><legend><b>' + label + '</b></legend>' + h + '</fieldset>';
   }
   function chosen() { var out = []; app.querySelectorAll('[data-course]:checked').forEach(function (b) { out.push(b.getAttribute('data-course')); }); return out; }
