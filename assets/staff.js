@@ -475,7 +475,9 @@
           } }
       });
       p.querySelector('#nc').onsubmit = function (e) { e.preventDefault();
-        S.db.from('classes').insert({ name: p.querySelector('#cn').value.trim(), programme: p.querySelector('#cp').value.trim() || null, teacher_id: ME.user.id, join_code: code6() }).then(function (r) { if (ok(r, 'Class created')) classes(p); }); };
+        var sb = p.querySelector('#nc [type=submit]'); if (sb.disabled) return; sb.disabled = true; sb.textContent = 'Creating…';   // one class per click
+        S.db.from('classes').insert({ name: p.querySelector('#cn').value.trim(), programme: p.querySelector('#cp').value.trim() || null, teacher_id: ME.user.id, join_code: code6() }).then(function (r) { if (ok(r, 'Class created')) classes(p); else { sb.disabled = false; sb.textContent = 'Create class'; } },
+          function () { sb.disabled = false; sb.textContent = 'Create class'; }); };
       p.querySelectorAll('tr[data-id]').forEach(function (tr) { var id = tr.getAttribute('data-id');
         tr.querySelector('[data-a=save]').onclick = function () { S.db.from('classes').update({ name: tr.querySelector('[data-k=name]').value.trim(), programme: tr.querySelector('[data-k=programme]').value.trim() || null, active: tr.querySelector('[data-k=active]').checked }).eq('id', id).then(function (r) { ok(r, 'Saved'); }); };
         tr.querySelector('[data-a=new]').onclick = function () { S.db.from('classes').update({ join_code: code6() }).eq('id', id).then(function (r) { if (ok(r, 'New code made')) classes(p); }); };
@@ -2685,7 +2687,12 @@
       box.querySelector('#cf').onsubmit = function (e) { e.preventDefault(); var course = box.querySelector('#cc').value;
         var row = { name: box.querySelector('#cn').value.trim(), description: box.querySelector('#cd').value.trim() || null, listed: box.querySelector('#cli').checked };
         if (!course) return toast('Choose the course you teach.', true); if (row.name.length < 3) return toast('Give the class a name.', true);
-        if (!c) return S.db.rpc('create_school_class', { nm: row.name, course_slug: course, descr: row.description, is_listed: row.listed }).then(function (r) { if (!ok(r, 'Class created')) return; TC.cur = r.data; TC.tab = 'materials'; teachClasses(p); });
+        if (!c) {   // one request per click: a double click or Enter pressed twice made two classes (16 Nov 2026); migration 069 also guards this
+          var sb = box.querySelector('#cf [type=submit]'); if (sb.disabled) return; sb.disabled = true; sb.textContent = 'Creating…';
+          return S.db.rpc('create_school_class', { nm: row.name, course_slug: course, descr: row.description, is_listed: row.listed }).then(function (r) {
+            if (!ok(r, 'Class created')) { sb.disabled = false; sb.textContent = 'Create class'; return; } TC.cur = r.data; TC.tab = 'materials'; teachClasses(p); },
+            function () { sb.disabled = false; sb.textContent = 'Create class'; toast('Could not create the class. Check your connection and try again.', true); });
+        }
         S.db.from('classes').update(row).eq('id', c.id).then(function (r) { if (!ok(r)) return;
           (course !== c.course ? S.db.rpc('set_class_course', { cid: c.id, course_slug: course }) : Promise.resolve({})).then(function (x) { if (ok(x, 'Saved')) teachClasses(p); }); }); };
       var ar = box.querySelector('#carch'); if (ar) ar.onclick = function () { S.db.from('classes').update({ active: !c.active }).eq('id', c.id).then(function (r) { if (ok(r, c.active ? 'Class closed' : 'Class reopened')) teachClasses(p); }); };
