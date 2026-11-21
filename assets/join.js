@@ -164,5 +164,6 @@
     var sv = saved();
     if (sv && sv.code && !pre) return pinOnly(sv);
     codeStep(pre, sv && sv.expired ? 'Your saved code has expired on this device. Type your code again.' : '');
+    if (pre.length === 6 || pre.length === 8) { var fm = app.querySelector('#jc'); if (fm) fm.onsubmit({ preventDefault: function () {} }); }   // a code typed in the homepage box goes straight on to the next step
   }, function () { codeStep(pre); });
 })();
