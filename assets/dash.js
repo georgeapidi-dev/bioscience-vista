@@ -352,6 +352,46 @@
       box.querySelectorAll('[data-ack]').forEach(function (b) { b.onclick = function () { var a = seen(me).ack || {}; a[b.getAttribute('data-ack')] = b.getAttribute('data-v'); setSeen(me, { ack: a }); b.closest('.db-fbi').remove(); if (!box.querySelector('.db-fbi')) box.hidden = true; if (chip) { chip.textContent = Math.max(0, +chip.textContent - 1); if (chip.textContent === '0') chip.closest('span').hidden = true; } }; });
     });
   }
+  /* Student Learning Centre phase 6: choose what the dashboard shows (work set by the teacher and feedback always stay), a focus mode,
+     and reading settings that apply on every page (BV.a11y). Saved on this device. */
+  function custom(me, J) {
+    var KEY = 'bv-dhide-' + me.user.id, P = { hide: [], focus: false };
+    try { P = Object.assign(P, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+    var opt = J.filter(function (j) { return j[0] !== 'db-set'; });
+    function apply() {
+      var hid = P.focus ? opt.map(function (j) { return j[0]; }) : P.hide, st = document.getElementById('db-hide-css');
+      if (!st) { st = document.createElement('style'); st.id = 'db-hide-css'; document.head.appendChild(st); }
+      st.textContent = hid.map(function (id) { return '#db-wrap #' + id + ',.db-jump a[href="#' + id + '"]{display:none!important}'; }).join('') + (P.focus ? '#db-wrap #db-tools~*:not(#db-cust){display:none!important}#db-wrap .db-two:has(#revise){display:none!important}' : '');
+      var btn = document.getElementById('dbcust'); if (btn) btn.textContent = P.focus ? '🎯 Focus mode on · ⚙' : '⚙ Customise';
+    }
+    function keep() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} apply(); }
+    apply();
+    var btn = document.getElementById('dbcust'), box = document.getElementById('db-cust'); if (!btn || !box) return;
+    btn.onclick = function () {
+      var open = box.hidden; box.hidden = !open; btn.setAttribute('aria-expanded', String(open)); if (!open) return;
+      var A = window.BV && BV.a11y ? BV.a11y() : [], size = A.indexOf('xl') >= 0 ? 'xl' : A.indexOf('lg') >= 0 ? 'lg' : '';
+      box.innerHTML = '<h3>⚙ Customise my dashboard</h3><p class="small muted" style="margin:0 0 10px">Saved on this device. Work set by your teacher and feedback to act on are always shown.</p>' +
+        '<div class="db-cg"><fieldset><legend>🎯 Focus mode</legend><label class="db-ck"><input type="checkbox" id="dcf"' + (P.focus ? ' checked' : '') + '> Show only my set work, feedback and what to do next</label></fieldset>' +
+        '<fieldset id="dcs"' + (P.focus ? ' disabled' : '') + '><legend>👀 Show on my dashboard</legend>' + opt.map(function (j) { return '<label class="db-ck"><input type="checkbox" data-sh="' + j[0] + '"' + (P.hide.indexOf(j[0]) < 0 ? ' checked' : '') + '> ' + j[1] + '</label>'; }).join('') + '</fieldset>' +
+        '<fieldset><legend>🔤 Reading (every page)</legend><div class="db-seg" role="radiogroup" aria-label="Text size">' + [['', 'A Normal'], ['lg', 'A+ Large'], ['xl', 'A++ Extra large']].map(function (z) { return '<label><input type="radio" name="dcz" value="' + z[0] + '"' + (size === z[0] ? ' checked' : '') + '> ' + z[1] + '</label>'; }).join('') + '</div>' +
+        [['read', 'Easier reading: more space between letters, words and lines'], ['calm', 'Calmer pages: turn off animations and moving effects'], ['hc', 'Clearer links, darker grey text and a bold focus outline']].map(function (o) { return '<label class="db-ck"><input type="checkbox" data-a="' + o[0] + '"' + (A.indexOf(o[0]) >= 0 ? ' checked' : '') + '> ' + o[1] + '</label>'; }).join('') +
+        (document.getElementById('themeBtn') ? '<p style="margin:8px 0 0"><button type="button" class="btn sm" id="dct">🌗 Switch light / dark</button></p>' : '') + '</fieldset></div>' +
+        '<p style="margin:10px 0 0"><button type="button" class="btn sm" id="dcr">↺ Reset to the standard dashboard</button> <button type="button" class="btn sm main" id="dcx">Done</button></p>';
+      box.querySelector('#dcf').onchange = function () { P.focus = this.checked; box.querySelector('#dcs').disabled = P.focus; keep(); };
+      box.querySelectorAll('[data-sh]').forEach(function (c) { c.onchange = function () { var id = c.getAttribute('data-sh'); P.hide = P.hide.filter(function (x) { return x !== id; }); if (!c.checked) P.hide.push(id); keep(); }; });
+      var setA = function () { var L = []; var z = box.querySelector('[name=dcz]:checked'); if (z && z.value) L.push(z.value); box.querySelectorAll('[data-a]').forEach(function (c) { if (c.checked) L.push(c.getAttribute('data-a')); }); if (window.BV && BV.a11y) BV.a11y(L); };
+      box.querySelectorAll('[name=dcz],[data-a]').forEach(function (c) { c.onchange = setA; });
+      var t = box.querySelector('#dct'); if (t) t.onclick = function () { document.getElementById('themeBtn').click(); };
+      box.querySelector('#dcr').onclick = function () { P = { hide: [], focus: false }; keep(); if (window.BV && BV.a11y) BV.a11y([]); box.hidden = true; btn.click(); };
+      box.querySelector('#dcx').onclick = function () { box.hidden = true; btn.setAttribute('aria-expanded', 'false'); btn.focus(); };
+      box.scrollIntoView({ block: 'nearest' });
+    };
+    if (!document.getElementById('db-cust-css')) { var cs = document.createElement('style'); cs.id = 'db-cust-css';
+      cs.textContent = '.db-cbtn{flex:0 0 auto;margin-left:auto;font:inherit;font-weight:800;font-size:.86rem;padding:7px 13px;border-radius:999px;border:2px solid #475569;background:#fff;color:#334155;cursor:pointer}.db-cbtn:hover{background:#334155;color:#fff}' +
+        '.db-cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}.db-cg fieldset{border:1px solid var(--line,#e2e8f0);border-radius:14px;padding:8px 12px 10px;margin:0;background:#fff;min-width:0}.db-cg fieldset[disabled]{opacity:.55}.db-cg legend{font-weight:800;padding:0 6px}' +
+        '.db-ck{display:flex;gap:8px;align-items:flex-start;padding:4px 0;cursor:pointer}.db-ck input{margin-top:4px;width:18px;height:18px;flex:none}.db-seg{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}.db-seg label{border:2px solid #c7d2fe;border-radius:999px;padding:4px 10px;font-weight:700;cursor:pointer}.db-seg label:has(input:checked){background:#4f46e5;border-color:#4f46e5;color:#fff}.db-seg input{position:absolute;opacity:0;pointer-events:none}.db-seg label:focus-within{outline:3px solid #f59e0b}';
+      document.head.appendChild(cs); }
+  }
   function liveLoop(me, res, prog, quizzes, att, tasks) {
     clearInterval(LIVEID); if (me.view || me.preview) return;
     var ids = tasks.map(function (t) { return t.id + t.state; }).sort().join(), fbAt = res.reduce(function (m, r) { var d = String(r.updated_at || r.recorded_at || ''); return d > m ? d : m; }, '');
@@ -457,7 +497,7 @@
       '<div class="db-stats"><a href="#db-set"' + (overdue.length ? ' class="hot"' : '') + '>🧑‍🏫 <b>' + openT.length + '</b> set work to do' + (overdue.length ? ' · ' + overdue.length + ' overdue' : '') + '</a>' +
       '<span hidden><a href="#db-fb" class="hot">💬 <b data-fbn>0</b> feedback to act on</a></span>' + '<a href="#db-todo">✅ <b>' + todo.length + '</b> on my list</a><a href="#db-res">📊 <b>' + (max ? Math.round(100 * got / max) + '%' : '–') + '</b> overall</a><a href="#db-prog">📘 <b>' + done + '/' + prog.length + '</b> lessons done</a></div></section>';
     var J = [['db-set', '🧑‍🏫 Set work', '#4f46e5', openT.length], ['db-todo', '✅ My to-do', '#059669', todo.length], ['db-res', '📊 Results & feedback', '#9333ea', fb.length], ['revise', '🎯 Revise next', '#db2777'], ['plan', '🧭 Learning plan', '#0284c7'], ['mylessons', '📘 My lessons', '#2563eb'], ['lx', '🚀 My journey', '#0d9488'], ['db-tools', '🧰 Tools', '#ea580c'], ['mycl', '🏫 My classes', '#0f766e'], ['anbox', '📈 Learning profile', '#7c3aed']];
-    h += '<nav class="db-jump" aria-label="Jump to a part of my dashboard">' + J.map(function (j) { return '<a href="#' + j[0] + '" style="--c:' + j[2] + '">' + j[1] + (j[3] ? ' <i>' + j[3] + '</i>' : '') + '</a>'; }).join('') + '</nav><div id="wblive"></div>' + continueCard(me, prog, tasks) + '<section class="db-sec" id="db-pri" style="--c:#0d9488" hidden></section>';
+    h += '<nav class="db-jump" aria-label="Jump to a part of my dashboard">' + J.map(function (j) { return '<a href="#' + j[0] + '" style="--c:' + j[2] + '">' + j[1] + (j[3] ? ' <i>' + j[3] + '</i>' : '') + '</a>'; }).join('') + '<button type="button" class="db-cbtn" id="dbcust" aria-expanded="false" aria-controls="db-cust">⚙ Customise</button></nav><section class="db-sec" id="db-cust" style="--c:#475569" hidden></section><div id="wblive"></div>' + continueCard(me, prog, tasks) + '<section class="db-sec" id="db-pri" style="--c:#0d9488" hidden></section>';
     // To do (16 Nov 2026): what the teacher set for the class, kept apart from my own to-do list; inside each, interactive lessons, examinations and exam-style questions are separate
     var CAT = {}; quizzes.forEach(function (q) { CAT[q.id] = q.category; });
     var typeOf = function (kind, cat) { return kind === 'lesson' || cat === 'lesson' ? 'les' : cat === 'exam' ? 'exam' : kind === 'quiz' || cat === 'quiz' ? 'qs' : 'oth'; };
@@ -525,6 +565,7 @@
     app.innerHTML = h; boardWatch(me); news(me);
     var slot = app.querySelector('#lx-slot'); if (lx && slot) slot.parentNode.replaceChild(lx, slot);
     feedbackBox(me, res, prog); liveLoop(me, res, prog, quizzes, att, tasks);
+    custom(me, J);
     var mn = document.getElementById('main'); if (mn) mn.classList.add('sl-wide');
     var sm = app.querySelector('#slmob'); if (sm) sm.onclick = function () { var o = app.querySelector('.sl-side').classList.toggle('open'); sm.setAttribute('aria-expanded', o); };
     priorities(me, res, prog, tasks);

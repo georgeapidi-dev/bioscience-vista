@@ -14,7 +14,8 @@
       S.db.from('resources').select('id,topic_id,title,kind,url,download_url,sort_order,published').order('sort_order'),
       S.db.from('learning_progress').select('lesson_id,status,percent,last_step,updated_at').eq('student_id', me.user.id),
       S.db.from('quizzes').select('id,title,instructions,due_at').eq('category', 'lesson').in('published', (me.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).order('created_at', { ascending: false }),
-      S.db.from('simulations').select('id,topic_id,title,url,is_internal').eq('published', true)
+      S.db.from('simulations').select('id,topic_id,title,url,is_internal').eq('published', true),
+      S.db.from('learner_preferences').select('programme,subjects').eq('user_id', me.user.id).maybeSingle().then(function (r) { return r; }, function () { return { data: null }; })
     ]).then(function (x) {
       var subjects = x[0].data || [], topics = (x[1].data || []).filter(function (t) { return t.published; }), prog = {}, mineIL = {};
       (x[4].data || []).forEach(function (p) { prog[p.lesson_id] = p; });
@@ -31,6 +32,12 @@
       var subjOfL = function (l) { var t = TOP[l.topic_id]; return t && t.subject_id; };
       var recent = (x[4].data || []).filter(function (p) { return LID[p.lesson_id]; }).sort(function (a, b) { return new Date(b.updated_at || 0) - new Date(a.updated_at || 0); });
       var mySubj = recent.length && subjOfL(LID[recent[0].lesson_id]), mySlug = (subjects.filter(function (z) { return z.id === mySubj; })[0] || {}).slug;
+      if (!mySlug && x[7] && x[7].data) {   // no lessons started yet: open on the programme and subject from my learning profile (phase 6)
+        var LP = x[7].data, f = ((LP.subjects || [])[0] || '').toLowerCase(), pre = { ib_dp: 'ib-', igcse: 'igcse-', a_level: 'a-level-', cambridge_ks3: 'cam-ls-' }[LP.programme];
+        var sub = /bio/.test(f) ? 'biology' : /chem/.test(f) ? 'chemistry' : /phys/.test(f) ? 'physics' : /environment/.test(f) ? 'ess' : /math/.test(f) ? (LP.programme === 'ib_dp' ? 'maths-aa' : 'mathematics') : '';
+        var want = LP.programme === 'ib_myp' ? 'myp-science' : pre && sub ? pre + sub : '';
+        if (want && subjects.some(function (z) { return z.slug === want; })) mySlug = want;
+      }
       var going = recent.filter(function (p) { return p.status !== 'completed' && (p.percent || 0) < 100; }).slice(0, 4);
       if (going.length && !me.staff) {
         var cw = document.createElement('section'); cw.className = 'lc-cont';

@@ -1,6 +1,6 @@
 /* BioscienceVista motion layer: scroll reveals, header on scroll, count-up numbers, hero network and parallax. */
 (function () {
-  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reduce = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || document.documentElement.classList.contains('a11y-calm');
   var top = document.querySelector('header.top');
   function onScroll() { if (top) top.classList.toggle('scrolled', window.scrollY > 8); }
   addEventListener('scroll', onScroll, { passive: true }); onScroll();

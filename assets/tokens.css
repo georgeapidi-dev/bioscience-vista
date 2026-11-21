@@ -159,3 +159,10 @@ table.marks td.task-c .tk-kind{display:inline-block;padding:1px 6px;border-radiu
 
 /* 21 Nov 2026: a wide table or scroll strip inside a .grp page grid must scroll inside its own box, never stretch the page */
 .grp{grid-template-columns:minmax(0,1fr)}.grp>*{min-width:0}
+
+/* Student Learning Centre phase 6: reading settings (BV.a11y) */
+html.a11y-lg{font-size:112.5%}html.a11y-lg body{font-size:19px}
+html.a11y-xl{font-size:125%}html.a11y-xl body{font-size:21px}
+html.a11y-read body{letter-spacing:.03em;word-spacing:.14em;line-height:1.85}html.a11y-read p,html.a11y-read li{text-align:left!important}
+html.a11y-calm *,html.a11y-calm *::before,html.a11y-calm *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+html.a11y-hc main a:not(.btn):not([class*="btn"]){text-decoration:underline!important;text-underline-offset:2px}html.a11y-hc :focus-visible{outline:3px solid #f59e0b!important;outline-offset:2px}html.a11y-hc .muted,html.a11y-hc .small.muted,html.a11y-hc .ms-muted,html.a11y-hc .vx-muted{color:#1e293b!important}html.a11y-hc[data-theme="dark"] .muted,html.a11y-hc[data-theme="dark"] .ms-muted{color:#e2e8f0!important}
