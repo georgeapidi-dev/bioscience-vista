@@ -23,10 +23,12 @@
       '<div class="row2" style="gap:8px;flex-wrap:wrap;justify-content:flex-start"><label class="f" style="margin:0">or how many unnamed<input id="scq" type="number" min="1" max="300" style="width:90px"></label>' +
       '<label class="f" style="margin:0">Note (e.g. school)<input id="sco" maxlength="120" style="width:200px"></label><label class="f" style="margin:0">Expires after (days, optional)<input id="scd" type="number" min="1" max="365" style="width:90px"></label>' +
       '<button type="button" class="btn main sm" id="scm">＋ Make codes</button><button type="button" class="btn sm" id="scp">🖨 Print unused codes</button></div><p class="msg" id="scmsg" role="status"></p></section>' +
+      '<section class="panel grp"><h3 style="margin:0">👥 Current students</h3><p class="small">Make a code for every student already in a teacher\'s class who has none yet. Each code is linked to that student: using it once opens their own place (classes, work and results kept) and they create their 4-digit PIN. Codes already made are not repeated.</p>' +
+        '<p><button type="button" class="btn main sm" id="scs">🎟 Make codes for current students</button></p><p class="msg" id="scsm" role="status"></p></section>' +
       '<section class="panel grp"><div class="row2"><h3 style="margin:0">Codes</h3><input id="scf" type="search" placeholder="🔎 Find a name, code or note" style="max-width:260px"></div><div id="scl"><p class="small muted">Loading…</p></div></section>';
     var L = [], NM = {};
     function load() {
-      S.db.from('site_invites').select('code,full_name,note,created_at,expires_at,used_by,used_at').order('created_at', { ascending: false }).limit(2000).then(function (r) {
+      S.db.from('site_invites').select('code,full_name,note,created_at,expires_at,used_by,used_at,for_student').order('created_at', { ascending: false }).limit(2000).then(function (r) {
         var l = box.querySelector('#scl');
         if (r.error) { l.innerHTML = '<p class="msg">' + E(S.nice(r.error)) + '</p>'; return; }
         L = r.data || []; var ids = L.filter(function (x) { return x.used_by; }).map(function (x) { return x.used_by; });
@@ -40,13 +42,18 @@
       var unused = L.filter(function (x) { return !x.used_by; }).length;
       box.querySelector('#scl').innerHTML = '<p class="small"><b>' + unused + '</b> unused · <b>' + (L.length - unused) + '</b> used</p>' + (rows.length ? '<div class="tablewrap"><table class="marks"><tr><th>Code</th><th>For</th><th>Note</th><th>Status</th><th></th></tr>' + rows.slice(0, 400).map(function (x) {
         var exp = !x.used_by && x.expires_at && new Date(x.expires_at) < now;
-        return '<tr><td style="font-family:ui-monospace,monospace;letter-spacing:.1em"><b>' + E(fmt(x.code)) + '</b></td><td>' + E(x.full_name || '—') + '</td><td class="small">' + E(x.note || '') + '</td><td>' +
+        return '<tr><td style="font-family:ui-monospace,monospace;letter-spacing:.1em"><b>' + E(fmt(x.code)) + '</b></td><td>' + E(x.full_name || '—') + (x.for_student ? ' <span class="pill" title="Linked to this student\'s existing place">🔗 existing</span>' : '') + '</td><td class="small">' + E(x.note || '') + '</td><td>' +
           (x.used_by ? '<span class="pill ok">✓ used by ' + E(NM[x.used_by] || 'a student') + '</span> <span class="small muted">' + new Date(x.used_at).toLocaleDateString() + '</span>' : exp ? '<span class="pill">expired</span>' : '<span class="pill t">unused</span>' + (x.expires_at ? ' <span class="small muted">until ' + new Date(x.expires_at).toLocaleDateString() + '</span>' : '')) + '</td><td>' +
           (x.used_by ? '' : '<button type="button" class="btn sm" data-sdel="' + E(x.code) + '">🗑</button>') + '</td></tr>'; }).join('') + '</table></div>' : '<p class="small muted">No codes match.</p>');
       box.querySelectorAll('[data-sdel]').forEach(function (b) { b.onclick = function () { if (b.disabled) return; b.disabled = true;
         S.db.from('site_invites').delete().eq('code', b.getAttribute('data-sdel')).is('used_by', null).then(function (r) { if (r.error) { b.disabled = false; alert(S.nice(r.error)); return; } load(); }); }; });
     }
     box.querySelector('#scf').oninput = list;
+    box.querySelector('#scs').onclick = function () { var b = this, m = box.querySelector('#scsm'); if (b.disabled) return; b.disabled = true; m.className = 'msg'; m.textContent = 'Making codes…';
+      S.db.rpc('make_student_codes', { note: null }).then(function (r) { b.disabled = false;
+        if (r.error) { m.textContent = S.nice(r.error); return; }
+        var k = (r.data || []).length; m.className = 'msg ok'; m.textContent = k ? k + ' code' + (k === 1 ? '' : 's') + ' made for current students. Print them and give each student their own.' : 'Every current student already has a code.';
+        load(); }); };
     box.querySelector('#scm').onclick = function () { var b = this, m = box.querySelector('#scmsg'); if (b.disabled) return;
       var names = box.querySelector('#scn').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean), q = +box.querySelector('#scq').value || 0;
       if (!names.length && q > 0) for (var i = 0; i < Math.min(q, 300); i++) names.push('');

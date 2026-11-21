@@ -105,7 +105,7 @@
   // unused website code: make your place on the site
   function newStep() {
     var named = !!(R.name && R.name.trim()), parts = String(R.name || '').trim().split(/\s+/), pre1 = named ? parts[0] : '', pre2 = named ? parts.slice(1).join(' ') : '';
-    shell(2, '<button class="jn-back" type="button" id="jb">← Change the code</button><h2>✨ Welcome to BioscienceVista</h2><p class="lead">This is your personal website code. Use it once now: give your two official names and create a 4-digit PIN. Keep the code: next time, your code and your PIN sign you in.</p>' +
+    shell(2, '<button class="jn-back" type="button" id="jb">← Change the code</button><h2>✨ ' + (R.linked ? 'Welcome back' : 'Welcome to BioscienceVista') + '</h2>' + (R.linked ? '<p class="lead">This code opens your own place on BioscienceVista: your classes, work and results are all still there. Check your names and create your 4-digit PIN. From now on you sign in with this code and your PIN, not your email.</p>' : '') + '<p class="lead"' + (R.linked ? ' hidden' : '') + '>This is your personal website code. Use it once now: give your two official names and create a 4-digit PIN. Keep the code: next time, your code and your PIN sign you in.</p>' +
       '<form id="jw"><label for="jn1">First name (official, as on your school record)</label><input type="text" id="jn1" autocomplete="given-name" maxlength="40" value="' + E(pre1) + '"' + (named ? ' readonly' : '') + '>' +
       '<label for="jn2">Family name (official)</label><input type="text" id="jn2" autocomplete="family-name" maxlength="40" value="' + E(pre2) + '"' + (named ? ' readonly' : '') + '>' +
       (named ? '<p class="jn-note">Not your name? Do not continue: give the code back to your teacher.</p>' : '') +
@@ -126,7 +126,7 @@
       call({ action: 'new', code: CODE, first: g, last: fm, name: n, pin: p1 }).then(function (d) {
         if (d.error || !d.token_hash) { busy(b, false, 'Start ▶'); return msg(d.error || 'Could not use that code.'); }
         msg('🎉 Welcome, ' + n.split(' ')[0] + '!', true);
-        return signInWith(d.token_hash, '/join/').catch(function () { busy(b, false, 'Start ▶'); msg('Your place is made, but signing in did not finish. Go back and sign in with your code and PIN.'); });
+        return signInWith(d.token_hash, d.linked ? '/dashboard/' : '/join/').catch(function () { busy(b, false, 'Start ▶'); msg('Your place is made, but signing in did not finish. Go back and sign in with your code and PIN.'); });
       }); };
   }
 
