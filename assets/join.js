@@ -48,13 +48,10 @@
 
   // ---------- signed out: one code box ----------
   function codeStep(pre, note) {
-    shell(1, '<h2>🎒 Sign in or join with your code</h2><p class="lead">' + (note || 'No email or password needed. Type the code you were given.') + '</p>' +
+    shell(1, '<h2>Sign in</h2><p class="lead">' + (note || 'Type the code from your teacher. No email or password.') + '</p>' +
       '<form id="jc"><label for="jcode">Your code</label><input id="jcode" class="jn-code" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" value="' + E(pre || '') + '">' +
       '<button class="jn-go" type="submit">Next ▶</button><p class="jn-msg" role="alert"></p></form>' +
-      '<div class="jn-kinds"><div>🆕 <b>8 characters</b>: your personal website code. The first time, it opens your place on BioscienceVista; after that it signs you in with your PIN.</div>' +
-      '<div>🏫 <b>6 characters</b>: your class sign-in code. Tap your name and type your PIN.</div>' +
-      '<div>🎟 <b>7 characters</b>: a joining code from your teacher for one class. Sign in first, then type it.</div></div>' +
-      '<p class="jn-note">👪 <b>Parent or carer?</b> <a href="/family/">See your child\'s progress with their website code</a>. Teachers with a teacher code type it above. Learning on your own? <a href="/register/?as=learner">Independent learner account</a>.</p>');
+      '<p class="jn-note">Lost your code or PIN? Ask your teacher. · <a href="/login/">Teacher, parent or independent learner? Log in</a></p>');
     var f = app.querySelector('#jc'), inp = app.querySelector('#jcode'); inp.focus();
     f.onsubmit = function (e) { e.preventDefault(); var c = clean(inp.value), b = f.querySelector('button');
       if (c.length < 6 || c.length > 8) return msg('Type the whole code: 6, 7 or 8 letters and numbers.');
@@ -64,7 +61,7 @@
         if (d.kind === 'student') return pinStep({ name: d.name, pin: d.pin }, 'signin_code');
         if (d.kind === 'class') return nameStep();
         if (d.kind === 'join') { try { sessionStorage.setItem(PEND, c); } catch (x) {}
-          return codeStep('', '🎟 That is your joining code for <b>' + E(d['class']) + '</b>' + (d.used ? ' (already used)' : '') + '. First sign in: type your website code (8 characters) or your class sign-in code (6 characters). The joining code is used straight after.'); }
+          return codeStep('', '🎟 That is your joining code for <b>' + E(d['class']) + '</b>' + (d.used ? ' (already used)' : '') + '. Sign in first with your own code; we use the joining code straight after.'); }
         msg('That code is not recognised.'); }); };
   }
   // class sign-in code: tap your name
@@ -155,7 +152,7 @@
       NEXT = { how: 'signin_code', code: CODE, name: g, pin: true };
       call({ action: 'new', code: CODE, first: g, last: fm, name: n, pin: p1 }).then(function (d) {
         if (d.error || !d.token_hash) { busy(b, false, 'Enter ▶'); return msg(d.error || 'Could not use that code.'); }
-        msg('🎉 Welcome, ' + g + '! Your PIN is ' + p1 + ': remember it.', true);
+        msg('🎉 Welcome, ' + g + '! Signing you in…', true);
         return signInWith(d.token_hash, d.role === 'teacher' ? '/teach/' : d.linked ? '/dashboard/' : '/join/').catch(function () { busy(b, false, 'Enter ▶'); msg('Your place is made, but signing in did not finish. Go back and sign in with your code and PIN.'); });
       }); };
   }
@@ -191,6 +188,8 @@
   }
 
   var pre = clean(new URLSearchParams(location.search).get('code') || '');
+  try { pre = pre || clean(sessionStorage.getItem('bv-join-code') || ''); sessionStorage.removeItem('bv-join-code'); } catch (e) {}
+  if (location.search) history.replaceState(null, '', location.pathname);   // keep codes out of the address bar and history
   if (!S.on) return S.notReady(app);
   // someone is already signed in on this device but a different person's code (6 or 8 characters) was typed:
   // offer to sign them out and go on with the new code (George, 21 Nov 2026: a new student was sent to "join your class")
@@ -200,7 +199,7 @@
       '<button class="jn-go" type="button" id="jsw">Use this code (sign out ' + E(who.split(' ')[0]) + ') ▶</button>' +
       '<p class="jn-note"><a href="#" id="jst">No, stay signed in as ' + E(who) + '</a></p>');
     app.querySelector('#jsw').onclick = function () { var b = this; busy(b, true, 'Signing out…'); remember(null); try { sessionStorage.removeItem(PEND); } catch (e) {}
-      S.db.auth.signOut().then(function () { location.href = '/join/?code=' + encodeURIComponent(code); }, function () { location.href = '/join/?code=' + encodeURIComponent(code); }); };
+      var to = function () { try { sessionStorage.setItem('bv-join-code', code); } catch (e) {} location.href = '/join/'; }; S.db.auth.signOut().then(to, to); };
     app.querySelector('#jst').onclick = function (e) { e.preventDefault(); if (me.staff || me.school || me.parent) location.href = me.parent ? '/parent/' : me.school ? '/teach/' : '/staff/'; else joinView(me, '', !(me.classes || []).length); };
   }
   S.me().then(function (me) {
@@ -208,7 +207,7 @@
     if (me && (me.staff || me.school || me.parent)) { shell(1, '<h2>Codes are for students</h2><p class="lead">You are signed in as a ' + (me.parent ? 'parent' : 'teacher') + '. Students type their codes here on their own device.</p><a class="jn-go" href="' + (me.parent ? '/parent/' : me.school ? '/teach/' : '/staff/') + '">Go to my page ▶</a>'); return; }
     if (me) { ME = me; var pend = ''; try { pend = sessionStorage.getItem(PEND) || ''; } catch (e) {}
       return joinView(me, pre.length === 7 ? pre : pend, !(me.classes || []).length); }
-    if (pre.length === 7) { try { sessionStorage.setItem(PEND, pre); } catch (e) {} return codeStep('', '🎟 You have a class joining code. First sign in: type your website code (8 characters) or your class sign-in code (6 characters).'); }
+    if (pre.length === 7) { try { sessionStorage.setItem(PEND, pre); } catch (e) {} return codeStep('', '🎟 Joining code saved. Sign in first with your own code.'); }
     var sv = saved();
     if (sv && sv.code && !pre) return pinOnly(sv);
     codeStep(pre, sv && sv.expired ? 'Your saved code has expired on this device. Type your code again.' : '');
