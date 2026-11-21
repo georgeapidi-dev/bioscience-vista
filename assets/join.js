@@ -179,7 +179,8 @@
       '<button class="jn-go" type="submit">Join ▶</button><p class="jn-msg" role="alert"></p></form><div id="jdone"></div><p class="jn-note"><a href="/dashboard/">Go to my dashboard ▶</a></p>');
     var f = app.querySelector('#jc'), inp = app.querySelector('#jcode'); inp.focus();
     var go = function () { var c = clean(inp.value), b = f.querySelector('button');
-      if (c.length !== 7) return msg(c.length === 6 ? 'That looks like the class sign-in code. To join, you need your own 7-character joining code from your teacher.' : 'A joining code has 7 letters and numbers.');
+      if (c.length === 8 || c.length === 6) return switchUser(me, c);   // a website code or class code: probably someone else's
+      if (c.length !== 7) return msg('A joining code has 7 letters and numbers.');
       busy(b, true, 'Joining…');
       S.db.rpc('redeem_class_code', { code: c }).then(function (r) { busy(b, false, 'Join ▶'); try { sessionStorage.removeItem(PEND); } catch (e) {}
         if (r.error) return msg(S.nice(r.error));
@@ -191,7 +192,19 @@
 
   var pre = clean(new URLSearchParams(location.search).get('code') || '');
   if (!S.on) return S.notReady(app);
+  // someone is already signed in on this device but a different person's code (6 or 8 characters) was typed:
+  // offer to sign them out and go on with the new code (George, 21 Nov 2026: a new student was sent to "join your class")
+  function switchUser(me, code) {
+    var who = (me.profile && me.profile.full_name) || (/@students\.biosciencevista\.com$/.test(me.user.email || '') ? 'a student' : me.user.email) || 'someone';
+    shell(1, '<h2>Someone is already signed in</h2><p class="lead">This device is signed in as <b>' + E(who) + '</b>. To use the code <b style="font-family:ui-monospace,monospace;letter-spacing:.1em">' + E(code) + '</b>, sign them out first.</p>' +
+      '<button class="jn-go" type="button" id="jsw">Use this code (sign out ' + E(who.split(' ')[0]) + ') ▶</button>' +
+      '<p class="jn-note"><a href="#" id="jst">No, stay signed in as ' + E(who) + '</a></p>');
+    app.querySelector('#jsw').onclick = function () { var b = this; busy(b, true, 'Signing out…'); remember(null); try { sessionStorage.removeItem(PEND); } catch (e) {}
+      S.db.auth.signOut().then(function () { location.href = '/join/?code=' + encodeURIComponent(code); }, function () { location.href = '/join/?code=' + encodeURIComponent(code); }); };
+    app.querySelector('#jst').onclick = function (e) { e.preventDefault(); if (me.staff || me.school || me.parent) location.href = me.parent ? '/parent/' : me.school ? '/teach/' : '/staff/'; else joinView(me, '', !(me.classes || []).length); };
+  }
   S.me().then(function (me) {
+    if (me && (pre.length === 6 || pre.length === 8)) return switchUser(me, pre);
     if (me && (me.staff || me.school || me.parent)) { shell(1, '<h2>Codes are for students</h2><p class="lead">You are signed in as a ' + (me.parent ? 'parent' : 'teacher') + '. Students type their codes here on their own device.</p><a class="jn-go" href="' + (me.parent ? '/parent/' : me.school ? '/teach/' : '/staff/') + '">Go to my page ▶</a>'); return; }
     if (me) { ME = me; var pend = ''; try { pend = sessionStorage.getItem(PEND) || ''; } catch (e) {}
       return joinView(me, pre.length === 7 ? pre : pend, !(me.classes || []).length); }
