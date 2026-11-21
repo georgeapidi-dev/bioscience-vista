@@ -117,12 +117,12 @@
   // step 1: ask who is logging in, so the right account type and page are used
   function chooser() {
     try { var sv = JSON.parse(localStorage.getItem('bv-join-me') || 'null'); if (sv && sv.code && Date.now() - (+sv.at || 0) < 90 * 864e5) { location.replace('/join/'); return; } } catch (e) {}   // a student's device: straight to "type your PIN"
-    app.innerHTML = '<div class="form narrow" id="rolepick"><h2>Log in</h2>' +
+    app.innerHTML = '<div class="form narrow" id="rolepick"><h2>Who are you?</h2>' +
       '<a class="btn main" href="/join/" style="display:block;width:100%;margin:10px 0;text-align:left">🎒 Student in a class <span style="display:block;font-weight:600;font-size:.85rem">Code and PIN</span></a>' +
       '<button class="btn main" type="button" data-role="student" style="display:block;width:100%;margin:10px 0;text-align:left">🚀 Learning on my own</button>' +
       '<button class="btn main" type="button" data-role="teacher" style="display:block;width:100%;margin:10px 0;text-align:left">🧑‍🏫 Teacher</button>' +
       '<button class="btn main" type="button" data-role="parent" style="display:block;width:100%;margin:10px 0;text-align:left">👪 Parent or carer</button>' +
-      '<p class="small" style="margin-top:12px"><a href="#" id="fp0">Forgot your password?</a> · <a href="/register/">Create an account</a></p></div>';
+      '<p class="small" style="margin-top:12px"><a href="#" id="fp0">Forgot your password?</a> · <b><a href="/register/">New here? Create an account</a></b></p></div>';
     app.querySelectorAll('[data-role]').forEach(function (b) { b.addEventListener('click', function () { loginForm('', b.getAttribute('data-role')); }); });
     app.querySelector('#fp0').addEventListener('click', function (e) { e.preventDefault(); forgotForm(''); });
   }
