@@ -120,9 +120,9 @@
   /* =================== teacher: class insights =================== */
   function teacher(S, me) {
     var uid = me.user.id, q = function (p) { return p.then(function (r) { return r; }, function () { return { data: null }; }); };
-    Promise.all([q(S.db.from('classes').select('id,name,deleted_at').eq('teacher_id', uid)), q(S.db.from('class_teachers').select('class_id').eq('teacher_id', uid))]).then(function (R) {
-      var own = (R[0].data || []).filter(function (c) { return !c.deleted_at; }), extra = (R[1].data || []).map(function (x) { return x.class_id; }).filter(function (id) { return !own.some(function (c) { return c.id === id; }); });
-      return (extra.length ? q(S.db.from('classes').select('id,name,deleted_at').in('id', extra)) : Promise.resolve({ data: [] })).then(function (r2) { return own.concat((r2.data || []).filter(function (c) { return !c.deleted_at; })); });
+    Promise.all([q(S.db.from('classes').select('id,name,deleted_at,owner_kind,archived_at').eq('teacher_id', uid)), q(S.db.from('class_teachers').select('class_id').eq('teacher_id', uid))]).then(function (R) {
+      var own = (R[0].data || []).filter(function (c) { return !c.deleted_at && !c.archived_at; }), extra = (R[1].data || []).map(function (x) { return x.class_id; }).filter(function (id) { return !own.some(function (c) { return c.id === id; }); });
+      return (extra.length ? q(S.db.from('classes').select('id,name,deleted_at,owner_kind,archived_at').in('id', extra)) : Promise.resolve({ data: [] })).then(function (r2) { return own.concat((r2.data || []).filter(function (c) { return !c.deleted_at; })); });
     }).then(function (classes) {
       if (!classes.length) return;
       var ids = classes.map(function (c) { return c.id; }), week = new Date(Date.now() - 7 * 864e5).toISOString();
@@ -137,7 +137,7 @@
         return Promise.all([sids.length ? q(S.db.from('learning_progress').select('student_id,status,updated_at').in('student_id', sids).gte('updated_at', week)) : { data: [] }, sids.length ? q(S.db.from('profiles').select('id,full_name').in('id', sids)) : { data: [] }, sids.length ? q(S.db.from('tutor_sessions').select('user_id,flagged,updated_at').in('user_id', sids).gte('updated_at', week).limit(5000)) : { data: [] }]).then(function (X) {
           var LP = X[0].data || [], TS = X[2].data || [], NM = {}; (X[1].data || []).forEach(function (p) { NM[p.id] = p.full_name; });
           // Compact class insights (21 Nov 2026): one row per class that has students; empty curriculum classes are left out
-          var withSt = classes.filter(function (c) { return EN.some(function (e) { return e.class_id === c.id; }); });
+          var withSt = classes.filter(function (c) { return EN.some(function (e) { return e.class_id === c.id; }) && !(location.pathname.indexOf('/teach/') === 0 && c.owner_kind === 'main'); });   // on My classes: only the teacher's own classroom classes
           if (!withSt.length) { root.hidden = true; return; }
           var rows = withSt.map(function (c) {
             var st = EN.filter(function (e) { return e.class_id === c.id; }).map(function (e) { return e.student_id; }).filter(function (v, i, a) { return a.indexOf(v) === i; });
@@ -149,16 +149,15 @@
             var ts = TS.filter(function (t) { return st.indexOf(t.user_id) >= 0; }), fl = ts.filter(function (t) { return t.flagged; });
             var rp = RP.filter(function (r) { return r.class_id === c.id; }), waiting = rp.filter(function (r) { return /submitted/.test(r.status); }).length;
             var dash = '<span class="muted">–</span>';
-            return '<tr><td><b>' + E(c.name) + '</b></td><td class="n">' + st.length + '</td><td class="n">' + active + '</td><td class="n">' + done + '</td>' +
+            return '<tr><td><b>' + E(c.name) + '</b><br><span class="muted">' + active + ' of ' + st.length + ' active · ' + done + ' lesson' + (done === 1 ? '' : 's') + ' done (7 days)</span></td>' +
               '<td>' + (weak ? E(weak.topic) + ' <span class="muted">' + weak.pct + ' % of ' + weak.max + ' marks</span>' : '<span class="muted" title="Fewer than 10 marks in every topic">Not enough evidence yet</span>') + '</td>' +
-              '<td>' + (topMis ? E(topMis) + ' <span class="muted">(' + mis[topMis] + ')</span>' : dash) + '</td>' +
+              '<td class="w2">' + (topMis ? E(topMis) + ' <span class="muted">(' + mis[topMis] + ')</span>' : dash) + '</td>' +
               '<td class="n">' + (support.length ? '<a href="/mastery/?class=' + c.id + '" title="' + E(support.map(function (s) { return NM[s] || 'A student'; }).join(', ')) + '"><b style="color:#c2410c">' + support.length + '</b></a>' : '0') + '</td>' +
-              '<td class="n">' + ts.length + (fl.length ? ' <span title="Asked the tutor for assessed work" style="color:#b45309">⚠' + fl.length + '</span>' : '') + '</td>' +
-              '<td class="n">' + (rp.length ? '<a href="/research/#/teacher">' + rp.length + (waiting ? ' · <b>' + waiting + ' waiting</b>' : '') + '</a>' : dash) + '</td></tr>';
+              '<td>' + ts.length + ' tutor chat' + (ts.length === 1 ? '' : 's') + (fl.length ? ' <span title="Asked the tutor for assessed work" style="color:#b45309">⚠' + fl.length + '</span>' : '') + (rp.length ? '<br><a href="/research/#/teacher">' + rp.length + ' research' + (waiting ? ' · <b>' + waiting + ' waiting</b>' : '') + '</a>' : '') + '</td></tr>';
           }).join('');
-          root.innerHTML = '<style>#lx{margin:18px 0 8px}#lx table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;font-size:.88rem}#lx th{background:#f8fafc;color:#475569;font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:8px 10px}#lx td{padding:8px 10px;border-top:1px solid #f1f5f9;vertical-align:top}#lx td.n,#lx th.n{text-align:center}#lx .tw{overflow-x:auto}</style>' +
+          root.innerHTML = '<style>#lx{margin:18px 0 8px}#lx table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;font-size:.88rem}#lx th{background:#f8fafc;color:#475569;font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:8px 10px}#lx td{padding:8px 10px;border-top:1px solid #f1f5f9;vertical-align:top}#lx td.n,#lx th.n{text-align:center}#lx .tw{overflow-x:auto}#lx td{overflow-wrap:anywhere}@media (max-width:1180px){#lx .w2{display:none}}</style>' +
             '<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin:0 0 8px"><h3 style="margin:0;color:#0f1f3d">Class insights</h3><a class="small" href="/mastery/">🔥 Class mastery heatmap →</a></div>' +
-            '<div class="tw"><table><tr><th>Class</th><th class="n">Students</th><th class="n">Active (7 days)</th><th class="n">Lessons done (7 days)</th><th>Weakest topic</th><th>Most common wrong idea</th><th class="n">May need support</th><th class="n">AI tutor chats (7 days)</th><th class="n">Research projects</th></tr>' + rows + '</table></div>' +
+            '<div class="tw"><table><tr><th>Class</th><th>Weakest topic</th><th class="w2">Most common wrong idea</th><th class="n">May need support</th><th>AI tutor and research</th></tr>' + rows + '</table></div>' +
             '<p class="muted small" style="margin:6px 0 0">How it is worked out: from marked answers in lessons and quizzes (item results). Weakest topic needs 10+ marks; "may need support" means below 50 % across 10+ marks. Classes without students are not shown.</p>';
           root.hidden = false;
         });
