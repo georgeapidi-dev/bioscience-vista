@@ -34,6 +34,7 @@
     '<div class="ait-modes" role="tablist" aria-label="Learning mode">' + MODES.map(function (m) {
       return '<button type="button" role="tab" data-m="' + m[0] + '" aria-selected="' + (m[0] === st.mode) + '"><span aria-hidden="true">' + m[1] + '</span> ' + m[2] + '</button>'; }).join('') + '</div>' +
     '<p class="ait-desc" id="ait-desc"></p>' +
+    '<div id="ait-mine" class="ait-mine" hidden></div>' +
     '<div class="ait-topic"><label for="ait-topic">Topic (optional)</label><input id="ait-topic" maxlength="120" placeholder="e.g. enzymes, titration, forces, statistics"></div>' +
     '<div class="ait-log" id="ait-log" aria-live="polite"></div>' +
     '<form class="ait-form" id="ait-form"><label for="ait-in" class="sr-only">Your message</label><textarea id="ait-in" rows="2" maxlength="1500" placeholder="Ask a question, give an answer or describe what you are stuck on…"></textarea>' +
@@ -116,5 +117,44 @@
       if (d && d.signin) log.insertAdjacentHTML('beforeend', '<p class="ait-in"><a class="vx-btn" href="/login/?next=/tutor/">Sign in</a> <a class="vx-btn ghost" href="/register/">Create a free account</a></p>');
     }, function () { busy = false; st.log.push({ who: 'err', text: 'The tutor could not be reached. Check your connection and try again.' }); save(); paint(); });
   };
-  paint(); setTimeout(past, 800);
+  /* Student Learning Centre phase 5: suggestions from your own learning records (marked answers, wrong ideas, work your teacher set).
+     A chip only fills in the mode, topic and a first message; you choose whether to send it. */
+  function mine() {
+    var D = db(); if (!D) return;
+    D.auth.getSession().then(function (s) {
+      if (!s || !s.data || !s.data.session) return;
+      var uid = s.data.session.user.id, since = new Date(Date.now() - 180 * 864e5).toISOString();
+      Promise.all([D.from('item_results').select('topic,got,max,at,misconceptions').eq('student_id', uid).gte('at', since).order('at', { ascending: false }).limit(2000).then(function (r) { return r.data || []; }, function () { return []; }),
+        D.rpc('my_todo').then(function (r) { return r.data || []; }, function () { return []; })]).then(function (x) {
+        var T = {}, mis = [];
+        x[0].forEach(function (r) { if (!r.topic || !(+r.max > 0) || r.got == null) return; var m = T[r.topic] || (T[r.topic] = { k: r.topic, g: 0, m: 0 }); m.g += Math.min(+r.got, +r.max); m.m += +r.max;
+          (Array.isArray(r.misconceptions) ? r.misconceptions : []).forEach(function (t) { if (typeof t === 'string' && t.trim() && mis.length < 40) mis.push([r.topic, t.trim()]); }); });
+        var tops = Object.keys(T).map(function (k) { var m = T[k]; m.pct = Math.round(100 * m.g / m.m); return m; }).filter(function (m) { return m.m >= 5; });
+        var weak = tops.filter(function (m) { return m.pct < 70; }).sort(function (a, b) { return a.pct - b.pct; }).slice(0, 3);
+        var strong = tops.filter(function (m) { return m.pct >= 80; }).sort(function (a, b) { return b.pct - a.pct; })[0];
+        var seen = {}, wrong = mis.filter(function (z) { var k = z[1].toLowerCase(); if (seen[k]) return false; seen[k] = 1; return true; }).slice(0, 2);
+        var now = Date.now(), work = x[1].filter(function (t) { return t.state !== 'done' && (t.kind === 'lesson' || t.kind === 'quiz') && (!t.due_at || new Date(t.due_at) > now - 864e5); })
+          .sort(function (a, b) { return (a.due_at ? +new Date(a.due_at) : 9e15) - (b.due_at ? +new Date(b.due_at) : 9e15); }).slice(0, 2);
+        var C = [];
+        weak.forEach(function (m) { C.push(['guide', m.k, 'Help me understand ' + m.k + '. I scored ' + m.pct + '% on it in my marked work. Start with what I am most likely missing.', '🧭 ' + m.k + ' · ' + m.pct + '%', 'weak']); });
+        wrong.forEach(function (z) { C.push(['mistake', z[0], 'My marked work showed this wrong idea about ' + z[0] + ': "' + z[1].slice(0, 200) + '". Help me see why it is wrong and what the right idea is.', '🩹 ' + (z[1].length > 46 ? z[1].slice(0, 44) + '…' : z[1]), 'mis']); });
+        work.forEach(function (t) { C.push(['teach', String(t.title).slice(0, 120), 'I need to get ready for "' + t.title + '", which my teacher set' + (t.due_at ? ' for ' + new Date(t.due_at).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' }) : '') + '. Teach me the key ideas first. Do not do the work for me.', '📌 ' + (t.title.length > 40 ? t.title.slice(0, 38) + '…' : t.title), 'set']); });
+        if (strong) C.push(['challenge', strong.k, 'Challenge me with a hard exam-style question on ' + strong.k + '.', '🏔️ Challenge: ' + strong.k, 'strong']);
+        if (!C.length) return;
+        var el = box.querySelector('#ait-mine'); el.hidden = false;
+        el.innerHTML = '<p><b>From my learning</b> <span class="vx-muted">Suggestions from your marked work and the work your teacher set. Pick one, read the message, then send it.</span></p><div class="ait-chips">' +
+          C.map(function (c, i) { return '<button type="button" class="ait-chip ' + c[4] + '" data-c="' + i + '">' + E(c[3]) + '</button>'; }).join('') + '</div>';
+        [].forEach.call(el.querySelectorAll('[data-c]'), function (b) { b.onclick = function () { var c = C[+b.getAttribute('data-c')];
+          if (st.log.length && (st.mode !== c[0] || st.topic !== c[1])) { st.log = []; st.sid = null; st.flag = false; }
+          st.mode = c[0]; st.topic = c[1]; tp.value = c[1]; save();
+          [].forEach.call(box.querySelectorAll('[data-m]'), function (t) { t.setAttribute('aria-selected', String(t.getAttribute('data-m') === st.mode)); });
+          paint(); inp.value = c[2]; inp.focus(); }; });
+        if (!document.getElementById('ait-mine-css')) { var cs = document.createElement('style'); cs.id = 'ait-mine-css';
+          cs.textContent = '.ait-mine{background:linear-gradient(120deg,#eef2ff,#fdf2f8);border:1px solid #c7d2fe;border-radius:14px;padding:10px 12px;margin:8px 0}.ait-mine p{margin:0 0 6px}.ait-chips{display:flex;flex-wrap:wrap;gap:6px}' +
+            '.ait-chip{font:inherit;font-size:.88rem;font-weight:700;border-radius:999px;padding:6px 12px;cursor:pointer;border:2px solid #c7d2fe;background:#fff;color:#3730a3;max-width:100%;overflow-wrap:anywhere;text-align:left}.ait-chip.weak{border-color:#fdba74;color:#9a3412}.ait-chip.mis{border-color:#fca5a5;color:#991b1b}.ait-chip.set{border-color:#fcd34d;color:#92400e}.ait-chip.strong{border-color:#86efac;color:#166534}.ait-chip:hover{background:#f8fafc}';
+          document.head.appendChild(cs); }
+      });
+    });
+  }
+  paint(); setTimeout(past, 800); setTimeout(mine, 900);
 })();

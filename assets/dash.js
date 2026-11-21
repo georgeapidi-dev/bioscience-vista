@@ -260,7 +260,7 @@
     var row = function (t) {
       var late = t.state !== 'done' && t.due_at && new Date(t.due_at) < now, soon = !late && t.state !== 'done' && t.due_at && (new Date(t.due_at) - now) < 2 * 864e5;
       var isNew = NEWT[t.id] && t.state !== 'done';
-      var hub = /^research:/.test(t.ref || '') ? 'Research Hub' : /^innovation:/.test(t.ref || '') ? 'Innovation Studio' : '';
+      var hub = /^research:/.test(t.ref || '') ? 'Research Hub' : /^innovation:/.test(t.ref || '') ? 'Innovation Studio' : t.kind === 'sim' && /\/simulations\/[a-z0-9-]+\//.test(t.url || '') ? 'Virtual Lab when you hand in' : '';
       var tick = t.state === 'done' ? '<span class="pill ok">✓ Done</span>' : hub ? '<span class="pill t" title="Ticks itself off when you finish this in the ' + hub + '">⚙ Ticks off in the ' + hub + '</span>' : t.kind === 'quiz' || t.kind === 'lesson' ? (t.state === 'started' ? '<span class="pill t">✎ Started</span>' : '') :
         '<button type="button" class="btn sm" data-done="' + t.id + '">✓ Mark as done</button>';
       return '<div class="todo' + (t.state === 'done' ? ' done' : '') + '" style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><div>' + (isNew ? '<span class="pill" style="background:#db2777;color:#fff;border-color:#db2777;margin-right:4px">🆕 New</span>' : '') + (/^research:/.test(t.ref || '') ? '🔬' : /^innovation:/.test(t.ref || '') ? '💡' : ICON[t.kind] || '📌') + ' ' +

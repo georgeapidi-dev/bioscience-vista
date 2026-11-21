@@ -20,6 +20,7 @@
     '.si-tb{display:flex;flex-direction:column;gap:3px;min-width:0}.si-tb .ms-bar{display:block;width:100%}' +
     '.si-t{border-bottom:1px solid #F1F5F9}.si-t[hidden]{display:none}.si-t>summary{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.6fr) auto;gap:10px;align-items:center;padding:9px 0;cursor:pointer;list-style:none}.si-tn{display:flex;flex-direction:column;min-width:0}.si-tn b{overflow-wrap:anywhere}' +
     '.si-ev{background:#F8FAFC;border-radius:12px;padding:8px 12px;margin:0 0 10px}.si-ev ul{margin:4px 0;padding:0;list-style:none}.si-ev li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;padding:4px 0;border-bottom:1px dashed #e2e8f0}.si-ev li span{overflow-wrap:anywhere}' +
+    '.si-h4{margin:0 0 4px;font-size:1rem}' +
     '.si-sk{display:grid;grid-template-columns:minmax(120px,1.2fr) 2fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #F1F5F9}' +
     '@media(max-width:640px){.si-t>summary{grid-template-columns:1fr auto}.si-tb{grid-column:1/-1;grid-row:2}.si-sk{grid-template-columns:1fr auto}.si-sk>div:nth-child(2){grid-column:1/-1;grid-row:2}.si-chart{gap:3px}.si-w small{font-size:.68rem}}' +
     '.ms-heat{border-collapse:collapse;font-size:.82rem}.ms-heat th,.ms-heat td{border:1px solid #fff;padding:5px 6px;text-align:center;min-width:46px}.ms-heat th{background:#F8FAFC;font-weight:700;max-width:120px;vertical-align:bottom}.ms-heat td:first-child,.ms-heat th:first-child{text-align:left;min-width:150px;background:#F8FAFC}';
@@ -64,11 +65,32 @@
     if (a.n < 3 || b.n < 3) return null; var d = Math.round(100 * a.g / a.m - 100 * b.g / b.m);
     return d >= 8 ? ['up', '↑ improving', '#166534', d] : d <= -8 ? ['down', '↓ slipping', '#B91C1C', d] : ['flat', '→ steady', '#475569', d];
   }
+  /* Student Learning Centre phase 5: labs and projects sit beside the marked work */
+  function invest(L, RP, PP, IN) {
+    var seen = {}; L = L.filter(function (a) { if (seen[a.sim]) return false; seen[a.sim] = 1; return true; }).slice(0, 6);
+    var nice = function (t) { return String(t || '').replace(/_/g, ' ').replace(/^./, function (c) { return c.toUpperCase(); }); };
+    var proj = [];
+    RP.forEach(function (p) { proj.push(['🔬', String(p.kind || '').toUpperCase() === 'EE' ? 'Extended essay' : 'Internal assessment', p.title, p.stage, p.status, p.updated_at, '/research/']); });
+    PP.forEach(function (p) { proj.push(['🧩', 'Personal Project', p.title, p.stage, p.status, p.updated_at, '/personal-project/']); });
+    IN.forEach(function (p) { proj.push(['💡', 'Innovation challenge', p.title, p.stage, p.status, p.updated_at, '/innovation/']); });
+    if (!L.length && !proj.length) return '';
+    return '<section class="ms-card"><h3>🧪 Investigations and projects</h3><div class="si-two">' +
+      '<div><h4 class="si-h4">🔬 Virtual labs</h4>' + (L.length ? L.map(function (a) { var pc = a.max_score ? Math.round(100 * a.score / a.max_score) : null;
+        return '<div class="si-li"><span><b>' + E(a.sim_title || a.sim) + '</b><br><span class="ms-muted">' + (a.trials || 0) + ' trials · ' + (a.submitted_at ? '✓ handed in' : 'in progress') + (pc != null ? ' · analysis ' + pc + ' %' : '') + (a.teacher_comment ? ' · 💬 teacher comment' : '') + '</span></span><span class="si-acts"><a class="btn sm" href="/simulations/' + encodeURIComponent(a.sim) + '/">' + (a.submitted_at ? 'Open' : 'Continue ▶') + '</a></span></div>'; }).join('') +
+        '<p style="margin:8px 0 0"><a class="btn sm" href="/lab-results/">📊 All my lab results</a></p>' : '<p class="ms-muted">No labs yet. <a href="/simulations/">Open the Virtual Lab</a>.</p>') + '</div>' +
+      '<div><h4 class="si-h4">📁 Projects</h4>' + (proj.length ? proj.map(function (p) {
+        return '<div class="si-li"><span>' + p[0] + ' <b>' + E(p[2] || p[1]) + '</b><br><span class="ms-muted">' + E(p[1]) + (p[3] ? ' · stage: ' + E(nice(p[3])) : '') + (p[4] ? ' · ' + E(nice(p[4])) : '') + (p[5] ? ' · ' + ago(new Date(p[5]).getTime()) : '') + '</span></span><span class="si-acts"><a class="btn sm" href="' + p[6] + '">Open</a></span></div>'; }).join('') : '<p class="ms-muted">No projects started yet.</p>') + '</div></div></section>';
+  }
   function student(me) {
     app.innerHTML = hero('My Science Intelligence', 'Loading your marked work…');
     var q = function (p) { return p.then(function (r) { return r.error ? { data: [] } : r; }, function () { return { data: [] }; }); };
     Promise.all([q(S.db.from('item_results').select('topic,topic_id,skill,got,max,at,misconceptions,title,q_label,objective').eq('student_id', me.user.id).gte('at', new Date(Date.now() - 365 * DAY).toISOString()).order('at', { ascending: false }).limit(5000)),
-      q(S.db.rpc('practice_topics')), q(S.db.from('lessons').select('id,topic_id,title,url,published').eq('published', true))]).then(function (x) {
+      q(S.db.rpc('practice_topics')), q(S.db.from('lessons').select('id,topic_id,title,url,published').eq('published', true)),
+      q(S.db.from('sim_attempts').select('sim,sim_title,score,max_score,trials,teacher_comment,submitted_at,updated_at').eq('student_id', me.user.id).order('updated_at', { ascending: false }).limit(30)),
+      q(S.db.from('research_projects').select('kind,title,stage,status,updated_at').eq('student_id', me.user.id)),
+      q(S.db.from('pp_projects').select('title,stage,status,updated_at').eq('student_id', me.user.id)),
+      q(S.db.from('innovation_projects').select('title,stage,status,updated_at').eq('owner_id', me.user.id))]).then(function (x) {
+      var INV = invest(x[3].data || [], x[4].data || [], x[5].data || [], x[6].data || []);
       var R = x[0].data || [], PT = x[1].data || [], T = aggregate(R, function (r) { return r.topic; }), SK = aggregate(R, function (r) { return r.skill; });
       var LES = {}; (x[2].data || []).forEach(function (l) { if (l.url && l.topic_id) (LES[l.topic_id] = LES[l.topic_id] || []).push(l); });
       var byName = {}, byId = {}; PT.forEach(function (p) { byName[(p.topic || '').toLowerCase()] = p; byId[p.topic_id] = p; });
@@ -80,7 +102,7 @@
       var notStarted = PT.filter(function (p) { return !T[p.topic] && !topics.some(function (m) { return m.tid === p.topic_id; }); });
       var count = function (k) { return topics.filter(function (m) { return m.st === k; }).length; };
       var mis = [], seenM = {}; topics.forEach(function (m) { m.mis.slice(-3).forEach(function (t) { var k = m.k + '|' + t.toLowerCase(); if (seenM[k]) return; seenM[k] = 1; mis.push([m.k, t]); }); });
-      if (!R.length) { app.innerHTML = hero('My Science Intelligence', 'See how secure you are in every topic and skill.') + '<section class="ms-card"><p>No marked work yet. When you complete lessons and assessments, each topic shows here as Strong, Developing, Needs support, Requires intervention or Insufficient evidence.</p><p><a class="btn sm main" href="/practice/">🎯 Start practising</a> <a class="btn sm" href="/learn/">📚 Open a lesson</a></p></section>'; return; }
+      if (!R.length) { app.innerHTML = hero('My Science Intelligence', 'See how secure you are in every topic and skill.') + '<section class="ms-card"><p>No marked work yet. When you complete lessons and assessments, each topic shows here as Strong, Developing, Needs support, Requires intervention or Insufficient evidence.</p><p><a class="btn sm main" href="/practice/">🎯 Start practising</a> <a class="btn sm" href="/learn/">📚 Open a lesson</a></p></section>' + INV; return; }
       function acts(m, main) { var pid = practiceId(m), ls = m.tid && LES[m.tid] && LES[m.tid][0];
         return (pid ? '<button class="btn sm' + (main ? ' main' : '') + '" data-prac="' + pid + '">🎯 Practise 10</button>' : '') + (ls ? '<a class="btn sm" href="' + E(ls.url) + '">📘 Lesson</a>' : '') +
           '<a class="btn sm" href="/tutor/?mode=' + (m.st === 'strong' ? 'test' : 'guide') + '&topic=' + encodeURIComponent(m.k) + '">🤖 ' + (m.st === 'strong' ? 'Challenge me' : 'Explain it') + '</a>'; }
@@ -105,6 +127,7 @@
             '<div class="si-ev"><p class="ms-muted"><b>Evidence:</b> your ' + Math.min(8, m.rows.length) + ' most recent marked answers in this topic.</p><ul>' + m.rows.slice(0, 8).map(function (r) { return '<li><span>' + E(r.title || 'Answer') + (r.q_label ? ' · ' + E(r.q_label) : '') + (r.objective ? ' <span class="ms-muted">(' + E(r.objective) + ')</span>' : '') + '</span><b>' + (+r.got) + ' / ' + (+r.max) + '</b><span class="ms-muted">' + ago(new Date(r.at).getTime()) + '</span></li>'; }).join('') + '</ul>' +
             (m.mis.length ? '<p class="ms-muted"><b>Wrong idea to fix:</b> ' + E(m.mis[m.mis.length - 1]) + '</p>' : '') + '<p class="si-acts">' + acts(m, m.st !== 'strong') + '</p></div></details>'; }).join('') +
         (notStarted.length ? '<details style="margin-top:10px"><summary class="ms-muted">Topics you can practise but have not started (' + notStarted.length + ')</summary><p>' + notStarted.slice(0, 40).map(function (p) { return '<button class="btn sm" data-prac="' + p.topic_id + '" style="margin:3px">' + E(p.topic) + '</button>'; }).join('') + '</p></details>' : '') + '</section>' +
+        INV +
         (Object.keys(SK).length ? '<section class="ms-card"><h3>🧠 Skills</h3>' + Object.keys(SK).map(function (k) { return SK[k]; }).sort(function (a, b) { return a.pct - b.pct; }).map(function (m) { var st = sstate(m), l = SL(st);
           return '<div class="si-sk"><div><b>' + E(m.k.charAt(0).toUpperCase() + m.k.slice(1)) + '</b><br><span class="ms-muted">' + m.marks + ' marks</span></div><div><div class="ms-bar"><i style="width:' + (st === 'none' ? 0 : m.pct) + '%;background:' + (st === 'int' ? '#7F1D1D' : l[3]) + '"></i></div><span class="ms-muted">' + (st === 'none' ? 'not enough yet' : m.pct + ' %') + '</span> ' + spill(st) + '</div><div><a class="btn sm" href="/tutor/?mode=guide&topic=' + encodeURIComponent('Improving my ' + m.k + ' answers in science') + '">🤖 Help</a></div></div>'; }).join('') + '</section>' : '') +
         (mis.length ? '<section class="ms-card"><h3>🩹 Mistakes to fix</h3><p class="ms-muted">From the feedback on your marked answers.</p><ul class="ms-mis">' + mis.slice(-10).reverse().map(function (x) { return '<li><b>' + E(x[0]) + ':</b> ' + E(x[1]) + ' <a href="/tutor/?mode=mistake&topic=' + encodeURIComponent(x[0]) + '">explain it to me</a></li>'; }).join('') + '</ul></section>' : '') +
