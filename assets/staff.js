@@ -1635,31 +1635,60 @@
       var s = window.BVQ.suggest(ansv, q.ans.mark_scheme || q.ans.model_answer || '', q.marks); if (s.got != null) out.push({ qid: q.id, got: s.got }); });
     return out;
   }
+  /* Marking centre (Command Centre phase 5, 21 Nov 2026): one inbox with filters; each attempt opens with ◀ Previous / Next ▶ through
+     the same list, marks save themselves, and "Release & next" moves straight on. Nothing reaches a student until it is released. */
+  function mQueue(ids) { try { if (ids) sessionStorage.setItem('bv-mq', JSON.stringify(ids)); return JSON.parse(sessionStorage.getItem('bv-mq') || '[]'); } catch (e) { return ids || []; } }
   function marking(p, args) {
     if (args[0]) return markOne(p, args[0]);
-    S.db.from('quiz_attempts').select('id,quiz_id,student_id,submitted_at,score,max_score,status,released, quizzes(title,show_results)').neq('status', 'in_progress').eq('released', false).order('submitted_at').then(function (r) {
-      var rows = (r.data || []).filter(function (a) { return mine(a.student_id) && (a.status === 'needs_marking' || (a.quizzes && !a.quizzes.show_results)); });
-      if (!rows.length) { p.innerHTML = '<p class="emptybox">Nothing to mark or release. 🎉</p>'; return; }
-      S.db.from('profiles').select('id,full_name').in('id', rows.map(function (a) { return a.student_id; })).then(function (pr) { var n = {}; (pr.data || []).forEach(function (x) { n[x.id] = x.full_name; });
-        var ready = rows.filter(function (a) { return a.status === 'marked'; });
-        p.innerHTML = '<div class="row2"><p><b>' + rows.length + '</b> to check · ' + ready.length + ' fully marked</p><div class="acts"><button class="btn sm" type="button" id="auto">⚡ Auto-mark written answers</button>' +
-          '<button class="btn main sm" type="button" id="relall"' + (ready.length ? '' : ' disabled') + '>✓ Release ' + ready.length + ' checked result' + (ready.length === 1 ? '' : 's') + '</button></div></div>' +
-          '<p class="small muted">Auto-mark fills in suggested marks from your mark scheme. Nothing reaches students until you open each one, check it and release it (or use Release for those you have checked).</p>' +
-          '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Quiz</th><th>Submitted</th><th>Marks so far</th><th>Status</th></tr>' + rows.map(function (a) {
-            return '<tr><td><a href="#marking/' + a.id + '">' + E(n[a.student_id] || '–') + '</a></td><td>' + E(a.quizzes ? a.quizzes.title : '') + '</td><td class="small">' + E(S.when(a.submitted_at)) + '</td><td>' + E(a.score) + ' / ' + E(a.max_score) + '</td><td>' +
-              (a.status === 'needs_marking' ? '<span class="pill">needs marks</span>' : '<span class="pill">ready to release</span>') + '</td></tr>'; }).join('') + '</table></div>';
+    var since = new Date(Date.now() - 14 * 864e5).toISOString(), F = (function () { try { return JSON.parse(sessionStorage.getItem('bv-mf') || '{}'); } catch (e) { return {}; } })();
+    Promise.all([
+      S.db.from('quiz_attempts').select('id,quiz_id,student_id,submitted_at,score,max_score,status,released, quizzes(title,show_results,due_at)').neq('status', 'in_progress').eq('released', false).order('submitted_at').limit(1000),
+      S.db.from('quiz_attempts').select('id,quiz_id,student_id,submitted_at,score,max_score,status,released, quizzes(title,show_results,due_at)').eq('released', true).gte('submitted_at', since).order('submitted_at', { ascending: false }).limit(300)
+    ]).then(function (x) {
+      var open = (x[0].data || []).filter(function (a) { return mine(a.student_id) && (a.status === 'needs_marking' || (a.quizzes && !a.quizzes.show_results)); });
+      var done = (x[1].data || []).filter(function (a) { return mine(a.student_id); });
+      var all = open.concat(done); if (!all.length) { p.innerHTML = '<p class="emptybox">Nothing to mark or release, and nothing released in the last 14 days. 🎉</p>'; return; }
+      S.db.from('profiles').select('id,full_name').in('id', all.map(function (a) { return a.student_id; }).filter(function (v, i, s) { return s.indexOf(v) === i; })).then(function (pr) {
+        var n = {}; (pr.data || []).forEach(function (r) { n[r.id] = r.full_name; });
+        var cn = {}; CLASSES.forEach(function (c) { cn[c.id] = c.name; });
+        var stateOf = function (a) { return a.released ? 'rel' : a.status === 'needs_marking' ? 'need' : 'ready'; };
+        var LBL = { need: ['Awaiting marks', '#dc2626'], ready: ['Marked: ready to release', '#d97706'], rel: ['Released', '#16a34a'] };
+        var cnt = { need: 0, ready: 0, rel: 0 }; all.forEach(function (a) { cnt[stateOf(a)]++; });
+        var ready = open.filter(function (a) { return a.status === 'marked'; });
+        p.innerHTML = '<style>.mk-f{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px}.mk-f a{padding:6px 12px;border-radius:999px;border:1px solid #cbd5e1;text-decoration:none;font-weight:700;font-size:.86rem;color:#334155;cursor:pointer}.mk-f a.on{background:#0f1f3d;color:#fff;border-color:#0f1f3d}.mk-f a i{font-style:normal;margin-left:5px;opacity:.8}.mk-f select,.mk-f input{padding:7px 9px;border-radius:9px;border:1px solid #cbd5e1;font:inherit;width:auto!important;margin:0}.mk-f input{flex:1 1 180px}.mk-st{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.76rem;font-weight:800;color:#fff;background:var(--c)}</style>' +
+          '<div class="row2" style="align-items:center;margin:0 0 8px"><p style="margin:0"><b>' + cnt.need + '</b> awaiting marks · <b>' + cnt.ready + '</b> ready to release · ' + cnt.rel + ' released in 14 days</p><div class="acts"><button class="btn sm" type="button" id="auto">⚡ Auto-mark written answers</button>' +
+          '<button class="btn main sm" type="button" id="relall"' + (ready.length ? '' : ' disabled') + '>✓ Release ' + ready.length + ' checked result' + (ready.length === 1 ? '' : 's') + '</button><button class="btn sm" type="button" id="startq">▶ Start marking</button></div></div>' +
+          '<div class="mk-f" role="tablist">' + [['open', 'To do', cnt.need + cnt.ready], ['need', 'Awaiting marks', cnt.need], ['ready', 'Ready to release', cnt.ready], ['rel', 'Released (14 days)', cnt.rel]].map(function (t) { return '<a data-f="' + t[0] + '"' + ((F.s || 'open') === t[0] ? ' class="on"' : '') + '>' + t[1] + '<i>' + t[2] + '</i></a>'; }).join('') +
+          '<select id="mkc" aria-label="Class"><option value="">All classes</option>' + CLASSES.map(function (c) { return '<option value="' + c.id + '"' + (F.c === c.id ? ' selected' : '') + '>' + E(c.name) + '</option>'; }).join('') + '</select><input type="search" id="mkq" placeholder="Student or task…" value="' + E(F.q || '') + '"></div>' +
+          '<p class="small muted" style="margin:0 0 8px">Auto-mark fills in suggested marks from your mark scheme. Nothing reaches students until you check and release it. Open one and use <b>Next ▶</b> to go through the list without coming back here.</p><div id="mkl"></div>';
+        var draw = function () {
+          var f = F.s || 'open', c = F.c || '', q = (F.q || '').toLowerCase();
+          var L = all.filter(function (a) { var s2 = stateOf(a); return (f === 'open' ? s2 !== 'rel' : s2 === f) && (!c || CLASS_OF[a.student_id] === c) && (!q || ((n[a.student_id] || '') + ' ' + (a.quizzes ? a.quizzes.title : '')).toLowerCase().indexOf(q) >= 0); });
+          mQueue(L.filter(function (a) { return !a.released; }).map(function (a) { return a.id; }));
+          p.querySelector('#mkl').innerHTML = L.length ? '<div class="tablewrap"><table class="cc-tbl"><tr><th>Student</th><th class="hm">Class</th><th>Task</th><th class="hm">Submitted</th><th class="hm hm2">Deadline</th><th class="n">Marks</th><th>Status</th></tr>' + L.map(function (a) {
+            var due = a.quizzes && a.quizzes.due_at, late = due && a.submitted_at && new Date(a.submitted_at) > new Date(due), st = LBL[stateOf(a)];
+            return '<tr><td><a class="nm" style="--k:' + hue(CLASS_OF[a.student_id] || '') + '" href="#marking/' + a.id + '">' + E(n[a.student_id] || '–') + '</a></td><td class="hm small">' + E(cn[CLASS_OF[a.student_id]] || '') + '</td><td title="' + E(a.quizzes ? a.quizzes.title : '') + '">' + E(deskName(a.quizzes ? a.quizzes.title : '')) + '</td>' +
+              '<td class="hm small">' + E(ago(a.submitted_at)) + (late ? ' <span style="color:#b45309;font-weight:700">late</span>' : '') + '</td><td class="hm hm2 small">' + (due ? E(new Date(due).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })) : '–') + '</td><td class="n">' + E(a.score) + '/' + E(a.max_score) + '</td><td><span class="mk-st" style="--c:' + st[1] + '">' + st[0] + '</span></td></tr>'; }).join('') + '</table></div>' : '<p class="emptybox">Nothing here.</p>';
+        };
+        var save = function () { try { sessionStorage.setItem('bv-mf', JSON.stringify(F)); } catch (e) {} draw(); };
+        p.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { F.s = b.getAttribute('data-f'); p.querySelectorAll('[data-f]').forEach(function (x) { x.classList.toggle('on', x === b); }); save(); }; });
+        p.querySelector('#mkc').onchange = function () { F.c = this.value; save(); };
+        p.querySelector('#mkq').oninput = function () { F.q = this.value; save(); };
+        p.querySelector('#startq').onclick = function () { var qd = mQueue(); if (qd.length) location.hash = 'marking/' + qd[0]; else toast('Nothing left to mark in this list.'); };
+        draw();
         p.querySelector('#auto').onclick = function () {
-          var btn = this, quizIds = rows.filter(function (a) { return a.status === 'needs_marking'; }).map(function (a) { return a.quiz_id; }).filter(function (v, i, s) { return s.indexOf(v) === i; }), done = 0; btn.disabled = true; btn.textContent = 'Marking…';
-          Promise.all(quizIds.map(function (qid) { return loadQuiz(qid).then(function (qs) { return [qid, qs]; }); })).then(function (all) {
-            var Qs = {}; all.forEach(function (x) { Qs[x[0]] = x[1]; });
+          var btn = this, rows = open, quizIds = rows.filter(function (a) { return a.status === 'needs_marking'; }).map(function (a) { return a.quiz_id; }).filter(function (v, i, s) { return s.indexOf(v) === i; }), cnt2 = 0; btn.disabled = true; btn.textContent = 'Marking…';
+          Promise.all(quizIds.map(function (qid) { return loadQuiz(qid).then(function (qs) { return [qid, qs]; }); })).then(function (al) {
+            var Qs = {}; al.forEach(function (y) { Qs[y[0]] = y[1]; });
             return S.db.from('quiz_attempts').select('id,quiz_id,answers,detail').in('id', rows.filter(function (a) { return a.status === 'needs_marking'; }).map(function (a) { return a.id; })).then(function (ar) {
               var jobs = []; (ar.data || []).forEach(function (a) { autoMarks(a, Qs[a.quiz_id] || []).forEach(function (m) { jobs.push({ attempt: a.id, qid: m.qid, marks_given: m.got, comment: null }); }); });
-              return jobs.reduce(function (pr, j) { return pr.then(function () { return S.db.rpc('mark_answer', j).then(function () { done++; }); }); }, Promise.resolve());
+              return jobs.reduce(function (pr2, j) { return pr2.then(function () { return S.db.rpc('mark_answer', j).then(function () { cnt2++; }); }); }, Promise.resolve());
             });
-          }).then(function () { toast(done + ' written answer' + (done === 1 ? '' : 's') + ' marked automatically. Check them, then release.'); marking(p, []); });
+          }).then(function () { toast(cnt2 + ' written answer' + (cnt2 === 1 ? '' : 's') + ' marked automatically. Check them, then release.'); marking(p, []); });
         };
         p.querySelector('#relall').onclick = function () { var btn = this; btn.disabled = true;
-          ready.reduce(function (pr, a) { return pr.then(function () { return S.db.rpc('release_attempt', { attempt: a.id }).then(function (x) { return S.db.functions.invoke('result-feedback', { body: { attempt: a.id } }).then(function () { return x; }, function () { return x; }); }); }); }, Promise.resolve()).then(function () { toast(ready.length + ' result' + (ready.length === 1 ? '' : 's') + ' released to students'); marking(p, []); }); };
+          ready.reduce(function (pr2, a) { return pr2.then(function () { return S.db.rpc('release_attempt', { attempt: a.id }).then(function (y) { return S.db.functions.invoke('result-feedback', { body: { attempt: a.id } }).then(function () { return y; }, function () { return y; }); }); }); }, Promise.resolve())
+            .then(function () { toast('Released ' + ready.length + ' result' + (ready.length === 1 ? '' : 's')); marking(p, []); }); };
       });
     });
   }
@@ -1678,7 +1707,8 @@
         var qs = x[0], by = {}, FB = {}; (a.detail || []).forEach(function (d) { by[d.question_id] = d; }); ((x[2] && x[2].data) || []).forEach(function (f) { FB[f.question_id] = f; });
         var waitAI = Object.keys(FB).filter(function (k) { return FB[k].need_ai && !FB[k].ai && !FB[k].reviewed; }).length;
         var held = a.quizzes && !a.quizzes.show_results;
-        p.innerHTML = '<p><a href="#marking">← Marking list</a></p><section class="panel row2"><div><h3>' + E(x[1].data ? x[1].data.full_name : '') + ' · ' + E(a.quizzes ? a.quizzes.title : '') + '</h3><p class="small muted">Submitted ' + E(S.when(a.submitted_at)) + '</p>' + (a.away_count ? '<p class="small" style="color:#b91c1c"><b>🚩 Left the page ' + a.away_count + ' time' + (a.away_count > 1 ? 's' : '') + '</b>, ' + Math.round((a.away_seconds || 0) / 60 * 10) / 10 + ' min away in total.</p>' : '') + '</div>' +
+        var MQ = mQueue(), qi = MQ.indexOf(aid), prevId = qi > 0 ? MQ[qi - 1] : null, nextId = qi >= 0 && qi < MQ.length - 1 ? MQ[qi + 1] : (qi < 0 && MQ.length ? MQ[0] : null);
+        p.innerHTML = '<div class="row2" style="align-items:center;margin:0 0 6px"><a href="#marking">← Marking inbox</a><span class="cta">' + (qi >= 0 ? '<span class="small muted">' + (qi + 1) + ' of ' + MQ.length + '</span>' : '') + (prevId ? '<a class="btn sm" href="#marking/' + prevId + '">◀ Previous</a>' : '') + (nextId ? '<a class="btn sm" href="#marking/' + nextId + '">Next ▶</a>' : '') + '<span class="small muted" id="mksv"></span></span></div><section class="panel row2"><div><h3>' + E(x[1].data ? x[1].data.full_name : '') + ' · ' + E(a.quizzes ? a.quizzes.title : '') + '</h3><p class="small muted">Submitted ' + E(S.when(a.submitted_at)) + '</p>' + (a.away_count ? '<p class="small" style="color:#b91c1c"><b>🚩 Left the page ' + a.away_count + ' time' + (a.away_count > 1 ? 's' : '') + '</b>, ' + Math.round((a.away_seconds || 0) / 60 * 10) / 10 + ' min away in total.</p>' : '') + '</div>' +
           '<div><b style="font-size:1.6rem" id="tot">' + E(a.score) + '</b> / ' + E(a.max_score) + (BVT.levelPill ? BVT.levelPill(a.score, a.max_score, a.quizzes ? a.quizzes.title : '') : '') + ((a.repeats || []).length ? ' <span class="pill">↻ ' + a.repeats.length + ' repeat' + (a.repeats.length > 1 ? 's' : '') + '</span>' : '') + ' <span class="pill">' + (a.released ? 'released' : held ? 'not released yet' : 'student sees MCQ score') + '</span></div></section>' +
           qs.filter(function (q) { return q.kind !== 'info'; }).map(function (q, i) { var d = by[q.id] || {}, g = (a.answers || {})[q.id], an = q.ans || {}, written = q.kind === 'short';
             var pic = /^data:image\//.test(g || ''), sug = written ? (pic ? { got: null, hits: [] } : Q.suggest(window.BVT && BVT.answerText ? BVT.answerText(g || '') : g || '', an.mark_scheme || an.model_answer || '', q.marks)) : null, pts = written ? Q.points(an.mark_scheme || an.model_answer || '') : [], lv = written ? Q.levels(an.rubric) : [];
@@ -1689,7 +1719,7 @@
               (lv.length ? '<div class="small"><b>Rubric</b> (click a level)' + lv.map(function (l) { return '<div><button type="button" class="btn sm" data-lv="' + l.hi + '">' + (l.lo === l.hi ? l.lo : l.lo + '–' + l.hi) + '</button> ' + E(l.text) + '</div>'; }).join('') + '</div>' : '') +
               repeatsOf(a, q) + (fr && BVT.feedback ? BVT.feedback(fr, { staff: true }) : '') +
               '<div class="row2"><label class="f">Marks<input type="number" min="0" max="' + q.marks + '" step="0.5" data-k="m" value="' + E(val) + '" style="max-width:90px"></label>' + (q.marks ? '<span class="f" style="align-self:flex-end;display:flex;gap:6px"><button type="button" class="btn sm" data-set="0" title="Not correct: record 0">✗ 0</button><button type="button" class="btn sm" data-set="' + q.marks + '" title="Full marks">✓ ' + q.marks + '</button></span>' : '') + '<label class="f" style="flex:1">Comment for the student<input data-k="c" value="' + E(d.comment || '') + '"></label></div></article>'; }).join('') +
-          '<div class="acts panel">' + (waitAI ? '<button class="btn sm" type="button" id="askai">🤖 Get AI suggestions (' + waitAI + ')</button>' : '') + '<button class="btn sm" type="button" id="savem">Save marks</button><button class="btn main sm" type="button" id="rel">✓ Confirm grade and release to student</button></div>';
+          '<div class="acts panel">' + (waitAI ? '<button class="btn sm" type="button" id="askai">🤖 Get AI suggestions (' + waitAI + ')</button>' : '') + '<button class="btn sm" type="button" id="savem">Save marks</button><button class="btn main sm" type="button" id="rel">✓ Confirm grade and release' + (nextId ? ' & next ▶' : ' to student') + '</button></div>';
         p.querySelectorAll('[data-lv]').forEach(function (b) { b.onclick = function () { b.closest('[data-q]').querySelector('[data-k=m]').value = b.getAttribute('data-lv'); }; });
         p.querySelectorAll('[data-set]').forEach(function (b) { b.onclick = function () { b.closest('[data-q]').querySelector('[data-k=m]').value = b.getAttribute('data-set'); }; });
         p.querySelectorAll('[data-useai]').forEach(function (b) { b.onclick = function () { b.closest('[data-q]').querySelector('[data-k=m]').value = b.getAttribute('data-useai'); toast('AI mark copied in: press Save marks to confirm it.'); }; });
@@ -1705,10 +1735,13 @@
             if (m === '' || (d.got != null && +m === +d.got && c === (d.comment || ''))) return null;   /* 0 is a real mark: an unmarked answer given 0 is saved */ return { attempt: aid, qid: art.getAttribute('data-q'), marks_given: +m, comment: c || null }; }).filter(Boolean);
           return jobs.reduce(function (pr, j) { return pr.then(function () { return S.db.rpc('mark_answer', j).then(function (res) { if (res.error) throw res.error; p.querySelector('#tot').textContent = res.data; }); }); }, Promise.resolve());
         }
+        (function () { var t = null, sv = p.querySelector('#mksv');   // marks and comments save themselves a moment after typing
+          p.querySelectorAll('[data-k]').forEach(function (inp) { inp.addEventListener('input', function () { clearTimeout(t); if (sv) sv.textContent = 'Saving…'; t = setTimeout(function () { saveAll().then(function () { if (sv) sv.textContent = '✓ Saved ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }, function (e) { if (sv) sv.textContent = 'Not saved: ' + S.nice(e); }); }, 1200); }); });
+          p.querySelectorAll('[data-lv],[data-set],[data-useai]').forEach(function (b) { b.addEventListener('click', function () { var i = b.closest('[data-q]').querySelector('[data-k=m]'); if (i) i.dispatchEvent(new Event('input')); }); }); })();
         p.querySelector('#savem').onclick = function () { saveAll().then(function () { toast('Marks saved'); markOne(p, aid); }, function (e) { toast(S.nice(e), true); }); };
         p.querySelector('#rel').onclick = function () {
           var empty = [].filter.call(p.querySelectorAll('[data-k=m]'), function (i) { return i.value === ''; }).length; if (empty) { toast('Give a mark for every question first (' + empty + ' empty).', true); return; }
-          saveAll().then(function () { return S.db.rpc('release_attempt', { attempt: aid }); }).then(function (res) { if (res.error) throw res.error; S.db.functions.invoke('result-feedback', { body: { attempt: aid } }).then(function () {}, function () {}); toast('Released: the student can now see ' + res.data + ' / ' + a.max_score); location.hash = 'marking'; })
+          saveAll().then(function () { return S.db.rpc('release_attempt', { attempt: aid }); }).then(function (res) { if (res.error) throw res.error; S.db.functions.invoke('result-feedback', { body: { attempt: aid } }).then(function () {}, function () {}); toast('Released: the student can now see ' + res.data + ' / ' + a.max_score); var q2 = mQueue().filter(function (id) { return id !== aid; }); mQueue(q2); location.hash = nextId && nextId !== aid ? 'marking/' + nextId : 'marking'; })
             .catch(function (e) { toast(S.nice(e), true); });
         };
       });
@@ -2168,7 +2201,7 @@
     '.cc-tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;font-size:.9rem}.cc-tbl th{background:#f8fafc;color:#475569;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:8px 10px}',
     '.cc-tbl td{padding:9px 10px;border-top:1px solid #f1f5f9;vertical-align:middle}.cc-tbl td.n{text-align:center}.cc-tbl a.nm{font-weight:800;color:#0f1f3d;text-decoration:none;border-left:4px solid var(--k);padding-left:8px}.cc-tbl tr.dim td{color:#94a3b8}',
     '.cc-h3{display:flex;justify-content:space-between;align-items:baseline;margin:18px 0 8px}.cc-h3 h3{margin:0;color:#0f1f3d}',
-    '.cc-tbl td,.cc-tbl th{overflow-wrap:anywhere}.cc-mob{display:none}',
+    '.cc-tbl td{overflow-wrap:break-word}.cc-tbl th{white-space:nowrap}.mk-st{white-space:nowrap}.cc-mob{display:none}',
     '@media (max-width:1180px) and (min-width:901px){.cc{grid-template-columns:58px minmax(0,1fr)}.cc-side .lbl,.cc-side h6,.cc-side a i,.cc-foot,.cc-tog{display:none}.cc-side a{justify-content:center}.cc-tbl .hm2{display:none}}',
     '@media (max-width:900px){.cc,.cc.min{grid-template-columns:minmax(0,1fr)}.cc-side{position:static;max-height:none;padding:8px}.cc-tog{display:none}.cc-mob{display:block;width:100%;background:transparent;border:0;color:#fff;font:inherit;font-weight:800;text-align:left;padding:4px 6px;cursor:pointer}',
     '.cc-side:not(.open) h6,.cc-side:not(.open) a,.cc-side:not(.open) .cc-foot{display:none}.cc.min .cc-side .lbl,.cc.min .cc-side h6,.cc.min .cc-foot{display:revert}.cc.min .cc-side a{justify-content:flex-start}.cc-side.open a{display:flex}',
