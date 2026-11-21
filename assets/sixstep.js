@@ -12,7 +12,8 @@
      - MYP lessons: global context, key concept, statement of inquiry and inquiry questions when the lesson provides them.
    Optional lesson data comes from <script type="application/json" id="sx-data"> (written by lessongen/gen.py). */
 (function () {
-  if (typeof window.SPEC !== 'object' || [1, 2, 3, 4, 5, 6].some(function (n) { return !document.getElementById('step' + n); })) return;   // only pages with all six stages
+  if ([1, 2, 3, 4, 5, 6].some(function (n) { return !document.getElementById('step' + n); })) return;   // only pages with all six stages (hand-built lessons too, 21 Nov 2026)
+  var SPEC = (typeof window.SPEC === 'object' && window.SPEC) || {};
   var STAGES = [
     ['Question', 'Spark curiosity', 'Predict, and say what you already know and want to find out.', '❓'],
     ['Explore', 'Discover and investigate', 'Look for patterns and relationships in the models, images and videos.', '🔍'],
@@ -147,6 +148,20 @@
     card.innerHTML = '<h3>🚀 Extension</h3>' + box('ext' + x[0], 'Extension (stage ' + x[0] + ')', E(x[1]), 3);
     if (save) sec.insertBefore(card, save.closest('.card') || save);
   });
+
+  /* ---------- hand-built lessons: real images (Explore) and a worked example (Explain) from the lesson data (21 Nov 2026) ---------- */
+  if (DATA.figs && DATA.figs.length) {
+    var fg = document.createElement('div'); fg.className = 'card sx-figs';
+    fg.innerHTML = '<h3>Look closely</h3><p class="small muted">Study each image. What does it show about the big idea?</p>' + DATA.figs.map(function (f) {
+      return '<figure class="wide"><img alt="' + E(f[1]) + '" src="https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(f[0]) + '?width=900" loading="lazy" style="max-height:420px;object-fit:contain" onerror="this.closest(\'figure\').remove()">' +
+        '<figcaption>' + E(f[1]) + '</figcaption><div class="credit">Image: ' + E(f[2] || '') + ', via <a href="https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(f[0]) + '" target="_blank" rel="noopener">Wikimedia Commons</a></div></figure>'; }).join('');
+    var t2b = $('.card.task', steps[1]) || $('.savecard', steps[1]); if (t2b) steps[1].insertBefore(fg, t2b.closest('.card') || t2b); else steps[1].appendChild(fg);
+  }
+  if (DATA.worked && DATA.worked.length) {
+    var wk = document.createElement('div'); wk.className = 'card sx-worked';
+    wk.innerHTML = DATA.worked.map(function (w) { return '<details class="worked" open><summary>✏️ Worked example: ' + E(w[0]) + '</summary><ol>' + w[1].map(function (x) { return '<li>' + E(x) + '</li>'; }).join('') + '</ol></details>'; }).join('');
+    var t4b = $('.card.task', steps[3]) || $('.savecard', steps[3]); if (t4b) steps[3].insertBefore(wk, t4b.closest('.card') || t4b); else steps[3].appendChild(wk);
+  }
 
   /* ---------- 4 EXPLAIN: misconception check ---------- */
   if (DATA.misc && DATA.misc.length) {
