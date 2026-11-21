@@ -424,7 +424,7 @@
      Every priority comes from the student's own records and says why it is suggested; ✓ done / ✕ not today hides it for today. */
   var CONT_HREF = null;
   var SLNAV = [['Learn', [['dash', '🏠', 'My dashboard', '/dashboard/'], ['learn', '📚', 'Learning centre', '/learn/'], ['assess', '📝', 'Assessments & practice', '/quizzes/'], ['intel', '🧠', 'My Science Intelligence', '/mastery/'], ['lab', '🔬', 'Virtual science lab', '/simulations/'], ['tutor', '🤖', 'AI science tutor', '/tutor/']]],
-    ['Grow', [['journey', '🚀', 'My learning journey', '#lx'], ['research', '🧪', 'Research & projects', '/research/'], ['pp', '🧭', 'Personal Project', '/personal-project/'], ['innov', '💡', 'Innovation Studio', '/innovation/'], ['show', '🌟', 'Science Showcase', '/showcase/'], ['data', '📊', 'BioData Lab', '/biodata/']]],
+    ['Grow', [['journey', '🚀', 'My learning journey', '/journey/'], ['goals', '🎯', 'My goals and profile', '#lx'], ['research', '🧪', 'Research & projects', '/research/'], ['pp', '🧭', 'Personal Project', '/personal-project/'], ['innov', '💡', 'Innovation Studio', '/innovation/'], ['show', '🌟', 'Science Showcase', '/showcase/'], ['data', '📊', 'BioData Lab', '/biodata/']]],
     ['Connect', [['classes', '🏫', 'My classes', '#mycl'], ['msg', '💬', 'Messages', '/messages/'], ['live', '🎥', 'Live lessons', '/live/'], ['check', '⚡', 'Live Check', '/check/']]],
     ['Me', [['results', '📋', 'My lab results', '/lab-results/'], ['profile', '👤', 'My profile', '#anbox']]]];
   function priDone(me) { var d = new Date().toISOString().slice(0, 10); try { var o = JSON.parse(localStorage.getItem('bv-pri-' + me.user.id) || '{}'); return o.d === d ? o : { d: d, h: [] }; } catch (e) { return { d: d, h: [] }; } }
