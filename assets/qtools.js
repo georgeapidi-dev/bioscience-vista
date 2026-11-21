@@ -320,9 +320,9 @@
 (function () {
   var T = window.BVT; if (!T) return;
   var RX = {
-    graph: /\b(plot|sketch|draw|construct|present)\b[^.?!]{0,70}\b(graph|line of best fit|best[- ]fit line|bar chart|histogram|curve)\b|\bgraph (the|your|these|this) (data|results)\b/i,
+    graph: /\b(plot|sketch|draw|construct|present)\b[^.?!]{0,70}\b(graph|line of best fit|best[- ]fit line|bar chart|histogram|curve|box[- ]and[- ]whisker|scatter ?(graph|diagram|plot)|pie chart|waveforms?|distribution)\b|\bgraph (the|your|these|this) (data|results)\b|\bsketch how\b[^.?!]{0,90}\bchang/i,
     table: /\b(construct|draw|design|make|create|prepare|copy and complete)\b[^.?!]{0,60}\btable\b|\b(record|present|organi[sz]e|put)\b[^.?!]{0,70}\bin a (suitable |results |data |neat )?table\b|\b(results|data) table\b/i,
-    draw: /\b(draw|sketch)\b(?![^.?!]{0,70}\b(graph|table|conclusion|line of best fit|chart|curve|histogram)\b)[^.?!]{0,90}\b(diagram|labell?ed|label|cell|circuit|apparatus|structure|particles?|arrangement|ray|wave|molecule|atom|food (chain|web)|flower|picture|model|set-?up|punnett|cross)\b|\blabell?ed diagram\b|\bdraw and label\b/i
+    draw: /\b(draw|sketch)\b(?![^.?!]{0,70}\b(graph|table|conclusion|line of best fit|chart|curve|histogram)\b)[^.?!]{0,90}\b(diagram|formulae?|repeat unit|monomers?|polymer|isomers?|enantiomers?|zwitterions?|curly arrows?|mechanism|energy profile|cladogram|nucleotides?|dna|dipeptide|peptide|pyramid|net|circle|triangle|shape|symbol|logo|product|section|moon|waveform|labell?ed|label|cell|circuit|apparatus|structure|particles?|arrangement|ray|wave|molecule|atom|food (chain|web)|flower|picture|model|set-?up|punnett|cross)\b|\blabell?ed diagram\b|\bdraw and label\b/i
   };
   T.needs = function (text) { var t = String(text || ''), out = []; ['graph', 'table', 'draw'].forEach(function (k) { if (RX[k].test(t)) out.push(k); }); return out; };
   T.detect = function (text) {   // only a drawing is asked for: nothing to explain, describe, state or calculate in words
