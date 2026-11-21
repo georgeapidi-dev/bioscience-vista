@@ -143,6 +143,7 @@
     clearInterval(LIVE);
     var h = location.hash.slice(1).split('/'), tab = h[0] || 'overview';
     if (ADMIN_TABS.indexOf(tab) >= 0 && (!ME.admin || TEACH)) tab = 'overview';
+    if (TEACH) { teachShell(tab); AUTO_NEW = h[3] === 'new'; } else {
     var head = '<div class="row2 cband" style="--k:' + (TEACH ? '#059669' : '#2563eb') + '"><div><p class="label">' + (TEACH ? 'My classes' + (ME.profile.school_name ? ' · ' + E(ME.profile.school_name) : '') : 'Main site · courses and their classes') + '</p><h2>' + (TEACH && ME.admin && AS ? 'Classroom of ' + E(TNAME[AS] || 'this teacher') : E(ME.profile.full_name || ME.user.email)) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><div class="cta">' + '<a class="btn sm" href="/board/">🖊 Whiteboard</a><a class="btn sm" href="/live/">🎥 Live Classroom</a><a class="btn sm" href="/research/#/teacher">🔬 Research Hub</a>' + (TEACH ? '<a class="btn sm" href="/messages/">Messages</a>' + (ME.admin ? '' : '<a class="btn sm" href="/premium/">Premium</a>') : ME.admin ? '<a class="btn main sm" href="/admin/">Admin: join requests, members, payments</a>' : '') + '<button class="btn sm" type="button" id="so">Log out</button></div></div>' +
       (TEACH && ME.admin ? '<div class="panel tint row2" id="asbar" style="align-items:center">' + (AS ? '<span>👁 <b>Admin view.</b> You are in <b>' + E(TNAME[AS] || 'this teacher') + '</b>\'s classroom: their dashboard, classes and students. Changes you make here are saved to their classes.</span>'
         : '<span>👁 <b>Admin:</b> open another teacher\'s classroom to see and edit their classes, their dashboard and their students.</span>') +
@@ -158,6 +159,7 @@
     })();
     var pk = app.querySelector('#aspick'); if (pk) pk.onchange = function () { AS = pk.value || null; try { if (AS) sessionStorage.setItem('bv-as-teacher', AS); else sessionStorage.removeItem('bv-as-teacher'); } catch (e) {}
       TC.cur = null; if (history.replaceState) history.replaceState(null, '', location.pathname + '#overview'); refs().then(route); };
+    }
     app.classList.add('teach-ui');
     app.querySelectorAll('nav.tabs a').forEach(function (a) { var k = TABHUE[a.getAttribute('href').slice(1)]; if (k) a.style.setProperty('--k', k); });
     var pane = app.querySelector('#pane');
@@ -722,6 +724,7 @@
       body.innerHTML = html; wireFilters(body, state);
       if (BV.findBox && list.length > 3) BV.findBox(body, 'details.panel[data-k]', 'div[style*="border-left:5px"]', 'Find work you set…');
       body.querySelector('#anew').onclick = function () { assignForm(body.querySelector('#aform'), c, kids, [], function () { state.reload(); }); };
+      if (AUTO_NEW) { AUTO_NEW = false; body.querySelector('#anew').click(); var fm = body.querySelector('#aform'); if (fm) setTimeout(function () { fm.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50); }
       body.querySelectorAll('[data-adel]').forEach(function (b) { b.onclick = function () {
         if (!confirm('Remove this work from every student\'s to-do list?')) return;
         var a = list.filter(function (x) { return x.id === b.getAttribute('data-adel'); })[0] || {}, rr = /^research:(ia|ee):(.+)$/.exec(a.ref || ''), iv = /^innovation:(.+)$/.exec(a.ref || '');
@@ -2076,36 +2079,185 @@
     });
   }
   /* ================= My classes (/teach/): the teacher's own classes ================= */
-  function teachOverview(p) {
-    var ids = CLASSES.map(function (c) { return c.id; });
-    Promise.all([
-      ids.length ? S.db.from('enrolments').select('class_id,status').in('class_id', ids) : Promise.resolve({ data: [] }),
-      S.db.from('quiz_attempts').select('id,student_id,status,released, quizzes(show_results)').neq('status', 'in_progress').eq('released', false),
-      S.db.from('student_results').select('title,score,max_score,recorded_at,student_id').order('recorded_at', { ascending: false }).limit(200)
+  /* ================= Teacher Command Centre (21 Nov 2026) =================
+     /teach/ only. A navy sidebar groups every teacher tool (sections A–J of the brief, existing pages only); the home page answers
+     "what needs my attention today?" from real records, with a Priority Desk and one-click actions. The admin's /staff/ page is unchanged. */
+  var AUTO_NEW = false, CC_COUNTS = null, CC_AT = 0;
+  var NAVG = [
+    ['Overview', [['overview', '🏠', 'Home', '#overview']]],
+    ['My classrooms', [['classes', '🏫', 'All classes', '#classes'], ['students', '👥', 'Students & results', '#students'], ['approvals', '🙋', 'Join requests', '#approvals', 'join']]],
+    ['Teaching & planning', [['lessons', '🧪', 'Lesson builder', '#lessons'], ['x-learn', '📚', 'Lesson library', '/learn/'], ['x-sims', '🔬', 'Virtual labs', '/simulations/']]],
+    ['Assessment centre', [['quizzes', '📝', 'Quizzes & exams', '#quizzes'], ['marking', '✅', 'Marking', '#marking', 'mark'], ['grading', '📏', 'Grade boundaries', '#grading']]],
+    ['Student learning', [['work', '📘', 'Lesson work', '#work'], ['questions', '❓', 'Student questions', '#questions', 'ask'], ['x-mastery', '🔥', 'Mastery & support', '/mastery/']]],
+    ['Laboratory', [['labs', '🧫', 'Lab work', '#labs', 'lab']]],
+    ['Research & projects', [['x-rh', '🔬', 'Research Hub', '/research/#/teacher'], ['x-pp', '🧭', 'Personal Project', '/personal-project/'], ['x-in', '💡', 'Innovation Studio', '/innovation/'], ['x-sc', '🌟', 'Science Showcase', '/showcase/']]],
+    ['Communication', [['x-msg', '💬', 'Messages', '/messages/']]],
+    ['Live teaching', [['x-live', '🎥', 'Live classroom', '/live/'], ['x-board', '🖊', 'Whiteboard', '/board/'], ['x-check', '⚡', 'Live Check', '/check/']]],
+    ['Site', [['bin', '🗑', 'Bin', '#bin']]]
+  ];
+  var TITLES = { overview: 'Home', classes: 'My classrooms', students: 'Students & results', approvals: 'Join requests', lessons: 'Lesson builder', quizzes: 'Quizzes & exams', marking: 'Marking centre', grading: 'Grade boundaries', work: 'Lesson work', questions: 'Student questions', labs: 'Lab work', bin: 'Bin' };
+  (function () { if (document.getElementById('cc-css')) return; var st = document.createElement('style'); st.id = 'cc-css'; st.textContent = [
+    '.cc{display:grid;grid-template-columns:232px minmax(0,1fr);gap:20px;align-items:start}.cc.min{grid-template-columns:60px minmax(0,1fr)}',
+    '.cc-side{position:sticky;top:76px;max-height:calc(100vh - 90px);overflow:auto;background:#0f1f3d;color:#cbd5e1;border-radius:18px;padding:12px 10px;scrollbar-width:thin}',
+    '.cc-side h6{margin:12px 8px 4px;font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:#7dd3c8;font-weight:800}.cc-side h6:first-of-type{margin-top:2px}',
+    '.cc-side a{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:10px;color:#e2e8f0;text-decoration:none;font-size:.9rem;font-weight:600;line-height:1.2}',
+    '.cc-side a:hover{background:rgba(255,255,255,.08)}.cc-side a.on{background:#0d9488;color:#fff}.cc-side a i{font-style:normal;margin-left:auto;background:#f59e0b;color:#1f2937;border-radius:999px;padding:0 7px;font-size:.72rem;font-weight:800}',
+    '.cc-side .ico{width:20px;text-align:center;flex:0 0 20px}.cc.min .cc-side .lbl,.cc.min .cc-side h6,.cc.min .cc-side a i,.cc.min .cc-foot{display:none}.cc.min .cc-side a{justify-content:center}',
+    '.cc-tog{width:100%;background:transparent;border:1px solid rgba(255,255,255,.18);color:#cbd5e1;border-radius:10px;padding:5px;cursor:pointer;font:inherit;margin:0 0 6px}',
+    '.cc-foot{border-top:1px solid rgba(255,255,255,.12);margin-top:10px;padding-top:10px;font-size:.8rem}.cc-foot select{width:100%;margin-top:4px;padding:5px;border-radius:8px;border:0;font:inherit;font-size:.82rem}',
+    '.cc-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:0 0 14px}.cc-top h1{margin:0;font-size:1.6rem;color:#0f1f3d}.cc-top .sub{color:#64748b;font-size:.88rem}',
+    '.cc-as{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:#fff7ed;border:1px solid #fdba74;border-left:6px solid #ea580c;border-radius:12px;padding:9px 12px;margin:0 0 12px}',
+    '.cc-as.mine{background:#f8fafc;border-color:#e2e8f0;border-left-color:#0d9488}.cc-as select{padding:6px 8px;border-radius:8px;border:1px solid #cbd5e1;font:inherit}',
+    '.cc-qa{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}.cc-qa a,.cc-qa button{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#0f1f3d;font:inherit;font-weight:700;font-size:.88rem;text-decoration:none;cursor:pointer}',
+    '.cc-qa a:hover,.cc-qa button:hover{border-color:#0d9488;color:#0d9488}.cc-qa .pri{background:#0d9488;border-color:#0d9488;color:#fff}.cc-qa .pri:hover{color:#fff;background:#0f766e}',
+    '.cc-menu{position:relative;display:inline-block}.cc-menu>div{position:absolute;z-index:30;top:calc(100% + 4px);left:0;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 12px 30px rgba(15,31,61,.18);padding:6px}',
+    '.cc-menu>div a,.cc-menu>div button{display:block;width:100%;text-align:left;padding:7px 10px;border-radius:8px;border:0;background:none;color:#0f1f3d;font:inherit;font-size:.9rem;text-decoration:none;cursor:pointer}.cc-menu>div a:hover,.cc-menu>div button:hover{background:#f0fdfa}',
+    '.cc-hello{background:linear-gradient(120deg,#0f1f3d,#134e4a);color:#fff;border-radius:18px;padding:18px 20px;margin:0 0 14px}.cc-hello h2{margin:0 0 4px;color:#fff;font-size:1.45rem}.cc-hello p{margin:0;color:#ccfbf1}',
+    '.cc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:0 0 16px}.cc-stats a{display:block;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;text-decoration:none;color:#475569;font-size:.8rem;font-weight:600}',
+    '.cc-stats a b{display:block;font-size:1.45rem;color:#0f1f3d;line-height:1.15}.cc-stats a:hover{border-color:#0d9488}.cc-stats a.warn b{color:#c2410c}',
+    '.cc-desk{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:0 0 18px}.cc-col{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px;border-top:4px solid var(--c)}',
+    '.cc-col h4{margin:0 0 8px;font-size:.92rem;color:#0f1f3d;display:flex;justify-content:space-between}.cc-col h4 span{color:#64748b;font-weight:600}',
+    '.cc-it{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid #f1f5f9;font-size:.88rem}.cc-it:first-of-type{border-top:0}.cc-it a{color:#0f1f3d;font-weight:700;text-decoration:none}.cc-it a:hover{color:#0d9488;text-decoration:underline}',
+    '.cc-it small{display:block;color:#64748b;font-weight:500}.cc-it .ok{margin-left:auto;flex:0 0 auto;border:1px solid #cbd5e1;background:#fff;border-radius:8px;cursor:pointer;font-size:.8rem;padding:1px 7px;color:#64748b}.cc-it .ok:hover{border-color:#16a34a;color:#16a34a}',
+    '.cc-none{color:#94a3b8;font-size:.86rem;padding:4px 0}',
+    '.cc-tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;font-size:.9rem}.cc-tbl th{background:#f8fafc;color:#475569;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:8px 10px}',
+    '.cc-tbl td{padding:9px 10px;border-top:1px solid #f1f5f9;vertical-align:middle}.cc-tbl td.n{text-align:center}.cc-tbl a.nm{font-weight:800;color:#0f1f3d;text-decoration:none;border-left:4px solid var(--k);padding-left:8px}.cc-tbl tr.dim td{color:#94a3b8}',
+    '.cc-h3{display:flex;justify-content:space-between;align-items:baseline;margin:18px 0 8px}.cc-h3 h3{margin:0;color:#0f1f3d}',
+    '@media (max-width:900px){.cc,.cc.min{grid-template-columns:1fr}.cc-side{position:static;max-height:none;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:4px;padding:8px}.cc-side h6,.cc-foot,.cc-tog{display:none}.cc-side a{flex:0 0 auto}.cc-tbl .hm{display:none}}'
+  ].join('\n'); document.head.appendChild(st); })();
+
+  function ccMin() { try { return localStorage.getItem('bv-cc-min') === '1'; } catch (e) { return false; } }
+  function teachShell(tab) {
+    var lx = document.getElementById('lx'); if (lx && app.contains(lx)) { app.parentNode.insertBefore(lx, app.nextSibling); } if (lx) lx.style.display = 'none';   // Class insights live on the home page only
+    var cur = tab, ext = ME.admin ? [['x-admin', '🛠', 'Admin', '/admin/'], ['x-staff', '🌐', 'Main-site courses', '/staff/']] : [];
+    var nav = NAVG.concat(ext.length ? [['Administration', ext]] : []).map(function (g) {
+      return '<h6>' + E(g[0]) + '</h6>' + g[1].map(function (it) { return '<a href="' + it[3] + '"' + (it[0] === cur ? ' class="on" aria-current="page"' : '') + ' title="' + E(it[2]) + '"><span class="ico">' + it[1] + '</span><span class="lbl">' + E(it[2]) + '</span>' + (it[4] ? '<i data-cnt="' + it[4] + '" hidden></i>' : '') + '</a>'; }).join('');
+    }).join('');
+    var first = (ME.profile.full_name || '').split(' ')[0] || 'teacher';
+    var asBar = ME.admin ? '<div class="cc-as' + (AS ? '' : ' mine') + '" id="asbar">' + (AS ? '<span>👁 <b>Admin view:</b> you are in <b>' + E(TNAME[AS] || 'another teacher') + '</b>\'s classroom. Changes you make are made in their classes.</span>' : '<span>👁 You are in <b>your own</b> classroom.</span>') +
+      '<label style="display:flex;gap:6px;align-items:center;margin:0">Open the classroom of<select id="aspick"><option value="">Me (my own classes)</option>' + TEACHERS.map(function (t) { return '<option value="' + t.id + '"' + (t.id === AS ? ' selected' : '') + '>' + E(TNAME[t.id] || 'Teacher') + ' (' + t.n + ')</option>'; }).join('') + '</select></label></div>' : '';
+    app.innerHTML = '<div class="cc' + (ccMin() ? ' min' : '') + '"><aside class="cc-side" aria-label="Teacher sections"><button type="button" class="cc-tog" id="cctog" title="Collapse or expand the menu">' + (ccMin() ? '»' : '« Collapse') + '</button>' + nav +
+      '<div class="cc-foot"><label>🎒 Student preview<select id="vas"><option value="">Choose a class…</option>' + CLASSES.map(function (c) { return '<option value="' + c.id + '">' + E(c.name) + '</option>'; }).join('') + '</select></label>' +
+      '<p style="margin:8px 0 0"><a href="#" id="so" style="padding:4px 0;color:#94a3b8">Log out</a></p></div></aside>' +
+      '<div class="cc-main">' + asBar + '<div class="cc-top"><div><span class="sub">' + E(ME.profile.school_name || 'My classroom') + ' · ' + E(first) + '</span><h1>' + E(TITLES[tab] || 'Home') + '</h1></div></div><div id="pane"><p class="muted">Loading…</p></div></div></div>';
+    app.querySelector('#so').onclick = function (e) { e.preventDefault(); S.signOut(); };
+    app.querySelector('#cctog').onclick = function () { var m = !ccMin(); try { localStorage.setItem('bv-cc-min', m ? '1' : '0'); } catch (e) {} app.querySelector('.cc').classList.toggle('min', m); this.textContent = m ? '»' : '« Collapse'; };
+    app.querySelector('#vas').onchange = function () { if (this.value) location.href = '/dashboard/?preview=' + encodeURIComponent(this.value) + '&from=teach'; };
+    var pk = app.querySelector('#aspick'); if (pk) pk.onchange = function () { AS = pk.value || null; try { if (AS) sessionStorage.setItem('bv-as-teacher', AS); else sessionStorage.removeItem('bv-as-teacher'); } catch (e) {}
+      TC.cur = null; CC_COUNTS = null; if (history.replaceState) history.replaceState(null, '', location.pathname + '#overview'); refs().then(route); };
+    ccCounts().then(function (n) { [].forEach.call(app.querySelectorAll('[data-cnt]'), function (i) { var v = n[i.getAttribute('data-cnt')] || 0; i.hidden = !v; i.textContent = v; }); });
+  }
+
+  /* real counts shared by the menu badges and the home page (kept for a minute) */
+  function ccCounts(force) {
+    if (CC_COUNTS && !force && Date.now() - CC_AT < 60000) return Promise.resolve(CC_COUNTS);
+    var ids = CLASSES.map(function (c) { return c.id; }), q = function (p) { return p.then(function (r) { return r; }, function () { return { data: null }; }); };
+    return Promise.all([
+      ids.length ? q(S.db.from('enrolments').select('class_id,student_id,status').in('class_id', ids)) : { data: [] },
+      q(S.db.from('quiz_attempts').select('id,student_id,status,released,submitted_at,quiz_id, quizzes(title,show_results)').neq('status', 'in_progress').eq('released', false).limit(1000)),
+      q(S.db.rpc('help_inbox', { only_open: true })),
+      q(S.db.from('sim_attempts').select('id,student_id,sim_title,submitted_at,teacher_comment').not('submitted_at', 'is', null).is('teacher_comment', null).limit(500))
     ]).then(function (x) {
-      var en = x[0].data || [], per = {}; en.forEach(function (e) { per[e.class_id] = per[e.class_id] || { ok: 0, wait: 0 }; if (e.status === 'approved') per[e.class_id].ok++; else if (e.status === 'pending') per[e.class_id].wait++; });
-      var nWait = en.filter(function (e) { return e.status === 'pending'; }).length;
-      var toMark = (x[1].data || []).filter(function (a) { return mine(a.student_id) && (a.status === 'needs_marking' || (a.quizzes && !a.quizzes.show_results)); }).length;
-      var res = (x[2].data || []).filter(function (r) { return mine(r.student_id); }).slice(0, 12);
-      var nm = {}; return (res.length ? S.db.from('profiles').select('id,full_name').in('id', res.map(function (r) { return r.student_id; })) : Promise.resolve({ data: [] })).then(function (pr) {
-        (pr.data || []).forEach(function (q) { nm[q.id] = q.full_name; });
-        p.innerHTML = '<div class="stats"><div class="stat"><span class="small muted">Classes</span><b>' + CLASSES.length + '</b></div><div class="stat"><span class="small muted">Students</span><b>' + Object.keys(MINE).length + '</b></div>' +
-          '<div class="stat"><span class="small muted">Asking to join</span><b><a href="#approvals">' + nWait + '</a></b></div><div class="stat"><span class="small muted">Answers to mark</span><b><a href="#marking">' + toMark + '</a></b></div></div>' +
-          (!CLASSES.length ? '<p class="panel tint">Start by <a href="#classes">creating a class</a>: choose the course you teach and its BioscienceVista lessons and quizzes are added for you.</p>' : '') +
-          (nWait ? '<p class="panel tint"><b>' + nWait + ' student' + (nWait > 1 ? 's are' : ' is') + ' asking to join your classes.</b> <a class="btn main sm" href="#approvals">Review requests</a></p>' : '') +
-          (CLASSES.length ? '<h3>🏫 My classes</h3><div class="ccards">' + CLASSES.map(function (c) { var k = per[c.id] || { ok: 0, wait: 0 };
-            return '<div class="ccard2" style="--k:' + hue(c.id) + '"><a href="#classes/' + c.id + '"><b>' + E(c.name) + '</b></a><span class="small">👥 ' + k.ok + ' student' + (k.ok === 1 ? '' : 's') + (k.wait ? ' · 🙋 ' + k.wait + ' waiting' : '') + '</span><span class="cc-main"><a href="#classes/' + c.id + '">Open class →</a><a href="#classes/' + c.id + '/status">🟢 Live work status</a><a href="#classes/' + c.id + '/todo">📌 Set work</a><a href="#classes/' + c.id + '/add">➕ Add lessons</a></span>' +
-              '<span class="cc-ops"><button type="button" class="btn sm" data-trc="' + c.id + '">🔀 Transfer students</button><button type="button" class="btn sm" data-delc="' + c.id + '" data-n="' + k.ok + '" style="color:#b91c1c">🗑 Delete class</button></span>' + '<details class="cc-more"><summary>More</summary><span><a href="#classes/' + c.id + '/lessons">🧪 Lessons</a><a href="#classes/' + c.id + '/quizzes">📝 Quizzes</a><a href="#classes/' + c.id + '/register">🗒 Register</a><a href="#classes/' + c.id + '/activity">👀 Activity</a><a href="' + '/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a><a href="/live/?class=' + c.id + '">🎥 Live</a></span></details></div>'; }).join('') + '</div>' : '') +
-                    '<section class="panel"><h3>Latest results</h3>' + (res.length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Task</th><th>Score</th></tr>' + res.map(function (r) { return '<tr><td>' + E(nm[r.student_id] || '–') + '</td>' + taskCell(r.title) + '<td>' + E(r.score) + '/' + E(r.max_score) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="small muted">No results yet.</p>') + '</section>' + (ME.admin ? '' : '<section class="panel" id="rvbox"></section>');
-        var cc = p.querySelector('.ccards'); if (cc && !p.querySelector('#ccact')) { var ho = document.createElement('div'); ho.id = 'ccact'; ho.style.scrollMarginTop = '180px'; cc.after(ho); }
-        p.querySelectorAll('[data-trc]').forEach(function (b) { b.onclick = function () { var c = CLASSES.filter(function (x) { return x.id === b.getAttribute('data-trc'); })[0], ho = p.querySelector('#ccact'); if (!c || !ho) return;
-          ho.innerHTML = '<section class="panel" style="border-top:5px solid #4f46e5"><div class="row2"><h3 style="margin:0">🔀 Transfer students from ' + E(c.name) + '</h3><button type="button" class="btn sm" id="trx">Close</button></div><div id="trh"></div></section>';
-          ho.querySelector('#trx').onclick = function () { ho.innerHTML = ''; };
-          transferBox(ho.querySelector('#trh'), c, p, function () { (TEACH ? teachOverview : overview)(p); }); ho.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
-        p.querySelectorAll('[data-delc]').forEach(function (b) { b.onclick = function () { var c = CLASSES.filter(function (x) { return x.id === b.getAttribute('data-delc'); })[0]; if (c) deleteClass(c, +b.getAttribute('data-n') || 0, function () { refs().then(function () { (TEACH ? teachOverview : overview)(p); }); }); }; });
-        if (!ME.admin) reviewBox(p.querySelector('#rvbox'));
-      });
+      var en = x[0].data || [], ok = en.filter(function (e) { return e.status === 'approved'; });
+      var inMine = function (sid) { return ok.some(function (e) { return e.student_id === sid; }) || mine(sid); };
+      var att = (x[1].data || []).filter(function (a) { return inMine(a.student_id) && (a.status === 'needs_marking' || (a.quizzes && !a.quizzes.show_results)); });
+      var ask = (x[2].data || []).filter(function (h) { return inMine(h.student_id); }), lab = (x[3].data || []).filter(function (a) { return inMine(a.student_id); });
+      CC_COUNTS = { en: en, att: att, askL: ask, labL: lab, mark: att.length, join: en.filter(function (e) { return e.status === 'pending'; }).length, ask: ask.length, lab: lab.length }; CC_AT = Date.now();
+      return CC_COUNTS;
     });
+  }
+  function ccDone() { try { return JSON.parse(localStorage.getItem('bv-pd-' + ME.user.id) || '{}'); } catch (e) { return {}; } }
+  function ccSetDone(k, sig) { var d = ccDone(); d[k] = sig; try { localStorage.setItem('bv-pd-' + ME.user.id, JSON.stringify(d)); } catch (e) {} }
+  function ago(d) { var s = (Date.now() - new Date(d).getTime()) / 864e5; return s < 1 ? 'today' : Math.round(s) + ' day' + (Math.round(s) === 1 ? '' : 's') + ' ago'; }
+  function inDays(d) { var s = (new Date(d).getTime() - Date.now()) / 864e5; return s < 1 ? (new Date(d).toDateString() === new Date().toDateString() ? 'today' : 'tomorrow') : 'in ' + Math.ceil(s) + ' days'; }
+
+  function teachOverview(p) {
+    var lx0 = document.getElementById('lx'); if (lx0 && p.contains(lx0)) { app.parentNode.insertBefore(lx0, app.nextSibling); lx0.style.display = 'none'; }
+    var ids = CLASSES.map(function (c) { return c.id; }), q = function (pr) { return pr.then(function (r) { return r; }, function () { return { data: null }; }); };
+    var now = Date.now(), wk = new Date(now - 7 * 864e5).toISOString();
+    ccCounts(true).then(function (N) {
+      var stud = {}; N.en.forEach(function (e) { if (e.status === 'approved') (stud[e.class_id] = stud[e.class_id] || []).push(e.student_id); });
+      var all = []; Object.keys(stud).forEach(function (k) { stud[k].forEach(function (s) { if (all.indexOf(s) < 0) all.push(s); }); });
+      return Promise.all([
+        ids.length ? q(S.db.from('assignments').select('id,class_id,title,kind,ref,due_at,created_at,everyone').in('class_id', ids).order('due_at', { ascending: true }).limit(400)) : { data: [] },
+        Promise.all(ids.map(function (c) { return q(S.db.rpc('class_todo', { cls: c })); })),
+        all.length ? q(S.db.from('learning_progress').select('student_id,status,updated_at').in('student_id', all).gte('updated_at', wk).limit(5000)) : { data: [] },
+        all.length ? q(S.db.from('student_results').select('student_id,title,score,max_score,recorded_at').in('student_id', all).order('recorded_at', { ascending: false }).limit(3000)) : { data: [] },
+        ids.length ? q(S.db.from('research_projects').select('id,class_id,student_id,kind,status,title,updated_at').in('class_id', ids).in('status', ['proposal_submitted', 'final_submitted'])) : { data: [] },
+        q(S.db.from('pp_projects').select('id,status,title,updated_at').eq('supervisor_id', OWNER()).in('status', ['proposal_submitted', 'final_submitted'])),
+        ids.length ? q(S.db.from('showcase_posts').select('id,class_id,title,updated_at').in('class_id', ids).eq('status', 'submitted')) : { data: [] },
+        all.length ? q(S.db.from('profiles').select('id,full_name').in('id', all)) : { data: [] }
+      ]).then(function (x) {
+        var A = x[0].data || [], TD = {}; (x[1] || []).forEach(function (r, i) { TD[ids[i]] = (r && r.data) || []; });
+        var LP = x[2].data || [], RS = x[3].data || [], RP = x[4].data || [], PP = x[5].data || [], SC = x[6].data || [], NM = {}; (x[7].data || []).forEach(function (r) { NM[r.id] = r.full_name; });
+        var cname = {}; CLASSES.forEach(function (c) { cname[c.id] = c.name; });
+        // per assignment: how many of the students it is for have finished
+        var st = {}; ids.forEach(function (c) { (TD[c] || []).forEach(function (r) { var o = st[r.assignment_id] = st[r.assignment_id] || { done: 0, all: 0 }; o.all++; if (r.state === 'done') o.done++; }); });
+        var overdue = A.filter(function (a) { var o = st[a.id]; return a.due_at && new Date(a.due_at) < now && new Date(a.due_at) > now - 21 * 864e5 && o && o.done < o.all; });
+        var upcoming = A.filter(function (a) { return a.due_at && new Date(a.due_at) >= now && new Date(a.due_at) < now + 7 * 864e5; });
+        // students who may need support: below 50 % across 10 or more recorded marks (the same rule as Class insights)
+        var per = {}; RS.forEach(function (r) { if (!(r.max_score > 0) || r.score == null) return; var o = per[r.student_id] = per[r.student_id] || { g: 0, m: 0 }; o.g += +r.score; o.m += +r.max_score; });
+        var support = Object.keys(per).filter(function (s) { return per[s].m >= 10 && per[s].g / per[s].m < 0.5; });
+        var doneWeek = LP.filter(function (l) { return l.status === 'completed'; }).length, active = {}; LP.forEach(function (l) { active[l.student_id] = 1; });
+        var D = ccDone(), items = { u: [], n: [], t: [], f: [] };
+        var add = function (col, key, sig, html) { if (D[key] === sig) return; items[col].push('<div class="cc-it"><div>' + html + '</div><button type="button" class="ok" data-done="' + E(key) + '" data-sig="' + E(sig) + '" title="Mark as done">✓</button></div>'); };
+        if (N.mark) add('u', 'mark', String(N.mark), '<a href="#marking">' + N.mark + ' answer' + (N.mark === 1 ? '' : 's') + ' to mark</a><small>Written answers and results waiting to be released</small>');
+        if (N.join) add('u', 'join', String(N.join), '<a href="#approvals">' + N.join + ' student' + (N.join === 1 ? '' : 's') + ' asking to join</a><small>Approve them so they see your work</small>');
+        overdue.slice(0, 6).forEach(function (a) { var o = st[a.id]; add('u', 'od-' + a.id, String(o.done), '<a href="#classes/' + a.class_id + '/todo">' + E(a.title) + '</a><small>' + E(cname[a.class_id] || '') + ' · due ' + ago(a.due_at) + ' · ' + (o.all - o.done) + ' of ' + o.all + ' not done</small>'); });
+        RP.forEach(function (r) { add('u', 'rp-' + r.id + r.status, r.updated_at, '<a href="/research/#/teacher">' + (r.status === 'final_submitted' ? 'Final ' : 'Proposal ') + (r.kind === 'ee' ? 'EE' : 'IA') + ' to review: ' + E(NM[r.student_id] || 'student') + '</a><small>' + E(cname[r.class_id] || '') + ' · ' + E(r.title || '') + '</small>'); });
+        PP.forEach(function (r) { add('u', 'pp-' + r.id + r.status, r.updated_at, '<a href="/personal-project/">Personal Project ' + (r.status === 'final_submitted' ? 'report' : 'proposal') + ' to review</a><small>' + E(r.title || '') + '</small>'); });
+        SC.forEach(function (r) { add('u', 'sc-' + r.id, r.updated_at, '<a href="/showcase/#/post/' + r.id + '">Showcase post to approve</a><small>' + E(cname[r.class_id] || '') + ' · ' + E(r.title) + '</small>'); });
+        upcoming.slice(0, 8).forEach(function (a) { var o = st[a.id] || { done: 0, all: 0 }; add('n', 'up-' + a.id, String(o.done), '<a href="#classes/' + a.class_id + '/todo">' + E(a.title) + '</a><small>' + E(cname[a.class_id] || '') + ' · due ' + inDays(a.due_at) + ' · ' + o.done + ' of ' + o.all + ' done</small>'); });
+        CLASSES.forEach(function (c) { var n = (stud[c.id] || []).length; if (!n) return; var has = A.some(function (a) { return a.class_id === c.id && (!a.due_at || new Date(a.due_at) >= now) && new Date(a.created_at) > now - 14 * 864e5; });
+          if (!has) add('t', 'tw-' + c.id, new Date().toISOString().slice(0, 10), '<a href="#classes/' + c.id + '/todo/new">Assign work to ' + E(c.name) + '</a><small>' + n + ' students · nothing new set in the last 2 weeks</small>'); });
+        if (N.ask) add('f', 'ask', String(N.ask), '<a href="#questions">' + N.ask + ' student question' + (N.ask === 1 ? '' : 's') + ' to answer</a><small>' + E((N.askL[0] || {}).question || '').slice(0, 70) + '</small>');
+        if (N.lab) add('f', 'lab', String(N.lab), '<a href="#labs">' + N.lab + ' lab record' + (N.lab === 1 ? '' : 's') + ' handed in without a comment</a><small>' + E((N.labL[0] || {}).sim_title || '') + '</small>');
+        if (support.length) add('f', 'sup', support.slice().sort().join(','), '<a href="/mastery/">' + support.length + ' student' + (support.length === 1 ? '' : 's') + ' may need support</a><small>Below 50 % across 10+ marks: ' + support.slice(0, 4).map(function (s) { return E(NM[s] || 'student'); }).join(', ') + (support.length > 4 ? '…' : '') + '</small>');
+        var nUrg = items.u.length, hr = new Date().getHours(), first = (ME.profile.full_name || '').split(' ')[0] || '';
+        var bits = []; if (N.mark) bits.push(N.mark + ' answer' + (N.mark === 1 ? '' : 's') + ' awaiting marking'); if (overdue.length) bits.push(overdue.length + ' overdue task' + (overdue.length === 1 ? '' : 's') + ' with work missing'); if (N.ask) bits.push(N.ask + ' open student question' + (N.ask === 1 ? '' : 's')); if (support.length) bits.push(support.length + ' student' + (support.length === 1 ? '' : 's') + ' who may need support');
+        var msg = bits.length ? 'You have ' + (bits.length > 1 ? bits.slice(0, -1).join(', ') + ' and ' + bits[bits.length - 1] : bits[0]) + '.' : 'Nothing urgent today. Your classes are up to date.';
+        var cOpts = function (suf) { return CLASSES.map(function (c) { return '<a href="#classes/' + c.id + suf + '">' + E(c.name) + '</a>'; }).join('') || '<span class="cc-none" style="padding:7px 10px;display:block">No classes yet</span>'; };
+        var col = function (k, t, c, empty) { return '<div class="cc-col" style="--c:' + c + '"><h4>' + t + ' <span>' + items[k].length + '</span></h4>' + (items[k].join('') || '<p class="cc-none">' + empty + '</p>') + '</div>'; };
+        var nextDue = function (cid) { var a = A.filter(function (z) { return z.class_id === cid && z.due_at && new Date(z.due_at) >= now; })[0]; return a ? '<span title="' + E(a.title) + '">' + E(shortTask(a.title).name) + ' · ' + inDays(a.due_at) + '</span>' : '<span style="color:#94a3b8">–</span>'; };
+        var rows = CLASSES.slice().sort(function (a, b) { return ((stud[b.id] || []).length > 0) - ((stud[a.id] || []).length > 0) || a.name.localeCompare(b.name); });
+        p.innerHTML = '<section class="cc-hello"><p style="font-size:.82rem;opacity:.85">' + new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '</p><h2>' + (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + (first ? ', ' + E(first) : '') + '</h2><p>' + E(msg) + '</p></section>' +
+          '<div class="cc-qa" aria-label="Quick actions"><span class="cc-menu"><button type="button" class="pri" data-mnu>📌 Assign work ▾</button><div hidden>' + cOpts('/todo/new') + '</div></span>' +
+          '<a href="#marking">✅ Mark submissions' + (N.mark ? ' (' + N.mark + ')' : '') + '</a><a href="#lessons">🧪 Create lesson</a><a href="#quizzes">📝 Create assessment</a>' +
+          '<span class="cc-menu"><button type="button" data-mnu>🏫 Open classroom ▾</button><div hidden>' + cOpts('') + '</div></span><span class="cc-menu"><button type="button" data-mnu>📣 Announcement ▾</button><div hidden>' + cOpts('/news') + '</div></span>' +
+          '<a href="/live/">🎥 Live classroom</a><a href="/board/">🖊 Whiteboard</a></div>' +
+          '<div class="cc-stats"><a href="#classes"><b>' + CLASSES.filter(function (c) { return (stud[c.id] || []).length; }).length + '</b>Active classes</a><a href="#students"><b>' + all.length + '</b>Students</a>' +
+          '<a href="#marking"' + (N.mark ? ' class="warn"' : '') + '><b>' + N.mark + '</b>To mark</a><a href="#questions"' + (N.ask ? ' class="warn"' : '') + '><b>' + N.ask + '</b>Student questions</a>' +
+          '<a href="#cc-desk"><b>' + upcoming.length + '</b>Due in 7 days</a><a href="#work"><b>' + doneWeek + '</b>Lessons completed (7 days)</a><a href="/mastery/"' + (support.length ? ' class="warn"' : '') + '><b>' + support.length + '</b>May need support</a></div>' +
+          '<div class="cc-h3" id="cc-desk"><h3>Your Priority Desk</h3><span class="small muted">' + (nUrg ? nUrg + ' urgent' : 'Nothing urgent') + ' · tick ✓ to clear an item; it comes back if something changes</span></div>' +
+          '<div class="cc-desk">' + col('u', '🔴 Urgent', '#dc2626', 'Nothing urgent.') + col('n', '📅 Upcoming', '#d97706', 'No deadlines in the next 7 days.') + col('t', '🧪 Teaching', '#0d9488', 'Every class has work set.') + col('f', '💬 Follow-up', '#4f46e5', 'No follow-ups.') + '</div>' +
+          '<div class="cc-h3"><h3>My classes</h3><a class="small" href="#classes">Manage classes →</a></div>' +
+          (rows.length ? '<div><table class="cc-tbl"><tr><th>Class</th><th class="n">Students</th><th class="n hm">Active (7 days)</th><th class="n">To mark</th><th class="hm">Next deadline</th><th></th></tr>' + rows.map(function (c) {
+            var ss = stud[c.id] || [], act = ss.filter(function (s) { return active[s]; }).length, mk = N.att.filter(function (a) { return ss.indexOf(a.student_id) >= 0; }).length, wait = N.en.filter(function (e) { return e.class_id === c.id && e.status === 'pending'; }).length;
+            return '<tr' + (ss.length ? '' : ' class="dim"') + '><td><a class="nm" style="--k:' + hue(c.id) + '" href="#classes/' + c.id + '">' + E(c.name) + '</a>' + (wait ? ' <a class="small" href="#approvals">🙋 ' + wait + ' waiting</a>' : '') + '</td><td class="n">' + ss.length + '</td><td class="n hm">' + (ss.length ? act : '–') + '</td><td class="n">' + (mk ? '<a href="#marking"><b>' + mk + '</b></a>' : '0') + '</td><td class="hm">' + nextDue(c.id) + '</td>' +
+              '<td style="white-space:nowrap;text-align:right"><a class="btn sm" href="#classes/' + c.id + '/todo/new">📌 Assign</a> <span class="cc-menu"><button type="button" class="btn sm" data-mnu aria-label="More actions for ' + E(c.name) + '">⋯</button><div hidden style="left:auto;right:0">' +
+              '<a href="#classes/' + c.id + '">Open classroom</a><a href="#classes/' + c.id + '/status">🟢 Live work status</a><a href="#classes/' + c.id + '/add">➕ Add lessons</a><a href="#classes/' + c.id + '/analysis">📊 Analytics</a><a href="#classes/' + c.id + '/news">📣 Announcement</a><a href="#classes/' + c.id + '/register">🗒 Register</a><a href="/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a>' +
+              '<button type="button" data-trc="' + c.id + '">🔀 Transfer students</button><button type="button" data-delc="' + c.id + '" data-n="' + ss.length + '" style="color:#b91c1c">🗑 Delete class</button></div></span></td></tr>'; }).join('') + '</table></div><div id="ccact" style="scroll-margin-top:180px"></div>' :
+            '<p class="panel tint">Start by <a href="#classes">creating a class</a>: choose the course you teach and its BioscienceVista lessons and quizzes are added for you.</p>') +
+          '<div id="cc-ins"></div>' +
+          '<div class="cc-h3"><h3>Latest results</h3><a class="small" href="#students">All results →</a></div>' + (RS.length ? '<div class="tablewrap"><table class="cc-tbl marks"><tr><th>Student</th><th>Task</th><th>Score</th><th class="hm">When</th></tr>' + RS.slice(0, 8).map(function (r) { return '<tr><td>' + E(NM[r.student_id] || '–') + '</td>' + taskCell(r.title) + '<td>' + E(r.score) + '/' + E(r.max_score) + '</td><td class="hm small muted">' + ago(r.recorded_at) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="small muted">No results yet.</p>') +
+          (ME.admin ? '' : '<section class="panel" id="rvbox" style="margin-top:18px"></section>');
+        // menus: one open at a time, close on outside click
+        p.querySelectorAll('[data-mnu]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var m = b.nextElementSibling, open = m.hidden; p.querySelectorAll('.cc-menu>div').forEach(function (d) { d.hidden = true; }); m.hidden = !open; }; });
+        if (!document.__ccClose) { document.__ccClose = true; document.addEventListener('click', function () { document.querySelectorAll('.cc-menu>div').forEach(function (d) { d.hidden = true; }); }); }
+        p.querySelectorAll('[data-done]').forEach(function (b) { b.onclick = function () { ccSetDone(b.getAttribute('data-done'), b.getAttribute('data-sig')); var it = b.closest('.cc-it'), h = it.parentNode.querySelector('h4 span'); it.remove(); if (h) h.textContent = Math.max(0, +h.textContent - 1); }; });
+        p.querySelectorAll('[data-trc]').forEach(function (b) { b.onclick = function () { var c = CLASSES.filter(function (x) { return x.id === b.getAttribute('data-trc'); })[0], ho = p.querySelector('#ccact'); if (!c || !ho) return;
+          ho.innerHTML = '<section class="panel" style="border-top:5px solid #0d9488;margin-top:12px"><div class="row2"><h3 style="margin:0">🔀 Transfer students from ' + E(c.name) + '</h3><button type="button" class="btn sm" id="trx">Close</button></div><div id="trh"></div></section>';
+          ho.querySelector('#trx').onclick = function () { ho.innerHTML = ''; };
+          transferBox(ho.querySelector('#trh'), c, p, function () { teachOverview(p); }); ho.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
+        p.querySelectorAll('[data-delc]').forEach(function (b) { b.onclick = function () { var c = CLASSES.filter(function (x) { return x.id === b.getAttribute('data-delc'); })[0]; if (c) deleteClass(c, +b.getAttribute('data-n') || 0, function () { refs().then(function () { route(); }); }); }; });
+        var lx = document.getElementById('lx'), slot = p.querySelector('#cc-ins'); if (lx && slot) { slot.parentNode.replaceChild(lx, slot); lx.style.display = ''; }
+        if (!ME.admin) reviewBox(p.querySelector('#rvbox'));
+        // the connected loop: new submissions and questions appear without a reload
+        clearInterval(LIVE); LIVE = setInterval(function () { if (location.hash && location.hash !== '#overview' && location.hash !== '#') return clearInterval(LIVE);
+          var before = (CC_COUNTS || {}).mark + '/' + (CC_COUNTS || {}).ask + '/' + (CC_COUNTS || {}).join + '/' + (CC_COUNTS || {}).lab;
+          ccCounts(true).then(function (n) { if (n.mark + '/' + n.ask + '/' + n.join + '/' + n.lab !== before && document.contains(p)) { toast('New student work has arrived'); teachOverview(p); } }); }, 60000);
+      });
+    }).catch(function (e) { p.innerHTML = '<p class="emptybox">Could not load your overview: ' + E(S.nice(e)) + '</p>'; });
   }
   function reviewBox(sec) {
     S.db.from('reviews').select('rating,body,status').eq('user_id', ME.user.id).maybeSingle().then(function (r) {
