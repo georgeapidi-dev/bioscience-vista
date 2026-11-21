@@ -54,7 +54,7 @@
       '<div class="jn-kinds"><div>🆕 <b>8 characters</b>: your personal website code. The first time, it opens your place on BioscienceVista; after that it signs you in with your PIN.</div>' +
       '<div>🏫 <b>6 characters</b>: your class sign-in code. Tap your name and type your PIN.</div>' +
       '<div>🎟 <b>7 characters</b>: a joining code from your teacher for one class. Sign in first, then type it.</div></div>' +
-      '<p class="jn-note">Learning on your own, without a teacher? <a href="/register/?as=learner">Create an independent learner account</a>. Teachers and parents: <a href="/login/">log in here</a>.</p>');
+      '<p class="jn-note">👪 <b>Parent or carer?</b> <a href="/family/">See your child\'s progress with their website code</a>. Teachers with a teacher code type it above. Learning on your own? <a href="/register/?as=learner">Independent learner account</a>.</p>');
     var f = app.querySelector('#jc'), inp = app.querySelector('#jcode'); inp.focus();
     f.onsubmit = function (e) { e.preventDefault(); var c = clean(inp.value), b = f.querySelector('button');
       if (c.length < 6 || c.length > 8) return msg('Type the whole code: 6, 7 or 8 letters and numbers.');
@@ -97,15 +97,15 @@
       busy(b, true, 'Signing in…');
       NEXT = how === 'signin' ? { how: 'signin', code: CODE, sid: s.id, name: s.name, pin: true } : { how: 'signin_code', code: CODE, name: s.name, pin: true };
       call(how === 'signin' ? { action: 'signin', code: CODE, sid: s.id, pin: pin } : { action: 'signin_code', code: CODE, pin: pin }).then(function (d) {
-        if (d.error || !d.token_hash) { busy(b, false, 'Sign in ▶'); inp.value = ''; inp.focus(); return msg(d.error || 'Could not sign in.'); }
+        if (d.error || !d.token_hash) { busy(b, false, 'Sign in ▶'); inp.value = ''; inp.focus(); if (/expired/i.test(d.error || '')) remember(null); return msg(d.error || 'Could not sign in.'); }
         msg('✓ Signed in…', true);
-        return signInWith(d.token_hash).catch(function () { busy(b, false, 'Sign in ▶'); msg('Could not finish signing in. Try again.'); });
+        return signInWith(d.token_hash, d.role === 'teacher' ? '/teach/' : null).catch(function () { busy(b, false, 'Sign in ▶'); msg('Could not finish signing in. Try again.'); });
       }); };
   }
   // unused website code: make your place on the site
   function newStep() {
     var named = !!(R.name && R.name.trim()), parts = String(R.name || '').trim().split(/\s+/), pre1 = named ? parts[0] : '', pre2 = named ? parts.slice(1).join(' ') : '';
-    shell(2, '<button class="jn-back" type="button" id="jb">← Change the code</button><h2>✨ ' + (R.linked ? 'Welcome back' : 'Welcome to BioscienceVista') + '</h2>' + (R.linked ? '<p class="lead">This code opens your own place on BioscienceVista: your classes, work and results are all still there. Check your names and create your 4-digit PIN. From now on you sign in with this code and your PIN, not your email.</p>' : '') + '<p class="lead"' + (R.linked ? ' hidden' : '') + '>This is your personal website code. Use it once now: give your two official names and create a 4-digit PIN. Keep the code: next time, your code and your PIN sign you in.</p>' +
+    shell(2, '<button class="jn-back" type="button" id="jb">← Change the code</button><h2>✨ ' + (R.linked ? 'Welcome back' : 'Welcome to BioscienceVista') + '</h2>' + (R.linked ? '<p class="lead">' + (R.role === 'teacher' ? 'This is your teacher code. It opens your own classes and everything in them. Create your 4-digit PIN: from now on you sign in with this code and your PIN.' : 'This code opens your own place on BioscienceVista: your classes, work and results are all still there. Check your names and create your 4-digit PIN. From now on you sign in with this code and your PIN, not your email.') + '</p>' : '') + '<p class="lead"' + (R.linked ? ' hidden' : '') + '>This is your personal website code. Use it once now: give your two official names and create a 4-digit PIN. Keep the code: next time, your code and your PIN sign you in.</p>' +
       '<form id="jw"><label for="jn1">First name (official, as on your school record)</label><input type="text" id="jn1" autocomplete="given-name" maxlength="40" value="' + E(pre1) + '"' + (named ? ' readonly' : '') + '>' +
       '<label for="jn2">Family name (official)</label><input type="text" id="jn2" autocomplete="family-name" maxlength="40" value="' + E(pre2) + '"' + (named ? ' readonly' : '') + '>' +
       (named ? '<p class="jn-note">Not your name? Do not continue: give the code back to your teacher.</p>' : '') +
@@ -126,7 +126,7 @@
       call({ action: 'new', code: CODE, first: g, last: fm, name: n, pin: p1 }).then(function (d) {
         if (d.error || !d.token_hash) { busy(b, false, 'Start ▶'); return msg(d.error || 'Could not use that code.'); }
         msg('🎉 Welcome, ' + n.split(' ')[0] + '!', true);
-        return signInWith(d.token_hash, d.linked ? '/dashboard/' : '/join/').catch(function () { busy(b, false, 'Start ▶'); msg('Your place is made, but signing in did not finish. Go back and sign in with your code and PIN.'); });
+        return signInWith(d.token_hash, d.role === 'teacher' ? '/teach/' : d.linked ? '/dashboard/' : '/join/').catch(function () { busy(b, false, 'Start ▶'); msg('Your place is made, but signing in did not finish. Go back and sign in with your code and PIN.'); });
       }); };
   }
 

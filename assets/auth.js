@@ -112,7 +112,7 @@
   var ROLE = {
     student: ['Independent learner', 'Use the email and password you chose when you signed up. In a teacher\'s class? <a href="/join/">Sign in with your code and PIN</a> instead.', '<a href="/register/?as=learner">New independent learner? Create an account</a>'],
     parent: ['Parent or carer', 'Use the email and password you chose for your parent account.', '<a href="/register/?as=parent">New parent? Create a parent account</a>'],
-    teacher: ['Teacher', 'Use the email and password of your teacher account.', '<a href="/register/?as=teacher">New teacher? Create a teacher account</a>']
+    teacher: ['Teacher', 'Use the email and password of your teacher account. Have a teacher code from BioscienceVista? <a href="/join/">Sign in with your code and PIN</a>.', '<a href="/register/?as=teacher">New teacher? Create a teacher account</a>']
   };
   // step 1: ask who is logging in, so the right account type and page are used
   function chooser() {
@@ -120,7 +120,8 @@
     app.innerHTML = '<div class="form narrow" id="rolepick"><h2>Who is logging in?</h2><p class="muted small">Choose one so we open the right page for you.</p>' +
       '<a class="btn main" href="/join/" style="display:block;width:100%;margin:10px 0;text-align:left;background:linear-gradient(120deg,#f97316,#db2777);border-color:transparent">🎒 I am a student in a teacher\'s class <span style="display:block;font-weight:600;font-size:.85rem">Sign in or join with your code and PIN: no email or password</span></a>' +
       '<button class="btn main" type="button" data-role="student" style="display:block;width:100%;margin:10px 0;text-align:left">🚀 I am an independent learner (email and password)</button>' +
-      '<button class="btn main" type="button" data-role="parent" style="display:block;width:100%;margin:10px 0;text-align:left">👪 I am a parent or carer</button>' +
+      '<a class="btn main" href="/family/" style="display:block;width:100%;margin:10px 0;text-align:left">👪 I am a parent or carer <span style="display:block;font-weight:600;font-size:.85rem">See your child\'s progress with their website code</span></a>' +
+      '<button class="btn main" type="button" data-role="parent" style="display:block;width:100%;margin:10px 0;text-align:left">👪 Parent account (email and password)</button>' +
       '<button class="btn main" type="button" data-role="teacher" style="display:block;width:100%;margin:10px 0;text-align:left">🧑‍🏫 I am a teacher</button>' +
       '<p class="small" style="margin-top:12px"><a href="#" id="fp0">🔑 Forgot your password?</a></p></div>';
     app.querySelectorAll('[data-role]').forEach(function (b) { b.addEventListener('click', function () { loginForm('', b.getAttribute('data-role')); }); });
