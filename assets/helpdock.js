@@ -66,8 +66,9 @@
   box.addEventListener('click', function (e) { if (e.target.closest('.x') || e.target === box) close(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && box.classList.contains('on')) close(); });
   window.BVHelp = { open: open, close: close };
-  function unread() {
-    var t = token(); if (!t || !window.fetch) return;
+  function fresh() { try { var ref = new URL(URL_).hostname.split('.')[0], t = JSON.parse(localStorage.getItem('sb-' + ref + '-auth-token') || 'null'); return t && t.access_token && (!t.expires_at || t.expires_at * 1000 > Date.now() + 15000) ? t.access_token : null; } catch (e) { return null; } }
+  function unread(again) {   // only with a token that has not expired; the page renews an old one within seconds, so try once more
+    var t = fresh(); if (!window.fetch) return; if (!t) { if (!again && token()) setTimeout(function () { unread(true); }, 5000); return; }
     fetch(URL_ + '/rest/v1/rpc/unread_messages', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: '{}' })
       .then(function (r) { return r.ok ? r.json() : 0; }).then(function (n) { var b = mb.querySelector('.n'), f = fab.querySelector('.n'); n = +n || 0; b.textContent = f.textContent = n > 99 ? '99+' : n; b.hidden = f.hidden = !n; }).catch(function () {});
   }
