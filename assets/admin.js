@@ -43,12 +43,12 @@
     S.db.from('code_settings').select('kind,days').then(function (r) { (r.data || []).forEach(function (x) { if (x.kind === 'join') box.querySelector('#jdays').value = String(x.days); }); });
     box.querySelector('#jdays').onchange = function () { var d = +this.value; S.db.rpc('set_code_days', { k: 'join', d: d }).then(function (r) { var m = box.querySelector('#scsm'); m.className = r.error ? 'msg' : 'msg ok'; m.textContent = r.error ? S.nice(r.error) : 'Teachers\' new joining codes now last ' + DUR.filter(function (x) { return x[0] === d; })[0][1] + '.'; }); };
     function load() {
-      Promise.all([S.db.rpc('admin_people_codes'), S.db.from('classes').select('id,name,teacher_id,self_study,archived_at,deleted_at').order('name'),
+      Promise.all([S.db.rpc('admin_people_codes'), S.db.from('classes').select('id,name,teacher_id,owner_kind,self_study,archived_at,deleted_at').order('name'),
         S.db.from('enrolments').select('student_id,class_id').eq('status', 'approved')]).then(function (x) {
         var l = box.querySelector('#scl'), bad = x.filter(function (y) { return y.error; })[0];
         if (bad) { l.innerHTML = '<p class="msg">' + E(S.nice(bad.error)) + '</p>'; return; }
         ROWS = x[0].data || []; BY = {}; ROWS.forEach(function (r) { if (r.person && !BY[r.person]) BY[r.person] = r; });
-        CLS = (x[1].data || []).filter(function (c) { return !c.self_study && !c.archived_at && !c.deleted_at; });
+        CLS = (x[1].data || []).filter(function (c) { return c.owner_kind !== 'main' && !c.self_study && !c.archived_at && !c.deleted_at; });   // courses are not classes
         ENR = {}; (x[2].data || []).forEach(function (e) { (ENR[e.class_id] = ENR[e.class_id] || []).push(e.student_id); });
         var tids = {}; ROWS.forEach(function (r) { if (r.role === 'teacher' && r.person) tids[r.person] = 1; }); CLS.forEach(function (c) { if (c.teacher_id) tids[c.teacher_id] = 1; });
         var miss = Object.keys(tids).filter(function (id) { return !BY[id]; });
@@ -277,7 +277,7 @@
   /* Members grouped the way a school is: teacher → their classes → the students in each class. Click a teacher, then a class, then a student's Dashboard. */
   function byTeacher(box) {
     box.innerHTML = '<p class="muted">Loading teachers, classes and students…</p>';
-    Promise.all([S.db.from('classes').select('id,name,programme,teacher_id,owner_kind,archived_at').order('name'), S.db.from('enrolments').select('id,student_id,class_id,status'), S.db.from('profiles').select('id,full_name,class_id')]).then(function (x) {
+    Promise.all([S.db.from('classes').select('id,name,programme,teacher_id,owner_kind,self_study,archived_at,deleted_at').order('name'), S.db.from('enrolments').select('id,student_id,class_id,status'), S.db.from('profiles').select('id,full_name,class_id')]).then(function (x) {
       if (x[0].error) return fail(box, x[0]);
       var who = {}; (x[2].data || []).forEach(function (p) { who[p.id] = { name: p.full_name || '(no name)', email: '' }; });
       (MEM || []).forEach(function (m) { who[m.id] = { name: m.full_name || (who[m.id] || {}).name || '(no name)', email: m.email || '', type: m.account_type }; });
@@ -285,7 +285,8 @@
       (x[1].data || []).forEach(function (e) { if (e.status === 'approved') add(e.class_id, e.student_id, e.id); });
       (x[2].data || []).forEach(function (p) { if (p.class_id) add(p.class_id, p.id); });
       var by = {}, order = [];
-      (x[0].data || []).filter(function (c) { return !c.archived_at; }).forEach(function (c) { var k = c.teacher_id || '_'; if (!by[k]) { by[k] = []; order.push(k); } by[k].push(c); });
+      var COURSES = (x[0].data || []).filter(function (c) { return c.owner_kind === 'main' && !c.archived_at && !c.deleted_at; });   // courses (site content) are not classes: listed on their own below
+      (x[0].data || []).filter(function (c) { return !c.archived_at && !c.deleted_at && c.owner_kind !== 'main'; }).forEach(function (c) { var k = c.teacher_id || '_'; if (!by[k]) { by[k] = []; order.push(k); } by[k].push(c); });
       var kids = function (c, tid) { return Object.keys(inClass[c.id] || {}).filter(function (s) { return s !== tid; }).sort(function (a, b) { return ((who[a] || {}).name || '').localeCompare((who[b] || {}).name || ''); }); };
       var total = function (tid) { var u = {}; by[tid].forEach(function (c) { kids(c, tid).forEach(function (s) { u[s] = 1; }); }); return Object.keys(u).length; };
       order.sort(function (a, b) { return (a === window.BVS_ME ? -1 : b === window.BVS_ME ? 1 : 0) || total(b) - total(a) || ((who[a] || {}).name || '').localeCompare((who[b] || {}).name || ''); });
@@ -295,12 +296,15 @@
       var cls = function (c, tid) { var ss = kids(c, tid), link = c.owner_kind === 'main' ? '/staff/#classes/' + c.id : '/teach/?as=' + tid + '#classes/' + c.id;
         return '<details class="panel" style="margin:8px 0"><summary style="cursor:pointer"><b>▸ 🏫 ' + E(c.name) + '</b> <span class="small muted">' + E(c.programme || '') + ' · ' + ss.length + ' student' + (ss.length === 1 ? '' : 's') + '</span></summary><p style="margin:8px 0"><a class="btn sm" href="' + link + '">Open the class page</a></p>' + (ss.length ? ss.map(function (z) { return row(z, c); }).join('') : '<p class="emptybox">No students in this class yet.</p>') + '</details>'; };
       var html = order.map(function (tid) { var w = who[tid] || { name: 'Teacher', email: '' }, mine = tid === window.BVS_ME, cs = by[tid], full = cs.filter(function (c) { return kids(c, tid).length; }), empty = cs.filter(function (c) { return !kids(c, tid).length; });
-        return '<details class="panel tint" style="margin:10px 0"' + (order.length === 1 ? ' open' : '') + '><summary style="cursor:pointer"><b style="font-size:1.05rem">▸ 🧑‍🏫 ' + E(w.name) + '</b>' + (mine ? ' <span class="pill" style="display:inline-block;width:auto">you · main site</span>' : '') + ' <span class="small muted">' + E(w.email) + ' · ' + cs.length + ' class' + (cs.length === 1 ? '' : 'es') + ' · ' + total(tid) + ' student' + (total(tid) === 1 ? '' : 's') + '</span></summary>' +
-          '<div class="row2" style="margin:8px 0"><span>' + (mine ? '' : prem(memOf(tid))) + '</span><span class="cta"><a class="btn sm" href="' + (mine ? '/staff/#classes' : '/teach/?as=' + tid + '#overview') + '">👁 Open ' + (mine ? 'my classes' : 'this teacher\'s classroom') + '</a>' + (mine || tid === '_' ? '' : accessBtns(memOf(tid)) + '<button class="btn sm" data-del="' + tid + '">Delete teacher account</button>') + '</span></div>' +
+        return '<details class="panel tint" style="margin:10px 0"' + (order.length === 1 ? ' open' : '') + '><summary style="cursor:pointer"><b style="font-size:1.05rem">▸ 🧑‍🏫 ' + E(w.name) + '</b>' + (mine ? ' <span class="pill" style="display:inline-block;width:auto">you</span>' : '') + ' <span class="small muted">' + E(w.email) + ' · ' + cs.length + ' class' + (cs.length === 1 ? '' : 'es') + ' · ' + total(tid) + ' student' + (total(tid) === 1 ? '' : 's') + '</span></summary>' +
+          '<div class="row2" style="margin:8px 0"><span>' + (mine ? '' : prem(memOf(tid))) + '</span><span class="cta"><a class="btn sm" href="' + (mine ? '/teach/#classes' : '/teach/?as=' + tid + '#overview') + '">👁 Open ' + (mine ? 'my classes' : 'this teacher\'s classroom') + '</a>' + (mine || tid === '_' ? '' : accessBtns(memOf(tid)) + '<button class="btn sm" data-del="' + tid + '">Delete teacher account</button>') + '</span></div>' +
           (full.length ? full.map(function (c) { return cls(c, tid); }).join('') : '<p class="emptybox">No class of this teacher has students yet.</p>') +
           (empty.length ? '<details style="margin:8px 0"><summary class="small" style="cursor:pointer;font-weight:700">Classes with no students yet (' + empty.length + ')</summary>' + empty.map(function (c) { return cls(c, tid); }).join('') + '</details>' : '') + '</details>'; }).join('');
       var loose = (MEM || []).filter(function (m) { return m.account_type === 'student' && !placed[m.id]; });
       box.innerHTML = '<p class="small muted">Click a teacher to see their classes, then a class to see its students. Each person\'s row has everything: premium status, free access, extra premium months, remove from class and delete account.</p>' + (html || '<p class="emptybox">No classes yet.</p>') +
+        (COURSES.length ? '<details class="panel" style="margin:10px 0"><summary style="cursor:pointer"><b>📚 Courses</b> <span class="small muted">' + COURSES.filter(function (c) { return !c.self_study; }).length + ' courses · the site\'s lessons and question sets that teachers choose for their classes; not classes, so not counted above</span></summary>' +
+          COURSES.filter(function (c) { return !c.self_study; }).map(function (c) { var n = kids(c, '').length + COURSES.filter(function (o) { return o.self_study && o.name.indexOf(c.name + ' ·') === 0; }).reduce(function (t, o) { return t + kids(o, '').length; }, 0);
+            return '<div class="row2" style="padding:5px 0;border-bottom:1px solid var(--line)"><span><b>' + E(c.name) + '</b> <span class="small muted">' + n + ' independent learner' + (n === 1 ? '' : 's') + '</span></span><a class="btn sm" href="/staff/#classes/' + c.id + '">Open course</a></div>'; }).join('') + '</details>' : '') +
         (loose.length ? '<details class="panel" style="margin:10px 0"><summary><b>Students not in a class yet</b> <span class="small muted">' + loose.length + '</span></summary>' + loose.map(function (m) { return row(m.id); }).join('') + '</details>' : '');
       var again = function () { byTeacher(box); };
       wireAccess(box, again);
