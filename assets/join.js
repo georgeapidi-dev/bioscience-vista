@@ -28,9 +28,15 @@
       var ctx = r.error.context; return ctx && typeof ctx.json === 'function' ? ctx.json().catch(function () { return { error: 'Something went wrong. Try again.' }; }) : { error: 'Could not reach BioscienceVista. Check your internet connection.' };
     }, function () { return { error: 'Could not reach BioscienceVista. Check your internet connection.' }; });
   }
+  /* Next visits: just the PIN. This device remembers the code (and the name tapped) for KEEP_DAYS after the last sign-in;
+     after that the saved code expires and the student types their code again. "Not you?" forgets it. */
+  var KEEP = 'bv-join-me', KEEP_DAYS = 90, NEXT = null;
+  function saved() { try { var o = JSON.parse(localStorage.getItem(KEEP) || 'null'); if (!o || !o.code) return null; if (Date.now() - (+o.at || 0) > KEEP_DAYS * 864e5) { localStorage.removeItem(KEEP); return { expired: true }; } return o; } catch (e) { return null; } }
+  function remember(o) { try { if (o) { o.at = Date.now(); localStorage.setItem(KEEP, JSON.stringify(o)); } else localStorage.removeItem(KEEP); } catch (e) {} }
   function signInWith(token, then) {
     return S.db.auth.verifyOtp({ token_hash: token, type: 'magiclink' }).then(function (r) {
       if (r.error) throw r.error;
+      if (NEXT) remember(NEXT);
       var pend = null; try { pend = sessionStorage.getItem(PEND); } catch (e) {}
       location.href = then || (pend ? '/join/' : '/dashboard/');
     });
@@ -89,6 +95,7 @@
     f.onsubmit = function (e) { e.preventDefault(); var pin = inp.value.trim(), b = f.querySelector('button');
       if (!/^[0-9]{4,6}$/.test(pin)) return msg('Your PIN is 4 numbers.');
       busy(b, true, 'Signing in…');
+      NEXT = how === 'signin' ? { how: 'signin', code: CODE, sid: s.id, name: s.name, pin: true } : { how: 'signin_code', code: CODE, name: s.name, pin: true };
       call(how === 'signin' ? { action: 'signin', code: CODE, sid: s.id, pin: pin } : { action: 'signin_code', code: CODE, pin: pin }).then(function (d) {
         if (d.error || !d.token_hash) { busy(b, false, 'Sign in ▶'); inp.value = ''; inp.focus(); return msg(d.error || 'Could not sign in.'); }
         msg('✓ Signed in…', true);
@@ -115,6 +122,7 @@
       if (p1 !== p2) return msg('The two PINs are not the same. Type them again.');
       if (!pinOk(p1)) return msg('Choose a PIN that is harder to guess than ' + p1 + '.');
       busy(b, true, 'Making your place…');
+      NEXT = { how: 'signin_code', code: CODE, name: g, pin: true };
       call({ action: 'new', code: CODE, first: g, last: fm, name: n, pin: p1 }).then(function (d) {
         if (d.error || !d.token_hash) { busy(b, false, 'Start ▶'); return msg(d.error || 'Could not use that code.'); }
         msg('🎉 Welcome, ' + n.split(' ')[0] + '!', true);
@@ -122,6 +130,12 @@
       }); };
   }
 
+  function pinOnly(o) {
+    CODE = o.code;
+    pinStep({ id: o.sid, name: o.name, pin: true }, o.how);
+    var back = app.querySelector('#jb'); if (back) { back.textContent = '← Not you? Use a different code'; back.onclick = function () { remember(null); codeStep(''); }; }
+    var lead = app.querySelector('.jn-who'); if (lead) lead.insertAdjacentHTML('afterend', '<p class="lead" style="margin-top:-4px">Welcome back. Type your PIN.</p>');
+  }
   // ---------- signed in: type a class joining code ----------
   function joinView(me, pre, first) {
     var nm = ((me.profile && me.profile.full_name) || '').split(' ')[0];
@@ -147,6 +161,8 @@
     if (me) { ME = me; var pend = ''; try { pend = sessionStorage.getItem(PEND) || ''; } catch (e) {}
       return joinView(me, pre.length === 7 ? pre : pend, !(me.classes || []).length); }
     if (pre.length === 7) { try { sessionStorage.setItem(PEND, pre); } catch (e) {} return codeStep('', '🎟 You have a class joining code. First sign in: type your website code (8 characters) or your class sign-in code (6 characters).'); }
-    codeStep(pre);
+    var sv = saved();
+    if (sv && sv.code && !pre) return pinOnly(sv);
+    codeStep(pre, sv && sv.expired ? 'Your saved code has expired on this device. Type your code again.' : '');
   }, function () { codeStep(pre); });
 })();

@@ -116,6 +116,7 @@
   };
   // step 1: ask who is logging in, so the right account type and page are used
   function chooser() {
+    try { var sv = JSON.parse(localStorage.getItem('bv-join-me') || 'null'); if (sv && sv.code && Date.now() - (+sv.at || 0) < 90 * 864e5) { location.replace('/join/'); return; } } catch (e) {}   // a student's device: straight to "type your PIN"
     app.innerHTML = '<div class="form narrow" id="rolepick"><h2>Who is logging in?</h2><p class="muted small">Choose one so we open the right page for you.</p>' +
       '<a class="btn main" href="/join/" style="display:block;width:100%;margin:10px 0;text-align:left;background:linear-gradient(120deg,#f97316,#db2777);border-color:transparent">🎒 I am a student in a teacher\'s class <span style="display:block;font-weight:600;font-size:.85rem">Sign in or join with your code and PIN: no email or password</span></a>' +
       '<button class="btn main" type="button" data-role="student" style="display:block;width:100%;margin:10px 0;text-align:left">🚀 I am an independent learner (email and password)</button>' +
