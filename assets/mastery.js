@@ -74,9 +74,9 @@
     });
   }
 
-  /* ---------- teacher: class heatmap ---------- */
+
   function teacher(me) {
-    app.innerHTML = hero('Class mastery', 'Loading your classes…');
+    app.innerHTML = hero('Mastery and student support', 'Who may need support and why, a heatmap of every student by topic, and the actions you take with their effect. Built only from marked work in this class.');
     Promise.all([S.db.from('classes').select('id,name,owner_kind,archived_at').eq('teacher_id', me.user.id).is('deleted_at', null).order('name'), S.db.from('class_teachers').select('class_id').eq('teacher_id', me.user.id)]).then(function (x) {
       var C = x[0].data || [], extra = (x[1].data || []).map(function (r) { return r.class_id; }).filter(function (id) { return !C.some(function (c) { return c.id === id; }); });
       return (extra.length ? S.db.from('classes').select('id,name,owner_kind,archived_at').in('id', extra) : Promise.resolve({ data: [] })).then(function (y) { C = C.concat(y.data || []);
@@ -85,31 +85,96 @@
     }).then(function (C) {
       var first = C.filter(function (c) { return !c.archived_at && c.owner_kind !== 'main'; })[0] || C.filter(function (c) { return !c.archived_at; })[0] || C[0];
       var pick = new URLSearchParams(location.search).get('class') || (first && first.id);
-      app.innerHTML = hero('Class mastery', 'Each cell is a student\'s weighted score in a topic from their marked lessons and assessments (recent work counts more). Use it to plan reteaching and target practice.') +
+      app.innerHTML = hero('Mastery and student support', 'Who may need support and why, a heatmap of every student by topic, and the support actions you take with their effect. Built only from marked work in this class.') +
         '<section class="ms-card"><label>Class <select id="ms-c">' + classOpts(C, pick) + '</select></label> <a class="btn sm" href="#student" id="ms-me">See my own mastery page</a></section><div id="ms-body"></div>';
       document.getElementById('ms-c').onchange = function () { history.replaceState(null, '', '?class=' + this.value); heat(this.value); };
       document.getElementById('ms-me').onclick = function () { setTimeout(function () { location.reload(); }, 50); };
       if (pick) heat(pick); else document.getElementById('ms-body').innerHTML = '<p class="ms-card">You have no classes yet.</p>';
     });
   }
+  /* ---------- teacher: student support centre + class heatmap (Command Centre phase 6, 21 Nov 2026) ----------
+     Four states for teachers: Strong understanding (Secure or Mastered), Developing, Needs support (Beginning), Insufficient evidence
+     (fewer than 5 marks in that topic). The weighted score itself is unchanged. Every recommendation gives its reason; actions are
+     recorded in public.interventions and their effect shown from marks gained after the action. */
+  var TL = { strong: ['Strong understanding', '#BBF7D0', '#166534'], dev: ['Developing', '#FED7AA', '#9A3412'], need: ['Needs support', '#FECACA', '#991B1B'], none: ['Insufficient evidence', '#F1F5F9', '#64748B'] };
+  function tstate(m) { if (!m || m.pct == null || m.marks < 5) return 'none'; return m.lv === 'master' || m.lv === 'secure' ? 'strong' : m.lv === 'dev' ? 'dev' : 'need'; }
+  var ACTIONS = ['Assign additional practice', 'Recommend a lesson', 'Send individual feedback', 'Arrange a support session', 'Monitor progress'];
   function heat(cid) {
     var body = document.getElementById('ms-body'); body.innerHTML = '<p class="ms-muted">Loading…</p>';
-    Promise.all([S.db.from('enrolments').select('student_id').eq('class_id', cid).eq('status', 'approved'), S.db.from('item_results').select('student_id,topic,skill,got,max,at,misconceptions').eq('class_id', cid).gte('at', new Date(Date.now() - 365 * DAY).toISOString()).limit(20000)]).then(function (x) {
-      var ids = (x[0].data || []).map(function (r) { return r.student_id; }), R = x[1].data || [];
-      return (ids.length ? S.db.from('profiles').select('id,full_name').in('id', ids) : Promise.resolve({ data: [] })).then(function (p) {
-        var NM = {}; (p.data || []).forEach(function (r) { NM[r.id] = r.full_name || 'Student'; });
+    var q = function (p) { return p.then(function (r) { return r; }, function () { return { data: null }; }); };
+    Promise.all([q(S.db.from('enrolments').select('student_id').eq('class_id', cid).eq('status', 'approved')),
+      q(S.db.from('item_results').select('student_id,topic,topic_id,skill,got,max,at,misconceptions,title,q_label,objective').eq('class_id', cid).gte('at', new Date(Date.now() - 365 * DAY).toISOString()).limit(20000)),
+      q(S.db.from('interventions').select('*').eq('class_id', cid).order('at', { ascending: false }).limit(200)),
+      q(S.db.rpc('class_todo', { cls: cid })), q(S.db.from('assignments').select('id,title,due_at').eq('class_id', cid))]).then(function (x) {
+      var ids = (x[0].data || []).map(function (r) { return r.student_id; }).filter(function (v, i, a) { return a.indexOf(v) === i; }), R = x[1].data || [], IV = x[2].data || [], TD = x[3].data || [], AS = x[4].data || [];
+      if (!ids.length) { body.innerHTML = '<section class="ms-card"><p>No students in this class yet.</p></section>'; return; }
+      var since14 = new Date(Date.now() - 14 * DAY).toISOString(), since30 = new Date(Date.now() - 30 * DAY).toISOString();
+      return Promise.all([q(S.db.from('profiles').select('id,full_name').in('id', ids)), q(S.db.from('learning_progress').select('student_id,updated_at').in('student_id', ids).gte('updated_at', since14).limit(5000)),
+        q(S.db.from('help_questions').select('student_id,created_at').in('student_id', ids).gte('created_at', since30).limit(2000))]).then(function (y) {
+        var NM = {}; (y[0].data || []).forEach(function (r) { NM[r.id] = r.full_name || 'Student'; });
+        var active = {}; (y[1].data || []).forEach(function (r) { active[r.student_id] = 1; });
+        var asks = {}; (y[2].data || []).forEach(function (r) { asks[r.student_id] = (asks[r.student_id] || 0) + 1; });
+        var due = {}, od = {}; AS.forEach(function (a) { due[a.id] = a; }); TD.forEach(function (t) { var a = due[t.assignment_id]; if (a && a.due_at && new Date(a.due_at) < Date.now() && t.state !== 'done') (od[t.student_id] = od[t.student_id] || []).push(a.title); });
         var topicsAll = aggregate(R, function (r) { return r.topic; }), tk = Object.keys(topicsAll).sort(function (a, b) { return topicsAll[a].pct - topicsAll[b].pct; }).slice(0, 18);
         var per = {}; ids.forEach(function (s) { per[s] = aggregate(R.filter(function (r) { return r.student_id === s; }), function (r) { return r.topic; }); });
-        var skills = aggregate(R, function (r) { return r.skill; }), mis = {}; R.forEach(function (r) { (Array.isArray(r.misconceptions) ? r.misconceptions : []).forEach(function (t) { if (typeof t === 'string') { var k = r.topic + '||' + t; mis[k] = (mis[k] || 0) + 1; } }); });
-        var topMis = Object.keys(mis).sort(function (a, b) { return mis[b] - mis[a]; }).slice(0, 8);
-        if (!R.length) { body.innerHTML = '<section class="ms-card"><p>No marked work in this class yet.</p></section>'; return; }
-        var cell = function (m) { if (!m) return '<td style="background:#F8FAFC;color:#94a3b8">–</td>'; var l = L(m.lv); return '<td style="background:' + l[2] + ';color:' + l[3] + '" title="' + m.n + ' answers">' + m.pct + '</td>'; };
-        body.innerHTML = '<section class="ms-card"><h3>Topics (weakest first)</h3><div style="overflow:auto"><table class="ms-heat"><tr><th>Student</th>' + tk.map(function (t) { return '<th title="' + E(t) + '">' + E(t.length > 28 ? t.slice(0, 26) + '…' : t) + '</th>'; }).join('') + '</tr>' +
-          '<tr><td><b>Class</b></td>' + tk.map(function (t) { return cell(topicsAll[t]); }).join('') + '</tr>' +
-          ids.slice().sort(function (a, b) { return (NM[a] || '').localeCompare(NM[b] || ''); }).map(function (s) { return '<tr><td>' + E(NM[s] || 'Student') + '</td>' + tk.map(function (t) { return cell(per[s][t]); }).join('') + '</tr>'; }).join('') + '</table></div>' +
-          '<p class="ms-muted">' + LV.slice(1).map(function (l) { return '<span class="ms-pill" style="background:' + l[2] + ';color:' + l[3] + '">' + l[1] + '</span>'; }).join(' ') + ' · numbers are percentages; hover for the number of answers.</p></section>' +
-          '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px"><section class="ms-card"><h3>Skills</h3>' + Object.keys(skills).map(function (k) { return skills[k]; }).sort(function (a, b) { return a.pct - b.pct; }).map(function (m) { var l = L(m.lv); return '<div class="ms-row" style="grid-template-columns:1fr 1.4fr"><b>' + E(m.k) + '</b><div><div class="ms-bar"><i style="width:' + m.pct + '%;background:' + l[3] + '"></i></div><span class="ms-muted">' + m.pct + ' % · ' + m.n + ' answers</span></div></div>'; }).join('') + '</section>' +
-          '<section class="ms-card"><h3>Most common mistakes</h3>' + (topMis.length ? '<ol class="ms-mis">' + topMis.map(function (k) { var p = k.split('||'); return '<li><b>' + E(p[0]) + '</b> (' + mis[k] + '×): ' + E(p[1]) + '</li>'; }).join('') + '</ol>' : '<p class="ms-muted">None recorded.</p>') + '</section></div>';
+        var tot = function (s, after) { var g = 0, m = 0; R.forEach(function (r) { if (r.student_id !== s || !(+r.max > 0) || r.got == null) return; if (after && r.at <= after) return; g += Math.min(+r.got, +r.max); m += +r.max; }); return { g: g, m: m, pct: m ? Math.round(100 * g / m) : null }; };
+        var totBefore = function (s, at) { var g = 0, m = 0; R.forEach(function (r) { if (r.student_id !== s || !(+r.max > 0) || r.got == null || r.at > at) return; g += Math.min(+r.got, +r.max); m += +r.max; }); return { g: g, m: m, pct: m ? Math.round(100 * g / m) : null }; };
+        // reasons, in plain words, from real records only
+        var SUP = ids.map(function (s) { var why = [], weakest = null;
+          Object.keys(per[s]).forEach(function (t) { var m = per[s][t]; if (m.marks >= 10 && m.pct < 50 && (!weakest || m.pct < weakest.pct)) weakest = { t: t, pct: m.pct, marks: m.marks, tid: m.tid }; });
+          if (weakest) why.push(['topic', E(weakest.t) + ': ' + weakest.pct + ' % across ' + weakest.marks + ' marks']);
+          var o = tot(s); if (o.m >= 10 && o.pct < 50) why.push(['overall', 'Overall ' + o.pct + ' % across ' + o.m + ' marked marks']);
+          if ((od[s] || []).length >= 2) why.push(['work', od[s].length + ' overdue tasks not done']);
+          if (!active[s]) why.push(['quiet', 'No lesson activity in the last 14 days']);
+          if ((asks[s] || 0) >= 3) why.push(['help', 'Asked for help ' + asks[s] + ' times in 30 days']);
+          return { s: s, why: why, weakest: weakest }; }).filter(function (r) { return r.why.length; }).sort(function (a, b) { return b.why.length - a.why.length; });
+        var cell = function (s, t, m) { var st = tstate(m), l = TL[st]; return '<td class="ms-cl" data-s="' + E(s) + '" data-t="' + E(t) + '" style="background:' + l[1] + ';color:' + l[2] + '" title="' + (m ? (m.marks < 5 ? 'Insufficient evidence: ' + m.marks + ' marks' : l[0] + ': ' + m.pct + ' % from ' + m.marks + ' marks') : 'No answers yet') + '">' + (m && m.marks >= 5 ? m.pct : '·') + '</td>'; };
+        var ivRow = function (iv) { var b = totBefore(iv.student_id, iv.at), a = tot(iv.student_id, iv.at), ch = a.m ? (b.pct != null ? a.pct - b.pct : null) : null;
+          return '<tr><td><b>' + E(NM[iv.student_id] || (iv.student_id ? 'Student' : 'Whole class')) + '</b><div class="ms-muted">' + E(iv.title) + '</div></td><td>' + E(iv.action || '') + (iv.evidence ? '<div class="ms-muted">' + E(iv.evidence) + '</div>' : '') + '</td><td class="ms-muted">' + new Date(iv.at).toLocaleDateString() + '</td>' +
+            '<td>' + (!iv.student_id ? '–' : a.m ? (ch != null ? '<b style="color:' + (ch >= 0 ? '#166534' : '#b91c1c') + '">' + (ch >= 0 ? '↑ +' + ch : '↓ ' + Math.abs(ch)) + ' points</b>' : '') + '<div class="ms-muted">' + a.pct + ' % from ' + a.m + ' new marks</div>' : '<span class="ms-muted">No new marks yet</span>') + '</td>' +
+            '<td><select data-ivs="' + iv.id + '">' + ['planned', 'done', 'dropped'].map(function (v) { return '<option' + (iv.status === v ? ' selected' : '') + '>' + v + '</option>'; }).join('') + '</select></td></tr>'; };
+        var supRow = function (r) { return '<div class="sp-row"><div style="flex:1 1 min(100%,260px)"><b>' + E(NM[r.s]) + '</b><ul class="sp-why">' + r.why.map(function (w) { return '<li>' + w[1] + '</li>'; }).join('') + '</ul></div>' +
+            '<div style="flex:1 1 min(100%,320px)"><div class="sp-acts">' + (r.weakest ? '<button class="btn sm" type="button" data-ev="' + E(r.s) + '" data-et="' + E(r.weakest.t) + '">🔍 Evidence</button>' : '') + '<a class="btn sm" href="/teach/#classes/' + cid + '/todo/new">📌 Assign practice</a><a class="btn sm" href="/messages/?to=' + E(r.s) + '">💬 Message</a><button class="btn sm" type="button" data-rec="' + E(r.s) + '" data-title="' + E(r.weakest ? r.weakest.t : r.why[0][1].replace(/<[^>]+>/g, '')) + '" data-evd="' + E(r.why.map(function (w) { return w[1].replace(/<[^>]+>/g, ''); }).join('; ')) + '">📝 Record an action</button></div><div data-recbox="' + E(r.s) + '"></div></div></div>'; };
+        body.innerHTML = '<style>.ms-cl{cursor:pointer}.ms-cl:hover{outline:2px solid #0f1f3d;outline-offset:-2px}.ms-th{cursor:pointer;text-decoration:underline dotted}.sp-acts{display:flex;flex-wrap:wrap;gap:6px}.sp-hd{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}.sp-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid #f1f5f9}.sp-row:first-of-type{border-top:0}.sp-why{margin:2px 0 0;padding-left:18px}.sp-why li{font-size:.88rem}.ms-tbl{width:100%;border-collapse:collapse;font-size:.88rem}.ms-tbl td,.ms-tbl th{padding:7px 8px;border-top:1px solid #f1f5f9;text-align:left;vertical-align:top}.ms-tbl th{background:#f8fafc;font-size:.74rem;text-transform:uppercase;color:#475569}.sp-form{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.sp-form select,.sp-form input{padding:6px 8px;border-radius:8px;border:1px solid #cbd5e1;font:inherit}.sp-form input{flex:1 1 min(100%,200px);min-width:0}</style>' +
+          '<section class="ms-card"><h3>🤝 Students who may benefit from support <span class="ms-muted" style="font-weight:600">(' + SUP.length + ' of ' + ids.length + ')</span></h3><p class="ms-muted" style="margin-top:0">Each reason comes from real records: a topic below 50 % across 10+ marks; overall below 50 % across 10+ marks; 2+ overdue tasks not done; no lesson activity in 14 days; 3+ help requests in 30 days. These are prompts for your judgement, not labels.</p>' +
+          (SUP.length ? SUP.map(function (r, i) { return (i === 10 ? '<details><summary style="cursor:pointer;font-weight:700;margin:8px 0">Show ' + (SUP.length - 10) + ' more</summary>' : '') + supRow(r); }).join('') + (SUP.length > 10 ? '</details>' : '') : '<p>Nobody stands out on these rules right now. 🎉</p>') + '</section>' +
+          '<section class="ms-card" id="ms-ev" hidden></section>' +
+          '<section class="ms-card"><h3>Class mastery heatmap</h3><p class="ms-muted" style="margin-top:0">Rows are students, columns are topics (weakest first). Click a cell to see the evidence, or a topic to drill down. Recent answers count more. A grey dot means fewer than 5 marks: not enough evidence, which is not the same as low performance.</p>' +
+          (R.length ? '<div style="overflow:auto"><table class="ms-heat"><tr><th>Student</th>' + tk.map(function (t) { return '<th class="ms-th" data-topic="' + E(t) + '" title="' + E(t) + '">' + E(t.length > 28 ? t.slice(0, 26) + '…' : t) + '</th>'; }).join('') + '</tr>' +
+            '<tr><td><b>Class</b></td>' + tk.map(function (t) { var m = topicsAll[t], l = TL[tstate(m)]; return '<td style="background:' + l[1] + ';color:' + l[2] + ';font-weight:800">' + (m.marks >= 5 ? m.pct : '·') + '</td>'; }).join('') + '</tr>' +
+            ids.slice().sort(function (a, b) { return (NM[a] || '').localeCompare(NM[b] || ''); }).map(function (s) { return '<tr><td>' + E(NM[s] || 'Student') + '</td>' + tk.map(function (t) { return cell(s, t, per[s][t]); }).join('') + '</tr>'; }).join('') + '</table></div>' +
+            '<p class="ms-muted">' + ['strong', 'dev', 'need', 'none'].map(function (k) { var l = TL[k]; return '<span class="ms-pill" style="background:' + l[1] + ';color:' + l[2] + '">' + l[0] + '</span>'; }).join(' ') + '</p>' : '<p>No marked work in this class yet.</p>') + '</section>' +
+          '<section class="ms-card"><h3>📝 Support actions and their effect</h3><p class="ms-muted" style="margin-top:0">"Effect" compares the student\'s marks after the action with their marks before it.</p>' + (IV.length ? '<div style="overflow:auto"><table class="ms-tbl"><tr><th>Who</th><th>Action</th><th>When</th><th>Effect</th><th>Status</th></tr>' + IV.map(ivRow).join('') + '</table></div>' : '<p class="ms-muted">No actions recorded yet. Use 📝 Record an action above.</p>') + '</section>';
+        var ev = body.querySelector('#ms-ev');
+        var showEv = function (s, t) {
+          var rows = R.filter(function (r) { return r.student_id === s && r.topic === t; }).sort(function (a, b) { return a.at < b.at ? 1 : -1; }), m = per[s][t];
+          ev.hidden = false; ev.innerHTML = '<div class="sp-hd"><h3 style="margin:0">🔍 ' + E(NM[s]) + ' · ' + E(t) + '</h3><button class="btn sm" type="button" id="evx">Close</button></div><p class="ms-muted">' + (m ? (m.marks < 5 ? 'Insufficient evidence: ' + m.marks + ' marks so far' : TL[tstate(m)][0] + ': ' + m.pct + ' % from ' + m.marks + ' marks') : 'No answers in this topic yet') + '</p>' +
+            (rows.length ? '<div style="overflow:auto"><table class="ms-tbl"><tr><th>When</th><th>Question</th><th>Marks</th><th>What went wrong</th></tr>' + rows.slice(0, 30).map(function (r) { return '<tr><td class="ms-muted">' + new Date(r.at).toLocaleDateString() + '</td><td>' + E(r.title || '') + (r.q_label ? ' · ' + E(r.q_label) : '') + (r.objective ? '<div class="ms-muted">' + E(r.objective) + '</div>' : '') + '</td><td><b>' + E(r.got) + '</b>/' + E(r.max) + '</td><td class="ms-muted">' + E((Array.isArray(r.misconceptions) ? r.misconceptions : []).join('; ')) + '</td></tr>'; }).join('') + '</table></div>' : '') +
+            '<div class="sp-acts" style="margin-top:8px"><a class="btn sm" href="/teach/#classes/' + cid + '/todo/new">📌 Assign practice</a><a class="btn sm" href="/messages/?to=' + E(s) + '">💬 Message</a><button class="btn sm" type="button" data-rec="' + E(s) + '" data-title="' + E(t) + '" data-evd="' + E(m ? m.pct + ' % from ' + m.marks + ' marks' : '') + '">📝 Record an action</button></div><div data-recbox="' + E(s) + '"></div>';
+          ev.querySelector('#evx').onclick = function () { ev.hidden = true; }; wireRec(ev); ev.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+        var showTopic = function (t) {
+          var st = ids.map(function (s) { return { s: s, m: per[s][t] }; }).sort(function (a, b) { return ((a.m && a.m.marks >= 5) ? a.m.pct : 999) - ((b.m && b.m.marks >= 5) ? b.m.pct : 999); }), tid = (topicsAll[t] || {}).tid;
+          var mis = {}; R.forEach(function (r) { if (r.topic === t) (Array.isArray(r.misconceptions) ? r.misconceptions : []).forEach(function (x) { if (x) mis[x] = (mis[x] || 0) + 1; }); });
+          var qs = {}; R.forEach(function (r) { if (r.topic !== t || !(+r.max > 0)) return; var k = (r.title || '') + (r.q_label ? ' · ' + r.q_label : ''); var o = qs[k] = qs[k] || { g: 0, m: 0, n: 0 }; o.g += Math.min(+r.got, +r.max); o.m += +r.max; o.n++; });
+          var qlist = Object.keys(qs).map(function (k) { return { k: k, pct: Math.round(100 * qs[k].g / qs[k].m), n: qs[k].n }; }).filter(function (o) { return o.n >= 3; }).sort(function (a, b) { return a.pct - b.pct; }).slice(0, 6);
+          ev.hidden = false; ev.innerHTML = '<div class="sp-hd"><h3 style="margin:0">📊 Topic: ' + E(t) + '</h3><button class="btn sm" type="button" id="evx">Close</button></div><p class="ms-muted">Class: ' + (topicsAll[t].marks >= 5 ? topicsAll[t].pct + ' % from ' + topicsAll[t].marks + ' marks' : 'not enough evidence yet') + '</p>' +
+            '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px"><div><b>Students, lowest first</b><ol class="sp-why">' + st.map(function (o) { return '<li><a href="#" data-ev="' + E(o.s) + '" data-et="' + E(t) + '">' + E(NM[o.s]) + '</a> <span class="ms-muted">' + (o.m && o.m.marks >= 5 ? o.m.pct + ' %' : 'not enough evidence') + '</span></li>'; }).join('') + '</ol></div>' +
+            '<div><b>Hardest questions</b> <span class="ms-muted">(3+ answers)</span><ol class="sp-why">' + (qlist.map(function (o) { return '<li>' + E(o.k) + ' <span class="ms-muted">' + o.pct + ' % · ' + o.n + ' answers</span></li>'; }).join('') || '<li class="ms-muted">Not enough answers yet</li>') + '</ol>' +
+            '<b>Common wrong ideas</b><ol class="sp-why">' + (Object.keys(mis).sort(function (a, b) { return mis[b] - mis[a]; }).slice(0, 5).map(function (k) { return '<li>' + E(k) + ' <span class="ms-muted">(' + mis[k] + ')</span></li>'; }).join('') || '<li class="ms-muted">None recorded</li>') + '</ol></div>' +
+            '<div><b>Reteach or practise</b><div id="tles" class="ms-muted">Loading lessons…</div><p style="margin-top:8px"><a class="btn sm" href="/teach/#classes/' + cid + '/todo/new">📌 Assign to the class</a> <button class="btn sm" type="button" data-rec="" data-title="' + E(t) + '" data-evd="' + E('Class ' + topicsAll[t].pct + ' %') + '">📝 Record a class action</button></p><div data-recbox=""></div></div></div>';
+          ev.querySelector('#evx').onclick = function () { ev.hidden = true; }; wireRec(ev); wireEv(ev); ev.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          (tid ? S.db.from('lessons').select('title,url').eq('topic_id', tid).eq('published', true).order('sort_order').limit(6) : Promise.resolve({ data: [] })).then(function (r) { var b2 = ev.querySelector('#tles'); if (b2) b2.innerHTML = (r.data || []).length ? '<ul class="sp-why">' + r.data.map(function (l) { return '<li><a href="' + E(l.url) + '" target="_blank" rel="noopener">' + E(l.title) + '</a></li>'; }).join('') + '</ul>' : 'No lessons linked to this topic.'; });
+        };
+        function wireEv(root) { root.querySelectorAll('[data-ev]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); showEv(b.getAttribute('data-ev'), b.getAttribute('data-et')); }; }); }
+        function wireRec(root) { root.querySelectorAll('[data-rec]').forEach(function (b) { b.onclick = function () { var s = b.getAttribute('data-rec'), box = root.querySelector('[data-recbox="' + s + '"]'); if (!box) return;
+          box.innerHTML = '<div class="sp-form"><select>' + ACTIONS.map(function (a) { return '<option>' + a + '</option>'; }).join('') + '</select><input placeholder="Note (optional), e.g. lunchtime session Tuesday"><button class="btn sm main" type="button">Save</button></div>';
+          box.querySelector('button').onclick = function () { var act = box.querySelector('select').value + (box.querySelector('input').value.trim() ? ': ' + box.querySelector('input').value.trim() : '');
+            S.db.from('interventions').insert({ class_id: cid, student_id: s || null, title: b.getAttribute('data-title') || 'Support', evidence: b.getAttribute('data-evd') || null, action: act }).then(function (r) { if (r.error) { box.innerHTML = '<p class="ms-muted">' + E(S.nice(r.error)) + '</p>'; return; } heat(cid); }); }; }; }); }
+        body.querySelectorAll('.ms-cl').forEach(function (td) { td.onclick = function () { showEv(td.getAttribute('data-s'), td.getAttribute('data-t')); }; });
+        body.querySelectorAll('[data-topic]').forEach(function (th) { th.onclick = function () { showTopic(th.getAttribute('data-topic')); }; });
+        body.querySelectorAll('[data-ivs]').forEach(function (sel) { sel.onchange = function () { S.db.from('interventions').update({ status: sel.value }).eq('id', sel.getAttribute('data-ivs')).then(function () {}); }; });
+        wireEv(body); wireRec(body);
       });
     });
   }

@@ -156,3 +156,6 @@ header.top .brand,.mainnav{font-family:var(--vx-font-body)}
 table.marks td.task-c{max-width:260px;font-size:.92rem;line-height:1.3}
 table.marks td.task-c .tk-code{display:inline-block;padding:1px 6px;border-radius:6px;background:#E0F2FE;color:#075985;font:700 .74rem/1.4 var(--vx-font-mono);white-space:nowrap}
 table.marks td.task-c .tk-kind{display:inline-block;padding:1px 6px;border-radius:6px;background:#FCE7F3;color:#9D174D;font-size:.74rem;font-weight:700;white-space:nowrap}
+
+/* 21 Nov 2026: a wide table or scroll strip inside a .grp page grid must scroll inside its own box, never stretch the page */
+.grp{grid-template-columns:minmax(0,1fr)}.grp>*{min-width:0}
