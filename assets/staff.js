@@ -143,7 +143,7 @@
     clearInterval(LIVE);
     var h = location.hash.slice(1).split('/'), tab = h[0] || 'overview';
     if (ADMIN_TABS.indexOf(tab) >= 0 && (!ME.admin || TEACH)) tab = 'overview';
-    if (TEACH) { teachShell(tab); AUTO_NEW = h[3] === 'new'; } else {
+    if (TEACH) { teachShell(tab); AUTO_NEW = h[3] === 'new'; AUTO_DUE = /^\d{4}-\d\d-\d\d$/.test(h[4] || '') ? h[4] : null; } else {
     var head = '<div class="row2 cband" style="--k:' + (TEACH ? '#059669' : '#2563eb') + '"><div><p class="label">' + (TEACH ? 'My classes' + (ME.profile.school_name ? ' · ' + E(ME.profile.school_name) : '') : 'Main site · courses and their classes') + '</p><h2>' + (TEACH && ME.admin && AS ? 'Classroom of ' + E(TNAME[AS] || 'this teacher') : E(ME.profile.full_name || ME.user.email)) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><div class="cta">' + '<a class="btn sm" href="/board/">🖊 Whiteboard</a><a class="btn sm" href="/live/">🎥 Live Classroom</a><a class="btn sm" href="/research/#/teacher">🔬 Research Hub</a>' + (TEACH ? '<a class="btn sm" href="/messages/">Messages</a>' + (ME.admin ? '' : '<a class="btn sm" href="/premium/">Premium</a>') : ME.admin ? '<a class="btn main sm" href="/admin/">Admin: join requests, members, payments</a>' : '') + '<button class="btn sm" type="button" id="so">Log out</button></div></div>' +
       (TEACH && ME.admin ? '<div class="panel tint row2" id="asbar" style="align-items:center">' + (AS ? '<span>👁 <b>Admin view.</b> You are in <b>' + E(TNAME[AS] || 'this teacher') + '</b>\'s classroom: their dashboard, classes and students. Changes you make here are saved to their classes.</span>'
         : '<span>👁 <b>Admin:</b> open another teacher\'s classroom to see and edit their classes, their dashboard and their students.</span>') +
@@ -163,7 +163,7 @@
     app.classList.add('teach-ui');
     app.querySelectorAll('nav.tabs a').forEach(function (a) { var k = TABHUE[a.getAttribute('href').slice(1)]; if (k) a.style.setProperty('--k', k); });
     var pane = app.querySelector('#pane');
-    ({ overview: TEACH ? teachOverview : overview, work: lessonWork, questions: helpDesk, labs: labWork, approvals: TEACH ? teachApprovals : approvals, activity: activity, lessons: lessons, classes: TEACH ? teachClasses : classes, students: students, quizzes: quizzes, marking: marking, grading: gradeBounds, bin: binTab, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
+    ({ planner: plannerTab, overview: TEACH ? teachOverview : overview, work: lessonWork, questions: helpDesk, labs: labWork, approvals: TEACH ? teachApprovals : approvals, activity: activity, lessons: lessons, classes: TEACH ? teachClasses : classes, students: students, quizzes: quizzes, marking: marking, grading: gradeBounds, bin: binTab, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
   }
 
   /* ---------- 🗑 Bin: removed classes, deleted quizzes and lessons stay here for 30 days (migration 042) ---------- */
@@ -689,12 +689,13 @@
         '<label class="f">Instructions for students (optional)<textarea id="ain" rows="2" placeholder="e.g. Finish steps 1–3 and correct your answers in your book."></textarea></label>' +
         '<fieldset style="border:1px solid var(--line);border-radius:10px;padding:8px 12px"><legend class="small"><b>Who</b></legend>' +
         '<label class="chk"><input type="radio" name="aw" value="all"' + (pre.length ? '' : ' checked') + '> The whole class (' + kids.length + ')</label> <label class="chk"><input type="radio" name="aw" value="some"' + (pre.length ? ' checked' : '') + '> Chosen students</label>' +
+        (CLASSES.filter(function (o) { return o.id !== c.id; }).length ? '<div id="amc" style="margin:6px 0 0"><span class="small"><b>Also set the same work for</b> (whole class each):</span> ' + CLASSES.filter(function (o) { return o.id !== c.id; }).map(function (o) { return '<label class="chk" style="margin-right:10px"><input type="checkbox" data-amc="' + o.id + '"> ' + E(o.name) + '</label>'; }).join('') + '</div>' : '') +
         '<div id="asl" style="columns:3 180px;margin-top:6px"' + (pre.length ? '' : ' hidden') + '>' + (kids.length ? kids.map(function (k) { return '<label class="chk small" style="display:flex"><input type="checkbox" value="' + k.id + '"' + (pre.indexOf(k.id) >= 0 ? ' checked' : '') + '> ' + E(k.full_name || '(no name)') + '</label>'; }).join('') : '<span class="small muted">No students in this class yet.</span>') +
         '<div class="small" style="column-span:all"><a href="#" id="aall">Tick all</a> · <a href="#" id="anone">Clear</a></div></div></fieldset>' +
         '<div class="acts"><button type="button" class="btn main sm" id="ago">📌 Add to the to-do list</button><button type="button" class="btn sm" id="ax">Cancel</button><span class="small" id="am"></span></div></section>';
       var $ = function (q) { return host.querySelector(q); };
       function fill() { var k = $('#ak').value, picks = ['lesson', 'quiz', 'resource', 'sim'].indexOf(k) >= 0;
-        $('#aiw').hidden = !picks; $('#auw').hidden = k !== 'link'; $('#arw').hidden = k !== 'research'; $('#aiv').hidden = k !== 'innov';
+        $('#aiw').hidden = !picks; $('#auw').hidden = k !== 'link'; $('#arw').hidden = k !== 'research'; $('#aiv').hidden = k !== 'innov'; var amc = $('#amc'); if (amc) amc.hidden = k === 'research' || k === 'innov' || host.querySelector('[name=aw]:checked').value === 'some';
         if (k === 'research' && !$('#at').value) $('#ars').onchange();
         if (picks) { var o = opts(k), n = (o.match(/<option /g) || []).length;
           $('#ai').innerHTML = '<option value="">' + (n ? 'Choose… (' + n + ' for ' + E(c.name) + ')' : q ? 'Nothing matches your search' : k === 'quiz' ? 'No quizzes or exams set for this class yet' : 'Nothing for this class yet') + '</option>' + o;
@@ -703,7 +704,7 @@
       $('#aq').oninput = function () { q = this.value.trim().toLowerCase(); fill(); };
       $('#ak').onchange = function () { fill(); $('#at').value = ''; };
       $('#ai').onchange = function () { var k = $('#ak').value, it = (L[k] || []).filter(function (x) { return x.id === $('#ai').value; })[0]; if (it) $('#at').value = it.title; };
-      host.querySelectorAll('[name=aw]').forEach(function (r) { r.onchange = function () { $('#asl').hidden = host.querySelector('[name=aw]:checked').value !== 'some'; }; });
+      host.querySelectorAll('[name=aw]').forEach(function (r) { r.onchange = function () { var sm = host.querySelector('[name=aw]:checked').value === 'some'; $('#asl').hidden = !sm; var amc = $('#amc'); if (amc) amc.hidden = sm || ['research', 'innov'].indexOf($('#ak').value) >= 0; }; });
       $('#aall').onclick = function (e) { e.preventDefault(); host.querySelectorAll('#asl input').forEach(function (x) { x.checked = true; }); };
       $('#anone').onclick = function (e) { e.preventDefault(); host.querySelectorAll('#asl input').forEach(function (x) { x.checked = false; }); };
       $('#ax').onclick = function () { host.innerHTML = ''; };
@@ -725,8 +726,10 @@
         S.db.rpc('assign_work', { cls: c.id, title: title, kind: k, ref: ref, url: url, instructions: $('#ain').value.trim(), due: iso($('#ad').value), students: some ? who : null }).then(function (r) {
           $('#ago').disabled = false;
           if (r.error) { m.textContent = S.nice(r.error); return; }
-          toast('Added to the to-do list of ' + (some ? who.length + ' student' + (who.length === 1 ? '' : 's') : 'everyone in ' + c.name) + (false ? '. This quiz is still a draft: publish it so students can open it.' : ''));
-          host.innerHTML = ''; if (done) done();
+          var more = some ? [] : [].map.call(host.querySelectorAll('[data-amc]:checked'), function (x) { return x.getAttribute('data-amc'); });
+          more.reduce(function (pr, cid2) { return pr.then(function (n) { return S.db.rpc('assign_work', { cls: cid2, title: title, kind: k, ref: ref, url: url, instructions: $('#ain').value.trim(), due: iso($('#ad').value), students: null }).then(function (x) { return n + (x.error ? 0 : 1); }, function () { return n; }); }); }, Promise.resolve(0)).then(function (n) {
+            toast('Added to the to-do list of ' + (some ? who.length + ' student' + (who.length === 1 ? '' : 's') : 'everyone in ' + c.name) + (n ? ' and ' + n + ' more class' + (n === 1 ? '' : 'es') : ''));
+            host.innerHTML = ''; if (done) done(); });
         });
       };
     });
@@ -769,7 +772,7 @@
       body.innerHTML = html; wireFilters(body, state);
       if (BV.findBox && list.length > 3) BV.findBox(body, 'details.panel[data-k]', 'div[style*="border-left:5px"]', 'Find work you set…');
       body.querySelector('#anew').onclick = function () { assignForm(body.querySelector('#aform'), c, kids, [], function () { state.reload(); }); };
-      if (AUTO_NEW) { AUTO_NEW = false; body.querySelector('#anew').click(); var fm = body.querySelector('#aform'); if (fm) setTimeout(function () { fm.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50); }
+      if (AUTO_NEW) { AUTO_NEW = false; body.querySelector('#anew').click(); if (AUTO_DUE) { var dueV = AUTO_DUE + 'T17:00', tries = 0; AUTO_DUE = null; (function fillDue() { var adi = body.querySelector('#aform #ad'); if (adi) adi.value = dueV; else if (tries++ < 40) setTimeout(fillDue, 100); })(); } var fm = body.querySelector('#aform'); if (fm) setTimeout(function () { fm.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50); }
       body.querySelectorAll('[data-adel]').forEach(function (b) { b.onclick = function () {
         if (!confirm('Remove this work from every student\'s to-do list?')) return;
         var a = list.filter(function (x) { return x.id === b.getAttribute('data-adel'); })[0] || {}, rr = /^research:(ia|ee):(.+)$/.exec(a.ref || ''), iv = /^innovation:(.+)$/.exec(a.ref || '');
@@ -2160,11 +2163,11 @@
   /* ================= Teacher Command Centre (21 Nov 2026) =================
      /teach/ only. A navy sidebar groups every teacher tool (sections A–J of the brief, existing pages only); the home page answers
      "what needs my attention today?" from real records, with a Priority Desk and one-click actions. The admin's /staff/ page is unchanged. */
-  var AUTO_NEW = false, CC_COUNTS = null, CC_AT = 0;
+  var AUTO_NEW = false, AUTO_DUE = null, CC_COUNTS = null, CC_AT = 0;
   var NAVG = [
     ['Overview', [['overview', '🏠', 'Home', '#overview']]],
     ['My classrooms', [['classes', '🏫', 'All classes', '#classes'], ['students', '👥', 'Students & results', '#students'], ['approvals', '🙋', 'Join requests', '#approvals', 'join']]],
-    ['Teaching & planning', [['lessons', '🧪', 'Lesson builder', '#lessons'], ['x-learn', '📚', 'Lesson library', '/learn/'], ['x-sims', '🔬', 'Virtual labs', '/simulations/']]],
+    ['Teaching & planning', [['planner', '📅', 'Weekly planner', '#planner'], ['lessons', '🧪', 'Lesson builder', '#lessons'], ['x-learn', '📚', 'Lesson library', '/learn/'], ['x-sims', '🔬', 'Virtual labs', '/simulations/']]],
     ['Assessment centre', [['quizzes', '📝', 'Quizzes & exams', '#quizzes'], ['marking', '✅', 'Marking', '#marking', 'mark'], ['grading', '📏', 'Grade boundaries', '#grading']]],
     ['Student learning', [['work', '📘', 'Lesson work', '#work'], ['questions', '❓', 'Student questions', '#questions', 'ask'], ['x-mastery', '🔥', 'Mastery & support', '/mastery/']]],
     ['Laboratory', [['labs', '🧫', 'Lab work', '#labs', 'lab']]],
@@ -2173,7 +2176,7 @@
     ['Live teaching', [['x-live', '🎥', 'Live classroom', '/live/'], ['x-board', '🖊', 'Whiteboard', '/board/'], ['x-check', '⚡', 'Live Check', '/check/']]],
     ['Site', [['bin', '🗑', 'Bin', '#bin']]]
   ];
-  var TITLES = { overview: 'Home', classes: 'My classrooms', students: 'Students & results', approvals: 'Join requests', lessons: 'Lesson builder', quizzes: 'Quizzes & exams', marking: 'Marking centre', grading: 'Grade boundaries', work: 'Lesson work', questions: 'Student questions', labs: 'Lab work', bin: 'Bin' };
+  var TITLES = { planner: 'Weekly planner', overview: 'Home', classes: 'My classrooms', students: 'Students & results', approvals: 'Join requests', lessons: 'Lesson builder', quizzes: 'Quizzes & exams', marking: 'Marking centre', grading: 'Grade boundaries', work: 'Lesson work', questions: 'Student questions', labs: 'Lab work', bin: 'Bin' };
   (function () { if (document.getElementById('cc-css')) return; var st = document.createElement('style'); st.id = 'cc-css'; st.textContent = [
     'main.wrap.cc-wide{max-width:1320px}.cc{display:grid;grid-template-columns:212px minmax(0,1fr);gap:18px;align-items:start}.cc.min{grid-template-columns:58px minmax(0,1fr)}.cc-body{min-width:0}.cc-body img,.cc-body table{max-width:100%}',
     '.cc-side{position:sticky;top:76px;max-height:calc(100vh - 90px);overflow:auto;background:#0f1f3d;color:#cbd5e1;border-radius:18px;padding:12px 10px;scrollbar-width:thin}',
@@ -2228,6 +2231,7 @@
     app.querySelector('#ccmob').onclick = function () { var sd = app.querySelector('.cc-side'), o = sd.classList.toggle('open'); this.setAttribute('aria-expanded', o); };
     app.querySelector('#cctog').onclick = function () { var m = !ccMin(); try { localStorage.setItem('bv-cc-min', m ? '1' : '0'); } catch (e) {} app.querySelector('.cc').classList.toggle('min', m); this.textContent = m ? '»' : '« Collapse'; };
     app.querySelector('#vas').onchange = function () { if (this.value) location.href = '/dashboard/?preview=' + encodeURIComponent(this.value) + '&from=teach'; };
+    if (['quizzes', 'marking', 'grading'].indexOf(tab) >= 0 && !(tab === 'marking' && location.hash.split('/')[1])) { var pn = app.querySelector('#pane'); if (pn) pn.insertAdjacentHTML('beforebegin', assessStrip(tab)); }
     var pk = app.querySelector('#aspick'); if (pk) pk.onchange = function () { AS = pk.value || null; try { if (AS) sessionStorage.setItem('bv-as-teacher', AS); else sessionStorage.removeItem('bv-as-teacher'); } catch (e) {}
       TC.cur = null; CC_COUNTS = null; if (history.replaceState) history.replaceState(null, '', location.pathname + '#overview'); refs().then(route); };
     ccCounts().then(function (n) { [].forEach.call(app.querySelectorAll('[data-cnt]'), function (i) { var v = n[i.getAttribute('data-cnt')] || 0; i.hidden = !v; i.textContent = v; }); });
@@ -2256,6 +2260,38 @@
   function ago(d) { var s = (Date.now() - new Date(d).getTime()) / 864e5; return s < 1 ? 'today' : Math.round(s) + ' day' + (Math.round(s) === 1 ? '' : 's') + ' ago'; }
   function inDays(d) { var s = (new Date(d).getTime() - Date.now()) / 864e5; return s < 1 ? (new Date(d).toDateString() === new Date().toDateString() ? 'today' : 'tomorrow') : 'in ' + Math.ceil(s) + ' days'; }
 
+  /* Weekly planner (phase 7): every piece of set work and every dated quiz across the teacher's classes, Monday to Sunday,
+     with how many students have finished; ＋ on a day opens Set work for a class with that due date. */
+  function plannerTab(p, args) {
+    var off = +(args && args[0]) || 0, d0 = new Date(); d0.setHours(0, 0, 0, 0); d0.setDate(d0.getDate() - ((d0.getDay() + 6) % 7) + 7 * off);
+    var days = []; for (var i = 0; i < 7; i++) { var d = new Date(d0); d.setDate(d0.getDate() + i); days.push(d); }
+    var end = new Date(d0); end.setDate(d0.getDate() + 7);
+    var ids = CLASSES.map(function (c) { return c.id; }), cn = {}; CLASSES.forEach(function (c) { cn[c.id] = c.name; });
+    var ymd = function (d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    p.innerHTML = '<p class="muted">Loading…</p>';
+    if (!ids.length) { p.innerHTML = '<p class="emptybox">No classes yet. <a href="#classes/catalogue">Make a class</a>.</p>'; return; }
+    Promise.all([S.db.from('assignments').select('id,class_id,title,kind,ref,due_at').in('class_id', ids).gte('due_at', d0.toISOString()).lt('due_at', end.toISOString()).order('due_at'),
+      Promise.all(ids.map(function (c) { return S.db.rpc('class_todo', { cls: c }).then(function (r) { return r.data || []; }, function () { return []; }); }))]).then(function (x) {
+      var A = x[0].data || [], st = {}; x[1].forEach(function (rows) { rows.forEach(function (t) { var o = st[t.assignment_id] = st[t.assignment_id] || { d: 0, n: 0 }; o.n++; if (t.state === 'done') o.d++; }); });
+      var today = ymd(new Date()), ICO = { lesson: '🧪', quiz: '📝', resource: '📄', sim: '🔬', link: '🔗', task: '✏️' };
+      p.innerHTML = '<style>.pl-wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.pl-d{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px;min-height:140px}.pl-d.today{border-color:#0d9488;box-shadow:0 0 0 2px #99f6e4 inset}.pl-d h4{margin:0 0 6px;font-size:.82rem;color:#0f1f3d;display:flex;justify-content:space-between;align-items:center}.pl-d h4 small{color:#64748b;font-weight:600}' +
+        '.pl-it{display:block;border-left:4px solid var(--k);background:#f8fafc;border-radius:8px;padding:5px 7px;margin:0 0 6px;text-decoration:none;color:#0f1f3d;font-size:.8rem;line-height:1.25}.pl-it b{display:block;font-size:.72rem;color:#64748b;font-weight:700}.pl-it i{font-style:normal;color:#64748b;font-size:.72rem}.pl-add{border:1px dashed #cbd5e1;background:none;border-radius:8px;cursor:pointer;font:inherit;font-size:.78rem;padding:1px 7px;color:#475569}' +
+        '@media (max-width:900px){.pl-wk{grid-template-columns:1fr}.pl-d{min-height:0}}</style>' +
+        '<div class="row2" style="align-items:center;margin:0 0 10px"><div class="cta"><a class="btn sm" href="#planner/' + (off - 1) + '">◀ Previous week</a><a class="btn sm' + (off ? '' : ' main') + '" href="#planner/0">This week</a><a class="btn sm" href="#planner/' + (off + 1) + '">Next week ▶</a></div>' +
+        '<b>' + days[0].toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' – ' + days[6].toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) + ' · ' + A.length + ' due</b></div>' +
+        '<div class="pl-wk">' + days.map(function (d) { var key = ymd(d), its = A.filter(function (a) { return ymd(new Date(a.due_at)) === key; });
+          return '<div class="pl-d' + (key === today ? ' today' : '') + '"><h4>' + d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' }) + ' <span class="cc-menu"><button type="button" class="pl-add" data-mnu title="Set work due this day">＋</button><div hidden>' + CLASSES.map(function (c) { return '<a href="#classes/' + c.id + '/todo/new/' + key + '">' + E(c.name) + '</a>'; }).join('') + '</div></span></h4>' +
+            (its.map(function (a) { var o = st[a.id] || { d: 0, n: 0 }; return '<a class="pl-it" style="--k:' + hue(a.class_id) + '" href="#classes/' + a.class_id + '/todo" title="' + E(a.title) + '"><b>' + E(cn[a.class_id] || '') + '</b>' + (/^research:/.test(a.ref || '') ? '🔬' : ICO[a.kind] || '📌') + ' ' + E(deskName(a.title)) + '<br><i>' + o.d + ' of ' + o.n + ' done</i></a>'; }).join('') || '<p class="cc-none" style="font-size:.78rem;margin:0">Nothing due</p>') + '</div>'; }).join('') + '</div>' +
+        '<p class="small muted" style="margin-top:10px">Shows work set from your dashboard (lessons, quizzes, files, simulations, links, tasks, Research Hub stages and Innovation challenges) by its due date. Press ＋ on a day to set work due that day.</p>';
+      p.querySelectorAll('[data-mnu]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var m = b.nextElementSibling, open = m.hidden; p.querySelectorAll('.cc-menu>div').forEach(function (dd) { dd.hidden = true; }); m.hidden = !open; }; });
+      if (!document.__ccClose) { document.__ccClose = true; document.addEventListener('click', function () { document.querySelectorAll('.cc-menu>div').forEach(function (dd) { dd.hidden = true; }); }); }
+    }).catch(function (e) { p.innerHTML = '<p class="emptybox">' + E(S.nice(e)) + '</p>'; });
+  }
+  function assessStrip(tab) {   // Create → Assign → Monitor → Mark → Analyse (phase 7)
+    var c0 = CLASSES[0] ? CLASSES[0].id : '', S5 = [['create', '1 · Create', '/build/', 'New quiz or exam in Assessment Studio, or pick from the question bank'], ['assign', '2 · Assign', c0 ? '#classes/' + c0 + '/todo/new' : '#classes', 'Set it for a class with a deadline'], ['monitor', '3 · Monitor', c0 ? '#classes/' + c0 + '/quizzes' : '#classes', 'Who has started, submitted or not begun'], ['mark', '4 · Mark', '#marking', 'Mark, give feedback and release'], ['analyse', '5 · Analyse', '/mastery/', 'Topics, questions and students who need support']];
+    var on = tab === 'marking' ? 'mark' : tab === 'grading' ? 'analyse' : 'create';
+    return '<nav aria-label="Assessment steps" style="display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px">' + S5.map(function (x) { return '<a href="' + x[2] + '" title="' + E(x[3]) + '" style="flex:1 1 140px;text-decoration:none;border:1px solid ' + (x[0] === on ? '#0d9488' : '#e2e8f0') + ';background:' + (x[0] === on ? '#f0fdfa' : '#fff') + ';border-radius:10px;padding:7px 10px;color:#0f1f3d"><b style="font-size:.86rem">' + x[1] + '</b><br><span class="small muted">' + E(x[3]) + '</span></a>'; }).join('') + '</nav>';
+  }
   function teachOverview(p) {
     var lx0 = document.getElementById('lx'); if (lx0 && p.contains(lx0)) { app.parentNode.insertBefore(lx0, app.nextSibling); lx0.style.display = 'none'; }
     var ids = CLASSES.map(function (c) { return c.id; }), q = function (pr) { return pr.then(function (r) { return r; }, function () { return { data: null }; }); };
