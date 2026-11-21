@@ -44,6 +44,10 @@
     return '<div class="q sx-q ' + (extraCls || '') + '"><label class="ql" for="sx-' + id + '">' + prompt + '</label>' +
       '<textarea id="sx-' + id + '" data-sx="' + id + '" data-label="' + E(label) + '" rows="' + (rows || 2) + '">' + E(v) + '</textarea></div>';
   }
+  function putBefore(sec, ref, node) {   // insert node into a stage, before the stage's child that contains ref (or at the end)
+    while (ref && ref.parentNode !== sec) ref = ref.parentNode;
+    if (ref) sec.insertBefore(node, ref); else sec.appendChild(node);
+  }
   document.addEventListener('input', function (e) { var k = e.target && e.target.getAttribute && e.target.getAttribute('data-sx'); if (k) { STATE[k] = e.target.value; keep(); } });
 
   /* ---------- journey bar ---------- */
@@ -114,7 +118,7 @@
   /* ---------- 2 EXPLORE: videos inside the stage ---------- */
   if (window.__sxVideos) {
     var w = document.createElement('div'); w.className = 'card sx-watch'; w.innerHTML = '<h3>Watch and explore</h3><p class="small muted">Watch one, then look for a pattern or relationship you can test in the next stage.</p>';
-    w.appendChild(window.__sxVideos); var t2 = $('.card.task', steps[1]) || $('.savecard', steps[1]); steps[1].insertBefore(w, t2);
+    w.appendChild(window.__sxVideos); putBefore(steps[1], $('.card.task', steps[1]) || $('.savecard', steps[1]), w);
   }
 
   /* ---------- Support: vocabulary bank and sentence starters ---------- */
@@ -146,7 +150,7 @@
     var sec = steps[x[0] - 1], save = $('.savecard', sec) || $('[data-step]', sec);
     var card = document.createElement('div'); card.className = 'card sx-only-ext sx-extcard';
     card.innerHTML = '<h3>🚀 Extension</h3>' + box('ext' + x[0], 'Extension (stage ' + x[0] + ')', E(x[1]), 3);
-    if (save) sec.insertBefore(card, save.closest('.card') || save);
+    putBefore(sec, save, card);
   });
 
   /* ---------- hand-built lessons: real images (Explore) and a worked example (Explain) from the lesson data (21 Nov 2026) ---------- */
@@ -155,12 +159,12 @@
     fg.innerHTML = '<h3>Look closely</h3><p class="small muted">Study each image. What does it show about the big idea?</p>' + DATA.figs.map(function (f) {
       return '<figure class="wide"><img alt="' + E(f[1]) + '" src="https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(f[0]) + '?width=900" loading="lazy" style="max-height:420px;object-fit:contain" onerror="this.closest(\'figure\').remove()">' +
         '<figcaption>' + E(f[1]) + '</figcaption><div class="credit">Image: ' + E(f[2] || '') + ', via <a href="https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(f[0]) + '" target="_blank" rel="noopener">Wikimedia Commons</a></div></figure>'; }).join('');
-    var t2b = $('.card.task', steps[1]) || $('.savecard', steps[1]); if (t2b) steps[1].insertBefore(fg, t2b.closest('.card') || t2b); else steps[1].appendChild(fg);
+    putBefore(steps[1], $('.card.task', steps[1]) || $('.savecard', steps[1]), fg);
   }
   if (DATA.worked && DATA.worked.length) {
     var wk = document.createElement('div'); wk.className = 'card sx-worked';
     wk.innerHTML = DATA.worked.map(function (w) { return '<details class="worked" open><summary>✏️ Worked example: ' + E(w[0]) + '</summary><ol>' + w[1].map(function (x) { return '<li>' + E(x) + '</li>'; }).join('') + '</ol></details>'; }).join('');
-    var t4b = $('.card.task', steps[3]) || $('.savecard', steps[3]); if (t4b) steps[3].insertBefore(wk, t4b.closest('.card') || t4b); else steps[3].appendChild(wk);
+    putBefore(steps[3], $('.card.task', steps[3]) || $('.savecard', steps[3]), wk);
   }
 
   /* ---------- 4 EXPLAIN: misconception check ---------- */
@@ -168,7 +172,7 @@
     var mc = document.createElement('div'); mc.className = 'card sx-misc';
     mc.innerHTML = '<h3>Misconception check</h3><p class="small muted">True or false? Choose, then read why.</p>' + DATA.misc.map(function (r, i) {
       return '<div class="sx-mrow" data-i="' + i + '"><span>' + E(r[0]) + '</span><span class="sx-tf"><button type="button" data-v="1">True</button><button type="button" data-v="0">False</button></span><div class="sx-why" hidden></div></div>'; }).join('');
-    var t4 = $('.card.task', steps[3]) || $('.savecard', steps[3]); steps[3].insertBefore(mc, t4);
+    putBefore(steps[3], $('.card.task', steps[3]) || $('.savecard', steps[3]), mc);
     $$('.sx-mrow', mc).forEach(function (row) {
       var r = DATA.misc[+row.getAttribute('data-i')];
       $$('button', row).forEach(function (b) { b.addEventListener('click', function () {
