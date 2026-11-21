@@ -32,11 +32,12 @@
   });
 
   /* Student Learning Centre phase 6: reading and motion settings for this device (text size, easier reading, calmer motion, clearer links and focus) */
-  BV.a11y = function (list) {
+  BV.a11y = function (list, quiet) {
     var de = document.documentElement, all = ['lg', 'xl', 'read', 'calm', 'hc'];
     if (list === undefined) { try { return (localStorage.getItem('bv-a11y') || '').split(',').filter(function (c) { return all.indexOf(c) >= 0; }); } catch (e) { return []; } }
     all.forEach(function (c) { de.classList.toggle('a11y-' + c, list.indexOf(c) >= 0); });
     try { if (list.length) localStorage.setItem('bv-a11y', list.join(',')); else localStorage.removeItem('bv-a11y'); } catch (e) {}
+    if (!quiet && window.BVS && BVS.prefsPush) BVS.prefsPush('a11y', list.length ? list.join(',') : null);   // follows the account (migration 068)
   };
   BV.store = function (k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } };
   BV.esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
@@ -238,4 +239,4 @@
   document.addEventListener('click', function (e) { if (dd.open && !dd.contains(e.target) && !list.contains(e.target)) dd.open = false; });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && dd.open) { dd.open = false; sum.focus(); } });
 })();
-try { if (window.BV && BV.a11y) BV.a11y(BV.a11y()); } catch (e) {}
+try { if (window.BV && BV.a11y) BV.a11y(BV.a11y(), true); } catch (e) {}

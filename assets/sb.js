@@ -41,8 +41,42 @@
       if (me.school && !opts.school && !opts.anyone) { location.href = '/teach/'; throw 'school'; }   // teachers from other schools have their own portal
       if (opts.parent && !me.parent && !me.staff) { el.innerHTML = '<section class="panel"><h2>Parents only</h2><p>This page is for parents. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; throw 'not-parent'; }
       if (!opts.allowPending && !me.ok) { S.updateNav(me); el.innerHTML = S.pendingBox(me); throw 'pending'; }
-      S.updateNav(me); if (me.admin) S.areaBar(el); return me;
+      S.updateNav(me); if (me.admin) S.areaBar(el); return S.prefsPull(me).then(function () { return me; });
     });
+  };
+  /* Settings that follow the account (migration 068, ui_prefs): teacher dashboard layout (cc), student dashboard sections (dhide)
+     and reading settings (a11y). The browser keeps a copy; the newer of the two wins, key by key. Never waits more than 1.5 s. */
+  var PREFS = null, PUID = null, PT = null;
+  function pkeys(uid) { return { cc: 'bv-cc-prefs-' + uid, dhide: 'bv-dhide-' + uid, a11y: 'bv-a11y' }; }
+  function pstamps(uid, set) { var k = 'bv-prefs-at-' + uid; try { if (set) localStorage.setItem(k, JSON.stringify(set)); return JSON.parse(localStorage.getItem(k) || '{}'); } catch (e) { return {}; } }
+  S.prefsPull = function (me) {
+    if (!me || !me.user || me.view || me.preview) return Promise.resolve();
+    if (PUID === me.user.id && PREFS) return Promise.resolve();
+    PUID = me.user.id;
+    var work = S.db.from('ui_prefs').select('prefs').eq('user_id', PUID).maybeSingle().then(function (r) {
+      if (r.error) { PREFS = null; return; }
+      PREFS = (r.data && r.data.prefs) || {};
+      var K = pkeys(PUID), at = pstamps(PUID), up = false;
+      Object.keys(K).forEach(function (k) {
+        var rem = PREFS[k], loc = null; try { loc = localStorage.getItem(K[k]); } catch (e) {}
+        if (rem && +rem.at > (+at[k] || 0)) {   // the account has a newer setting: use it here
+          try { if (rem.v == null) localStorage.removeItem(K[k]); else localStorage.setItem(K[k], String(rem.v)); } catch (e) {}
+          at[k] = +rem.at;
+          if (k === 'a11y' && window.BV && BV.a11y) BV.a11y(rem.v ? String(rem.v).split(',') : [], true);
+        } else if (!rem && loc != null) { PREFS[k] = { v: loc, at: +at[k] || Date.now() }; at[k] = PREFS[k].at; up = true; }   // first time: keep what this device has
+      });
+      pstamps(PUID, at); if (up) S.prefsSave();
+    }, function () {});
+    return Promise.race([work, new Promise(function (ok) { setTimeout(ok, 1500); })]);
+  };
+  S.prefsPush = function (k, v) {
+    if (!PUID) return; var at = pstamps(PUID); at[k] = Date.now(); pstamps(PUID, at);
+    if (!PREFS) return; PREFS[k] = { v: v == null ? null : String(v), at: at[k] };
+    clearTimeout(PT); PT = setTimeout(S.prefsSave, 800);
+  };
+  S.prefsSave = function () {
+    if (!PUID || !PREFS) return;
+    S.db.from('ui_prefs').upsert({ user_id: PUID, prefs: PREFS, updated_at: new Date().toISOString() }).then(function () {}, function () {});
   };
   /* the admin works in three separate places: running the site, the main-site courses, and their own classes */
   S.AREAS = [['/admin/', '🛠 Admin', 'Approvals, members, payments, settings'], ['/staff/', '🌐 Main site', 'Main-site courses, lessons, quizzes and their classes'], ['/teach/', '🏫 My classes', 'Classes you teach, like any teacher']];

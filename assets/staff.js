@@ -2220,7 +2220,7 @@
   var QAS = [['assign', '📌 Assign work'], ['mark', '✅ Mark submissions'], ['lesson', '🧪 Create lesson'], ['assess', '📝 Create assessment'], ['open', '🏫 Open classroom'], ['news', '📣 Announcement'], ['live', '🎥 Live classroom'], ['board', '🖊 Whiteboard'], ['planner', '📅 Weekly planner'], ['inbox', '📥 Inbox']];
   var LANDS = [['overview', 'Home'], ['planner', 'Weekly planner'], ['marking', 'Marking centre'], ['inbox', 'Inbox'], ['classes', 'All classes']];
   function ccPrefs() { var d = { hide: [], qa: ['assign', 'mark', 'lesson', 'assess', 'open', 'news', 'live', 'board'], fav: [], compact: false, land: 'overview' }; try { return Object.assign(d, JSON.parse(localStorage.getItem('bv-cc-prefs-' + ME.user.id) || '{}')); } catch (e) { return d; } }
-  function ccSetPrefs(o) { try { localStorage.setItem('bv-cc-prefs-' + ME.user.id, JSON.stringify(Object.assign(ccPrefs(), o))); } catch (e) {} }
+  function ccSetPrefs(o) { var v = JSON.stringify(Object.assign(ccPrefs(), o)); try { localStorage.setItem('bv-cc-prefs-' + ME.user.id, v); } catch (e) {} if (S.prefsPush) S.prefsPush('cc', v); }   // follows the account (migration 068)
   function favFirst(L) { var f = ccPrefs().fav; return L.slice().sort(function (a, b) { return (f.indexOf(b.id) >= 0) - (f.indexOf(a.id) >= 0); }); }
   function ccMin() { try { return localStorage.getItem('bv-cc-min') === '1'; } catch (e) { return false; } }
   function teachShell(tab) {
@@ -2462,7 +2462,7 @@
             bx.querySelector('#psave').onclick = function () {
               ccSetPrefs({ hide: [].filter.call(bx.querySelectorAll('[data-ps]'), function (c) { return !c.checked; }).map(function (c) { return c.getAttribute('data-ps'); }), qa: [].filter.call(bx.querySelectorAll('[data-pq]'), function (c) { return c.checked; }).map(function (c) { return c.getAttribute('data-pq'); }), compact: bx.querySelector('#pc').checked, land: bx.querySelector('#pl').value });
               toast('Saved'); route(); };
-            bx.querySelector('#preset').onclick = function () { try { localStorage.removeItem('bv-cc-prefs-' + ME.user.id); } catch (e) {} toast('Back to the default layout'); route(); };
+            bx.querySelector('#preset').onclick = function () { try { localStorage.removeItem('bv-cc-prefs-' + ME.user.id); } catch (e) {} if (S.prefsPush) S.prefsPush('cc', null); toast('Back to the default layout'); route(); };
           };
         })();
         // menus: one open at a time, close on outside click

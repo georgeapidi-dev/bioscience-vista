@@ -375,7 +375,7 @@
       st.textContent = hid.map(function (id) { return '#db-wrap #' + id + ',.db-jump a[href="#' + id + '"]{display:none!important}'; }).join('') + (P.focus ? '#db-wrap #db-tools~*:not(#db-cust){display:none!important}#db-wrap .db-two:has(#revise){display:none!important}' : '');
       var btn = document.getElementById('dbcust'); if (btn) btn.textContent = P.focus ? '🎯 Focus mode on · ⚙' : '⚙ Customise';
     }
-    function keep() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} apply(); }
+    function keep() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} if (S.prefsPush) S.prefsPush('dhide', JSON.stringify(P)); apply(); }
     apply();
     var btn = document.getElementById('dbcust'), box = document.getElementById('db-cust'); if (!btn || !box) return;
     btn.onclick = function () {
