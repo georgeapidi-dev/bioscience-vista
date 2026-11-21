@@ -22,7 +22,7 @@
   function stepEl(n) { return document.getElementById('step' + n); }
   function complete(n) {   // every answer box in the step is filled in
     var sec = stepEl(n); if (!sec) return true;
-    return [].slice.call(sec.querySelectorAll('textarea, select')).filter(function (e) { return !e.closest('.bv-rep, .bv-tans') && !e.disabled && e.offsetParent !== null; })
+    return [].slice.call(sec.querySelectorAll('textarea, select')).filter(function (e) { return !e.closest('.bv-rep, .bv-tans, .sx-q') && !e.disabled && e.offsetParent !== null; })
       .every(function (e) { return String(e.value || '').trim().length > 1; });
   }
   function ensureModels(n) {   // older lessons: show the model answers once the step is complete and saved
@@ -57,7 +57,7 @@
   if (window.BV_TEACHER) teacherView();
 
   /* ---------- 2. repeat a step ---------- */
-  function fields(sec) { return [].slice.call(sec.querySelectorAll(TEMPLATE ? '[data-save]' : 'textarea, select, input[type=text], input[type=number], input:not([type])')).filter(function (e) { return !e.closest('.bv-rep, .bv-tans'); }); }
+  function fields(sec) { return [].slice.call(sec.querySelectorAll(TEMPLATE ? '[data-save]' : 'textarea, select, input[type=text], input[type=number], input:not([type])')).filter(function (e) { return !e.closest('.bv-rep, .bv-tans, .sx-q'); }); }
   function snapshot(sec) { return fields(sec).map(function (e) { return { k: e.getAttribute('data-save'), v: e.type === 'checkbox' || e.type === 'radio' ? (e.checked ? e.value || 'on' : '') : e.value, label: e.getAttribute('data-label') || '' }; }); }
   function clear(sec) {
     fields(sec).forEach(function (e) {
