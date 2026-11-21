@@ -13,6 +13,15 @@
     '.ms-due{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.ms-due>div{border:2px solid #FDE68A;background:#FFFBEB;border-radius:14px;padding:12px;display:grid;gap:6px}' +
     '.ms-row{display:grid;grid-template-columns:minmax(160px,1.4fr) 2fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #F1F5F9}.ms-bar{height:12px;border-radius:99px;background:#F1F5F9;overflow:hidden}.ms-bar i{display:block;height:100%;border-radius:99px}' +
     '.ms-pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78rem;font-weight:700}.ms-muted{color:#64748b;font-size:.88rem}.ms-mis li{margin:0 0 8px}' +
+    '.si-sum{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.si-how{margin-top:8px}.si-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:14px}.si-good{border-top:6px solid #22c55e}.si-focus{border-top:6px solid #f97316}' +
+    '.si-li{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #F1F5F9}.si-acts{display:flex;flex-wrap:wrap;gap:6px}' +
+    '.si-chart{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;align-items:end}.si-w{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.8rem}.si-b{display:flex;align-items:flex-end;width:100%;max-width:56px;height:110px;background:#F8FAFC;border-radius:8px;overflow:hidden}.si-b i{display:block;width:100%;border-radius:8px 8px 0 0}' +
+    '.si-filt{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.si-filt button{font:inherit;font-size:.85rem;font-weight:700;padding:6px 11px;border-radius:999px;border:2px solid #c7d2fe;background:#eef2ff;color:#3730a3;cursor:pointer}.si-filt button.on{background:#4f46e5;border-color:#4f46e5;color:#fff}' +
+    '.si-tb{display:flex;flex-direction:column;gap:3px;min-width:0}.si-tb .ms-bar{display:block;width:100%}' +
+    '.si-t{border-bottom:1px solid #F1F5F9}.si-t[hidden]{display:none}.si-t>summary{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.6fr) auto;gap:10px;align-items:center;padding:9px 0;cursor:pointer;list-style:none}.si-tn{display:flex;flex-direction:column;min-width:0}.si-tn b{overflow-wrap:anywhere}' +
+    '.si-ev{background:#F8FAFC;border-radius:12px;padding:8px 12px;margin:0 0 10px}.si-ev ul{margin:4px 0;padding:0;list-style:none}.si-ev li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;padding:4px 0;border-bottom:1px dashed #e2e8f0}.si-ev li span{overflow-wrap:anywhere}' +
+    '.si-sk{display:grid;grid-template-columns:minmax(120px,1.2fr) 2fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #F1F5F9}' +
+    '@media(max-width:640px){.si-t>summary{grid-template-columns:1fr auto}.si-tb{grid-column:1/-1;grid-row:2}.si-sk{grid-template-columns:1fr auto}.si-sk>div:nth-child(2){grid-column:1/-1;grid-row:2}.si-chart{gap:3px}.si-w small{font-size:.68rem}}' +
     '.ms-heat{border-collapse:collapse;font-size:.82rem}.ms-heat th,.ms-heat td{border:1px solid #fff;padding:5px 6px;text-align:center;min-width:46px}.ms-heat th{background:#F8FAFC;font-weight:700;max-width:120px;vertical-align:bottom}.ms-heat td:first-child,.ms-heat th:first-child{text-align:left;min-width:150px;background:#F8FAFC}';
   function classOpts(C, pick) {   // the teacher's own classroom first, then the main-site course classes (as on /teach/ and /staff/)
     var live = C.filter(function (c) { return !c.archived_at; }), mine = live.filter(function (c) { return c.owner_kind !== 'main'; }), main = live.filter(function (c) { return c.owner_kind === 'main'; });
@@ -41,39 +50,73 @@
     if (staff && !/student/.test(location.hash)) teacher(me); else student(me);
   }, function () {});
 
-  /* ---------- student ---------- */
+  /* ---------- student: My Science Intelligence (Student Learning Centre phase 4) ----------
+     Five states, worked out the same way as on the teacher's support centre:
+     Insufficient evidence: fewer than 5 marks · Strong: 70 % or more · Developing: 40–69 %
+     Needs support: under 40 % · Requires intervention: under 50 % across 10 or more marks (the rule that puts a topic on the teacher's support list) */
+  var ST = [['strong', 'Strong', '#BBF7D0', '#166534', '💪'], ['dev', 'Developing', '#FED7AA', '#9A3412', '🌱'], ['need', 'Needs support', '#FECACA', '#991B1B', '🧭'], ['int', 'Requires intervention', '#7F1D1D', '#FFFFFF', '🚩'], ['none', 'Insufficient evidence', '#E2E8F0', '#475569', '🔍']];
+  function sstate(m) { if (!m || m.pct == null || m.marks < 5) return 'none'; if (m.pct < 50 && m.marks >= 10) return 'int'; return m.pct >= 70 ? 'strong' : m.pct >= 40 ? 'dev' : 'need'; }
+  function SL(k) { return ST.filter(function (x) { return x[0] === k; })[0] || ST[4]; }
+  function spill(k) { var l = SL(k); return '<span class="ms-pill" style="background:' + l[2] + ';color:' + l[3] + '">' + l[4] + ' ' + l[1] + '</span>'; }
+  function trend(rows) {   // last 30 days against the work before, at least 3 answers on each side
+    var cut = Date.now() - 30 * DAY, a = { g: 0, m: 0, n: 0 }, b = { g: 0, m: 0, n: 0 };
+    rows.forEach(function (r) { if (!(+r.max > 0) || r.got == null) return; var o = new Date(r.at).getTime() >= cut ? a : b; o.g += Math.min(+r.got, +r.max); o.m += +r.max; o.n++; });
+    if (a.n < 3 || b.n < 3) return null; var d = Math.round(100 * a.g / a.m - 100 * b.g / b.m);
+    return d >= 8 ? ['up', '↑ improving', '#166534', d] : d <= -8 ? ['down', '↓ slipping', '#B91C1C', d] : ['flat', '→ steady', '#475569', d];
+  }
   function student(me) {
-    app.innerHTML = hero('My mastery', 'Loading your marked work…');
-    Promise.all([S.db.from('item_results').select('topic,topic_id,skill,got,max,at,misconceptions').eq('student_id', me.user.id).gte('at', new Date(Date.now() - 365 * DAY).toISOString()).limit(5000),
-      S.db.rpc('practice_topics')]).then(function (x) {
+    app.innerHTML = hero('My Science Intelligence', 'Loading your marked work…');
+    var q = function (p) { return p.then(function (r) { return r.error ? { data: [] } : r; }, function () { return { data: [] }; }); };
+    Promise.all([q(S.db.from('item_results').select('topic,topic_id,skill,got,max,at,misconceptions,title,q_label,objective').eq('student_id', me.user.id).gte('at', new Date(Date.now() - 365 * DAY).toISOString()).order('at', { ascending: false }).limit(5000)),
+      q(S.db.rpc('practice_topics')), q(S.db.from('lessons').select('id,topic_id,title,url,published').eq('published', true))]).then(function (x) {
       var R = x[0].data || [], PT = x[1].data || [], T = aggregate(R, function (r) { return r.topic; }), SK = aggregate(R, function (r) { return r.skill; });
+      var LES = {}; (x[2].data || []).forEach(function (l) { if (l.url && l.topic_id) (LES[l.topic_id] = LES[l.topic_id] || []).push(l); });
       var byName = {}, byId = {}; PT.forEach(function (p) { byName[(p.topic || '').toLowerCase()] = p; byId[p.topic_id] = p; });
       function practiceId(m) { var p = (m.tid && byId[m.tid]) || byName[(m.k || '').toLowerCase()]; return p ? p.topic_id : null; }
-      var topics = Object.keys(T).map(function (k) { return T[k]; }).sort(function (a, b) { return (a.pct || 0) - (b.pct || 0); });
+      var topics = Object.keys(T).map(function (k) { var m = T[k]; m.st = sstate(m); m.rows = R.filter(function (r) { return r.topic === k; }); m.tr = trend(m.rows); return m; });
+      var ORD = { int: 0, need: 1, dev: 2, none: 3, strong: 4 };
+      topics.sort(function (a, b) { return ORD[a.st] - ORD[b.st] || (a.pct || 0) - (b.pct || 0); });
       var due = topics.filter(function (m) { return m.due <= Date.now() && m.lv !== 'none'; }).sort(function (a, b) { return a.due - b.due; });
       var notStarted = PT.filter(function (p) { return !T[p.topic] && !topics.some(function (m) { return m.tid === p.topic_id; }); });
-      var count = function (k) { return topics.filter(function (m) { return m.lv === k; }).length; };
-      var mis = []; topics.forEach(function (m) { m.mis.slice(-3).forEach(function (t) { mis.push([m.k, t]); }); });
-      if (!R.length) { app.innerHTML = hero('My mastery', 'See how secure you are in every topic.') + '<section class="ms-card"><p>No marked work yet. When you complete lessons and assessments, your mastery of each topic and skill appears here.</p><p><a class="btn sm main" href="/practice/">🎯 Start practising</a> <a class="btn sm" href="/learn/">📚 Open a lesson</a></p></section>'; return; }
-      app.innerHTML = hero('My mastery', 'Built from ' + R.length + ' marked answers in your lessons and assessments. Recent work counts more. Practise what is due for review, and your mastery grows.') +
-        '<section class="ms-card"><div class="ms-sum">' + ['begin', 'dev', 'secure', 'master'].map(function (k) { var l = L(k); return '<div style="background:' + l[2] + ';color:' + l[3] + '"><b>' + count(k) + '</b>' + l[1] + '</div>'; }).join('') + '<div style="background:#FEF3C7;color:#92400E"><b>' + due.length + '</b>Due for review</div></div>' +
-        '<p class="ms-muted" style="margin:10px 0 0">Beginning: under 40 % · Developing: 40–69 % · Secure: 70–84 % · Mastered: 85 % or more over at least 10 marks. Reviews are spaced out: 3 days for Beginning, 7 for Developing, 14 for Secure, 30 for Mastered.</p></section>' +
-        (due.length ? '<section class="ms-card"><h3>🔁 Due for review</h3><div class="ms-due">' + due.slice(0, 9).map(function (m) { var pid = practiceId(m);
-          return '<div><b>' + E(m.k) + '</b><span>' + pill(m.lv) + ' <span class="ms-muted">' + m.pct + ' % · last practised ' + ago(m.last) + '</span></span>' + (pid ? '<button class="btn sm main" data-prac="' + pid + '">🎯 Practise 10 questions</button>' : '<a class="btn sm" href="/tutor/?mode=test&topic=' + encodeURIComponent(m.k) + '">🤖 Quiz me with the AI tutor</a>') + '</div>'; }).join('') + '</div></section>' : '<section class="ms-card"><h3>🔁 Due for review</h3><p>Nothing is due right now. Well done.</p></section>') +
-        '<section class="ms-card"><h3>📚 Topics</h3>' + topics.map(function (m) { var l = L(m.lv), pid = practiceId(m);
-          return '<div class="ms-row"><div><b>' + E(m.k) + '</b><br><span class="ms-muted">' + m.n + ' answers · ' + ago(m.last) + '</span></div><div><div class="ms-bar" role="img" aria-label="' + m.pct + ' percent"><i style="width:' + m.pct + '%;background:' + l[3] + '"></i></div><span class="ms-muted">' + m.pct + ' %</span> ' + pill(m.lv) + '</div>' +
-            '<div>' + (pid ? '<button class="btn sm" data-prac="' + pid + '">🎯 Practise</button>' : '') + '</div></div>'; }).join('') +
+      var count = function (k) { return topics.filter(function (m) { return m.st === k; }).length; };
+      var mis = [], seenM = {}; topics.forEach(function (m) { m.mis.slice(-3).forEach(function (t) { var k = m.k + '|' + t.toLowerCase(); if (seenM[k]) return; seenM[k] = 1; mis.push([m.k, t]); }); });
+      if (!R.length) { app.innerHTML = hero('My Science Intelligence', 'See how secure you are in every topic and skill.') + '<section class="ms-card"><p>No marked work yet. When you complete lessons and assessments, each topic shows here as Strong, Developing, Needs support, Requires intervention or Insufficient evidence.</p><p><a class="btn sm main" href="/practice/">🎯 Start practising</a> <a class="btn sm" href="/learn/">📚 Open a lesson</a></p></section>'; return; }
+      function acts(m, main) { var pid = practiceId(m), ls = m.tid && LES[m.tid] && LES[m.tid][0];
+        return (pid ? '<button class="btn sm' + (main ? ' main' : '') + '" data-prac="' + pid + '">🎯 Practise 10</button>' : '') + (ls ? '<a class="btn sm" href="' + E(ls.url) + '">📘 Lesson</a>' : '') +
+          '<a class="btn sm" href="/tutor/?mode=' + (m.st === 'strong' ? 'test' : 'guide') + '&topic=' + encodeURIComponent(m.k) + '">🤖 ' + (m.st === 'strong' ? 'Challenge me' : 'Explain it') + '</a>'; }
+      // overall progress over the last 8 weeks
+      var wk = [], now = Date.now(); for (var i = 7; i >= 0; i--) wk.push({ s: now - (i + 1) * 7 * DAY, e: now - i * 7 * DAY, g: 0, m: 0 });
+      R.forEach(function (r) { if (!(+r.max > 0) || r.got == null) return; var t = new Date(r.at).getTime(); wk.forEach(function (w) { if (t > w.s && t <= w.e) { w.g += Math.min(+r.got, +r.max); w.m += +r.max; } }); });
+      var bars = wk.map(function (w, i) { var p = w.m ? Math.round(100 * w.g / w.m) : null;
+        return '<div class="si-w" title="' + (p == null ? 'No marked work' : p + ' % across ' + w.m + ' marks') + '"><span class="si-b"><i style="height:' + (p == null ? 0 : Math.max(4, p)) + '%;background:' + (p == null ? '#e2e8f0' : p >= 70 ? '#22c55e' : p >= 40 ? '#f59e0b' : '#ef4444') + '"></i></span><small>' + (p == null ? '–' : p + '%') + '</small><small class="ms-muted">' + (i === 7 ? 'this wk' : (7 - i) + 'w ago') + '</small></div>'; }).join('');
+      var strong = topics.filter(function (m) { return m.st === 'strong'; }).sort(function (a, b) { return b.pct - a.pct; }).slice(0, 3);
+      var focus = topics.filter(function (m) { return m.st === 'int' || m.st === 'need' || m.st === 'dev'; }).slice(0, 3);
+      app.innerHTML = hero('My Science Intelligence', 'Built from ' + R.length + ' marked answers in your lessons and assessments. Recent work counts more. Each topic shows how secure you are, what the evidence is, and what to do next.') +
+        '<section class="ms-card"><div class="ms-sum si-sum">' + ST.map(function (l) { return '<div style="background:' + l[2] + ';color:' + l[3] + '"><b>' + count(l[0]) + '</b>' + l[4] + ' ' + l[1] + '</div>'; }).join('') + '</div>' +
+        '<details class="si-how"><summary class="ms-muted">How these are worked out</summary><p class="ms-muted">Strong: 70 % or more · Developing: 40–69 % · Needs support: under 40 % · Requires intervention: under 50 % across 10 or more marks (your teacher sees these topics on their support list) · Insufficient evidence: fewer than 5 marks so far, so there is not enough to judge yet. Answers from the last 45 days count fully; older answers count less. The arrows compare the last 30 days with the work before (at least 3 answers in each).</p></details></section>' +
+        '<div class="si-two"><section class="ms-card si-good"><h3>💪 My strengths</h3>' + (strong.length ? strong.map(function (m) { return '<div class="si-li"><b>' + E(m.k) + '</b><span>' + m.pct + ' %' + (m.tr ? ' <span style="color:' + m.tr[2] + '">' + m.tr[1] + '</span>' : '') + '</span></div>'; }).join('') : '<p class="ms-muted">No topic is Strong yet. Keep going: 70 % or more across 5 marks makes it Strong.</p>') + '</section>' +
+        '<section class="ms-card si-focus"><h3>🎯 Focus next</h3>' + (focus.length ? focus.map(function (m) { return '<div class="si-li"><span><b>' + E(m.k) + '</b> ' + spill(m.st) + '</span><span class="si-acts">' + acts(m, true) + '</span></div>'; }).join('') : '<p class="ms-muted">Nothing needs attention right now. Try a challenge in a strong topic.</p>') + '</section></div>' +
+        '<section class="ms-card"><h3>📈 My progress over 8 weeks</h3><div class="si-chart">' + bars + '</div><p class="ms-muted" style="margin:6px 0 0">Percentage of marks gained in each week. Grey weeks had no marked work.</p></section>' +
+        (due.length ? '<section class="ms-card"><h3>🔁 Due for review</h3><div class="ms-due">' + due.slice(0, 6).map(function (m) { var pid = practiceId(m);
+          return '<div><b>' + E(m.k) + '</b><span>' + spill(m.st) + ' <span class="ms-muted">' + m.pct + ' % · last practised ' + ago(m.last) + '</span></span>' + (pid ? '<button class="btn sm main" data-prac="' + pid + '">🎯 Practise 10 questions</button>' : '<a class="btn sm" href="/tutor/?mode=test&topic=' + encodeURIComponent(m.k) + '">🤖 Quiz me with the AI tutor</a>') + '</div>'; }).join('') + '</div></section>' : '') +
+        '<section class="ms-card"><h3>📚 Every topic</h3><div class="si-filt" role="group" aria-label="Show">' + [['all', 'All']].concat(ST.map(function (l) { return [l[0], l[4] + ' ' + l[1]]; })).map(function (f, i) { return '<button type="button" data-sf="' + f[0] + '"' + (i ? '' : ' class="on"') + '>' + f[1] + '</button>'; }).join('') + '</div>' +
+        topics.map(function (m) { var l = SL(m.st);
+          return '<details class="si-t" data-st="' + m.st + '"><summary><span class="si-tn"><b>' + E(m.k) + '</b><span class="ms-muted">' + m.marks + ' marks · ' + m.n + ' answers · ' + ago(m.last) + '</span></span><span class="si-tb"><span class="ms-bar"><i style="width:' + (m.st === 'none' ? 0 : m.pct) + '%;background:' + (m.st === 'int' ? '#7F1D1D' : l[3]) + '"></i></span><span class="ms-muted">' + (m.st === 'none' ? 'not enough yet' : m.pct + ' %') + (m.tr ? ' <b style="color:' + m.tr[2] + '">' + m.tr[1] + '</b>' : '') + '</span></span>' + spill(m.st) + '</summary>' +
+            '<div class="si-ev"><p class="ms-muted"><b>Evidence:</b> your ' + Math.min(8, m.rows.length) + ' most recent marked answers in this topic.</p><ul>' + m.rows.slice(0, 8).map(function (r) { return '<li><span>' + E(r.title || 'Answer') + (r.q_label ? ' · ' + E(r.q_label) : '') + (r.objective ? ' <span class="ms-muted">(' + E(r.objective) + ')</span>' : '') + '</span><b>' + (+r.got) + ' / ' + (+r.max) + '</b><span class="ms-muted">' + ago(new Date(r.at).getTime()) + '</span></li>'; }).join('') + '</ul>' +
+            (m.mis.length ? '<p class="ms-muted"><b>Wrong idea to fix:</b> ' + E(m.mis[m.mis.length - 1]) + '</p>' : '') + '<p class="si-acts">' + acts(m, m.st !== 'strong') + '</p></div></details>'; }).join('') +
         (notStarted.length ? '<details style="margin-top:10px"><summary class="ms-muted">Topics you can practise but have not started (' + notStarted.length + ')</summary><p>' + notStarted.slice(0, 40).map(function (p) { return '<button class="btn sm" data-prac="' + p.topic_id + '" style="margin:3px">' + E(p.topic) + '</button>'; }).join('') + '</p></details>' : '') + '</section>' +
-        (Object.keys(SK).length ? '<section class="ms-card"><h3>🧠 Skills</h3>' + Object.keys(SK).map(function (k) { return SK[k]; }).sort(function (a, b) { return a.pct - b.pct; }).map(function (m) { var l = L(m.lv);
-          return '<div class="ms-row"><div><b>' + E(m.k.charAt(0).toUpperCase() + m.k.slice(1)) + '</b><br><span class="ms-muted">' + m.n + ' answers</span></div><div><div class="ms-bar"><i style="width:' + m.pct + '%;background:' + l[3] + '"></i></div><span class="ms-muted">' + m.pct + ' %</span> ' + pill(m.lv) + '</div><div><a class="btn sm" href="/tutor/?mode=guide&topic=' + encodeURIComponent('Improving my ' + m.k + ' answers in science') + '">🤖 Help</a></div></div>'; }).join('') + '</section>' : '') +
+        (Object.keys(SK).length ? '<section class="ms-card"><h3>🧠 Skills</h3>' + Object.keys(SK).map(function (k) { return SK[k]; }).sort(function (a, b) { return a.pct - b.pct; }).map(function (m) { var st = sstate(m), l = SL(st);
+          return '<div class="si-sk"><div><b>' + E(m.k.charAt(0).toUpperCase() + m.k.slice(1)) + '</b><br><span class="ms-muted">' + m.marks + ' marks</span></div><div><div class="ms-bar"><i style="width:' + (st === 'none' ? 0 : m.pct) + '%;background:' + (st === 'int' ? '#7F1D1D' : l[3]) + '"></i></div><span class="ms-muted">' + (st === 'none' ? 'not enough yet' : m.pct + ' %') + '</span> ' + spill(st) + '</div><div><a class="btn sm" href="/tutor/?mode=guide&topic=' + encodeURIComponent('Improving my ' + m.k + ' answers in science') + '">🤖 Help</a></div></div>'; }).join('') + '</section>' : '') +
         (mis.length ? '<section class="ms-card"><h3>🩹 Mistakes to fix</h3><p class="ms-muted">From the feedback on your marked answers.</p><ul class="ms-mis">' + mis.slice(-10).reverse().map(function (x) { return '<li><b>' + E(x[0]) + ':</b> ' + E(x[1]) + ' <a href="/tutor/?mode=mistake&topic=' + encodeURIComponent(x[0]) + '">explain it to me</a></li>'; }).join('') + '</ul></section>' : '') +
         '<p id="ms-msg" class="ms-muted" role="status"></p>';
-      [].forEach.call(app.querySelectorAll('[data-prac]'), function (b) { b.onclick = function () { b.disabled = true; b.textContent = 'Making your set…';
+      [].forEach.call(app.querySelectorAll('[data-sf]'), function (b) { b.onclick = function () { var f = b.getAttribute('data-sf');
+        [].forEach.call(app.querySelectorAll('[data-sf]'), function (x) { x.classList.toggle('on', x === b); });
+        [].forEach.call(app.querySelectorAll('.si-t'), function (t) { t.hidden = f !== 'all' && t.getAttribute('data-st') !== f; }); }; });
+      [].forEach.call(app.querySelectorAll('[data-prac]'), function (b) { b.onclick = function (e) { e.preventDefault(); b.disabled = true; b.textContent = 'Making your set…';
         S.db.rpc('practice_make', { topic_ids: [b.getAttribute('data-prac')], n: 10, kinds: null, set_title: null, crit: '', diff: null }).then(function (r) {
           if (r.error) { b.disabled = false; b.textContent = '🎯 Practise'; document.getElementById('ms-msg').textContent = S.nice(r.error); return; } location.href = '/quizzes/#' + r.data; }); }; });
     });
   }
-
 
   function teacher(me) {
     app.innerHTML = hero('Mastery and student support', 'Who may need support and why, a heatmap of every student by topic, and the actions you take with their effect. Built only from marked work in this class.');
