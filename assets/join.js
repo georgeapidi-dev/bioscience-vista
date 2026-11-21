@@ -114,31 +114,49 @@
         return signInWith(d.token_hash, d.role === 'teacher' ? '/teach/' : null).catch(function () { busy(b, false, 'Sign in ▶'); msg('Could not finish signing in. Try again.'); });
       }); };
   }
-  // unused website code: make your place on the site
+  // unused website code, first time (George, 21 Nov 2026): code → name → PIN → Enter, one thing per screen
   function newStep() {
     var named = !!(R.name && R.name.trim()), parts = String(R.name || '').trim().split(/\s+/), pre1 = named ? parts[0] : '', pre2 = named ? parts.slice(1).join(' ') : '';
-    shell(2, '<button class="jn-back" type="button" id="jb">← Change the code</button><h2>✨ ' + (R.linked ? 'Welcome back' : 'Welcome to BioscienceVista') + '</h2>' + (R.linked ? '<p class="lead">' + (R.role === 'teacher' ? 'This is your teacher code. It opens your own classes and everything in them. Create your 4-digit PIN: from now on you sign in with this code and your PIN.' : 'This code opens your own place on BioscienceVista: your classes, work and results are all still there. Check your names and create your 4-digit PIN. From now on you sign in with this code and your PIN, not your email.') + '</p>' : '') + '<p class="lead"' + (R.linked ? ' hidden' : '') + '>This is your personal website code. Use it once now: give your two official names and create a 4-digit PIN. Keep the code: next time, your code and your PIN sign you in.</p>' +
-      '<form id="jw"><label for="jn1">First name (official, as on your school record)</label><input type="text" id="jn1" autocomplete="given-name" maxlength="40" value="' + E(pre1) + '"' + (named ? ' readonly' : '') + '>' +
-      '<label for="jn2">Family name (official)</label><input type="text" id="jn2" autocomplete="family-name" maxlength="40" value="' + E(pre2) + '"' + (named ? ' readonly' : '') + '>' +
-      (named ? '<p class="jn-note">Not your name? Do not continue: give the code back to your teacher.</p>' : '') +
-      '<label for="jp1">Create your 4-digit PIN</label><input id="jp1" class="jn-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password">' +
-      '<label for="jp2">Type the PIN again</label><input id="jp2" class="jn-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password">' +
-      '<button class="jn-go" type="submit">Start ▶</button><p class="jn-msg" role="alert"></p></form>' +
-      '<p class="jn-note">🔒 Keep your PIN secret. Next, your teacher gives you a joining code for each class.</p>');
+    var hello = R.linked ? (R.role === 'teacher' ? 'This is your teacher code.' : 'Welcome back: your classes, work and results are all still here.') : 'Welcome to BioscienceVista.';
+    if (named) {
+      shell(2, '<button class="jn-back" type="button" id="jb">← Change the code</button><p class="lead">' + E(hello) + '</p><h2>Is this you?</h2>' +
+        '<div class="jn-who" style="font-size:1.35rem">👋 <b>' + E(R.name.trim()) + '</b></div>' +
+        '<button class="jn-go" type="button" id="jyes">Yes, this is me ▶</button>' +
+        '<p class="jn-note">Not your name? Do not continue: give the code back to your teacher.</p>');
+      app.querySelector('#jb').onclick = function () { codeStep(CODE); };
+      app.querySelector('#jyes').onclick = function () { pinNew(pre1, pre2); }; app.querySelector('#jyes').focus();
+      return;
+    }
+    shell(2, '<button class="jn-back" type="button" id="jb">← Change the code</button><p class="lead">' + E(hello) + '</p><h2>Your name</h2>' +
+      '<form id="jw"><label for="jn1">First name (official, as on your school record)</label><input type="text" id="jn1" autocomplete="given-name" maxlength="40">' +
+      '<label for="jn2">Family name (official)</label><input type="text" id="jn2" autocomplete="family-name" maxlength="40">' +
+      '<button class="jn-go" type="submit">Next ▶</button><p class="jn-msg" role="alert"></p></form>');
     app.querySelector('#jb').onclick = function () { codeStep(CODE); };
-    var f = app.querySelector('#jw'); (named ? app.querySelector('#jp1') : app.querySelector('#jn1')).focus();
-    f.onsubmit = function (e) { e.preventDefault(); var g = app.querySelector('#jn1').value.replace(/\s+/g, ' ').trim(), fm = app.querySelector('#jn2').value.replace(/\s+/g, ' ').trim(), n = (g + ' ' + fm).trim(), p1 = app.querySelector('#jp1').value.trim(), p2 = app.querySelector('#jp2').value.trim(), b = f.querySelector('button');
+    var f = app.querySelector('#jw'); app.querySelector('#jn1').focus();
+    f.onsubmit = function (e) { e.preventDefault(); var g = app.querySelector('#jn1').value.replace(/\s+/g, ' ').trim(), fm = app.querySelector('#jn2').value.replace(/\s+/g, ' ').trim();
       if (g.length < 2) return msg('Type your official first name.');
       if (fm.length < 2) return msg('Type your official family name.');
+      pinNew(g, fm); };
+  }
+  function pinNew(g, fm) {
+    var n = (g + ' ' + fm).trim();
+    shell(3, '<button class="jn-back" type="button" id="jb">← Back</button><div class="jn-who">👋 <b>' + E(n) + '</b></div><h2>Create your PIN</h2>' +
+      '<p class="lead">Choose 4 numbers you will remember. Keep them secret. Next time you sign in with your code and this PIN.</p>' +
+      '<form id="jw"><label for="jp1">Your new 4-digit PIN</label><input id="jp1" class="jn-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password">' +
+      '<label class="chk" style="display:flex;gap:6px;align-items:center;margin:6px 0 0;font-weight:400"><input type="checkbox" id="jshow" style="width:auto"> Show my PIN</label>' +
+      '<button class="jn-go" type="submit">Enter ▶</button><p class="jn-msg" role="alert"></p></form>');
+    app.querySelector('#jb').onclick = function () { newStep(); };
+    var f = app.querySelector('#jw'), inp = app.querySelector('#jp1'); inp.focus();
+    app.querySelector('#jshow').onchange = function () { inp.type = this.checked ? 'text' : 'password'; };
+    f.onsubmit = function (e) { e.preventDefault(); var p1 = inp.value.trim(), b = f.querySelector('button');
       if (!/^[0-9]{4}$/.test(p1)) return msg('Your PIN must be exactly 4 numbers.');
-      if (p1 !== p2) return msg('The two PINs are not the same. Type them again.');
       if (!pinOk(p1)) return msg('Choose a PIN that is harder to guess than ' + p1 + '.');
-      busy(b, true, 'Making your place…');
+      busy(b, true, 'Entering…');
       NEXT = { how: 'signin_code', code: CODE, name: g, pin: true };
       call({ action: 'new', code: CODE, first: g, last: fm, name: n, pin: p1 }).then(function (d) {
-        if (d.error || !d.token_hash) { busy(b, false, 'Start ▶'); return msg(d.error || 'Could not use that code.'); }
-        msg('🎉 Welcome, ' + n.split(' ')[0] + '!', true);
-        return signInWith(d.token_hash, d.role === 'teacher' ? '/teach/' : d.linked ? '/dashboard/' : '/join/').catch(function () { busy(b, false, 'Start ▶'); msg('Your place is made, but signing in did not finish. Go back and sign in with your code and PIN.'); });
+        if (d.error || !d.token_hash) { busy(b, false, 'Enter ▶'); return msg(d.error || 'Could not use that code.'); }
+        msg('🎉 Welcome, ' + g + '! Your PIN is ' + p1 + ': remember it.', true);
+        return signInWith(d.token_hash, d.role === 'teacher' ? '/teach/' : d.linked ? '/dashboard/' : '/join/').catch(function () { busy(b, false, 'Enter ▶'); msg('Your place is made, but signing in did not finish. Go back and sign in with your code and PIN.'); });
       }); };
   }
 
