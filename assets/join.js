@@ -151,7 +151,12 @@
   // ---------- signed in: type a class joining code ----------
   function joinView(me, pre, first) {
     var nm = ((me.profile && me.profile.full_name) || '').split(' ')[0];
-    shell(first ? 2 : 1, '<h2>🎟 ' + (first ? 'Now join your class' : 'Join a class') + '</h2><p class="lead">' + (nm ? 'Hello ' + E(nm) + '. ' : '') + 'Type the joining code your teacher gave you for the class. Each class has its own code, and each code works once.</p>' +
+    var mine = ((me.access && me.access.classes) || []).filter(function (c) { return !c.self; });
+    var inCls = mine.filter(function (c) { return c.status === 'approved'; }), waitCls = mine.filter(function (c) { return c.status === 'pending' || c.status === 'teacher_ok'; });
+    var have = (inCls.length ? '<p class="jn-msg ok" style="display:block">✅ You are in ' + inCls.map(function (c) { return '<b>' + E(c.name) + '</b>'; }).join(', ') + '. <a href="/dashboard/">Open my dashboard ▶</a></p>' : '') +
+      (waitCls.length ? '<p class="jn-note">⏳ Waiting to be confirmed for ' + waitCls.map(function (c) { return '<b>' + E(c.name) + '</b>'; }).join(', ') + '. You will see the lessons as soon as it is confirmed.</p>' : '');
+    if (mine.length) first = false;
+    shell(first ? 2 : 1, '<h2>🎟 ' + (first ? 'Now join your class' : 'Join a class') + '</h2>' + have + '<p class="lead">' + (nm ? 'Hello ' + E(nm) + '. ' : '') + (mine.length ? 'Joining another class? ' : '') + 'Type the joining code your teacher gave you for the class. Each class has its own code, and each code works once.</p>' +
       '<form id="jc"><label for="jcode">Joining code</label><input id="jcode" class="jn-code" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" value="' + E(pre || '') + '">' +
       '<button class="jn-go" type="submit">Join ▶</button><p class="jn-msg" role="alert"></p></form><div id="jdone"></div><p class="jn-note"><a href="/dashboard/">Go to my dashboard ▶</a></p>');
     var f = app.querySelector('#jc'), inp = app.querySelector('#jcode'); inp.focus();
