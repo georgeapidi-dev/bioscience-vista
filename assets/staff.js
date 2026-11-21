@@ -2774,7 +2774,9 @@
           (held.length ? '<h4>Waiting for BioscienceVista to confirm (' + held.length + ')</h4>' + held.map(function (e) { return '<p>' + E(nm[e.student_id] || 'Student') + '</p>'; }).join('') : '') +
           '<h4>Students in this class (' + okk.length + ')</h4>' + (okk.length ? okk.map(function (e) { return '<div class="row2" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><a href="#students/' + e.student_id + '">' + E(nm[e.student_id] || 'Student') + '</a></span><span class="cta">' + (others.length ? '<select class="btn sm" data-mv="' + e.student_id + '" aria-label="Move to another class"><option value="">Move to…</option>' + others.map(function (o) { return '<option value="' + o.id + '">' + E(o.name) + '</option>'; }).join('') + '</select>' : '') + '<a class="btn sm" href="/messages/">Message</a><button class="btn sm" data-no="' + e.id + '">Remove</button></span></div>'; }).join('') : '<p class="small muted">No students yet. They find your class under your school and ask to join, or add them below.</p>') +
           '<h4>➕ Add existing students</h4><p class="small muted">Search for students of your school or of your other classes by name, student number or email, and add them to <b>' + E(c.name) + '</b>. A new student who has no class yet: type their 8-character website code.</p>' +
-          '<div class="row2"><input id="sfind" placeholder="Name, student number, email or website code" style="flex:1"><button type="button" class="btn sm" id="sgo">Search</button></div><div id="sres"></div>';
+          '<div class="row2"><input id="sfind" placeholder="Name, student number, email or website code" style="flex:1"><button type="button" class="btn sm" id="sgo">Search</button></div><div id="sres"></div>' +
+          '<h4>🆕 New students (not on BioscienceVista yet)</h4><p class="small muted">Type each new student\'s two official names, one student per line. Each gets a personal 8-character website code for <b>' + E(c.name) + '</b>. The student types it at <b>biosciencevista.com</b> (the code box on the home page), creates a 4-digit PIN, and is put into this class.</p>' +
+          '<textarea id="nnames" rows="4" style="width:100%" placeholder="Amina Otieno&#10;Brian Mwangi"></textarea><p><button type="button" class="btn main sm" id="nmake">Make website codes</button> <span class="small muted" id="nmsg"></span></p><div id="ncodes"></div>';
         t.querySelectorAll('[data-ok],[data-no]').forEach(function (b) { b.onclick = function () { var yes = b.hasAttribute('data-ok');
           if (!yes && !b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'Click again to confirm'; return; }
           S.db.rpc('decide_enrolment', { eid: b.getAttribute(yes ? 'data-ok' : 'data-no'), approve: yes }).then(function (x) { if (ok(x, yes ? 'Accepted' : 'Done')) refs().then(function () { tcStudents(t, c); }); }); }; });
@@ -2791,6 +2793,29 @@
             out.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = function () { b.disabled = true;
               S.db.rpc('teacher_add_student', { sid: b.getAttribute('data-add'), cid: c.id }).then(function (y) { if (!ok(y, y.data === 'approved' ? 'Added to the class' : 'Added: waiting for BioscienceVista to confirm')) { b.disabled = false; return; } refs().then(function () { tcStudents(t, c); }); }); }; });
           }); };
+        var listNew = function () { var out = t.querySelector('#ncodes');
+          S.db.rpc('teacher_class_new_codes', { cid: c.id }).then(function (x) {
+            if (x.error) { out.innerHTML = '<p class="small muted">' + E(S.nice(x.error)) + '</p>'; return; }
+            var rows = x.data || []; if (!rows.length) { out.innerHTML = ''; return; }
+            var fmt = function (k) { return k.slice(0, 4) + '-' + k.slice(4); };
+            out.innerHTML = '<table class="small" style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr><th style="text-align:left">Student</th><th style="text-align:left">Website code</th><th style="text-align:left">Status</th><th></th></tr></thead><tbody>' +
+              rows.map(function (r) { return '<tr style="border-top:1px solid var(--line)"><td>' + E(r.full_name || '') + '</td><td><b style="font-family:ui-monospace,monospace;letter-spacing:.08em">' + E(fmt(r.code)) + '</b></td><td>' + (r.used ? '✅ joined' : '⏳ not used yet') + '</td><td>' + (r.used ? '' : '<button type="button" class="btn sm" data-ncx="' + E(r.code) + '">Cancel</button>') + '</td></tr>'; }).join('') +
+              '</tbody></table><p><button type="button" class="btn sm" id="nprint">🖨 Print code slips</button></p>';
+            out.querySelectorAll('[data-ncx]').forEach(function (b) { b.onclick = function () { if (!confirm('Cancel this code? The student will not be able to use it.')) return;
+              S.db.rpc('teacher_cancel_new_code', { k: b.getAttribute('data-ncx') }).then(function (y) { if (ok(y, 'Code cancelled')) listNew(); }); }; });
+            out.querySelector('#nprint').onclick = function () { var w = window.open('', '_blank'); if (!w) return;
+              w.document.write('<!doctype html><title>Website codes · ' + E(c.name) + '</title><style>body{font-family:system-ui,sans-serif}.s{border:1px dashed #999;border-radius:8px;padding:12px;margin:8px;display:inline-block;width:300px;vertical-align:top}.s b{font:700 1.4rem ui-monospace,monospace;letter-spacing:.1em}</style>' +
+                rows.filter(function (r) { return !r.used; }).map(function (r) { return '<div class="s">' + E(r.full_name || '') + '<br>' + E(c.name) + '<br><b>' + E(fmt(r.code)) + '</b><br><small>Go to biosciencevista.com, type this code in the code box, check your names and create a 4-digit PIN. Keep this code: it and your PIN sign you in.</small></div>'; }).join('') + '<script>print()<\/script>');
+              w.document.close(); };
+          }); };
+        listNew();
+        t.querySelector('#nmake').onclick = function () { var b = this, names = t.querySelector('#nnames').value.split(/\n+/).map(function (x) { return x.replace(/\s+/g, ' ').trim(); }).filter(Boolean), m = t.querySelector('#nmsg');
+          if (!names.length) { m.textContent = 'Type at least one name.'; return; }
+          var bad = names.filter(function (x) { return x.split(' ').length < 2; }); if (bad.length) { m.textContent = 'Type both official names for: ' + bad.join(', '); return; }
+          b.disabled = true; m.textContent = 'Making codes…';
+          S.db.rpc('teacher_new_student_codes', { cid: c.id, names: names }).then(function (y) { b.disabled = false;
+            if (y.error) { m.textContent = S.nice(y.error); return; }
+            m.textContent = '✓ ' + (y.data || []).length + ' code' + ((y.data || []).length === 1 ? '' : 's') + ' made. Give each student their own code.'; t.querySelector('#nnames').value = ''; listNew(); }); };
         t.querySelector('#sgo').onclick = find; t.querySelector('#sfind').onkeydown = function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); find(); } };
       });
     });
