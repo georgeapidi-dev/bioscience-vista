@@ -259,10 +259,11 @@
     var now = new Date(), open = items.filter(function (t) { return t.state !== 'done'; }), done = items.filter(function (t) { return t.state === 'done'; });
     var row = function (t) {
       var late = t.state !== 'done' && t.due_at && new Date(t.due_at) < now, soon = !late && t.state !== 'done' && t.due_at && (new Date(t.due_at) - now) < 2 * 864e5;
+      var isNew = NEWT[t.id] && t.state !== 'done';
       var hub = /^research:/.test(t.ref || '') ? 'Research Hub' : /^innovation:/.test(t.ref || '') ? 'Innovation Studio' : '';
       var tick = t.state === 'done' ? '<span class="pill ok">✓ Done</span>' : hub ? '<span class="pill t" title="Ticks itself off when you finish this in the ' + hub + '">⚙ Ticks off in the ' + hub + '</span>' : t.kind === 'quiz' || t.kind === 'lesson' ? (t.state === 'started' ? '<span class="pill t">✎ Started</span>' : '') :
         '<button type="button" class="btn sm" data-done="' + t.id + '">✓ Mark as done</button>';
-      return '<div class="todo' + (t.state === 'done' ? ' done' : '') + '" style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><div>' + (/^research:/.test(t.ref || '') ? '🔬' : /^innovation:/.test(t.ref || '') ? '💡' : ICON[t.kind] || '📌') + ' ' +
+      return '<div class="todo' + (t.state === 'done' ? ' done' : '') + '" style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><div>' + (isNew ? '<span class="pill" style="background:#db2777;color:#fff;border-color:#db2777;margin-right:4px">🆕 New</span>' : '') + (/^research:/.test(t.ref || '') ? '🔬' : /^innovation:/.test(t.ref || '') ? '💡' : ICON[t.kind] || '📌') + ' ' +
         (t.url ? '<a href="' + E(t.url) + '"' + (/^https?:/.test(t.url) && t.url.indexOf(location.origin) !== 0 ? ' target="_blank" rel="noopener"' : '') + '><b>' + E(t.title) + '</b></a>' : '<b>' + E(t.title) + '</b>') +
         (t.due_at ? ' <span class="small" style="color:' + (late ? '#c2410c' : soon ? '#b45309' : 'var(--muted)') + '">' + (late ? '⚠ was due ' : 'due ') + E(S.when(t.due_at)) + '</span>' : '') +
         (t.instructions ? '<div class="small muted">' + E(t.instructions) + '</div>' : '') + '</div><div>' + tick + '</div></div>';
@@ -317,6 +318,57 @@
   }
   var SUBJ = null;   // set for students in a Grade 6 to 10 science class: works out the subject of a lesson or question set
   function stag(kind, id, title) { if (!SUBJ) return ''; var n = SUBJ[kind](id, title); return n ? BV.subj.tag(n) + ' ' : ''; }
+  /* The connected loop (21 Nov 2026): what the teacher does reaches the student without a reload.
+     - work set since the student's last visit is marked 🆕 New; new work and new teacher feedback appear within a minute
+     - "Feedback to act on" gathers the teacher's feedback on results, lab records and returned Showcase posts, each with a way back to improve it */
+  var NEWT = {}, LIVEID = null;
+  function seen(me) { try { return JSON.parse(localStorage.getItem('bv-seen-' + me.user.id) || '{}'); } catch (e) { return {}; } }
+  function setSeen(me, o) { try { localStorage.setItem('bv-seen-' + me.user.id, JSON.stringify(Object.assign(seen(me), o))); } catch (e) {} }
+  function feedbackBox(me, res, prog) {
+    var box = app.querySelector('#db-fb'); if (!box) return;
+    var ack = seen(me).ack || {}, url = {}; prog.forEach(function (p) { if (p.lessons && p.lessons.url) url[p.lesson_id] = p.lessons.url; });
+    var q = function (pr) { return pr.then(function (r) { return r; }, function () { return { data: [] }; }); };
+    Promise.all([
+      me.view ? { data: [] } : q(S.db.from('sim_attempts').select('id,sim,sim_title,teacher_comment,updated_at,answers').eq('student_id', me.user.id).not('teacher_comment', 'is', null).order('updated_at', { ascending: false }).limit(20)),
+      me.view ? { data: [] } : q(S.db.from('showcase_posts').select('id,title,teacher_note,updated_at').eq('author_id', me.user.id).eq('status', 'returned').limit(10))
+    ]).then(function (x) {
+      var items = [];
+      res.filter(function (r) { return r.teacher_feedback; }).forEach(function (r) { var k = 'r' + r.id, v = String(r.updated_at || r.recorded_at); if (ack[k] === v) return;
+        var pc = S.pct(+r.score, +r.max_score), go = r.lesson_id ? url[r.lesson_id] : r.quiz_id ? '/quizzes/#' + r.quiz_id : '';
+        items.push({ k: k, v: v, at: v, html: '<b>' + E(r.title || 'Your work') + '</b>' + (pc != null ? ' <span class="small muted">' + pc + '%</span>' : '') + '<div class="small" style="margin:4px 0">' + E(String(r.teacher_feedback).replace(/[#*_>]/g, '').slice(0, 220)) + (String(r.teacher_feedback).length > 220 ? '…' : '') + '</div>' +
+          (go ? '<a class="btn sm" href="' + E(go) + '">' + (pc != null && pc < 60 ? '↻ Improve it now' : 'Open it again') + '</a> ' : '') + '<a class="btn sm" href="#db-res">Read in full</a>' }); });
+      ((x[0] && x[0].data) || []).forEach(function (a) { var k = 'l' + a.id, v = String(a.updated_at); if (ack[k] === v) return;
+        var go = /^sim:/.test(a.sim) ? ((a.answers && a.answers.Page) || '/simulations/play/?s=' + a.sim.slice(4)) : '/simulations/' + a.sim + '/';
+        items.push({ k: k, v: v, at: v, html: '<b>🔬 ' + E(a.sim_title || 'Lab') + '</b><div class="small" style="margin:4px 0">' + E(String(a.teacher_comment).slice(0, 220)) + '</div><a class="btn sm" href="' + E(go) + '">Open the lab</a> <a class="btn sm" href="/lab-results/">My lab results</a>' }); });
+      ((x[1] && x[1].data) || []).forEach(function (p) { var k = 's' + p.id, v = String(p.updated_at); if (ack[k] === v) return;
+        items.push({ k: k, v: v, at: v, html: '<b>🌟 Showcase: ' + E(p.title) + '</b> <span class="small" style="color:#b91c1c">returned</span><div class="small" style="margin:4px 0">' + E(String(p.teacher_note || '').slice(0, 220)) + '</div><a class="btn sm" href="/showcase/#/edit/' + p.id + '">Improve and resend</a>' }); });
+      items.sort(function (a, b) { return a.at < b.at ? 1 : -1; });
+      var chip = app.querySelector('[data-fbn]'); if (chip) { chip.textContent = items.length; chip.closest('span').hidden = !items.length; }
+      if (!items.length) { box.hidden = true; return; }
+      box.hidden = false;
+      box.innerHTML = '<h3>💬 Feedback to act on</h3><p class="small muted" style="margin:0 0 8px">Your teacher\'s comments on your work. Read each one, use it to improve, then press <b>Got it ✓</b>.</p>' +
+        items.slice(0, 6).map(function (it) { return '<div class="db-fbi"><div style="flex:1;min-width:0">' + it.html + '</div><button type="button" class="btn sm" data-ack="' + E(it.k) + '" data-v="' + E(it.v) + '">Got it ✓</button></div>'; }).join('') +
+        (items.length > 6 ? '<p class="small muted">and ' + (items.length - 6) + ' more…</p>' : '');
+      box.querySelectorAll('[data-ack]').forEach(function (b) { b.onclick = function () { var a = seen(me).ack || {}; a[b.getAttribute('data-ack')] = b.getAttribute('data-v'); setSeen(me, { ack: a }); b.closest('.db-fbi').remove(); if (!box.querySelector('.db-fbi')) box.hidden = true; if (chip) { chip.textContent = Math.max(0, +chip.textContent - 1); if (chip.textContent === '0') chip.closest('span').hidden = true; } }; });
+    });
+  }
+  function liveLoop(me, res, prog, quizzes, att, tasks) {
+    clearInterval(LIVEID); if (me.view || me.preview) return;
+    var ids = tasks.map(function (t) { return t.id + t.state; }).sort().join(), fbAt = res.reduce(function (m, r) { var d = String(r.updated_at || r.recorded_at || ''); return d > m ? d : m; }, '');
+    LIVEID = setInterval(function () {
+      if (document.hidden) return;
+      Promise.all([S.db.rpc('my_todo'), S.db.from('student_results').select('*').eq('student_id', me.user.id).order('recorded_at', { ascending: false })]).then(function (x) {
+        var T = x[0].data, R = x[1].data; if (!T || !R) return;
+        var newIds = T.map(function (t) { return t.id + t.state; }).sort().join(), newFb = R.reduce(function (m, r) { var d = String(r.updated_at || r.recorded_at || ''); return d > m ? d : m; }, '');
+        if (newIds === ids && newFb === fbAt) return;
+        if (app.querySelector('textarea:focus, input:focus, select:focus')) return;   // never redraw under a student who is typing
+        var added = T.filter(function (t) { return !tasks.some(function (o) { return o.id === t.id; }); });
+        var fbNew = R.some(function (r) { return r.teacher_feedback && String(r.updated_at || r.recorded_at) > fbAt; });
+        draw(me, R, prog, quizzes, att, T);
+        if (BV.toast) BV.toast(added.length ? '🆕 New work from your teacher: ' + added[0].title + (added.length > 1 ? ' and ' + (added.length - 1) + ' more' : '') : fbNew ? '💬 Your teacher left feedback' : 'Your work list was updated');
+      }, function () {});
+    }, 60000);
+  }
   function draw(me, res, prog, quizzes, att, tasks) {
     var first = (me.profile.full_name || 'there').split(' ')[0], got = 0, max = 0;
     res.forEach(function (r) { if (r.score != null && r.max_score) { got += +r.score; max += +r.max_score; } });
@@ -325,6 +377,9 @@
     var todo = quizzes.filter(function (q) { var a = att.filter(function (t) { return t.quiz_id === q.id; }); return !setQ[q.id] && !a.some(function (t) { return t.status !== 'in_progress'; }) && (!q.due_at || new Date(q.due_at) > new Date()); });
     var openTasks = tasks.filter(function (t) { return t.state !== 'done'; }).length;
     var fb = res.filter(function (r) { return r.teacher_feedback || r.ai_feedback; });
+    var SEEN = seen(me), since = SEEN.todo || new Date(Date.now() - 3 * 864e5).toISOString(); NEWT = {};
+    tasks.forEach(function (t) { if (t.created_at && t.created_at > since) NEWT[t.id] = 1; });
+    if (!me.view && !me.preview && !window.__bvSeenHook) { window.__bvSeenHook = true; window.addEventListener('pagehide', function () { setSeen(me, { todo: new Date().toISOString() }); }); }
     var now = new Date(), wk = new Date(now.getTime() + 7 * 864e5);
     var openT = tasks.filter(function (t) { return t.state !== 'done'; }), doneT = tasks.length - openT.length;
     var overdue = openT.filter(function (t) { return t.due_at && new Date(t.due_at) < now; }), soonT = openT.filter(function (t) { return t.due_at && new Date(t.due_at) >= now && new Date(t.due_at) < wk; });
@@ -341,11 +396,13 @@
       '.db-next{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:14px;background:linear-gradient(120deg,#4f46e5,#7c3aed);color:#fff;margin:6px 0 12px}.db-next a.btn{background:#fff;color:#4338ca;border:0}.db-next small{opacity:.9}' +
       '.db-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:14px}.db-two>.db-sec{margin:0}#db-wrap .panel.db-sec{box-shadow:none}' +
       '.dq{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:8px 0 0}.dq>div{border-radius:16px;padding:10px 12px;color:#fff;box-shadow:0 4px 12px rgba(15,23,42,.12)}.dq h4{margin:0 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;opacity:.9;color:#fff}.dq a{display:block;color:#fff;font-weight:800;text-decoration:none;padding:3px 0}.dq a:hover{text-decoration:underline}' +
+      '#db-wrap{min-width:0;max-width:100%}#app.grp{min-width:0;grid-template-columns:minmax(0,1fr)}.db-jump{max-width:100%}' +
+      '.db-fbi{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid #ffe4e6}.db-fbi:first-of-type{border-top:0}' +
       '#db-wrap #lx{margin:14px 0;scroll-margin-top:calc(var(--db-top,64px) + 64px)}@media (max-width:600px),(max-height:560px){.db-jump{position:static}.db-sec,#db-wrap #lx{scroll-margin-top:12px}}@media (max-width:600px){.db-hero{padding:18px}.db-hero .db-so{position:static;margin-top:10px}}</style>';
     h += '<div id="db-wrap"><section class="db-hero"><span class="db-eye">My dashboard</span><h1>Hello, ' + E(first) + ' 👋</h1><p>' + E(me.classes.map(function (c) { return c.name; }).join(' · ') || 'No class yet') + '</p>' +
       '<button class="btn sm db-so" type="button" id="so">Log out</button>' +
       '<div class="db-stats"><a href="#db-set"' + (overdue.length ? ' class="hot"' : '') + '>🧑‍🏫 <b>' + openT.length + '</b> set work to do' + (overdue.length ? ' · ' + overdue.length + ' overdue' : '') + '</a>' +
-      '<a href="#db-todo">✅ <b>' + todo.length + '</b> on my list</a><a href="#db-res">📊 <b>' + (max ? Math.round(100 * got / max) + '%' : '–') + '</b> overall</a><a href="#db-res">💬 <b>' + fb.length + '</b> feedback</a><a href="#db-prog">📘 <b>' + done + '/' + prog.length + '</b> lessons done</a></div></section>';
+      '<span hidden><a href="#db-fb" class="hot">💬 <b data-fbn>0</b> feedback to act on</a></span>' + '<a href="#db-todo">✅ <b>' + todo.length + '</b> on my list</a><a href="#db-res">📊 <b>' + (max ? Math.round(100 * got / max) + '%' : '–') + '</b> overall</a><a href="#db-prog">📘 <b>' + done + '/' + prog.length + '</b> lessons done</a></div></section>';
     var J = [['db-set', '🧑‍🏫 Set work', '#4f46e5', openT.length], ['db-todo', '✅ My to-do', '#059669', todo.length], ['db-res', '📊 Results & feedback', '#9333ea', fb.length], ['revise', '🎯 Revise next', '#db2777'], ['plan', '🧭 Learning plan', '#0284c7'], ['mylessons', '📘 My lessons', '#2563eb'], ['lx', '🚀 My journey', '#0d9488'], ['db-tools', '🧰 Tools', '#ea580c'], ['mycl', '🏫 My classes', '#0f766e'], ['anbox', '📈 Learning profile', '#7c3aed']];
     h += '<nav class="db-jump" aria-label="Jump to a part of my dashboard">' + J.map(function (j) { return '<a href="#' + j[0] + '" style="--c:' + j[2] + '">' + j[1] + (j[3] ? ' <i>' + j[3] + '</i>' : '') + '</a>'; }).join('') + '</nav><div id="wblive"></div>';
     // To do (16 Nov 2026): what the teacher set for the class, kept apart from my own to-do list; inside each, interactive lessons, examinations and exam-style questions are separate
@@ -383,9 +440,10 @@
       '.td-th{margin:8px 0 10px;border-radius:12px;padding:6px 10px 4px;background:color-mix(in srgb,var(--hc) 7%,#fff);border:1px solid color-mix(in srgb,var(--hc) 25%,#fff)}.td-thh{margin:0 0 2px;display:flex;align-items:center;gap:8px;font-weight:800;color:color-mix(in srgb,var(--hc) 80%,#000);font-size:.9rem}.td-thh span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:var(--hc);color:#fff;font-size:.8rem}.td-thh b{margin-left:auto;background:#fff;border-radius:999px;padding:0 8px;font-size:.78rem;color:#334155}.td-th .td-row:last-child{border-bottom:0}' +
       '.td-grp{margin:10px 0;border-left:4px solid var(--tc);padding-left:10px}.td-grp h4{margin:0 0 4px;color:var(--tc);display:flex;align-items:center;gap:6px}.td-grp h4 span{background:var(--tc);color:#fff;border-radius:999px;padding:0 8px;font-size:.8rem}.td-row{overflow-wrap:anywhere;padding:6px 0;border-bottom:1px solid var(--line,#e2e8f0)}</style>';
     h += '<section class="db-sec" id="db-set" style="--c:#4f46e5"><h2>🧑‍🏫 Work set by my teacher</h2><p class="small muted" style="margin:0">Everything your teacher set for your class, most urgent first. Tick off tasks when you finish them.</p>' +
-      (tasks.length ? '<div class="db-sum">' + (overdue.length ? '<span class="r">⚠ ' + overdue.length + ' overdue</span>' : '') + (soonT.length ? '<span class="a">⏰ ' + soonT.length + ' due this week</span>' : '') + '<span class="b">📌 ' + openT.length + ' to do</span>' + (doneT ? '<span class="g">✓ ' + doneT + ' done</span>' : '') + '</div>' : '') +
+      (tasks.length ? '<div class="db-sum">' + (overdue.length ? '<span class="r">⚠ ' + overdue.length + ' overdue</span>' : '') + (soonT.length ? '<span class="a">⏰ ' + soonT.length + ' due this week</span>' : '') + (Object.keys(NEWT).length ? '<span style="background:#fce7f3;color:#9d174d;border-color:#fbcfe8">🆕 ' + Object.keys(NEWT).length + ' new</span>' : '') + '<span class="b">📌 ' + openT.length + ' to do</span>' + (doneT ? '<span class="g">✓ ' + doneT + ' done</span>' : '') + '</div>' : '') +
       (nextT ? '<div class="db-next"><span><small>' + (nextT.due_at && new Date(nextT.due_at) < now ? '⚠ Overdue, do this first' : '⏭ Due next') + '</small><br><b>' + E(nextT.title) + '</b>' + (nextT.due_at ? ' <small>· ' + (new Date(nextT.due_at) < now ? 'was due ' : 'due ') + E(S.when(nextT.due_at)) + '</small>' : '') + '</span>' + (nextT.url ? '<a class="btn sm" href="' + E(nextT.url) + '">Start now →</a>' : '') + '</div>' : '') +
       '<div class="db-setlist">' + groups(setRows, 'Your teacher has not set any work right now. 🎉 Check your own to-do list below.') + '</div></section>';
+    h += '<section class="db-sec" id="db-fb" style="--c:#e11d48" hidden></section>';
     h += '<div id="bv-news"></div><div id="remind"></div>';
     h += '<section class="db-sec" id="db-todo" style="--c:#059669"><h3>✅ My to-do list</h3><p class="small muted">Lessons you have started and other question sets open for your class.</p><div class="db-mylist">' + groups(myRows, 'Nothing else to do right now. Well done! 🎉') + '</div></section>';
     var resOf = function (r) { return SUBJ ? (r.quiz_id ? SUBJ.quiz(r.quiz_id, r.title) : SUBJ.lesson(r.lesson_id, r.title)) : ''; };
@@ -413,6 +471,7 @@
     var lx = document.getElementById('lx'); if (lx && app.contains(lx)) app.parentNode.insertBefore(lx, app);   // keep the learner panel safe while the dashboard redraws
     app.innerHTML = h; boardWatch(me); news(me);
     var slot = app.querySelector('#lx-slot'); if (lx && slot) slot.parentNode.replaceChild(lx, slot);
+    feedbackBox(me, res, prog); liveLoop(me, res, prog, quizzes, att, tasks);
     [['#db-set', '.db-setlist', 'Find in work set by my teacher: a topic, code or title…'], ['#db-todo', '.db-mylist', 'Find in my to-do list…']].forEach(function (f) { var sec = app.querySelector(f[0]), list = sec && sec.querySelector(f[1]);
       if (list && BV.findBox && list.querySelectorAll('.td-row, .todo').length > 5) { var fw = document.createElement('div'); list.parentNode.insertBefore(fw, list); fw.appendChild(list); BV.findBox(fw, '.td-row, .todo', '.td-lv, .td-th, .td-grp', f[2]); } });
     var topH = function () { var hd = document.querySelector('header.top, .top'), r = hd && getComputedStyle(hd).position === 'sticky' ? hd.getBoundingClientRect().height : 0; app.querySelector('#db-wrap').style.setProperty('--db-top', Math.round(r) + 'px'); };
