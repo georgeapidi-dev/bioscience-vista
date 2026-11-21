@@ -47,8 +47,8 @@
      BV.subj.split(items, subjectOf, render): one tab per subject; each tab shows only that subject's items.
      BV.subj.isMyp(class): true for a Grade 6 to 10 (MYP 1 to 5) science class. */
   BV.subj = (function () {
-    var LIST = [['Biology', '#15803d', '🌿'], ['Chemistry', '#c2410c', '⚗️'], ['Physics', '#1d4ed8', '⚡']], OTHER = ['Other', '#6d28d9', '📚'];
-    var NAMED = /\b(biology|chemistry|physics)\b/i;
+    var LIST = [['Biology', '#15803d', '🌿'], ['Chemistry', '#c2410c', '⚗️'], ['Physics', '#1d4ed8', '⚡'], ['Mathematics', '#7c3aed', '➗']], OTHER = ['Other', '#6d28d9', '📚'];   // Mathematics: MYP 1-5 framework (Nov 2026)
+    var NAMED = /\b(biology|chemistry|physics|mathematics)\b/i;
     var WORDS = [['Biology', /\b(cell|dna|rna|gene|inherit|enzyme|nutri|food|diet|digest|photosynth|respirat|reproduc|evolution|biotech|classif|organism|living|understanding life|ecolog|ecosystem|plant|protein|carbohydrate|lipid|microscop|osmosis|mitosis|meiosis|cloning|stem cell|hormone|pollinat|vertebrate|microorganism|selective breeding|natural selection)/],
       ['Chemistry', /\b(matter|acid|alkali|atom|element|compound|mixture|particle|reaction|bonding|periodic|chemic|solution|solute|solvent|separat|substance)/],
       ['Physics', /\b(force|energy|electric|wave|motion|density|radioactiv|measur|speed|light|sound|heat|circuit|magnet|pressure|mass and weight|scientific investigation|introduction to science)/]];
