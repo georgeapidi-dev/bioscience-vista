@@ -12,7 +12,7 @@
 
   // the sets for my classes; each says its subject (Biology, Chemistry or Physics) from migration 036 on, before it the subject is read from the topic and title
   function quizRows(withSubject) {
-    return S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results,topic_id,' + (withSubject ? 'subject,' : '') + ' topics(name), quiz_classes(class_id, published, classes(id,name,archived_at,site_slug,follows,programme))').in('published', (ME.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false });
+    return S.db.from('quizzes').select('id,title,instructions,time_limit_minutes,opens_at,due_at,max_attempts,published,show_results,topic_id,' + (withSubject ? 'subject,practice,' : '') + ' topics(name), quiz_classes(class_id, published, classes(id,name,archived_at,site_slug,follows,programme))').in('published', (ME.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).eq('category', EXAM ? 'exam' : 'quiz').order('due_at', { ascending: true, nullsFirst: false });
   }
   function css() {
     if (document.getElementById('qc-css')) return; var st = document.createElement('style'); st.id = 'qc-css';
@@ -32,6 +32,11 @@
       '.qc-chips{display:flex;flex-wrap:wrap;gap:5px}.qc-chips span{background:var(--qcb);color:#334155;border-radius:8px;padding:2px 8px;font-size:.8rem}' +
       '.qc-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:auto}.qc-acts .btn.main{background:var(--qc);border-color:var(--qc)}.qc-more{flex:1 1 100%}.qc-more summary{cursor:pointer;font-size:.85rem;font-weight:700;color:#475569}.qc-more ul{margin:6px 0 0;padding-left:1.1em;font-size:.86rem}.qc-more ul ul{padding-left:1.1em;margin:4px 0}' +
       '.qc-part[hidden]{display:none}.qc-sel{white-space:nowrap}.qc-sel select{min-width:0}' +
+      '.qc-kind{font-weight:800}.qc-chips .qc-kind.of{background:#1e1b4b;color:#fff}.qc-chips .qc-kind.pr{background:#e0f2fe;color:#075985}' +
+      '.qc-set{background:linear-gradient(135deg,#fff7ed,#fef3c7);border:2px solid #fdba74;border-radius:18px;padding:12px 16px;margin:0 0 14px}.qc-set h3,.qc-past h3{margin:0 0 2px;display:inline-flex;gap:8px;align-items:center;font-size:1.1rem}.qc-set h3 span,.qc-past h3 span{background:#f97316;color:#fff;border-radius:999px;padding:0 9px;font-size:.85rem}' +
+      '.qc-setl,.qc-pl{display:grid;gap:8px;margin-top:8px}.qc-si,.qc-pi{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#fff;border-radius:12px;padding:9px 12px;border:1px solid #fed7aa}.qc-si>div,.qc-pi>div{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 220px}.qc-si.late{border-color:#ef4444;background:#fef2f2}' +
+      '.qc-due{font-size:.85rem;font-weight:700;color:#9a3412}.qc-si.late .qc-due{color:#b91c1c}.qc-ins{overflow-wrap:anywhere}.qc-si .btn.main{background:#ea580c;border-color:#ea580c;color:#fff}' +
+      '.qc-past{margin:22px 0 8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:18px;padding:12px 16px}.qc-past summary{cursor:pointer;list-style:none}.qc-past h3 span{background:#6366f1}.qc-pi{border-color:#e2e8f0}.qc-pa{display:flex;gap:6px;flex-wrap:wrap}.qc-score.low{background:#fee2e2;color:#991b1b}' +
       '@media(max-width:700px){.qc-tabs{display:flex;overflow-x:auto;scrollbar-width:thin;padding-bottom:6px}.qc-tabs a{flex:none;padding:9px 14px;font-size:.9rem;border-radius:999px}.qc-bar{position:static}.qc-hero{padding:16px}.qc-sel{flex:1 1 100%}.qc-sel select{flex:1}}';
     document.head.appendChild(st);
   }
@@ -70,7 +75,7 @@
         var th = BV.theme(q.title);
         return '<article class="qc-card qc-' + col + '"' + (th ? ' style="--qc:' + th.c + ';--qcb:color-mix(in srgb,' + th.c + ' 10%,#fff)"' : '') + ' data-find="' + E((q.title + ' ' + (q.topics && q.topics.name || '')).toLowerCase()) + '"><div class="qc-head"><b>' + E(q.title) + '</b>' +
           (best ? '<span class="qc-score' + (best.status === 'held' || best.status === 'needs_marking' ? ' wait' : '') + '">' + (best.status === 'held' ? 'Waiting for your teacher' : best.status === 'needs_marking' ? 'Being marked' : best.score + ' / ' + best.max) + '</span>' : '') + '</div>' +
-          '<div class="qc-chips">' + (th ? '<span style="background:' + th.c + ';color:#fff;font-weight:800">Theme ' + th.k + ' · ' + E(th.name) + '</span><span style="border:1.5px solid ' + th.c + ';color:' + th.c + ';font-weight:800;background:#fff">' + th.lv + ' · ' + E(th.level) + '</span>' : '') + [q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : '⏱ No time limit', q.due_at ? '📅 Due ' + S.when(q.due_at) : '', '🔁 ' + q.max_attempts + ' attempt' + (q.max_attempts > 1 ? 's' : '')].filter(Boolean).map(function (t) { return '<span>' + E(t) + '</span>'; }).join('') + '</div>' +
+          '<div class="qc-chips">' + (ME.staff ? '' : q.practice ? '<span class="qc-kind pr">🔁 Practice</span>' : '<span class="qc-kind of">🎯 Official attempt</span>') + (th ? '<span style="background:' + th.c + ';color:#fff;font-weight:800">Theme ' + th.k + ' · ' + E(th.name) + '</span><span style="border:1.5px solid ' + th.c + ';color:' + th.c + ';font-weight:800;background:#fff">' + th.lv + ' · ' + E(th.level) + '</span>' : '') + [q.time_limit_minutes ? '⏱ ' + q.time_limit_minutes + ' min' : '⏱ No time limit', q.due_at ? '📅 Due ' + S.when(q.due_at) : '', '🔁 ' + q.max_attempts + ' attempt' + (q.max_attempts > 1 ? 's' : '')].filter(Boolean).map(function (t) { return '<span>' + E(t) + '</span>'; }).join('') + '</div>' +
           '<div class="qc-acts">' + btn + (ME.admin ? S.del('quiz', q.id, q.title) : '') + (more ? '<details class="qc-more"><summary>More</summary><ul>' + more + '</ul></details>' : '') + '</div></article>';
       }
       // each quiz sits under the class it is set for (a student sees only their own classes)
@@ -104,6 +109,7 @@
           // Grade 6 to 10 science: Biology, Chemistry and Physics are kept apart, one tab per subject
           return '<section class="grp qc-grp"><h3 class="qc-cls">🏫 ' + E(groups[g].name) + '</h3>' +
             (BV.subj.isMyp(groups[g].cls) ? BV.subj.split(gq, subjOf, lists) : lists(gq)) + '</section>'; }).join('');
+      if (!ME.staff) extras(qs, at, now);
       app.querySelectorAll('[data-reqq]').forEach(function (b) { b.onclick = function () { b.disabled = true;
         S.db.rpc('request_quiz', { qid: b.getAttribute('data-reqq'), cid: b.getAttribute('data-cls') }).then(function (r) { if (r.error) { b.disabled = false; alert(S.nice(r.error)); return; } list(); }); }; });
       function goCls(v) { var u = new URL(location.href); if (v) u.searchParams.set('class', v); else u.searchParams.delete('class'); history.replaceState(null, '', u); list(); }
@@ -116,6 +122,38 @@
       if (fnd) fnd.oninput = filt;
       app.querySelectorAll('[data-show]').forEach(function (b) { b.onclick = function () { show = b.getAttribute('data-show'); app.querySelectorAll('[data-show]').forEach(function (x) { x.classList.toggle('on', x === b); }); filt(); }; });
     });
+  }
+
+  /* Student Learning Centre phase 3: what the teacher has set (deadlines and instructions) on top, every past attempt with its result underneath */
+  function extras(qs, at, now) {
+    var byId = {}; qs.forEach(function (q) { byId[q.id] = q; });
+    var doneQ = {}; at.forEach(function (a) { if (a.status !== 'in_progress') doneQ[a.quiz_id] = 1; });
+    var live = {}; at.forEach(function (a) { if (a.status === 'in_progress') live[a.quiz_id] = 1; });
+    function when(d) { var t = new Date(d), days = Math.ceil((t - now) / 864e5); return t.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }) + (days < 0 ? ' · overdue' : days === 0 ? ' · today' : days === 1 ? ' · tomorrow' : ' · in ' + days + ' days'); }
+    S.db.rpc('my_todo').then(function (r) { return r.error ? { data: [] } : r; }, function () { return { data: [] }; }).then(function (r) {
+      var set = {}, rows = [];
+      (r.data || []).forEach(function (t) { var q = t.kind === 'quiz' && byId[t.ref]; if (!q || doneQ[q.id] || set[q.id]) return; set[q.id] = 1; rows.push({ q: q, due: t.due_at || q.due_at, ins: t.instructions || q.instructions, by: 1 }); });
+      qs.forEach(function (q) { if (set[q.id] || doneQ[q.id] || q.practice || !q.due_at || new Date(q.due_at) < new Date(now - 7 * 864e5)) return; set[q.id] = 1; rows.push({ q: q, due: q.due_at, ins: q.instructions }); });
+      rows.sort(function (x, y) { return (x.due ? +new Date(x.due) : 9e15) - (y.due ? +new Date(y.due) : 9e15); });
+      var old = document.getElementById('qc-set'); if (old) old.remove();
+      if (!rows.length) return;
+      var box = document.createElement('section'); box.id = 'qc-set'; box.className = 'qc-set';
+      box.innerHTML = '<h3>📌 Set by your teacher <span>' + rows.length + '</span></h3><p class="small muted">Official attempts with a deadline. They count towards your results, so read the instructions first.</p><div class="qc-setl">' + rows.map(function (o) {
+        var late = o.due && new Date(o.due) < now;
+        return '<div class="qc-si' + (late ? ' late' : '') + '"><div><b>' + E(o.q.title) + '</b>' + (o.due ? '<span class="qc-due">⏰ ' + E(when(o.due)) + '</span>' : '') +
+          (o.ins ? '<span class="small muted qc-ins">ℹ️ ' + E(String(o.ins).slice(0, 220)) + '</span>' : '') + '</div><a class="btn sm main" href="#' + o.q.id + '">' + (live[o.q.id] ? 'Continue ▶' : 'Start ▶') + '</a></div>'; }).join('') + '</div>';
+      var bar = app.querySelector('.qc-bar') || app.querySelector('.qc-tabs'); if (bar) bar.before(box); else app.prepend(box);
+    });
+    var past = at.filter(function (a) { return a.status !== 'in_progress' && byId[a.quiz_id]; }).sort(function (x, y) { return new Date(y.submitted_at || 0) - new Date(x.submitted_at || 0); });
+    if (!past.length) return;
+    var per = {}; at.forEach(function (a) { per[a.quiz_id] = (per[a.quiz_id] || 0) + 1; });
+    var sec = document.createElement('section'); sec.className = 'qc-past';
+    sec.innerHTML = '<details' + (past.length <= 6 ? ' open' : '') + '><summary><h3>🗂 My previous attempts <span>' + past.length + '</span></h3></summary><p class="small muted">Open an attempt to see your marks and your teacher\'s feedback. Where attempts are left you can try again.</p><div class="qc-pl">' + past.map(function (a) {
+      var q = byId[a.quiz_id], held = !q.show_results && !a.released, pc = a.max_score ? Math.round(100 * a.score / a.max_score) : null, left = q.max_attempts - per[q.id];
+      var res = held ? '<span class="qc-score wait">Waiting for your teacher</span>' : a.status === 'needs_marking' ? '<span class="qc-score wait">Being marked</span>' : a.score != null ? '<span class="qc-score' + (pc < 50 ? ' low' : '') + '">' + a.score + ' / ' + a.max_score + (pc != null ? ' · ' + pc + '%' : '') + '</span>' : '';
+      return '<div class="qc-pi"><div><b>' + E(q.title) + '</b><span class="small muted">' + (q.practice ? '🔁 Practice' : '🎯 Official') + (a.submitted_at ? ' · handed in ' + new Date(a.submitted_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '') + '</span></div>' + res +
+        '<span class="qc-pa"><a class="btn sm" href="#' + q.id + '">Review</a>' + (left > 0 && !held ? '<a class="btn sm" href="#' + q.id + '">↻ Try again (' + left + ' left)</a>' : '') + '</span></div>'; }).join('') + '</div></details>';
+    app.appendChild(sec);
   }
 
   function open(qid) {

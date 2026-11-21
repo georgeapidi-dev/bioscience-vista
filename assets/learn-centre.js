@@ -12,7 +12,7 @@
       S.db.from('topics').select('id,subject_id,parent_id,name,code,programme,summary,sort_order,published').order('sort_order'),
       S.db.from('lessons').select('id,topic_id,title,summary,url,minutes,max_marks,sort_order,published,external_id').order('sort_order'),
       S.db.from('resources').select('id,topic_id,title,kind,url,download_url,sort_order,published').order('sort_order'),
-      S.db.from('learning_progress').select('lesson_id,status,percent').eq('student_id', me.user.id),
+      S.db.from('learning_progress').select('lesson_id,status,percent,last_step,updated_at').eq('student_id', me.user.id),
       S.db.from('quizzes').select('id,title,instructions,due_at').eq('category', 'lesson').in('published', (me.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).order('created_at', { ascending: false }),
       S.db.from('simulations').select('id,topic_id,title,url,is_internal').eq('published', true)
     ]).then(function (x) {
@@ -25,7 +25,24 @@
       var L = by(lessons, 'topic_id'), R = by((x[3].data || []).filter(function (r) { return r.published; }), 'topic_id'), SIM = by(x[6].data || [], 'topic_id'), KIDS = by(topics.filter(function (t) { return t.parent_id; }), 'parent_id');
       var orphanIL = Object.keys(mineIL).filter(function (k) { return !lessons.some(function (l) { return l.external_id === k && l.topic_id; }); }).map(function (k) { return mineIL[k]; });
       subjects = subjects.filter(function (s) { return topics.some(function (t) { return t.subject_id === s.id; }); });
-      var cur = location.hash.slice(1) || (subjects[0] && subjects[0].slug), q = '', onlyLessons = false;
+      /* Student Learning Centre phase 3: pick up where you stopped, and open on the subject you are working in */
+      var TOP = {}; topics.forEach(function (t) { TOP[t.id] = t; });
+      var LID = {}; lessons.forEach(function (l) { LID[l.id] = l; });
+      var subjOfL = function (l) { var t = TOP[l.topic_id]; return t && t.subject_id; };
+      var recent = (x[4].data || []).filter(function (p) { return LID[p.lesson_id]; }).sort(function (a, b) { return new Date(b.updated_at || 0) - new Date(a.updated_at || 0); });
+      var mySubj = recent.length && subjOfL(LID[recent[0].lesson_id]), mySlug = (subjects.filter(function (z) { return z.id === mySubj; })[0] || {}).slug;
+      var going = recent.filter(function (p) { return p.status !== 'completed' && (p.percent || 0) < 100; }).slice(0, 4);
+      if (going.length && !me.staff) {
+        var cw = document.createElement('section'); cw.className = 'lc-cont';
+        cw.innerHTML = '<h3>▶ Continue where you stopped</h3><div class="lc-cl">' + going.map(function (p) { var l = LID[p.lesson_id], t = TOP[l.topic_id], pc = p.percent || 0;
+          return '<a class="lc-ci" href="' + E(l.url || '#') + '"><b>' + E(l.title) + '</b><span class="small">' + E(t ? t.name : '') + (p.updated_at ? ' · ' + E(S.when ? S.when(p.updated_at) : new Date(p.updated_at).toLocaleDateString()) : '') + '</span><span class="bar"><i style="width:' + pc + '%"></i></span><span class="lc-go">' + pc + '% · Continue ▶</span></a>'; }).join('') + '</div>';
+        app.before(cw);
+        if (!document.getElementById('lc-cont-css')) { var st = document.createElement('style'); st.id = 'lc-cont-css';
+          st.textContent = '.lc-cont{background:linear-gradient(120deg,#4f46e5,#7c3aed 60%,#db2777);border-radius:18px;padding:14px 16px;margin:0 0 14px;color:#fff}.lc-cont h3{margin:0 0 8px;color:#fff}.lc-cl{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}' +
+            '.lc-ci{display:flex;flex-direction:column;gap:4px;background:#fff;color:#1e1b4b;border-radius:14px;padding:10px 12px;text-decoration:none;min-width:0}.lc-ci b{overflow-wrap:anywhere}.lc-ci .small{color:#64748b}.lc-ci .bar{display:block;height:7px;background:#e0e7ff;border-radius:9px;overflow:hidden}.lc-ci .bar i{display:block;height:100%;background:#22c55e}.lc-go{font-weight:800;color:#4f46e5;font-size:.88rem}.lc-ci:hover{outline:3px solid #fde047}';
+          document.head.appendChild(st); }
+      }
+      var cur = location.hash.slice(1) || mySlug || (subjects[0] && subjects[0].slug), q = '', onlyLessons = false;
       try { onlyLessons = localStorage.getItem('bv-only') === '1'; } catch (e) {}
 
       function count(t) { var n = (L[t.id] || []).length + (R[t.id] || []).length + (SIM[t.id] || []).length; (KIDS[t.id] || []).forEach(function (k) { n += count(k); }); return n; }
@@ -64,6 +81,7 @@
       }
       if (!me.staff) requests();
       var grade = null; try { grade = localStorage.getItem('bv-grade'); } catch (e) {}
+      if (!grade && recent.length) { var t0 = TOP[LID[recent[0].lesson_id].topic_id]; while (t0 && t0.parent_id && TOP[t0.parent_id]) t0 = TOP[t0.parent_id]; if (t0 && t0.programme) grade = t0.programme; }   // open on the grade you are working in
       var MORE = { 'myp-science': '/myp/', 'ib-biology': '/biology/', 'a-level-biology': '/biology/', 'igcse-biology': '/biology/', 'ib-maths-aa': '/maths/', 'ib-maths-ai': '/maths/', 'ib-chemistry': '/chemistry/', 'igcse-chemistry': '/chemistry/', 'a-level-chemistry': '/chemistry/', 'ib-physics': '/physics/', 'ib-ess': '/environmental-systems/' };
       app.addEventListener('click', function (e) { var k = e.target.closest ? e.target.closest('[data-ask]') : null; if (!k) return; k.disabled = true;
         S.db.rpc('request_material', { lid: k.getAttribute('data-ask'), cid: k.getAttribute('data-cls') }).then(function (x) { if (x.error) { k.disabled = false; alert(S.nice(x.error)); return; } requests(); }); });
