@@ -324,15 +324,26 @@
   var NEWT = {}, LIVEID = null;
   function seen(me) { try { return JSON.parse(localStorage.getItem('bv-seen-' + me.user.id) || '{}'); } catch (e) { return {}; } }
   function setSeen(me, o) { try { localStorage.setItem('bv-seen-' + me.user.id, JSON.stringify(Object.assign(seen(me), o))); } catch (e) {} }
+  var FBQ = [];
   function feedbackBox(me, res, prog) {
     var box = app.querySelector('#db-fb'); if (!box) return;
     var ack = seen(me).ack || {}, url = {}; prog.forEach(function (p) { if (p.lessons && p.lessons.url) url[p.lesson_id] = p.lessons.url; });
     var q = function (pr) { return pr.then(function (r) { return r; }, function () { return { data: [] }; }); };
     Promise.all([
       me.view ? { data: [] } : q(S.db.from('sim_attempts').select('id,sim,sim_title,teacher_comment,updated_at,answers').eq('student_id', me.user.id).not('teacher_comment', 'is', null).order('updated_at', { ascending: false }).limit(20)),
-      me.view ? { data: [] } : q(S.db.from('showcase_posts').select('id,title,teacher_note,updated_at').eq('author_id', me.user.id).eq('status', 'returned').limit(10))
+      me.view ? { data: [] } : q(S.db.from('showcase_posts').select('id,title,teacher_note,updated_at').eq('author_id', me.user.id).eq('status', 'returned').limit(10)),
+      // phase 7 journey test: comments the teacher wrote on individual answers while marking (attempt_feedback.teacher.comment)
+      me.view ? { data: [] } : q(S.db.from('quiz_attempts').select('id,quiz_id,score,max_score,released,submitted_at, quizzes(title,show_results), attempt_feedback(teacher)').eq('student_id', me.user.id).eq('status', 'marked').gte('submitted_at', new Date(Date.now() - 60 * 864e5).toISOString()).order('submitted_at', { ascending: false }).limit(20))
     ]).then(function (x) {
-      var items = [];
+      ((x[2] && x[2].data) || []).forEach(function (a) {
+        if (!a.released && !(a.quizzes && a.quizzes.show_results)) return;
+        var cm = (a.attempt_feedback || []).map(function (f) { return f.teacher; }).filter(function (t) { return t && t.comment && String(t.comment).trim(); });
+        if (!cm.length || res.some(function (r) { return r.attempt_id === a.id && r.teacher_feedback; })) return;
+        var k = 'q' + a.id, v = cm.map(function (t) { return t.at || ''; }).sort().pop() || String(a.submitted_at); if (ack[k] === v) return;
+        var pc = S.pct(+a.score, +a.max_score);
+        FBQ.push({ k: k, v: v, at: v, html: '<b>📝 ' + E((a.quizzes && a.quizzes.title) || 'Your quiz') + '</b>' + (pc != null ? ' <span class="small muted">' + pc + '%</span>' : '') + ' <span class="small muted">· ' + cm.length + ' comment' + (cm.length > 1 ? 's' : '') + ' on your answers</span><div class="small" style="margin:4px 0">“' + E(String(cm[0].comment).slice(0, 200)) + '”' + (cm.length > 1 ? ' and ' + (cm.length - 1) + ' more' : '') + '</div><a class="btn sm" href="/quizzes/#' + E(a.quiz_id) + '">Read every comment</a>' });
+      });
+      var items = FBQ.splice(0);
       res.filter(function (r) { return r.teacher_feedback; }).forEach(function (r) { var k = 'r' + r.id, v = String(r.updated_at || r.recorded_at); if (ack[k] === v) return;
         var pc = S.pct(+r.score, +r.max_score), go = r.lesson_id ? url[r.lesson_id] : r.quiz_id ? '/quizzes/#' + r.quiz_id : '';
         items.push({ k: k, v: v, at: v, html: '<b>' + E(r.title || 'Your work') + '</b>' + (pc != null ? ' <span class="small muted">' + pc + '%</span>' : '') + '<div class="small" style="margin:4px 0">' + E(String(r.teacher_feedback).replace(/[#*_>]/g, '').slice(0, 220)) + (String(r.teacher_feedback).length > 220 ? '…' : '') + '</div>' +
