@@ -82,10 +82,22 @@
   // PIN (by class sign-in code + name, or by website code)
   function pinStep(s, how) {
     var back = function () { if (how === 'signin') nameStep(); else codeStep(CODE); };
-    if (!s.pin) {
-      shell(3, '<button class="jn-back" type="button" id="jb">← Back</button><div class="jn-who">👋 <b>' + E(s.name || 'Hello') + '</b></div><h2>Choose your PIN first</h2>' +
-        '<p class="lead">You have not chosen a PIN yet. Ask your teacher to set one for you (it takes a few seconds), or, if you used to sign in with an email and password, <a href="/login/?next=/dashboard/">sign in that way once</a> and your dashboard asks you to choose one.</p>');
-      app.querySelector('#jb').onclick = back; return;
+    if (!s.pin) {   // no PIN yet: the student's own 8-character website code lets them create one (the class code alone cannot)
+      shell(2, '<button class="jn-back" type="button" id="jb">← Back</button><div class="jn-who">👋 <b>' + E(s.name || 'Hello') + '</b></div><h2>Create your PIN</h2>' +
+        '<p class="lead">You have not made a PIN yet. Type your personal <b>8-character website code</b> (your teacher or BioscienceVista gave it to you). Then you create your 4-digit PIN.</p>' +
+        '<form id="jw8"><label for="j8">Your website code</label><input id="j8" class="jn-code" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false">' +
+        '<button class="jn-go" type="submit">Next ▶</button><p class="jn-msg" role="alert"></p></form>' +
+        '<p class="jn-note">No website code? Ask your teacher: they can give you one, or set your PIN for you. Used to sign in with an email and password? <a href="/login/?next=/dashboard/">Sign in that way once</a>.</p>');
+      app.querySelector('#jb').onclick = back;
+      var f8 = app.querySelector('#jw8'), i8 = app.querySelector('#j8'); i8.focus();
+      f8.onsubmit = function (e) { e.preventDefault(); var c = clean(i8.value), b = f8.querySelector('button');
+        if (c.length !== 8) return msg('Your website code has 8 letters and numbers.');
+        busy(b, true, 'Checking…');
+        call({ action: 'lookup', code: c }).then(function (d) { busy(b, false, 'Next ▶'); if (d.error) return msg(d.error); CODE = c; R = d;
+          if (d.kind === 'site') return newStep();
+          if (d.kind === 'student') return pinStep({ name: d.name, pin: d.pin }, 'signin_code');
+          msg('That is not a website code. Type the 8-character code with your name on it.'); }); };
+      return;
     }
     shell(3, '<button class="jn-back" type="button" id="jb">← ' + (how === 'signin' ? 'Not me' : 'Change the code') + '</button><div class="jn-who">👋 <b>' + E(s.name || 'Welcome back') + '</b></div>' +
       '<form id="jp"><label for="jpin">Your 4-digit PIN</label><input id="jpin" class="jn-pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password">' +
