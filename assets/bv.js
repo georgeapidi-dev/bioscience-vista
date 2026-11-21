@@ -90,9 +90,11 @@
     function showAll(name) { [].forEach.call(document.querySelectorAll('.sj'), function (b) { show(b, name); }); }
     document.addEventListener('click', function (e) {
       var b = e.target.closest ? e.target.closest('[data-sj-tab]') : null; if (!b) return;
-      var name = b.getAttribute('data-sj-tab'); BV.store('bv-subj', name); showAll(name);   // every list on the page follows the subject chosen
+      var name = b.getAttribute('data-sj-tab'); if (b.closest('[data-sj-nostore]')) { var box = b.closest('.sj'); if (box) show(box, name); try { history.replaceState(null, '', '#' + (name === 'A2 Level' ? 'a2' : 'as')); } catch (x) {} return; }   /* AS / A2 tabs: this block only, remembered in the address, not as the subject */
+      BV.store('bv-subj', name); showAll(name);   // every list on the page follows the subject chosen
     });
     function first() {   // pages built with their tabs already in place (class pages): open the subject in the address, or the one chosen last time
+      var lvh = (location.hash || '').toLowerCase(); if (lvh === '#a2' || lvh === '#as') [].forEach.call(document.querySelectorAll('.sj[data-sj-nostore]'), function (b) { show(b, lvh === '#a2' ? 'A2 Level' : 'AS Level'); });
       var n = asked(); if (n) BV.store('bv-subj', n); else n = BV.store('bv-subj');
       if (n) showAll(n);
     }
