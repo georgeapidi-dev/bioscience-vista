@@ -85,7 +85,7 @@
     '.cchip.on{background:linear-gradient(135deg,var(--k),color-mix(in srgb,var(--k) 72%,#fff));color:#fff;border-color:transparent;box-shadow:0 6px 16px color-mix(in srgb,var(--k) 35%,transparent)}',
     '.qlinks{display:flex;flex-wrap:wrap;gap:8px}.qlinks a{--k:#2563eb;text-decoration:none;font-weight:700;border-radius:12px;padding:8px 12px;color:#fff;background:linear-gradient(135deg,var(--k),color-mix(in srgb,var(--k) 60%,#000 0%));box-shadow:0 4px 12px color-mix(in srgb,var(--k) 30%,transparent)}.qlinks a:hover{filter:brightness(1.1)}',
     '.ccards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.ccard2{--k:#2563eb;border-radius:16px;padding:14px;color:#fff;text-decoration:none;background:linear-gradient(135deg,var(--k),color-mix(in srgb,var(--k) 72%,#fff));box-shadow:0 8px 20px color-mix(in srgb,var(--k) 30%,transparent);display:flex;flex-direction:column;gap:6px}',
-    '.cc-main{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.cc-main a{background:rgba(255,255,255,.95);color:var(--k)!important;border-radius:999px;padding:4px 12px;font-size:.85rem;text-decoration:none}.cc-more summary{cursor:pointer;font-size:.82rem;opacity:.9;margin-top:4px}.cc-more span{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.85rem;margin-top:4px}',
+    '.cc-ops{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.cc-ops .btn{background:rgba(255,255,255,.95);border-radius:999px;padding:3px 10px;font-size:.8rem}.cc-main{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.cc-main a{background:rgba(255,255,255,.95);color:var(--k)!important;border-radius:999px;padding:4px 12px;font-size:.85rem;text-decoration:none}.cc-more summary{cursor:pointer;font-size:.82rem;opacity:.9;margin-top:4px}.cc-more span{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.85rem;margin-top:4px}',
     '.ccard2 b{font-size:1.1rem}.ccard2 a{color:#fff;font-weight:700}.ccard2 .small{opacity:.95}.ccard2:hover{transform:translateY(-2px)}'
   ].join('\n'); document.head.appendChild(st); })();
   var TABHUE = { overview: '#7c3aed', work: '#2563eb', questions: '#db2777', labs: '#0891b2', approvals: '#ea580c', classes: '#059669', students: '#4f46e5', quizzes: '#ca8a04', lessons: '#0d9488', marking: '#dc2626', grading: '#7c3aed', bin: '#64748b', content: '#9333ea' };
@@ -427,6 +427,17 @@
     if (on && !confirm('Archive ' + (c.name || 'this class') + '?\n\nIts students lose access to lessons and materials until you restore it. Your lessons, quizzes, notes and simulations are kept.')) return;
     S.db.rpc('archive_class', { cid: id, archive: on }).then(function (r) { if (ok(r, on ? 'Class archived' : 'Class restored')) classes(p); });
   }
+  /* Teacher dashboard → 🗑 Delete class (21 Nov 2026). The admin moves it to the 🗑 Bin (restorable for 30 days); a teacher archives it
+     (hidden from students and from the dashboard, restorable under Classes → Archived classes). Students' results are kept either way. */
+  function deleteClass(c, n, after) {
+    var warn = n ? '\n\n' + n + ' student' + (n === 1 ? ' is' : 's are') + ' still in this class. Use 🔀 Transfer students first if they should move to another class.' : '';
+    if (ME.admin) {
+      if (!confirm('Delete ' + c.name + '?\n\nIt goes to the 🗑 Bin for 30 days and can be restored from there.' + warn)) return;
+      return S.db.rpc('bin_item', { kind: 'class', item: c.id }).then(function (r) { if (ok(r, c.name + ' moved to the 🗑 Bin')) after(); });
+    }
+    if (!confirm('Delete ' + c.name + '?\n\nThe class is archived: students no longer see it and it leaves your dashboard. You can restore it under Classes → Archived classes; only the admin can remove it for good.' + warn)) return;
+    S.db.rpc('archive_class', { cid: c.id, archive: true }).then(function (r) { if (ok(r, c.name + ' archived')) after(); });
+  }
   function removeClass(p, id) {
     var c = CLASSES.concat(ARCHIVED).filter(function (x) { return x.id === id; })[0] || {};
     if (!confirm('Remove ' + (c.name || 'this class') + '?\n\nIt goes to the 🗑 Bin for 30 days and can be restored from there. Deleting it permanently from the bin takes its students out of it.')) return;
@@ -654,6 +665,7 @@
         var k = $('#ak').value, it = (L[k] || []).filter(function (x) { return x.id === $('#ai').value; })[0], m = $('#am');
         var some = host.querySelector('[name=aw]:checked').value === 'some', who = Array.prototype.map.call(host.querySelectorAll('#asl input:checked'), function (x) { return x.value; });
         var title = $('#at').value.trim() || (it && it.title) || '';
+        if (!title && k === 'research') { var so = $('#ars').selectedOptions[0]; title = ($('#ars').value.indexOf('ee:') === 0 ? 'Extended essay: ' : 'IA: ') + (so ? so.textContent : ''); }
         if (['lesson', 'quiz', 'resource', 'sim'].indexOf(k) >= 0 && !it) { m.textContent = 'Choose which ' + ({ lesson: 'lesson', quiz: 'quiz or exam', resource: 'file', sim: 'simulation' }[k]) + '.'; return; }
         if (k === 'link' && !/^https?:\/\//.test($('#au').value.trim())) { m.textContent = 'Paste the web address (starting https://).'; return; }
         if (!title) { m.textContent = 'Give the work a title.'; $('#at').focus(); return; }
@@ -2083,8 +2095,14 @@
           (nWait ? '<p class="panel tint"><b>' + nWait + ' student' + (nWait > 1 ? 's are' : ' is') + ' asking to join your classes.</b> <a class="btn main sm" href="#approvals">Review requests</a></p>' : '') +
           (CLASSES.length ? '<h3>🏫 My classes</h3><div class="ccards">' + CLASSES.map(function (c) { var k = per[c.id] || { ok: 0, wait: 0 };
             return '<div class="ccard2" style="--k:' + hue(c.id) + '"><a href="#classes/' + c.id + '"><b>' + E(c.name) + '</b></a><span class="small">👥 ' + k.ok + ' student' + (k.ok === 1 ? '' : 's') + (k.wait ? ' · 🙋 ' + k.wait + ' waiting' : '') + '</span><span class="cc-main"><a href="#classes/' + c.id + '">Open class →</a><a href="#classes/' + c.id + '/status">🟢 Live work status</a><a href="#classes/' + c.id + '/todo">📌 Set work</a><a href="#classes/' + c.id + '/add">➕ Add lessons</a></span>' +
-              '<details class="cc-more"><summary>More</summary><span><a href="#classes/' + c.id + '/lessons">🧪 Lessons</a><a href="#classes/' + c.id + '/quizzes">📝 Quizzes</a><a href="#classes/' + c.id + '/register">🗒 Register</a><a href="#classes/' + c.id + '/activity">👀 Activity</a><a href="' + '/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a><a href="/live/?class=' + c.id + '">🎥 Live</a></span></details></div>'; }).join('') + '</div>' : '') +
+              '<span class="cc-ops"><button type="button" class="btn sm" data-trc="' + c.id + '">🔀 Transfer students</button><button type="button" class="btn sm" data-delc="' + c.id + '" data-n="' + k.ok + '" style="color:#b91c1c">🗑 Delete class</button></span>' + '<details class="cc-more"><summary>More</summary><span><a href="#classes/' + c.id + '/lessons">🧪 Lessons</a><a href="#classes/' + c.id + '/quizzes">📝 Quizzes</a><a href="#classes/' + c.id + '/register">🗒 Register</a><a href="#classes/' + c.id + '/activity">👀 Activity</a><a href="' + '/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a><a href="/live/?class=' + c.id + '">🎥 Live</a></span></details></div>'; }).join('') + '</div>' : '') +
                     '<section class="panel"><h3>Latest results</h3>' + (res.length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Task</th><th>Score</th></tr>' + res.map(function (r) { return '<tr><td>' + E(nm[r.student_id] || '–') + '</td>' + taskCell(r.title) + '<td>' + E(r.score) + '/' + E(r.max_score) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="small muted">No results yet.</p>') + '</section>' + (ME.admin ? '' : '<section class="panel" id="rvbox"></section>');
+        var cc = p.querySelector('.ccards'); if (cc && !p.querySelector('#ccact')) { var ho = document.createElement('div'); ho.id = 'ccact'; cc.after(ho); }
+        p.querySelectorAll('[data-trc]').forEach(function (b) { b.onclick = function () { var c = CLASSES.filter(function (x) { return x.id === b.getAttribute('data-trc'); })[0], ho = p.querySelector('#ccact'); if (!c || !ho) return;
+          ho.innerHTML = '<section class="panel" style="border-top:5px solid #4f46e5"><div class="row2"><h3 style="margin:0">🔀 Transfer students from ' + E(c.name) + '</h3><button type="button" class="btn sm" id="trx">Close</button></div><div id="trh"></div></section>';
+          ho.querySelector('#trx').onclick = function () { ho.innerHTML = ''; };
+          transferBox(ho.querySelector('#trh'), c, p, function () { overview(p); }); ho.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
+        p.querySelectorAll('[data-delc]').forEach(function (b) { b.onclick = function () { var c = CLASSES.filter(function (x) { return x.id === b.getAttribute('data-delc'); })[0]; if (c) deleteClass(c, +b.getAttribute('data-n') || 0, function () { refs().then(function () { overview(p); }); }); }; });
         if (!ME.admin) reviewBox(p.querySelector('#rvbox'));
       });
     });
@@ -2214,7 +2232,7 @@
     });
   }
   /* Edit class → transfer students to another of the teacher's classes (17 Nov 2026, admin). Results stay with each student. */
-  function transferBox(box, c, p) {
+  function transferBox(box, c, p, after) {
     var others = CLASSES.filter(function (o) { return o.id !== c.id && o.owner_kind !== 'main'; }), d = document.createElement('section');
     d.className = 'panel grp'; d.style.marginTop = '12px'; box.appendChild(d);
     if (!others.length) { d.innerHTML = '<h4 style="margin:0">🔀 Transfer students</h4><p class="small muted">Make another class first; then you can move students into it here.</p>'; return; }
@@ -2239,7 +2257,7 @@
           if (!confirm('Move ' + sel.length + ' student' + (sel.length > 1 ? 's' : '') + ' from ' + c.name + ' to ' + name + '?')) return;
           btn.disabled = true; var done = 0, fail = 0;
           sel.reduce(function (pr, sid) { return pr.then(function () { return S.db.rpc('teacher_move_student', { sid: sid, from_cid: c.id, to_cid: to }).then(function (x) { if (x.error) fail++; else done++; }); }); }, Promise.resolve())
-            .then(function () { toast(done + ' moved to ' + name + (fail ? ' · ' + fail + ' could not be moved' : ''), !!fail); refs().then(function () { teachClasses(p); }); });
+            .then(function () { toast(done + ' moved to ' + name + (fail ? ' · ' + fail + ' could not be moved' : ''), !!fail); refs().then(function () { (after || function () { teachClasses(p); })(); }); });
         };
       });
     });
