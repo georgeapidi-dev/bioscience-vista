@@ -2333,14 +2333,97 @@
     }).then(function () { return S.db.auth.updateUser({ data: { courses_applied: true } }).then(function () {}, function () {}); }).then(refs).then(function () { if (CLASSES.length) toast('Your classes are ready: ' + CLASSES.map(function (c) { return c.name; }).join(', ')); }, function () {});
   }
   function courseList() { return COURSES ? Promise.resolve(COURSES) : S.db.rpc('course_list').then(function (r) { COURSES = r.data || []; return COURSES; }); }
+  /* ================= My classrooms (Command Centre phase 3, 21 Nov 2026) =================
+     #classes shows four separate views instead of one mixed list: teaching classes (searchable, grouped by programme, one compact row each),
+     archived classes (restore; possible duplicates explained, never merged automatically), the class catalogue (courses a class can be made from)
+     and, for the admin, the Independent learners groups. Managing one class (students, settings, materials) is #classes/<id>/manage. */
+  var CVIEWS = ['active', 'archived', 'catalogue', 'indep'];
+  function classesView(p, view) {
+    if (view === 'indep' && !ME.admin) view = 'active';
+    var tabs = [['active', '🏫 Teaching classes', CLASSES.length], ['archived', '🗄 Archived', ARCHIVED.length], ['catalogue', '📚 Class catalogue', '']].concat(ME.admin ? [['indep', '🧑‍🎓 Independent learners', '']] : []);
+    p.innerHTML = '<style>.cv-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px;border-bottom:1px solid #e2e8f0;padding-bottom:8px}.cv-tabs a{padding:7px 12px;border-radius:10px;text-decoration:none;font-weight:700;font-size:.9rem;color:#334155}.cv-tabs a.on{background:#0f1f3d;color:#fff}.cv-tabs a i{font-style:normal;font-size:.75rem;background:#e2e8f0;color:#334155;border-radius:999px;padding:0 7px;margin-left:5px}.cv-tabs a.on i{background:#0d9488;color:#fff}' +
+      '.cv-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}.cv-bar input,.cv-bar select{padding:8px 10px;border-radius:10px;border:1px solid #cbd5e1;font:inherit;min-width:0;width:auto!important;margin:0}.cv-bar input{flex:1 1 220px}.cv-bar select{flex:0 1 auto}#cvl .cc-tbl{table-layout:fixed}#cvl .cc-tbl th:nth-child(1){width:44%}#cvl .cc-tbl th:nth-child(2),#cvl .cc-tbl th:nth-child(3){width:11%}#cvl .cc-tbl th:last-child{width:170px}@media (max-width:900px){#cvl .cc-tbl th:nth-child(1){width:auto}#cvl .cc-tbl th:last-child{width:150px}}.cv-g{margin:14px 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:#0d9488;font-weight:800}.cv-warn{color:#b45309;font-size:.8rem;font-weight:700}</style>' +
+      '<nav class="cv-tabs" aria-label="Class views">' + tabs.map(function (t) { return '<a href="#classes/' + t[0] + '"' + (t[0] === view ? ' class="on" aria-current="page"' : '') + '>' + t[1] + (t[2] !== '' ? '<i>' + t[2] + '</i>' : '') + '</a>'; }).join('') + '</nav><div id="cvb"><p class="muted">Loading…</p></div>';
+    var box = p.querySelector('#cvb');
+    if (view === 'catalogue') {
+      box.innerHTML = '<p class="small muted" style="margin-top:0">Each BioscienceVista course can become a class of yours: its lessons and quizzes are added for you. Courses need the admin\'s approval once.</p><div class="cv-bar"><button class="btn main sm" type="button" id="newc">＋ New class from a course</button><button class="btn sm" type="button" id="chs">🏫 ' + E(ME.profile.school_name || 'Set your school') + '</button></div><div id="newbox"></div><div id="mycbox"></div>';
+      box.querySelector('#newc').onclick = function () { classForm(box.querySelector('#newbox'), null, p); };
+      box.querySelector('#chs').onclick = function () { changeSchool(p); };
+      myCourses().then(function () { coursePanel(box.querySelector('#mycbox')); });
+      return;
+    }
+    if (view === 'indep') {
+      S.db.from('classes').select('id,name,programme,deleted_at,archived_at').eq('owner_kind', 'main').ilike('name', '%independent learners%').is('deleted_at', null).order('name').then(function (r) {
+        var C = (r.data || []).filter(function (c) { return !c.archived_at; }), ids = C.map(function (c) { return c.id; });
+        return (ids.length ? S.db.from('enrolments').select('class_id,status').in('class_id', ids) : Promise.resolve({ data: [] })).then(function (e) {
+          var n = {}; (e.data || []).forEach(function (x) { if (x.status === 'approved') n[x.class_id] = (n[x.class_id] || 0) + 1; });
+          var withS = C.filter(function (c) { return n[c.id]; }), empty = C.filter(function (c) { return !n[c.id]; });
+          box.innerHTML = '<p class="small muted" style="margin-top:0">Students learning on their own in a main-site course. These are kept apart from your teaching classes; they are managed on the main-site page.</p>' +
+            (withS.length ? '<table class="cc-tbl"><tr><th>Group</th><th class="n">Students</th><th></th></tr>' + withS.map(function (c) { return '<tr><td><b>' + E(c.name) + '</b></td><td class="n">' + n[c.id] + '</td><td style="text-align:right"><a class="btn sm" href="/staff/#classes/' + c.id + '">Open on the main site</a></td></tr>'; }).join('') + '</table>' : '<p class="emptybox">No independent learners yet.</p>') +
+            (empty.length ? '<details style="margin-top:10px"><summary class="small muted" style="cursor:pointer">' + empty.length + ' groups with no students yet</summary><p class="small muted">' + empty.map(function (c) { return E(c.name.replace(/ · Independent learners$/i, '')); }).join(' · ') + '</p></details>' : '');
+        });
+      }).catch(function (e) { box.innerHTML = '<p class="emptybox">' + E(S.nice(e)) + '</p>'; });
+      return;
+    }
+    var list = view === 'archived' ? ARCHIVED : CLASSES, ids = CLASSES.concat(ARCHIVED).map(function (c) { return c.id; });
+    Promise.all([ids.length ? S.db.from('enrolments').select('class_id,student_id,status').in('class_id', ids) : Promise.resolve({ data: [] }),
+      view === 'active' && CLASSES.length ? S.db.from('assignments').select('class_id,title,due_at').in('class_id', CLASSES.map(function (c) { return c.id; })).gte('due_at', new Date().toISOString()).order('due_at').limit(300) : Promise.resolve({ data: [] }),
+      view === 'active' ? ccCounts() : Promise.resolve(null)]).then(function (x) {
+      var EN = x[0].data || [], A = x[1].data || [], N = x[2] || { att: [] }, st = {}, wait = {};
+      EN.forEach(function (e) { if (e.status === 'approved') (st[e.class_id] = st[e.class_id] || []).push(e.student_id); else if (e.status === 'pending') wait[e.class_id] = (wait[e.class_id] || 0) + 1; });
+      var level = function (c) { var n = c.name.toLowerCase(), g = String(c.programme || '').toLowerCase(); return (/\bhl\b/.test(n) && /\bsl\b/.test(g)) || (/\bsl\b/.test(n) && /\bhl\b/.test(g)); };
+      if (view === 'archived') {
+        var act = {}; CLASSES.forEach(function (c) { (st[c.id] || []).forEach(function (s) { (act[s] = act[s] || []).push(c.name); }); });
+        var dupes = list.map(function (c) { var ss = st[c.id] || [], where = {}; ss.forEach(function (s) { (act[s] || []).forEach(function (n) { where[n] = (where[n] || 0) + 1; }); });
+          var best = Object.keys(where).sort(function (a, b) { return where[b] - where[a]; })[0], same = list.concat(CLASSES).filter(function (o) { return o.id !== c.id && o.name.trim().toLowerCase() === c.name.trim().toLowerCase(); }).length;
+          return { c: c, n: ss.length, best: best, k: best ? where[best] : 0, same: same }; });
+        box.innerHTML = (list.length ? '<p class="small muted" style="margin-top:0">Archived classes keep every result and enrolment. Students do not see them. Restore one to use it again.</p><table class="cc-tbl"><tr><th>Class</th><th class="n">Students</th><th class="hm">Archived</th><th>Check</th><th></th></tr>' + dupes.map(function (d) {
+            var note = d.k ? (d.k === d.n ? 'All ' + d.n + ' students are now in <b>' + E(d.best) + '</b>: replaced, keep archived' : d.k + ' of ' + d.n + ' students are now in <b>' + E(d.best) + '</b>') : d.n ? 'Its students are in no active class of yours' : 'Empty';
+            return '<tr><td><b>' + E(d.c.name) + '</b>' + (d.same ? ' <span class="cv-warn">same name as ' + d.same + ' other</span>' : '') + '<br><span class="small muted">' + E(d.c.programme || '') + '</span></td><td class="n">' + d.n + '</td><td class="hm small muted">' + E(S.when(d.c.archived_at)) + '</td><td class="small">' + note + '</td>' +
+              '<td style="white-space:nowrap;text-align:right"><button type="button" class="btn sm" data-unarc="' + d.c.id + '">↩ Restore</button>' + (ME.admin ? ' <button type="button" class="btn sm" data-binc="' + d.c.id + '">🗑 Bin</button>' : '') + '</td></tr>'; }).join('') + '</table>' +
+            '<p class="small muted">"Check" compares each archived class with your active classes. Nothing is merged or deleted for you.</p>' : '<p class="emptybox">No archived classes.</p>');
+        box.querySelectorAll('[data-unarc]').forEach(function (b) { b.onclick = function () { if (!confirm('Restore this class? Its students will see it again.')) return; S.db.rpc('archive_class', { cid: b.getAttribute('data-unarc'), archive: false }).then(function (r) { if (ok(r, 'Class restored')) refs().then(function () { classesView(p, 'archived'); }); }); }; });
+        box.querySelectorAll('[data-binc]').forEach(function (b) { b.onclick = function () { removeClass(p, b.getAttribute('data-binc')); }; });
+        return;
+      }
+      var progs = {}; CLASSES.forEach(function (c) { progs[c.programme || 'Other'] = 1; });
+      box.innerHTML = '<div class="cv-bar"><input type="search" id="cvq" placeholder="Search your classes…" aria-label="Search your classes"><select id="cvp" aria-label="Programme"><option value="">All programmes</option>' + Object.keys(progs).sort().map(function (g) { return '<option>' + E(g) + '</option>'; }).join('') + '</select>' +
+        '<select id="cvs" aria-label="Show"><option value="">All classes</option><option value="st">With students</option><option value="empty">No students yet</option><option value="closed">Closed to new students</option></select>' +
+        (ME.admin && AS ? '' : '<button class="btn main sm" type="button" id="newc">＋ New class</button>') + '</div><div id="newbox"></div><div id="cvl"></div><div id="ccact" style="scroll-margin-top:180px"></div>';
+      var draw = function () {
+        var q = box.querySelector('#cvq').value.trim().toLowerCase(), pg = box.querySelector('#cvp').value, sh = box.querySelector('#cvs').value;
+        var L = CLASSES.filter(function (c) { var n = (st[c.id] || []).length; return (!q || (c.name + ' ' + (c.programme || '')).toLowerCase().indexOf(q) >= 0) && (!pg || (c.programme || 'Other') === pg) && (!sh || (sh === 'st' ? n : sh === 'empty' ? !n : !c.active)); });
+        var G = {}; L.forEach(function (c) { (G[c.programme || 'Other'] = G[c.programme || 'Other'] || []).push(c); });
+        box.querySelector('#cvl').innerHTML = !CLASSES.length ? '<p class="emptybox">No teaching classes yet. Use <b>＋ New class</b>, or open the <a href="#classes/catalogue">class catalogue</a>.</p>' : !L.length ? '<p class="emptybox">No class matches.</p>' :
+          Object.keys(G).sort().map(function (g) { return '<p class="cv-g">' + E(g) + '</p><table class="cc-tbl"><tr><th>Class</th><th class="n">Students</th><th class="n hm">To mark</th><th class="hm hm2">Next deadline</th><th></th></tr>' + G[g].map(function (c) {
+            var ss = st[c.id] || [], mk = N.att.filter(function (a) { return ss.indexOf(a.student_id) >= 0; }).length, nx = A.filter(function (a) { return a.class_id === c.id; })[0];
+            return '<tr' + (ss.length ? '' : ' class="dim"') + '><td><a class="nm" style="--k:' + hue(c.id) + '" href="#classes/' + c.id + '">' + E(c.name) + '</a>' + (c.active ? '' : ' <span class="small muted">(closed)</span>') + (wait[c.id] ? ' <a class="small" href="#approvals">🙋 ' + wait[c.id] + ' waiting</a>' : '') + (level(c) ? '<br><span class="cv-warn" title="The class name and its course disagree on HL/SL">⚠ Name says ' + (/\bhl\b/i.test(c.name) ? 'HL' : 'SL') + ', course is ' + E(c.programme) + '</span>' : '') + '</td>' +
+              '<td class="n">' + ss.length + '</td><td class="n hm">' + (mk ? '<a href="#marking"><b>' + mk + '</b></a>' : '0') + '</td><td class="hm hm2 small">' + (nx ? E(shortTask(nx.title).name) + ' · ' + inDays(nx.due_at) : '<span style="color:#94a3b8">–</span>') + '</td>' +
+              '<td style="white-space:nowrap;text-align:right"><a class="btn sm" href="#classes/' + c.id + '/manage">⚙ Manage</a> <span class="cc-menu"><button type="button" class="btn sm" data-mnu aria-label="More actions for ' + E(c.name) + '">⋯</button><div hidden style="left:auto;right:0">' +
+              '<a href="#classes/' + c.id + '">Open classroom</a><a href="#classes/' + c.id + '/todo/new">📌 Assign work</a><a href="#classes/' + c.id + '/status">🟢 Live work status</a><a href="#classes/' + c.id + '/add">➕ Add lessons</a><a href="#classes/' + c.id + '/analysis">📊 Analytics</a><a href="#classes/' + c.id + '/news">📣 Announcement</a>' +
+              '<button type="button" data-trc="' + c.id + '">🔀 Transfer students</button><button type="button" data-delc="' + c.id + '" data-n="' + ss.length + '" style="color:#b91c1c">🗑 Delete class</button></div></span></td></tr>'; }).join('') + '</table>'; }).join('');
+        box.querySelectorAll('[data-mnu]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var m = b.nextElementSibling, open = m.hidden; box.querySelectorAll('.cc-menu>div').forEach(function (d) { d.hidden = true; }); m.hidden = !open; }; });
+        box.querySelectorAll('[data-trc]').forEach(function (b) { b.onclick = function () { var c = CLASSES.filter(function (x) { return x.id === b.getAttribute('data-trc'); })[0], ho = box.querySelector('#ccact'); if (!c) return;
+          ho.innerHTML = '<section class="panel" style="border-top:5px solid #0d9488;margin-top:12px"><div class="row2"><h3 style="margin:0">🔀 Transfer students from ' + E(c.name) + '</h3><button type="button" class="btn sm" id="trx">Close</button></div><div id="trh"></div></section>';
+          ho.querySelector('#trx').onclick = function () { ho.innerHTML = ''; };
+          transferBox(ho.querySelector('#trh'), c, p, function () { classesView(p, 'active'); }); ho.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
+        box.querySelectorAll('[data-delc]').forEach(function (b) { b.onclick = function () { var c = CLASSES.filter(function (x) { return x.id === b.getAttribute('data-delc'); })[0]; if (c) deleteClass(c, +b.getAttribute('data-n') || 0, function () { refs().then(function () { classesView(p, 'active'); }); }); }; });
+      };
+      ['#cvq', '#cvp', '#cvs'].forEach(function (k) { box.querySelector(k).oninput = box.querySelector(k).onchange = draw; });
+      var nc = box.querySelector('#newc'); if (nc) nc.onclick = function () { classForm(box.querySelector('#newbox'), null, p); };
+      if (!document.__ccClose) { document.__ccClose = true; document.addEventListener('click', function () { document.querySelectorAll('.cc-menu>div').forEach(function (d) { d.hidden = true; }); }); }
+      draw();
+    }).catch(function (e) { box.innerHTML = '<p class="emptybox">' + E(S.nice(e)) + '</p>'; });
+  }
   function teachClasses(p, args) {
+    if (TEACH && (!args || !args[0] || CVIEWS.indexOf(args[0]) >= 0)) return refs().then(function () { classesView(p, (args && args[0]) || 'active'); });
     if (args && args[0] && args[1] === 'add') { TC.cur = args[0]; TC.tab = 'materials'; TC.madd = true; }
     else if (args && args[0] && args[1] === 'manage') { TC.cur = args[0]; TC.tab = 'students'; }   // #classes/<id>/add: straight to "Add from main site"
     else if (args && args[0]) return refs().then(function () { classPage(p, args[0], args[1]); });
     refs().then(function () {
       if (!TC.cur || !CLASSES.some(function (c) { return c.id === TC.cur; })) TC.cur = CLASSES[0] ? CLASSES[0].id : null;
       var c = CLASSES.filter(function (x) { return x.id === TC.cur; })[0];
-      p.innerHTML = '<section class="panel grp"><div class="row2"><h3 style="margin:0">🏫 My classes</h3><span class="cta"><button class="btn sm" type="button" id="chs">🏫 ' + E(ME.profile.school_name || 'Set your school') + '</button>' + (ME.admin && AS ? '' : '<button class="btn main sm" type="button" id="newc">＋ New class</button>') + '</span></div>' +
+      p.innerHTML = '<p class="small"><a href="#classes">← All classes</a></p><section class="panel grp"><div class="row2"><h3 style="margin:0">⚙ Manage a class</h3><span class="cta"><button class="btn sm" type="button" id="chs">🏫 ' + E(ME.profile.school_name || 'Set your school') + '</button>' + (ME.admin && AS ? '' : '<button class="btn main sm" type="button" id="newc">＋ New class</button>') + '</span></div>' +
         (CLASSES.length ? '<div class="cchips">' + CLASSES.map(function (x) { return '<button type="button" class="cchip' + (x.id === TC.cur ? ' on' : '') + '" style="--k:' + hue(x.id) + '" data-c="' + x.id + '">' + E(x.name) + (x.active ? '' : ' (closed)') + '</button>'; }).join('') + '</div>' : '<p class="small muted">' + (MYC !== null && !ME.admin ? 'No classes yet. Your class for a course is made when the BioscienceVista admin approves the course (see My courses below).' : 'No classes yet. Press ＋ New class and choose the course you teach.') + '</p>') +
         '<div id="newbox"></div></section><div id="mycbox"></div><div id="cbox"></div>';
       myCourses().then(function () { coursePanel(p.querySelector('#mycbox')); });
@@ -2353,7 +2436,7 @@
       }
       if (p.querySelector('#newc')) p.querySelector('#newc').onclick = function () { classForm(p.querySelector('#newbox'), null, p); };
       p.querySelector('#chs').onclick = function () { changeSchool(p); };
-      p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { TC.cur = b.getAttribute('data-c'); TC.tab = 'students'; teachClasses(p); }; });
+      p.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { location.hash = '#classes/' + b.getAttribute('data-c') + '/manage'; }; });
       if (c) { classBox(p.querySelector('#cbox'), c, p); lessonRequests(c, p); if (args && (args[1] === 'add' || args[1] === 'manage')) setTimeout(function () { var tb = p.querySelector('#tab'); if (tb) tb.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 400); }
     });
   }
