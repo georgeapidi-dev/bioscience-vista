@@ -20,70 +20,131 @@
      Students and teachers sign in with their code + 4-digit PIN; parents type the child's code at /family/ for a read-only view. */
   var DUR = [[7, '1 week'], [30, '1 month'], [90, '3 months'], [180, '6 months'], [365, '12 months']];
   function durSel(id, pick, attr) { return '<select ' + (attr || '') + ' aria-label="How long the code lasts"' + (id ? ' id="' + id + '"' : '') + '>' + (pick ? '' : '<option value="" selected disabled>choose…</option>') + DUR.map(function (d) { return '<option value="' + d[0] + '"' + (d[0] === pick ? ' selected' : '') + '>' + d[1] + '</option>'; }).join('') + '</select>'; }
+  // Website codes (Nov 2026): every teacher with their classes and students underneath; email a code to a student or teacher,
+  // or a whole class's codes to its teacher (server function send-email); one simple box to make codes for new students
   function codes(box) {
-    box.innerHTML = '<style>.wc-g>summary{cursor:pointer;font-weight:800;padding:8px 0;list-style:none}.wc-g>summary::-webkit-details-marker{display:none}.wc-g>summary:before{content:"▸ ";color:#7c3aed}.wc-g[open]>summary:before{content:"▾ "}.wc-sub{margin:0 0 6px 12px}' +
-      '.wc-row{display:grid;grid-template-columns:minmax(140px,1.4fr) 120px 150px minmax(110px,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9}.wc-row b.c{font-family:ui-monospace,monospace;letter-spacing:.08em}.wc-row select{font:inherit;padding:4px 6px;border-radius:8px;max-width:100%}' +
+    box.innerHTML = '<style>.wc-g>summary{cursor:pointer;font-weight:800;padding:8px 0;list-style:none}.wc-g>summary::-webkit-details-marker{display:none}.wc-g>summary:before{content:"▸ ";color:#7c3aed}.wc-g[open]>summary:before{content:"▾ "}.wc-sub{margin:0 0 6px 14px}.wc-t{border:1px solid #e2e8f0;border-radius:12px;padding:2px 10px;margin:0 0 8px;background:#fff}' +
+      '.wc-row{display:grid;grid-template-columns:minmax(140px,1.4fr) 110px 140px minmax(110px,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9}.wc-row b.c{font-family:ui-monospace,monospace;letter-spacing:.08em}.wc-row select{font:inherit;padding:4px 6px;border-radius:8px;max-width:100%}' +
+      '.wc-t>summary .wc-row{border:0;display:inline-grid;width:calc(100% - 24px);vertical-align:middle}.wc-act{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}' +
       '.wc-st{font-size:.82rem}.wc-st .pill{font-size:.78rem}.wc-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}.wc-cnt{font-size:.82rem;color:#64748b;font-weight:600}' +
-      '@media(max-width:760px){.wc-row{grid-template-columns:1fr auto;}.wc-row>.wc-st{grid-column:1/-1}.wc-row>.wc-d{grid-column:1}}</style>' +
-      '<section class="panel tint grp"><h3 style="margin:0">🎟 Make new codes</h3><p class="small">One person per line with their two official names (first name, then family name), or a number of unnamed codes (the student types both names). New people create a 4-digit PIN the first time they use the code.</p>' +
-        '<label class="f">Names (one per line)<textarea id="scn" rows="3" placeholder="Amani Otieno&#10;Brian Kip"></textarea></label>' +
-        '<div class="row2" style="gap:8px;flex-wrap:wrap;justify-content:flex-start;align-items:flex-end"><label class="f" style="margin:0">or how many unnamed<input id="scq" type="number" min="1" max="300" style="width:90px"></label>' +
-        '<label class="f" style="margin:0">Lasts ' + durSel('scd', 365) + '</label><label class="f" style="margin:0">Note (e.g. school)<input id="sco" maxlength="120" style="width:190px"></label>' +
-        '<button type="button" class="btn main sm" id="scm">＋ Make codes</button></div><p class="msg" id="scmsg" role="status"></p></section>' +
-      '<section class="panel grp"><div class="wc-h"><h3 style="margin:0">👥 Everyone and their codes</h3><span class="row2" style="gap:6px;flex-wrap:wrap">' +
+      '.wc-mail{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 8px;margin:2px 0 6px;background:#f5f3ff;border-radius:10px}.wc-mail input{flex:1 1 200px;max-width:280px}' +
+      '@media(max-width:760px){.wc-row{grid-template-columns:1fr auto}.wc-row>.wc-st{grid-column:1/-1}.wc-row>.wc-d{grid-column:1}.wc-t>summary .wc-row{width:calc(100% - 20px)}}</style>' +
+      '<section class="panel tint grp"><h3 style="margin:0 0 6px">🎟 Make codes for new students</h3>' +
+        '<div class="row2" style="gap:8px;flex-wrap:wrap;justify-content:flex-start;align-items:flex-end"><label class="f" style="margin:0;flex:1 1 260px">Full names, one per line<textarea id="scn" rows="2" placeholder="Amani Otieno&#10;Brian Kip"></textarea></label>' +
+        '<label class="f" style="margin:0">Lasts ' + durSel('scd', 365) + '</label><button type="button" class="btn main sm" id="scm">＋ Make</button></div>' +
+        '<p class="small muted" style="margin:6px 0 0">Teachers and students who already have an account get theirs with ＋ Make code on their own line below.</p><p class="msg" id="scmsg" role="status"></p></section>' +
+      '<section class="panel grp"><div class="wc-h"><h3 style="margin:0">🧑‍🏫 Teachers, their classes and students</h3><span class="row2" style="gap:6px;flex-wrap:wrap">' +
         '<label class="small">Teachers\' joining codes last ' + durSel('jdays', 30) + '</label>' +
         '<button type="button" class="btn sm" id="scs">🎟 Codes for everyone without one</button></span></div>' +
         '<div class="row2" style="gap:8px;flex-wrap:wrap;justify-content:flex-start;margin:8px 0"><input id="scf" type="search" placeholder="🔎 Find a name, code, class or school" style="flex:1 1 220px;max-width:340px">' +
-        '<select id="scw" aria-label="Show"><option value="all">Everyone</option><option value="none">No code yet</option><option value="soon">Expiring within 30 days</option><option value="exp">Expired</option><option value="unused">Not used yet</option></select>' +
-        '<label class="small">New codes and renewals last ' + durSel('rdays', 365) + '</label></div><p class="msg" id="scsm" role="status"></p><div id="scl"><p class="small muted">Loading…</p></div></section>';
-    var ROWS = [], open = {};
+        '<select id="scw" aria-label="Show"><option value="all">Everyone</option><option value="none">No code yet</option><option value="noexp">No expiry set yet</option><option value="soon">Expiring within 30 days</option><option value="exp">Expired</option><option value="unused">Not used yet</option></select>' +
+        '<label class="small">New codes and renewals last ' + durSel('rdays', 365) + '</label></div><p class="msg" id="scsm" role="status" aria-live="polite"></p><div id="scl"><p class="small muted">Loading…</p></div></section>';
+    var ROWS = [], BY = {}, TEACH = [], CLS = [], ENR = {}, NAMES = {}, open = {};
     S.db.from('code_settings').select('kind,days').then(function (r) { (r.data || []).forEach(function (x) { if (x.kind === 'join') box.querySelector('#jdays').value = String(x.days); }); });
     box.querySelector('#jdays').onchange = function () { var d = +this.value; S.db.rpc('set_code_days', { k: 'join', d: d }).then(function (r) { var m = box.querySelector('#scsm'); m.className = r.error ? 'msg' : 'msg ok'; m.textContent = r.error ? S.nice(r.error) : 'Teachers\' new joining codes now last ' + DUR.filter(function (x) { return x[0] === d; })[0][1] + '.'; }); };
     function load() {
-      S.db.rpc('admin_people_codes').then(function (r) {
-        var l = box.querySelector('#scl');
-        if (r.error) { l.innerHTML = '<p class="msg">' + E(S.nice(r.error)) + '</p>'; return; }
-        ROWS = r.data || []; draw();
+      Promise.all([S.db.rpc('admin_people_codes'), S.db.from('classes').select('id,name,teacher_id,self_study,archived_at,deleted_at').order('name'),
+        S.db.from('enrolments').select('student_id,class_id').eq('status', 'approved')]).then(function (x) {
+        var l = box.querySelector('#scl'), bad = x.filter(function (y) { return y.error; })[0];
+        if (bad) { l.innerHTML = '<p class="msg">' + E(S.nice(bad.error)) + '</p>'; return; }
+        ROWS = x[0].data || []; BY = {}; ROWS.forEach(function (r) { if (r.person && !BY[r.person]) BY[r.person] = r; });
+        CLS = (x[1].data || []).filter(function (c) { return !c.self_study && !c.archived_at && !c.deleted_at; });
+        ENR = {}; (x[2].data || []).forEach(function (e) { (ENR[e.class_id] = ENR[e.class_id] || []).push(e.student_id); });
+        var tids = {}; ROWS.forEach(function (r) { if (r.role === 'teacher' && r.person) tids[r.person] = 1; }); CLS.forEach(function (c) { if (c.teacher_id) tids[c.teacher_id] = 1; });
+        var miss = Object.keys(tids).filter(function (id) { return !BY[id]; });
+        (miss.length ? S.db.from('profiles').select('id,full_name,school_name').in('id', miss) : Promise.resolve({ data: [] })).then(function (p) {
+          NAMES = {}; (p.data || []).forEach(function (q) { NAMES[q.id] = q; });
+          TEACH = Object.keys(tids).map(function (id) { var r = BY[id], q = NAMES[id] || {};
+            return r || { person: id, name: q.full_name || 'Teacher', role: 'teacher', grp_type: 'admin', grp: q.school_name || '', self: true }; });
+          TEACH.sort(function (a, b) { return String(a.grp || '').localeCompare(String(b.grp || '')) || String(a.name || '').localeCompare(String(b.name || '')); });
+          draw();
+        });
       });
     }
     function fmt(c) { return c ? c.slice(0, 4) + '-' + c.slice(4) : ''; }
     function state(x) { var now = Date.now(); if (!x.code) return 'none'; if (x.expires_at && new Date(x.expires_at) < now) return 'exp'; if (!x.used_at) return 'unused'; return 'ok'; }
     function left(x) { if (!x.expires_at) return 'no expiry'; var d = Math.ceil((new Date(x.expires_at) - Date.now()) / 864e5); return d < 0 ? 'expired ' + new Date(x.expires_at).toLocaleDateString() : 'until ' + new Date(x.expires_at).toLocaleDateString() + (d <= 30 ? ' (' + d + ' day' + (d === 1 ? '' : 's') + ')' : ''); }
     function nearest(x) { if (!x.expires_at) return 0; if (!x.created_at) return 365; var d = Math.round((new Date(x.expires_at) - new Date(x.created_at)) / 864e5); var best = 365; DUR.forEach(function (o) { if (Math.abs(o[0] - d) < Math.abs(best - d)) best = o[0]; }); return best; }
-    function row(x) {
-      var st = state(x), key = (x.person || '') + '|' + (x.code || '');
-      var status = st === 'none' ? '<span class="pill t">no code yet</span>' : st === 'exp' ? '<span class="pill" style="background:#fee2e2;color:#991b1b">expired</span>' : st === 'unused' ? '<span class="pill t">not used yet</span>' : '<span class="pill ok">✓ in use</span>';
-      var act = !x.person ? '<button type="button" class="btn sm" data-del="' + E(x.code) + '" title="Delete this unused code">🗑</button>'
+    function row(x, extra) {
+      var st = state(x);
+      var status = x.self ? '<span class="small muted">admin account</span>' : st === 'none' ? '<span class="pill t">no code yet</span>' : st === 'exp' ? '<span class="pill" style="background:#fee2e2;color:#991b1b">expired</span>' : st === 'unused' ? '<span class="pill t">not used yet</span>' : '<span class="pill ok">✓ in use</span>';
+      var act = x.self ? '' : !x.person ? '<button type="button" class="btn sm" data-del="' + E(x.code) + '" title="Delete this unused code">🗑</button>'
         : st === 'none' ? '<button type="button" class="btn main sm" data-make="' + E(x.person) + '">＋ Make code</button>'
         : '<button type="button" class="btn sm" data-renew="' + E(x.code) + '" title="A new code for the same person; the old one stops now. Their place, classes and results stay.">↻ Renew</button>';
-      return '<div class="wc-row" data-key="' + E(key) + '"><div><b>' + E(x.name || 'Unnamed code') + '</b>' + (x.role === 'teacher' && x.grp_type === 'unassigned' ? ' <span class="small muted">teacher</span>' : '') + '</div>' +
+      if (x.code && st !== 'exp') act += '<button type="button" class="btn sm" data-mail="' + E(x.code) + '" title="Email this code to ' + E(x.name || 'them') + '">✉ Send to ' + (x.role === 'teacher' ? 'teacher' : 'student') + '</button>';
+      return '<div class="wc-row"><div><b>' + E(x.name || 'Unnamed code') + '</b>' + (extra || '') + '</div>' +
         '<div>' + (x.code ? '<b class="c">' + E(fmt(x.code)) + '</b>' : '<span class="small muted">—</span>') + '</div>' +
         '<div class="wc-d">' + (x.code && st !== 'exp' ? durSel('', nearest(x), 'data-dur="' + E(x.code) + '"') : '') + '</div>' +
-        '<div class="wc-st">' + status + ' <span class="small muted"' + (x.code && !x.expires_at ? ' style="color:#b45309;font-weight:700"' : '') + '>' + (x.code ? E(left(x)) : '') + '</span></div><div>' + act + '</div></div>';
+        '<div class="wc-st">' + status + ' <span class="small muted"' + (x.code && !x.expires_at ? ' style="color:#b45309;font-weight:700"' : '') + '>' + (x.code ? E(left(x)) : '') + '</span></div><div class="wc-act">' + act + '</div></div>';
     }
     function draw() {
       var q = (box.querySelector('#scf').value || '').trim().toLowerCase(), w = box.querySelector('#scw').value, now = Date.now();
-      var keepIt = function (x) { var st = state(x);
+      var fits = function (x) { var st = state(x);
         if (w === 'none' && st !== 'none') return false; if (w === 'noexp' && !(x.code && !x.expires_at)) return false; if (w === 'exp' && st !== 'exp') return false; if (w === 'unused' && st !== 'unused') return false;
-        if (w === 'soon' && !(x.expires_at && st !== 'exp' && new Date(x.expires_at) - now < 30 * 864e5)) return false;
-        return !q || ((x.name || '') + ' ' + (x.code || '') + ' ' + (x.grp || '')).toLowerCase().indexOf(q) >= 0; };
-      var SEC = [['class', '🏫 Students by class'], ['school', '🏛 Teachers by school'], ['indep', '🚀 Independent learners'], ['private', '🧑‍🏫 Private teachers'], ['unassigned', '🆕 New codes not used yet']];
-      var html = SEC.map(function (s) {
-        var rows = ROWS.filter(function (x) { return x.grp_type === s[0] && keepIt(x); }); if (!rows.length) return '';
-        var groups = {}, order = []; rows.forEach(function (x) { var g = x.grp || '—'; if (!groups[g]) { groups[g] = []; order.push(g); } groups[g].push(x); });
-        order.sort(function (a, b) { return a.localeCompare(b); });
-        var many = order.length > 1 || s[0] === 'class' || s[0] === 'school';
-        var body = order.map(function (g) { var list = groups[g].sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || '')); });
-          var none = list.filter(function (x) { return !x.code; }).length, ex = list.filter(function (x) { return state(x) === 'exp'; }).length;
-          var inner = list.map(row).join('');
-          if (!many) return inner;
-          var gk = s[0] + ':' + g;
-          return '<details class="wc-g wc-sub" data-g="' + E(gk) + '"' + (open[gk] || q ? ' open' : '') + '><summary>' + E(g) + ' <span class="wc-cnt">' + list.length + (none ? ' · ' + none + ' without a code' : '') + (ex ? ' · ' + ex + ' expired' : '') + '</span> <button type="button" class="btn sm" data-print="' + E(gk) + '" style="margin-left:6px">🖨 Print</button></summary>' + inner + '</details>'; }).join('');
-        return '<details class="wc-g" data-g="' + s[0] + '"' + (open[s[0]] !== false ? ' open' : '') + '><summary>' + s[1] + ' <span class="wc-cnt">' + rows.length + '</span>' + (many ? '' : ' <button type="button" class="btn sm" data-print="' + s[0] + ':' + E(order[0]) + '" style="margin-left:6px">🖨 Print</button>') + '</summary>' + body + '</details>';
+        if (w === 'soon' && !(x.expires_at && st !== 'exp' && new Date(x.expires_at) - now < 30 * 864e5)) return false; return true; };
+      var hit = function (x, more) { return !q || ((x.name || '') + ' ' + (x.code || '') + ' ' + (more || '')).toLowerCase().indexOf(q) >= 0; };
+      var byName = function (a, b) { return String(a.name || '').localeCompare(String(b.name || '')); };
+      // 1. teachers, each with their classes and the students in them
+      var tHtml = TEACH.map(function (t) {
+        var tHit = hit(t, t.grp), cls = CLS.filter(function (c) { return c.teacher_id === t.person; }), shown = 0;
+        var inner = cls.map(function (c) {
+          var all = (ENR[c.id] || []).map(function (id) { return BY[id]; }).filter(Boolean).sort(byName);
+          var list = all.filter(function (x) { return fits(x) && (tHit || hit(x, c.name)); }); if (!list.length && (q || w !== 'all')) return ''; shown += list.length;
+          var none = all.filter(function (x) { return !x.code; }).length, ck = 'c:' + c.id;
+          return '<details class="wc-g wc-sub" data-g="' + E(ck) + '"' + (open[ck] || q ? ' open' : '') + '><summary>🏫 ' + E(c.name) + ' <span class="wc-cnt">' + all.length + ' student' + (all.length === 1 ? '' : 's') + (none ? ' · ' + none + ' without a code' : '') + '</span> ' +
+            '<button type="button" class="btn sm" data-mailclass="' + E(c.id) + '" title="Email every student\'s code in this class to ' + E(t.name || 'the teacher') + '" style="margin-left:6px">✉ Send class codes to teacher</button> <button type="button" class="btn sm" data-print="' + E(c.id) + '">🖨 Print</button></summary>' +
+            (list.length ? list.map(function (x) { return row(x); }).join('') : '<p class="small muted" style="margin:4px 0 8px">No students yet.</p>') + '</details>';
+        }).join('');
+        if ((q || w !== 'all') && !shown && !(tHit && fits(t))) return '';
+        var tk = 't:' + t.person;
+        return '<details class="wc-g wc-t" data-g="' + E(tk) + '"' + (open[tk] || q ? ' open' : '') + '><summary>' + row(t, (t.grp && t.grp_type !== 'admin' ? ' <span class="small muted">' + E(t.grp) + '</span>' : '') + ' <span class="wc-cnt">· ' + cls.length + ' class' + (cls.length === 1 ? '' : 'es') + '</span>') + '</summary>' +
+          (inner || '<p class="small muted" style="margin:4px 0 8px 14px">' + (cls.length ? 'Nobody here matches.' : 'No classes yet.') + '</p>') + '</details>';
       }).join('');
+      // 2. independent learners, 3. new codes not used yet
+      var simple = function (type, title) { var list = ROWS.filter(function (x) { return x.grp_type === type && fits(x) && hit(x, x.grp); }).sort(byName); if (!list.length) return '';
+        return '<details class="wc-g" data-g="' + type + '"' + (open[type] || q ? ' open' : '') + '><summary>' + title + ' <span class="wc-cnt">' + list.length + '</span> <button type="button" class="btn sm" data-print="' + type + '" style="margin-left:6px">🖨 Print</button></summary>' + list.map(function (x) { return row(x); }).join('') + '</details>'; };
+      var html = (tHtml ? '<h4 style="margin:6px 0">🧑‍🏫 Teachers</h4>' + tHtml : '') + simple('indep', '🚀 Independent learners') + simple('unassigned', '🆕 New codes not used yet');
       box.querySelector('#scl').innerHTML = html || '<p class="small muted">Nobody matches.</p>';
       box.querySelectorAll('details.wc-g').forEach(function (d) { d.ontoggle = function () { open[d.getAttribute('data-g')] = d.open; }; });
-      var rd = function () { return +box.querySelector('#rdays').value; }, msg = function (t, ok) { var m = box.querySelector('#scsm'); m.className = ok ? 'msg ok' : 'msg'; m.textContent = t; };
+      // buttons inside a <summary> must not open or close it
+      box.querySelectorAll('summary button, summary select').forEach(function (b) { b.addEventListener('click', function (e) { e.stopPropagation(); if (b.tagName === 'BUTTON') e.preventDefault(); }); });
+      wire();
+    }
+    var rd = function () { return +box.querySelector('#rdays').value; }, msg = function (t, ok) { var m = box.querySelector('#scsm'); m.className = ok ? 'msg ok' : 'msg'; m.textContent = t; };
+    // email: the server finds the address on the account; a code sign-in account has none, so ask for one right under the line
+    function mail(b, what, to) {
+      if (b.disabled) return; b.disabled = true; var was = b.textContent; b.textContent = 'Sending…';
+      S.db.functions.invoke('send-email', { body: Object.assign({}, what, to ? { to: to } : {}) }).then(function (res) {
+        var d = res.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } }
+        b.disabled = false; b.textContent = was;
+        if (res.error && !d) return msg('Could not send: ' + S.nice(res.error));
+        if (d && d.need_email) return ask(b, what, d.message);
+        if (d && d.configured === false) return msg('Email is not switched on yet: add the email service key (see Email notices on this page).');
+        msg((d && d.message) || 'Could not send.', !!(d && d.ok));
+        if (d && d.ok) { var f = b.closest('.wc-mail'); if (!f) { f = b.closest('.wc-row, summary'); f = f && f.nextElementSibling; } if (f && f.classList.contains('wc-mail')) f.remove(); }
+      });
+    }
+    function ask(b, what, why) {
+      var host = b.closest('.wc-row') || b.closest('summary'); if (!host) return msg(why);
+      var nx = host.nextElementSibling; if (nx && nx.classList.contains('wc-mail')) { nx.querySelector('input').focus(); return; }
+      var f = document.createElement('div'); f.className = 'wc-mail';
+      f.innerHTML = '<span class="small">' + E(why) + '</span><input type="email" placeholder="name@example.com" aria-label="Email address"><button type="button" class="btn main sm">✉ Send</button><button type="button" class="btn sm" aria-label="Cancel">✕</button>';
+      host.parentNode.insertBefore(f, host.nextSibling);
+      var inp = f.querySelector('input'), go = f.querySelectorAll('button')[0];
+      go.onclick = function () { var v = inp.value.trim(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { inp.focus(); return msg('Type a full email address.'); } mail(go, what, v); };
+      inp.onkeydown = function (e) { if (e.key === 'Enter') go.onclick(); };
+      f.querySelectorAll('button')[1].onclick = function () { f.remove(); }; inp.focus();
+    }
+    function printList(title, list) {
+      list = list.filter(function (x) { return x.code && state(x) !== 'exp'; });
+      if (!list.length) { msg('No codes to print in ' + title + '. Make them first.'); return; }
+      var w = window.open('', '_blank'); if (!w) { msg('Allow pop-ups to print the codes.'); return; }
+      w.document.write('<!doctype html><meta charset="utf-8"><title>Codes · ' + E(title) + '</title><style>body{font-family:system-ui,sans-serif;margin:16px}.g{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.k{border:2px dashed #94a3b8;border-radius:12px;padding:12px;break-inside:avoid}.k b{display:block;font:800 1.6rem ui-monospace,monospace;letter-spacing:.18em;margin:6px 0}small{color:#475569}</style>' +
+        '<h3 style="margin:0 0 10px">' + E(title) + '</h3><div class="g">' + list.map(function (x) { var tch = x.role === 'teacher';
+          return '<div class="k"><small>BioscienceVista · ' + (tch ? 'your teacher code' : 'your website code') + '</small><div><b style="font:700 1rem system-ui;letter-spacing:0;display:inline">' + E(x.name || '') + '</b></div><b>' + E(fmt(x.code)) + '</b><small>Go to ' + E(location.host) + '/join and type this code. The first time, create your 4-digit PIN; after that this code and your PIN sign you in' + (x.expires_at ? ' until ' + new Date(x.expires_at).toLocaleDateString() : '') + '.' + (tch ? '' : ' Parents: see progress at ' + E(location.host) + '/family with this code.') + '</small></div>'; }).join('') + '</div><script>print()<\/script>');
+      w.document.close();
+    }
+    function wire() {
       box.querySelectorAll('[data-dur]').forEach(function (s2) { s2.onchange = function () { var c = s2.getAttribute('data-dur'), d = +s2.value;
         S.db.rpc('set_code_expiry', { c: c, days: d }).then(function (r) { if (r.error) return msg(S.nice(r.error)); ROWS.forEach(function (x) { if (x.code === c) { x.expires_at = r.data; x.created_at = new Date().toISOString(); } }); msg('Code ' + fmt(c) + ' now lasts ' + DUR.filter(function (o) { return o[0] === d; })[0][1] + ' from today.', true); draw(); }); }; });
       box.querySelectorAll('[data-renew]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); if (b.disabled) return; b.disabled = true;
@@ -92,34 +153,30 @@
         S.db.rpc('make_person_code', { pid: b.getAttribute('data-make'), days: rd() }).then(function (r) { b.disabled = false; if (r.error) return msg(S.nice(r.error)); msg('Code ' + fmt(r.data.code) + ' made for ' + (r.data.full_name || 'them') + '.', true); load(); }); }; });
       box.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); if (b.disabled) return; b.disabled = true;
         S.db.from('site_invites').delete().eq('code', b.getAttribute('data-del')).is('used_by', null).then(function (r) { b.disabled = false; if (r.error) return msg(S.nice(r.error)); load(); }); }; });
-      box.querySelectorAll('[data-print]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); e.stopPropagation();
-        var gk = b.getAttribute('data-print'), i = gk.indexOf(':'), t = gk.slice(0, i), g = gk.slice(i + 1);
-        var list = ROWS.filter(function (x) { return x.grp_type === t && (x.grp || '—') === g && x.code && state(x) !== 'exp'; });
-        if (!list.length) { msg('No codes to print in ' + g + '. Make them first.'); return; }
-        var w = window.open('', '_blank'); if (!w) { msg('Allow pop-ups to print the codes.'); return; }
-        w.document.write('<!doctype html><meta charset="utf-8"><title>Codes · ' + E(g) + '</title><style>body{font-family:system-ui,sans-serif;margin:16px}.g{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.k{border:2px dashed #94a3b8;border-radius:12px;padding:12px;break-inside:avoid}.k b{display:block;font:800 1.6rem ui-monospace,monospace;letter-spacing:.18em;margin:6px 0}small{color:#475569}</style>' +
-          '<h3 style="margin:0 0 10px">' + E(g) + '</h3><div class="g">' + list.map(function (x) { var tch = x.role === 'teacher';
-            return '<div class="k"><small>BioscienceVista · ' + (tch ? 'your teacher code' : 'your website code') + '</small><div><b style="font:700 1rem system-ui;letter-spacing:0;display:inline">' + E(x.name || '') + '</b></div><b>' + E(fmt(x.code)) + '</b><small>Go to ' + E(location.host) + '/join and type this code. The first time, create your 4-digit PIN; after that this code and your PIN sign you in' + (x.expires_at ? ' until ' + new Date(x.expires_at).toLocaleDateString() : '') + '.' + (tch ? '' : ' Parents: see progress at ' + E(location.host) + '/family with this code.') + '</small></div>'; }).join('') + '</div><script>print()<\/script>');
-        w.document.close(); }; });
+      box.querySelectorAll('[data-mail]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); e.stopPropagation(); mail(b, { send_code: b.getAttribute('data-mail') }); }; });
+      box.querySelectorAll('[data-mailclass]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); e.stopPropagation(); mail(b, { send_class: b.getAttribute('data-mailclass') }); }; });
+      box.querySelectorAll('[data-print]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); e.stopPropagation(); var k = b.getAttribute('data-print');
+        if (k === 'indep' || k === 'unassigned') return printList(k === 'indep' ? 'Independent learners' : 'New codes', ROWS.filter(function (x) { return x.grp_type === k; }));
+        var c = CLS.filter(function (y) { return y.id === k; })[0]; if (c) printList(c.name, (ENR[c.id] || []).map(function (id) { return BY[id]; }).filter(Boolean)); }; });
     }
     box.querySelector('#scf').oninput = draw; box.querySelector('#scw').onchange = draw;
     box.querySelector('#scs').onclick = function () { var b = this, m = box.querySelector('#scsm'); if (b.disabled) return;
-      var none = ROWS.filter(function (x) { return x.person && !x.code; }), seen = {}, ids = []; none.forEach(function (x) { if (!seen[x.person]) { seen[x.person] = 1; ids.push(x.person); } });
+      var seen = {}, ids = []; ROWS.concat(TEACH).forEach(function (x) { if (x.person && !x.code && !x.self && !seen[x.person]) { seen[x.person] = 1; ids.push(x.person); } });
       if (!ids.length) { m.className = 'msg ok'; m.textContent = 'Everyone already has a code.'; return; }
-      b.disabled = true; m.className = 'msg'; m.textContent = 'Making ' + ids.length + ' codes…'; var d = +box.querySelector('#rdays').value, done = 0, bad = 0;
+      b.disabled = true; m.className = 'msg'; m.textContent = 'Making ' + ids.length + ' codes…'; var d = rd(), done = 0, bad = 0;
       ids.reduce(function (p, id) { return p.then(function () { return S.db.rpc('make_person_code', { pid: id, days: d }).then(function (r) { if (r.error) bad++; else done++; }); }); }, Promise.resolve()).then(function () {
-        b.disabled = false; m.className = bad ? 'msg' : 'msg ok'; m.textContent = done + ' code' + (done === 1 ? '' : 's') + ' made' + (bad ? ', ' + bad + ' could not be made' : '') + '. Print them by class or school.'; load(); }); };
+        b.disabled = false; m.className = bad ? 'msg' : 'msg ok'; m.textContent = done + ' code' + (done === 1 ? '' : 's') + ' made' + (bad ? ', ' + bad + ' could not be made' : '') + '.'; load(); }); };
     box.querySelector('#scm').onclick = function () { var b = this, m = box.querySelector('#scmsg'); if (b.disabled) return;
-      var names = box.querySelector('#scn').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean), q = +box.querySelector('#scq').value || 0;
-      if (!names.length && q > 0) for (var i = 0; i < Math.min(q, 300); i++) names.push('');
-      var bad = names.filter(function (x) { return x && x.split(/\s+/).length < 2; });
-      if (!names.length) { m.className = 'msg'; m.textContent = 'Type the names, one per line, or a number of unnamed codes.'; return; }
-      if (bad.length) { m.className = 'msg'; m.textContent = 'Give each person two official names (first and family name): ' + bad.slice(0, 5).join(', '); return; }
+      var names = box.querySelector('#scn').value.split('\n').map(function (x) { return x.trim().replace(/\s+/g, ' '); }).filter(Boolean);
+      var bad = names.filter(function (x) { return x.split(' ').length < 2; });
+      if (!names.length) { m.className = 'msg'; m.textContent = 'Type each student\'s full name, one per line.'; return; }
+      if (bad.length) { m.className = 'msg'; m.textContent = 'Give each student two names (first and family name): ' + bad.slice(0, 5).join(', '); return; }
       b.disabled = true; m.className = 'msg'; m.textContent = 'Making codes…';
-      S.db.rpc('make_site_codes', { names: names, note: box.querySelector('#sco').value.trim() || null, days: +box.querySelector('#scd').value }).then(function (r) { b.disabled = false;
+      S.db.rpc('make_site_codes', { names: names, note: null, days: +box.querySelector('#scd').value }).then(function (r) { b.disabled = false;
         if (r.error) { m.textContent = S.nice(r.error); return; }
-        m.className = 'msg ok'; m.textContent = (r.data || []).length + ' code' + ((r.data || []).length === 1 ? '' : 's') + ' made: see "New codes not used yet" below to print them.';
-        box.querySelector('#scn').value = ''; box.querySelector('#scq').value = ''; load(); }); };
+        var made = r.data || [];
+        m.className = 'msg ok'; m.innerHTML = made.length + ' code' + (made.length === 1 ? '' : 's') + ' made' + (made.length && made[0].code ? ': ' + made.slice(0, 8).map(function (x) { return '<b>' + E(x.full_name || '') + '</b> ' + E(fmt(x.code)); }).join(' · ') + (made.length > 8 ? ' …' : '') : '') + '. They are under "New codes not used yet".';
+        box.querySelector('#scn').value = ''; load(); }); };
     load();
   }
   // AI helper status: one tiny server-side check, remembered for this visit; "Check again" repeats it
