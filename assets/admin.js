@@ -19,7 +19,7 @@
      private teachers; one line per person: name, code, duration, status, Renew. Every code lasts 1 week, 1 month, 3, 6 or 12 months.
      Students and teachers sign in with their code + 4-digit PIN; parents type the child's code at /family/ for a read-only view. */
   var DUR = [[7, '1 week'], [30, '1 month'], [90, '3 months'], [180, '6 months'], [365, '12 months']];
-  function durSel(id, pick, attr) { return '<select ' + (attr || '') + ' aria-label="How long the code lasts"' + (id ? ' id="' + id + '"' : '') + '>' + DUR.map(function (d) { return '<option value="' + d[0] + '"' + (d[0] === pick ? ' selected' : '') + '>' + d[1] + '</option>'; }).join('') + '</select>'; }
+  function durSel(id, pick, attr) { return '<select ' + (attr || '') + ' aria-label="How long the code lasts"' + (id ? ' id="' + id + '"' : '') + '>' + (pick ? '' : '<option value="" selected disabled>choose…</option>') + DUR.map(function (d) { return '<option value="' + d[0] + '"' + (d[0] === pick ? ' selected' : '') + '>' + d[1] + '</option>'; }).join('') + '</select>'; }
   function codes(box) {
     box.innerHTML = '<style>.wc-g>summary{cursor:pointer;font-weight:800;padding:8px 0;list-style:none}.wc-g>summary::-webkit-details-marker{display:none}.wc-g>summary:before{content:"▸ ";color:#7c3aed}.wc-g[open]>summary:before{content:"▾ "}.wc-sub{margin:0 0 6px 12px}' +
       '.wc-row{display:grid;grid-template-columns:minmax(140px,1.4fr) 120px 150px minmax(110px,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9}.wc-row b.c{font-family:ui-monospace,monospace;letter-spacing:.08em}.wc-row select{font:inherit;padding:4px 6px;border-radius:8px;max-width:100%}' +
@@ -49,7 +49,7 @@
     function fmt(c) { return c ? c.slice(0, 4) + '-' + c.slice(4) : ''; }
     function state(x) { var now = Date.now(); if (!x.code) return 'none'; if (x.expires_at && new Date(x.expires_at) < now) return 'exp'; if (!x.used_at) return 'unused'; return 'ok'; }
     function left(x) { if (!x.expires_at) return 'no expiry'; var d = Math.ceil((new Date(x.expires_at) - Date.now()) / 864e5); return d < 0 ? 'expired ' + new Date(x.expires_at).toLocaleDateString() : 'until ' + new Date(x.expires_at).toLocaleDateString() + (d <= 30 ? ' (' + d + ' day' + (d === 1 ? '' : 's') + ')' : ''); }
-    function nearest(x) { if (!x.expires_at || !x.created_at) return 365; var d = Math.round((new Date(x.expires_at) - new Date(x.created_at)) / 864e5); var best = 365; DUR.forEach(function (o) { if (Math.abs(o[0] - d) < Math.abs(best - d)) best = o[0]; }); return best; }
+    function nearest(x) { if (!x.expires_at) return 0; if (!x.created_at) return 365; var d = Math.round((new Date(x.expires_at) - new Date(x.created_at)) / 864e5); var best = 365; DUR.forEach(function (o) { if (Math.abs(o[0] - d) < Math.abs(best - d)) best = o[0]; }); return best; }
     function row(x) {
       var st = state(x), key = (x.person || '') + '|' + (x.code || '');
       var status = st === 'none' ? '<span class="pill t">no code yet</span>' : st === 'exp' ? '<span class="pill" style="background:#fee2e2;color:#991b1b">expired</span>' : st === 'unused' ? '<span class="pill t">not used yet</span>' : '<span class="pill ok">✓ in use</span>';
@@ -59,12 +59,12 @@
       return '<div class="wc-row" data-key="' + E(key) + '"><div><b>' + E(x.name || 'Unnamed code') + '</b>' + (x.role === 'teacher' && x.grp_type === 'unassigned' ? ' <span class="small muted">teacher</span>' : '') + '</div>' +
         '<div>' + (x.code ? '<b class="c">' + E(fmt(x.code)) + '</b>' : '<span class="small muted">—</span>') + '</div>' +
         '<div class="wc-d">' + (x.code && st !== 'exp' ? durSel('', nearest(x), 'data-dur="' + E(x.code) + '"') : '') + '</div>' +
-        '<div class="wc-st">' + status + ' <span class="small muted">' + (x.code ? E(left(x)) : '') + '</span></div><div>' + act + '</div></div>';
+        '<div class="wc-st">' + status + ' <span class="small muted"' + (x.code && !x.expires_at ? ' style="color:#b45309;font-weight:700"' : '') + '>' + (x.code ? E(left(x)) : '') + '</span></div><div>' + act + '</div></div>';
     }
     function draw() {
       var q = (box.querySelector('#scf').value || '').trim().toLowerCase(), w = box.querySelector('#scw').value, now = Date.now();
       var keepIt = function (x) { var st = state(x);
-        if (w === 'none' && st !== 'none') return false; if (w === 'exp' && st !== 'exp') return false; if (w === 'unused' && st !== 'unused') return false;
+        if (w === 'none' && st !== 'none') return false; if (w === 'noexp' && !(x.code && !x.expires_at)) return false; if (w === 'exp' && st !== 'exp') return false; if (w === 'unused' && st !== 'unused') return false;
         if (w === 'soon' && !(x.expires_at && st !== 'exp' && new Date(x.expires_at) - now < 30 * 864e5)) return false;
         return !q || ((x.name || '') + ' ' + (x.code || '') + ' ' + (x.grp || '')).toLowerCase().indexOf(q) >= 0; };
       var SEC = [['class', '🏫 Students by class'], ['school', '🏛 Teachers by school'], ['indep', '🚀 Independent learners'], ['private', '🧑‍🏫 Private teachers'], ['unassigned', '🆕 New codes not used yet']];
