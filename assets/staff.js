@@ -2193,7 +2193,8 @@
         ids.length ? q(S.db.from('research_projects').select('id,class_id,student_id,kind,status,title,updated_at').in('class_id', ids).in('status', ['proposal_submitted', 'final_submitted'])) : { data: [] },
         q(S.db.from('pp_projects').select('id,status,title,updated_at').eq('supervisor_id', OWNER()).in('status', ['proposal_submitted', 'final_submitted'])),
         ids.length ? q(S.db.from('showcase_posts').select('id,class_id,title,updated_at').in('class_id', ids).eq('status', 'submitted')) : { data: [] },
-        all.length ? q(S.db.from('profiles').select('id,full_name').in('id', all)) : { data: [] }
+        all.length ? q(S.db.from('profiles').select('id,full_name').in('id', all)) : { data: [] },
+        ids.length ? q(S.db.from('item_results').select('class_id,student_id,got,max').in('class_id', ids).limit(20000)) : { data: [] }
       ]).then(function (x) {
         var A = x[0].data || [], TD = {}; (x[1] || []).forEach(function (r, i) { TD[ids[i]] = (r && r.data) || []; });
         var LP = x[2].data || [], RS = x[3].data || [], RP = x[4].data || [], PP = x[5].data || [], SC = x[6].data || [], NM = {}; (x[7].data || []).forEach(function (r) { NM[r.id] = r.full_name; });
@@ -2203,7 +2204,7 @@
         var overdue = A.filter(function (a) { var o = st[a.id]; return a.due_at && new Date(a.due_at) < now && new Date(a.due_at) > now - 21 * 864e5 && o && o.done < o.all; });
         var upcoming = A.filter(function (a) { return a.due_at && new Date(a.due_at) >= now && new Date(a.due_at) < now + 7 * 864e5; });
         // students who may need support: below 50 % across 10 or more recorded marks (the same rule as Class insights)
-        var per = {}; RS.forEach(function (r) { if (!(r.max_score > 0) || r.score == null) return; var o = per[r.student_id] = per[r.student_id] || { g: 0, m: 0 }; o.g += +r.score; o.m += +r.max_score; });
+        var per = {}; (x[8].data || []).forEach(function (r) { if (!(r.max > 0) || (stud[r.class_id] || []).indexOf(r.student_id) < 0) return; var o = per[r.student_id] = per[r.student_id] || { g: 0, m: 0 }; o.g += +r.got || 0; o.m += +r.max; });   // same rule and records as Class insights: marked answers (item results)
         var support = Object.keys(per).filter(function (s) { return per[s].m >= 10 && per[s].g / per[s].m < 0.5; });
         var doneWeek = LP.filter(function (l) { return l.status === 'completed'; }).length, active = {}; LP.forEach(function (l) { active[l.student_id] = 1; });
         var D = ccDone(), items = { u: [], n: [], t: [], f: [] };
@@ -2234,7 +2235,7 @@
           '<a href="/live/">🎥 Live classroom</a><a href="/board/">🖊 Whiteboard</a></div>' +
           '<div class="cc-stats"><a href="#classes"><b>' + CLASSES.filter(function (c) { return (stud[c.id] || []).length; }).length + '</b>Active classes</a><a href="#students"><b>' + all.length + '</b>Students</a>' +
           '<a href="#marking"' + (N.mark ? ' class="warn"' : '') + '><b>' + N.mark + '</b>To mark</a><a href="#questions"' + (N.ask ? ' class="warn"' : '') + '><b>' + N.ask + '</b>Student questions</a>' +
-          '<a href="#cc-desk"><b>' + upcoming.length + '</b>Due in 7 days</a><a href="#work"><b>' + doneWeek + '</b>Lessons completed (7 days)</a><a href="/mastery/"' + (support.length ? ' class="warn"' : '') + '><b>' + support.length + '</b>May need support</a></div>' +
+          '<a href="#cc-desk"><b>' + upcoming.length + '</b>Due in 7 days</a><a href="#work"><b>' + doneWeek + '</b>Lessons done (7 d)</a><a href="/mastery/"' + (support.length ? ' class="warn"' : '') + '><b>' + support.length + '</b>May need support</a></div>' +
           '<div class="cc-h3" id="cc-desk"><h3>Your Priority Desk</h3><span class="small muted">' + (nUrg ? nUrg + ' urgent' : 'Nothing urgent') + ' · tick ✓ to clear an item; it comes back if something changes</span></div>' +
           '<div class="cc-desk">' + col('u', '🔴 Urgent', '#dc2626', 'Nothing urgent.') + col('n', '📅 Upcoming', '#d97706', 'No deadlines in the next 7 days.') + col('t', '🧪 Teaching', '#0d9488', 'Every class has work set.') + col('f', '💬 Follow-up', '#4f46e5', 'No follow-ups.') + '</div>' +
           '<div class="cc-h3"><h3>My classes</h3><a class="small" href="#classes">Manage classes →</a></div>' +
