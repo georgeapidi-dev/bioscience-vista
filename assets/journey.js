@@ -1,4 +1,4 @@
-/* My learning journey · BioscienceVista · by George Apidi (Student Learning Centre brief)
+/* My learning journey · BioscienceVista · by BioscienceVista (Student Learning Centre brief)
    One timeline of everything a student has done, newest first, built only from their own records:
    lessons (learning_progress), assessments (quiz_attempts), labs (sim_attempts), set work ticked off (assignment_done),
    projects (research_projects, pp_projects, innovation_projects), feedback (student_results, lab comments, answer comments),

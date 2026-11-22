@@ -1,4 +1,4 @@
-/* MYP Personal Project Hub · BioscienceVista · by George Apidi
+/* MYP Personal Project Hub · BioscienceVista · by BioscienceVista
    The student's side (part 1): start a project, plan it (criterion A), keep a timeline, a process journal, evidence and sources,
    draft the report section by section against the official rules, self-assess with the official descriptors, and submit.
    Data: pp_* tables (migration 061) and the private pp-files bucket. Nothing here gives marks: checks are advice only. */

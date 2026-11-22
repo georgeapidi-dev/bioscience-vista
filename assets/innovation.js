@@ -1,4 +1,4 @@
-/* Innovation Studio · BioscienceVista · by George Apidi (phase 8)
+/* Innovation Studio · BioscienceVista · by BioscienceVista (phase 8)
    Real-world design challenges worked through the design cycle: inquire and analyse → develop ideas → create → evaluate → share
    (MYP Design criteria A–D). Students work alone or in a team; teachers publish challenges, read projects and give feedback.
    Data: innovation_* tables (migration 065) and the private innovation-files bucket. */

@@ -1,4 +1,4 @@
-/* BioscienceVista · VISTA MYP Personal Project Hub · content (teacher-created by George Apidi). Loaded before pp.js.
+/* BioscienceVista · VISTA MYP Personal Project Hub · content (teacher-created by BioscienceVista). Loaded before pp.js.
    Global contexts, ATL skill clusters, idea categories, product formats, success-criteria types, source evaluation and
    report guidance. The assessment criteria and their official descriptors are NOT here: they live in pp_guides (database)
    and are entered from the IB MYP Projects guide. */
