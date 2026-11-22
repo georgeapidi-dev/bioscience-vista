@@ -1,0 +1,3836 @@
+{
+"about": "IB Biology (first assessment 2025) teaching-hour plan. Hours from the IB Biology guide; lesson durations share each topic's hours by the understandings taught. Built by lessongen/ibdeep/hours.py.",
+"source": "IB Biology guide, first assessment 2025: recommended teaching hours per topic (SL 110 h, HL 180 h of syllabus content; experimental programme SL 40 h, HL 60 h).",
+"themes": {
+"A": "Unity and diversity",
+"B": "Form and function",
+"C": "Interaction and interdependence",
+"D": "Continuity and change"
+},
+"totals": {
+"SL": 110,
+"HL": 180,
+"experimental": {
+"SL": 40,
+"HL": 60
+}
+},
+"differences": [
+{
+"topic": "A3.2",
+"brief": "HL 2 hours",
+"guide": "Additional higher level: 3 hours",
+"used": "HL 3 hours"
+}
+],
+"topics": [
+{
+"code": "A1.1",
+"name": "Water",
+"theme": "A",
+"hl_only": false,
+"sl_hours": 2,
+"ahl_hours": 1,
+"hl_hours": 3,
+"understandings": {
+"SL": 6,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "a11-lesson1",
+"id": "DP1-A1.1-L1",
+"title": "Water: Polarity, Hydrogen Bonding, Cohesion and Adhesion",
+"level": "SL",
+"range": "A1.1.1 – A1.1.4",
+"understandings": [
+"A1.1.1",
+"A1.1.2",
+"A1.1.3",
+"A1.1.4"
+],
+"skills": [],
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "a11-lesson2",
+"id": "DP1-A1.1-L2",
+"title": "Water: Solvent Properties, and Water Compared with Air",
+"level": "SL",
+"range": "A1.1.5 – A1.1.6",
+"understandings": [
+"A1.1.5",
+"A1.1.6"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "a11-lesson3",
+"id": "DP1-A1.1-L3",
+"title": "AHL: Water Beyond Earth",
+"level": "HL",
+"range": "A1.1.7 – A1.1.8",
+"understandings": [
+"A1.1.7",
+"A1.1.8"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 3"
+}
+]
+},
+{
+"code": "A1.2",
+"name": "Nucleic acids",
+"theme": "A",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 2,
+"hl_hours": 5,
+"understandings": {
+"SL": 10,
+"HL": 5
+},
+"skills": [
+{
+"code": "A1.2.13",
+"text": "Structure of a nucleosome",
+"level": "HL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "a12-lesson1",
+"id": "DP1-A12-L1",
+"title": "A1.2 Nucleic acids · Lesson 1: DNA as the genetic material, nucleotides, the backbone and the bases",
+"level": "SL",
+"range": "A1.2.1 – A1.2.4",
+"understandings": [
+"A1.2.1",
+"A1.2.2",
+"A1.2.3",
+"A1.2.4"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "a12-lesson2",
+"id": "DP1-A12-L2",
+"title": "A1.2 Nucleic acids · Lesson 2: RNA as a polymer, the DNA double helix, DNA versus RNA and complementary base pairing",
+"level": "SL",
+"range": "A1.2.5 – A1.2.8",
+"understandings": [
+"A1.2.5",
+"A1.2.6",
+"A1.2.7",
+"A1.2.8"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "a12-lesson3",
+"id": "DP1-A12-L3",
+"title": "A1.2 Nucleic acids · Lesson 3: DNA sequence diversity and the genetic code",
+"level": "SL",
+"range": "A1.2.9 – A1.2.10",
+"understandings": [
+"A1.2.9",
+"A1.2.10"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "a12-lesson4",
+"id": "DP1-A12-L4",
+"title": "A1.2 Nucleic acids · Lesson 4 (HL): Directionality, base chemistry and DNA packaging",
+"level": "HL",
+"range": "A1.2.11 – A1.2.13",
+"understandings": [
+"A1.2.11",
+"A1.2.12",
+"A1.2.13"
+],
+"skills": [
+"A1.2.13"
+],
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "a12-lesson5",
+"id": "DP1-A12-L5",
+"title": "A1.2 Nucleic acids · Lesson 5 (HL): Experimental evidence for DNA as the genetic material",
+"level": "HL",
+"range": "A1.2.14 – A1.2.15",
+"understandings": [
+"A1.2.14",
+"A1.2.15"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 5"
+}
+]
+},
+{
+"code": "A2.1",
+"name": "Origins of cells",
+"theme": "A",
+"hl_only": true,
+"sl_hours": 0,
+"ahl_hours": 2,
+"hl_hours": 2,
+"understandings": {
+"SL": 0,
+"HL": 9
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "a21-lesson1",
+"id": "DP1-A2.1-L1",
+"title": "A2.1 Origins of cells · Lesson 1 (HL): Early Earth, what counts as alive, and the problem of the first cell",
+"level": "HL",
+"range": "A2.1.1 – A2.1.3",
+"understandings": [
+"A2.1.1",
+"A2.1.2",
+"A2.1.3"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "a21-lesson2",
+"id": "DP1-A2.1-L2",
+"title": "A2.1 Origins of cells · Lesson 2 (HL): Miller–Urey, protocells and the RNA world",
+"level": "HL",
+"range": "A2.1.4 – A2.1.6",
+"understandings": [
+"A2.1.4",
+"A2.1.5",
+"A2.1.6"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hours 1–2"
+},
+{
+"n": 3,
+"path": "a21-lesson3",
+"id": "DP-A21-L3",
+"title": "A2.1 Origins of cells · Lesson 3 (HL): LUCA: evidence, dating and hydrothermal vents",
+"level": "HL",
+"range": "A2.1.7 – A2.1.9",
+"understandings": [
+"A2.1.7",
+"A2.1.8",
+"A2.1.9"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "A2.2",
+"name": "Cell structure",
+"theme": "A",
+"hl_only": false,
+"sl_hours": 4,
+"ahl_hours": 1,
+"hl_hours": 5,
+"understandings": {
+"SL": 11,
+"HL": 3
+},
+"skills": [
+{
+"code": "A2.2.2",
+"text": "Microscopy skills",
+"level": "SL"
+},
+{
+"code": "A2.2.10",
+"text": "Cell types and cell structures viewed in light and electron micrographs",
+"level": "SL"
+},
+{
+"code": "A2.2.11",
+"text": "Drawing and annotation based on electron micrographs",
+"level": "SL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "a22-lesson1",
+"id": "DP1-A22-L1",
+"title": "A2.2 Cell structure · Lesson 1: Cell theory and microscopy",
+"level": "SL",
+"range": "A2.2.1 – A2.2.3",
+"understandings": [
+"A2.2.1",
+"A2.2.2",
+"A2.2.3"
+],
+"skills": [
+"A2.2.2"
+],
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "a22-lesson2",
+"id": "DP1-A22-L2",
+"title": "A2.2 Cell structure · Lesson 2: Common cell structures and prokaryotic cells",
+"level": "SL",
+"range": "A2.2.4 – A2.2.5",
+"understandings": [
+"A2.2.4",
+"A2.2.5"
+],
+"skills": [],
+"minutes": 45,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "a22-lesson3",
+"id": "DP1-A22-L3",
+"title": "A2.2 Cell structure · Lesson 3: Eukaryotic cells and the processes of life",
+"level": "SL",
+"range": "A2.2.6 – A2.2.7",
+"understandings": [
+"A2.2.6",
+"A2.2.7"
+],
+"skills": [],
+"minutes": 45,
+"hour": "Hours 2–3"
+},
+{
+"n": 4,
+"path": "a22-lesson4",
+"id": "DP1-A22-L4",
+"title": "A2.2 Cell structure · Lesson 4: Cell diversity, atypical cells and micrographs",
+"level": "SL",
+"range": "A2.2.8 – A2.2.11",
+"understandings": [
+"A2.2.8",
+"A2.2.9",
+"A2.2.10",
+"A2.2.11"
+],
+"skills": [
+"A2.2.10",
+"A2.2.11"
+],
+"minutes": 85,
+"hour": "Hours 3–4"
+},
+{
+"n": 5,
+"path": "a22-lesson5",
+"id": "DP1-A22-L5",
+"title": "A2.2 Cell structure · Lesson 5 (HL): Endosymbiosis, differentiation and multicellularity",
+"level": "HL",
+"range": "A2.2.12 – A2.2.14",
+"understandings": [
+"A2.2.12",
+"A2.2.13",
+"A2.2.14"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 5"
+}
+]
+},
+{
+"code": "A2.3",
+"name": "Viruses",
+"theme": "A",
+"hl_only": true,
+"sl_hours": 0,
+"ahl_hours": 2,
+"hl_hours": 2,
+"understandings": {
+"SL": 0,
+"HL": 6
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "a23-lesson1",
+"id": "DP1-A23-L1",
+"title": "A2.3 Viruses · Lesson 1: Structural features common to viruses",
+"level": "HL",
+"range": "A2.3.1",
+"understandings": [
+"A2.3.1"
+],
+"skills": [],
+"minutes": 20,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "a23-lesson2",
+"id": "DP1-A23-L2",
+"title": "A2.3 Viruses · Lesson 2: Diversity of viral structure and genetic material",
+"level": "HL",
+"range": "A2.3.2",
+"understandings": [
+"A2.3.2"
+],
+"skills": [],
+"minutes": 20,
+"hour": "Hour 1"
+},
+{
+"n": 3,
+"path": "a23-lesson3",
+"id": "DP1-A23-L3",
+"title": "A2.3 Viruses · Lesson 3: The lytic cycle of bacteriophage lambda",
+"level": "HL",
+"range": "A2.3.3",
+"understandings": [
+"A2.3.3"
+],
+"skills": [],
+"minutes": 20,
+"hour": "Hour 1"
+},
+{
+"n": 4,
+"path": "a23-lesson4",
+"id": "DP1-A23-L4",
+"title": "A2.3 Viruses · Lesson 4: The lysogenic cycle",
+"level": "HL",
+"range": "A2.3.4",
+"understandings": [
+"A2.3.4"
+],
+"skills": [],
+"minutes": 15,
+"hour": "Hour 2"
+},
+{
+"n": 5,
+"path": "a23-lesson5",
+"id": "DP1-A23-L5",
+"title": "A2.3 Viruses · Lesson 5: Origins of viruses and convergent evolution",
+"level": "HL",
+"range": "A2.3.5",
+"understandings": [
+"A2.3.5"
+],
+"skills": [],
+"minutes": 15,
+"hour": "Hour 2"
+},
+{
+"n": 6,
+"path": "a23-lesson6",
+"id": "DP1-A23-L6",
+"title": "A2.3 Viruses · Lesson 6: Rapid evolution in viruses",
+"level": "HL",
+"range": "A2.3.6",
+"understandings": [
+"A2.3.6"
+],
+"skills": [],
+"minutes": 15,
+"hour": "Hour 2"
+},
+{
+"n": 7,
+"path": "a23-lesson7",
+"id": "DP1-A23-L7",
+"title": "A2.3 Viruses · Lesson 7: Consolidation and exam practice",
+"level": "HL",
+"range": "review",
+"understandings": [],
+"skills": [],
+"minutes": 15,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "A3.1",
+"name": "Diversity of organisms",
+"theme": "A",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 2,
+"hl_hours": 5,
+"understandings": {
+"SL": 11,
+"HL": 4
+},
+"skills": [
+{
+"code": "A3.1.7",
+"text": "Karyotyping and karyograms",
+"level": "SL"
+},
+{
+"code": "A3.1.10",
+"text": "Comparison of genome sizes",
+"level": "SL"
+},
+{
+"code": "A3.1.14",
+"text": "Engagement with local plant or animal species to develop a dichotomous key",
+"level": "HL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "a31-lesson1",
+"id": "DP-A31-L1",
+"title": "A3.1 Diversity of organisms · Lesson 1: Variation, species and the binomial system",
+"level": "SL",
+"range": "A3.1.1 – A3.1.3",
+"understandings": [
+"A3.1.1",
+"A3.1.2",
+"A3.1.3"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "a31-lesson2",
+"id": "DP-A31-L2",
+"title": "A3.1 Diversity of organisms · Lesson 2: The biological species concept and the problem of divergence",
+"level": "SL",
+"range": "A3.1.4 – A3.1.5",
+"understandings": [
+"A3.1.4",
+"A3.1.5"
+],
+"skills": [],
+"minutes": 35,
+"hour": "Hours 1–2"
+},
+{
+"n": 3,
+"path": "a31-lesson3",
+"id": "DP-A31-L3",
+"title": "A3.1 Diversity of organisms · Lesson 3: Chromosome numbers, karyotypes and human chromosome 2",
+"level": "SL",
+"range": "A3.1.6 – A3.1.7",
+"understandings": [
+"A3.1.6",
+"A3.1.7"
+],
+"skills": [
+"A3.1.7"
+],
+"minutes": 35,
+"hour": "Hour 2"
+},
+{
+"n": 4,
+"path": "a31-lesson4",
+"id": "DP-A31-L4",
+"title": "A3.1 Diversity of organisms · Lesson 4: Genomes: unity, diversity, size and sequencing",
+"level": "SL",
+"range": "A3.1.8 – A3.1.11",
+"understandings": [
+"A3.1.8",
+"A3.1.9",
+"A3.1.10",
+"A3.1.11"
+],
+"skills": [
+"A3.1.10"
+],
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 5,
+"path": "a31-lesson5",
+"id": "DP-A31-L5",
+"title": "A3.1 Diversity of organisms · Lesson 5 (HL): Species in practice: asexual organisms, chromosome number, keys and eDNA",
+"level": "HL",
+"range": "A3.1.12 – A3.1.15",
+"understandings": [
+"A3.1.12",
+"A3.1.13",
+"A3.1.14",
+"A3.1.15"
+],
+"skills": [
+"A3.1.14"
+],
+"minutes": 120,
+"hour": "Hours 4–5"
+}
+]
+},
+{
+"code": "A3.2",
+"name": "Classification and cladistics",
+"theme": "A",
+"hl_only": true,
+"sl_hours": 0,
+"ahl_hours": 3,
+"hl_hours": 3,
+"understandings": {
+"SL": 0,
+"HL": 9
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "a32-lesson1",
+"id": "DP-A32-L1",
+"title": "A3.2 Classification and cladistics · Lesson 1 (HL): Why classify, the trouble with ranks, and clades",
+"level": "HL",
+"range": "A3.2.1 – A3.2.4",
+"understandings": [
+"A3.2.1",
+"A3.2.2",
+"A3.2.3",
+"A3.2.4"
+],
+"skills": [],
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "a32-lesson2",
+"id": "DP-A32-L2",
+"title": "A3.2 Classification and cladistics · Lesson 2 (HL): Molecular clocks, building cladograms and reading them",
+"level": "HL",
+"range": "A3.2.5 – A3.2.7",
+"understandings": [
+"A3.2.5",
+"A3.2.6",
+"A3.2.7"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "a32-lesson3",
+"id": "DP-A32-L3",
+"title": "A3.2 Classification and cladistics · Lesson 3 (HL): Testing classifications with cladistics, and the three domains",
+"level": "HL",
+"range": "A3.2.8 – A3.2.9",
+"understandings": [
+"A3.2.8",
+"A3.2.9"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hour 3"
+}
+]
+},
+{
+"code": "A4.1",
+"name": "Evolution and speciation",
+"theme": "A",
+"hl_only": false,
+"sl_hours": 4,
+"ahl_hours": 1,
+"hl_hours": 5,
+"understandings": {
+"SL": 7,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "a41-lesson1",
+"id": "DP-A41-L1",
+"title": "A4.1 Evolution and speciation · Lesson 1: Evolution and evidence from sequences and selective breeding",
+"level": "SL",
+"range": "A4.1.1 – A4.1.3",
+"understandings": [
+"A4.1.1",
+"A4.1.2",
+"A4.1.3"
+],
+"skills": [],
+"minutes": 105,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "a41-lesson2",
+"id": "DP-A41-L2",
+"title": "A4.1 Evolution and speciation · Lesson 2: Homologous and analogous structures, and speciation",
+"level": "SL",
+"range": "A4.1.4 – A4.1.7",
+"understandings": [
+"A4.1.4",
+"A4.1.5",
+"A4.1.6",
+"A4.1.7"
+],
+"skills": [],
+"minutes": 135,
+"hour": "Hours 2–4"
+},
+{
+"n": 3,
+"path": "a41-lesson3",
+"id": "DP-A41-L3",
+"title": "A4.1 Evolution and speciation · Lesson 3 (HL): Sympatric and allopatric speciation, adaptive radiation, hybrids and polyploidy",
+"level": "HL",
+"range": "A4.1.8 – A4.1.11",
+"understandings": [
+"A4.1.8",
+"A4.1.9",
+"A4.1.10",
+"A4.1.11"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 5"
+}
+]
+},
+{
+"code": "A4.2",
+"name": "Conservation of biodiversity",
+"theme": "A",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 0,
+"hl_hours": 3,
+"understandings": {
+"SL": 8,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "a42-lesson1",
+"id": "DP-A42-L1",
+"title": "A4.2 Conservation of biodiversity · Lesson 1: Biodiversity, its history, extinctions and ecosystem loss",
+"level": "SL",
+"range": "A4.2.1 – A4.2.4",
+"understandings": [
+"A4.2.1",
+"A4.2.2",
+"A4.2.3",
+"A4.2.4"
+],
+"skills": [],
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "a42-lesson2",
+"id": "DP-A42-L2",
+"title": "A4.2 Conservation of biodiversity · Lesson 2: The biodiversity crisis, its causes and conservation",
+"level": "SL",
+"range": "A4.2.5 – A4.2.8",
+"understandings": [
+"A4.2.5",
+"A4.2.6",
+"A4.2.7",
+"A4.2.8"
+],
+"skills": [],
+"minutes": 90,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "B1.1",
+"name": "Carbohydrates and lipids",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 4,
+"ahl_hours": 0,
+"hl_hours": 4,
+"understandings": {
+"SL": 13,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "b11-lesson1",
+"id": "DP1-B1.1-L1",
+"title": "B1.1 Carbohydrates and lipids · Lesson 1: Carbon, condensation and hydrolysis",
+"level": "SL",
+"range": "B1.1.1 – B1.1.3",
+"understandings": [
+"B1.1.1",
+"B1.1.2",
+"B1.1.3"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "b11-lesson2",
+"id": "DP1-B1.1-L2",
+"title": "B1.1 Carbohydrates and lipids · Lesson 2: Monosaccharides, polysaccharides and glycoproteins",
+"level": "SL",
+"range": "B1.1.4 – B1.1.7",
+"understandings": [
+"B1.1.4",
+"B1.1.5",
+"B1.1.6",
+"B1.1.7"
+],
+"skills": [],
+"minutes": 75,
+"hour": "Hours 1–3"
+},
+{
+"n": 3,
+"path": "b11-lesson3",
+"id": "DP-B11-L3",
+"title": "B1.1 Carbohydrates and lipids · Lesson 3: Lipids, triglycerides and fatty acids",
+"level": "SL",
+"range": "B1.1.8 – B1.1.10",
+"understandings": [
+"B1.1.8",
+"B1.1.9",
+"B1.1.10"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "b11-lesson4",
+"id": "DP-B11-L4",
+"title": "B1.1 Carbohydrates and lipids · Lesson 4: Adipose tissue, phospholipid bilayers and steroids",
+"level": "SL",
+"range": "B1.1.11 – B1.1.13",
+"understandings": [
+"B1.1.11",
+"B1.1.12",
+"B1.1.13"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "B1.2",
+"name": "Proteins",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 2,
+"ahl_hours": 2,
+"hl_hours": 4,
+"understandings": {
+"SL": 5,
+"HL": 7
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "b12-lesson1",
+"id": "DP1-B1.2-L1",
+"title": "B1.2 Proteins · Lesson 1: Amino acids, peptide bonds and dietary requirements",
+"level": "SL",
+"range": "B1.2.1 – B1.2.3",
+"understandings": [
+"B1.2.1",
+"B1.2.2",
+"B1.2.3"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "b12-lesson2",
+"id": "DP-B12-L2",
+"title": "B1.2 Proteins · Lesson 2: The infinite variety of polypeptides and the effect of pH and temperature",
+"level": "SL",
+"range": "B1.2.4 – B1.2.5",
+"understandings": [
+"B1.2.4",
+"B1.2.5"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "b12-lesson3",
+"id": "DP1-B1.2-L2",
+"title": "AHL Proteins: R Groups and the Levels of Structure",
+"level": "HL",
+"range": "B1.2.6 – B1.2.9",
+"understandings": [
+"B1.2.6",
+"B1.2.7",
+"B1.2.8",
+"B1.2.9"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "b12-lesson4",
+"id": "DP1-B1.2-L3",
+"title": "AHL Proteins: Arrangement, Quaternary Structure, Collagen and Insulin",
+"level": "HL",
+"range": "B1.2.10 – B1.2.12",
+"understandings": [
+"B1.2.10",
+"B1.2.11",
+"B1.2.12"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "B2.1",
+"name": "Membranes and membrane transport",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 4,
+"ahl_hours": 2,
+"hl_hours": 6,
+"understandings": {
+"SL": 10,
+"HL": 7
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "b21-lesson1",
+"id": "DP1-B21-L1",
+"title": "B2.1 Membranes and membrane transport · Lesson 1: Lipid bilayers, simple diffusion and membrane proteins",
+"level": "SL",
+"range": "B2.1.1 – B2.1.4",
+"understandings": [
+"B2.1.1",
+"B2.1.2",
+"B2.1.3",
+"B2.1.4"
+],
+"skills": [],
+"minutes": 95,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "b21-lesson2",
+"id": "DP1-B21-L2",
+"title": "B2.1 Membranes and membrane transport · Lesson 2: Osmosis, aquaporins, channels and pumps",
+"level": "SL",
+"range": "B2.1.5 – B2.1.8",
+"understandings": [
+"B2.1.5",
+"B2.1.6",
+"B2.1.7",
+"B2.1.8"
+],
+"skills": [],
+"minutes": 95,
+"hour": "Hours 2–4"
+},
+{
+"n": 3,
+"path": "b21-lesson3",
+"id": "DP-B21-L3",
+"title": "B2.1 Membranes and membrane transport · Lesson 3: Glycoproteins, glycolipids and the fluid mosaic model",
+"level": "SL",
+"range": "B2.1.9 – B2.1.10",
+"understandings": [
+"B2.1.9",
+"B2.1.10"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 4"
+},
+{
+"n": 4,
+"path": "b21-lesson4",
+"id": "DP-B21-L4",
+"title": "B2.1 Membranes and membrane transport · Lesson 4 (HL): Membrane fluidity, cholesterol and vesicles",
+"level": "HL",
+"range": "B2.1.11 – B2.1.13",
+"understandings": [
+"B2.1.11",
+"B2.1.12",
+"B2.1.13"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 5"
+},
+{
+"n": 5,
+"path": "b21-lesson5",
+"id": "DP-B21-L5",
+"title": "B2.1 Membranes and membrane transport · Lesson 5 (HL): Gated channels, the sodium–potassium pump, cotransport and cell adhesion",
+"level": "HL",
+"range": "B2.1.14 – B2.1.17",
+"understandings": [
+"B2.1.14",
+"B2.1.15",
+"B2.1.16",
+"B2.1.17"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "B2.2",
+"name": "Organelles and compartmentalization",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 1,
+"ahl_hours": 2,
+"hl_hours": 3,
+"understandings": {
+"SL": 3,
+"HL": 6
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "b22-lesson1",
+"id": "DP1-B22-L1",
+"title": "B2.2 Organelles and compartmentalization · Lesson 1: Organelles and the advantages of compartmentalization",
+"level": "SL",
+"range": "B2.2.1 – B2.2.3",
+"understandings": [
+"B2.2.1",
+"B2.2.2",
+"B2.2.3"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "b22-lesson2",
+"id": "DP1-B22-L2",
+"title": "B2.2 Organelles and compartmentalization · Lesson 2 (HL): Mitochondria, chloroplasts and the nucleus",
+"level": "HL",
+"range": "B2.2.4 – B2.2.6",
+"understandings": [
+"B2.2.4",
+"B2.2.5",
+"B2.2.6"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "b22-lesson3",
+"id": "DP1-B22-L3",
+"title": "B2.2 Organelles and compartmentalization · Lesson 3 (HL): Ribosomes, rough ER, Golgi apparatus and vesicles",
+"level": "HL",
+"range": "B2.2.7 – B2.2.9",
+"understandings": [
+"B2.2.7",
+"B2.2.8",
+"B2.2.9"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 3"
+}
+]
+},
+{
+"code": "B2.3",
+"name": "Cell specialization",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 2,
+"ahl_hours": 1,
+"hl_hours": 3,
+"understandings": {
+"SL": 6,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "b23-lesson1",
+"id": "DP1-B23-L1",
+"title": "B2.3 Cell specialization · Lesson 1: Differentiation, stem cells and stem cell niches",
+"level": "SL",
+"range": "B2.3.1 – B2.3.3",
+"understandings": [
+"B2.3.1",
+"B2.3.2",
+"B2.3.3"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "b23-lesson2",
+"id": "DP1-B23-L2",
+"title": "B2.3 Cell specialization · Lesson 2: Types of stem cell, cell size and surface area-to-volume ratio",
+"level": "SL",
+"range": "B2.3.4 – B2.3.6",
+"understandings": [
+"B2.3.4",
+"B2.3.5",
+"B2.3.6"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "b23-lesson3",
+"id": "DP-B23-L3",
+"title": "B2.3 Cell specialization · Lesson 3 (HL): Specialized cells: SA:V adaptations, pneumocytes, muscle and gametes",
+"level": "HL",
+"range": "B2.3.7 – B2.3.10",
+"understandings": [
+"B2.3.7",
+"B2.3.8",
+"B2.3.9",
+"B2.3.10"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 3"
+}
+]
+},
+{
+"code": "B3.1",
+"name": "Gas exchange",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 1,
+"hl_hours": 4,
+"understandings": {
+"SL": 10,
+"HL": 3
+},
+"skills": [
+{
+"code": "B3.1.6",
+"text": "Measurement of lung volumes",
+"level": "SL"
+},
+{
+"code": "B3.1.10",
+"text": "Stomatal density",
+"level": "SL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "b31-lesson1",
+"id": "DP1-B31-L1",
+"title": "B3.1 Gas exchange · Lesson 1: Gas exchange surfaces and the mammalian lung",
+"level": "SL",
+"range": "B3.1.1 – B3.1.4",
+"understandings": [
+"B3.1.1",
+"B3.1.2",
+"B3.1.3",
+"B3.1.4"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "b31-lesson2",
+"id": "DP1-B31-L2",
+"title": "B3.1 Gas exchange · Lesson 2: Ventilation and measuring lung volumes",
+"level": "SL",
+"range": "B3.1.5 – B3.1.6",
+"understandings": [
+"B3.1.5",
+"B3.1.6"
+],
+"skills": [
+"B3.1.6"
+],
+"minutes": 40,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "b31-lesson3",
+"id": "DP1-B31-L3",
+"title": "B3.1 Gas exchange · Lesson 3: Gas exchange in leaves, transpiration and stomatal density",
+"level": "SL",
+"range": "B3.1.7 – B3.1.10",
+"understandings": [
+"B3.1.7",
+"B3.1.8",
+"B3.1.9",
+"B3.1.10"
+],
+"skills": [
+"B3.1.10"
+],
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 4,
+"path": "b31-lesson4",
+"id": "DP-B31-L4",
+"title": "B3.1 Gas exchange · Lesson 4 (HL): Haemoglobin, oxygen dissociation curves and the Bohr shift",
+"level": "HL",
+"range": "B3.1.11 – B3.1.13",
+"understandings": [
+"B3.1.11",
+"B3.1.12",
+"B3.1.13"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "B3.2",
+"name": "Transport",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 2,
+"hl_hours": 5,
+"understandings": {
+"SL": 10,
+"HL": 8
+},
+"skills": [
+{
+"code": "B3.2.2",
+"text": "Structure of arteries and veins",
+"level": "SL"
+},
+{
+"code": "B3.2.4",
+"text": "Measurement of pulse rates",
+"level": "SL"
+},
+{
+"code": "B3.2.6",
+"text": "Causes and consequences of occlusion of the coronary arteries",
+"level": "SL"
+},
+{
+"code": "B3.2.9",
+"text": "Distribution of tissues in a transverse section of the stem of a dicotyledonous plant",
+"level": "SL"
+},
+{
+"code": "B3.2.10",
+"text": "Distribution of tissues in a transverse section of the root of a dicotyledonous plant",
+"level": "SL"
+},
+{
+"code": "B3.2.16",
+"text": "Stages in the cardiac cycle",
+"level": "HL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "b32-lesson1",
+"id": "DP1-B32-L1",
+"title": "B3.2 Transport · Lesson 1: Capillaries, arteries and veins: structure",
+"level": "SL",
+"range": "B3.2.1 – B3.2.3",
+"understandings": [
+"B3.2.1",
+"B3.2.2",
+"B3.2.3"
+],
+"skills": [
+"B3.2.2"
+],
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "b32-lesson2",
+"id": "DP1-B32-L2",
+"title": "B3.2 Transport · Lesson 2: Pulse rate, veins and coronary heart disease",
+"level": "SL",
+"range": "B3.2.4 – B3.2.6",
+"understandings": [
+"B3.2.4",
+"B3.2.5",
+"B3.2.6"
+],
+"skills": [
+"B3.2.4",
+"B3.2.6"
+],
+"minutes": 55,
+"hour": "Hours 1–2"
+},
+{
+"n": 3,
+"path": "b32-lesson3",
+"id": "DP1-B32-L3",
+"title": "B3.2 Transport · Lesson 3: Water transport in plants: transpiration, xylem, stems and roots",
+"level": "SL",
+"range": "B3.2.7 – B3.2.10",
+"understandings": [
+"B3.2.7",
+"B3.2.8",
+"B3.2.9",
+"B3.2.10"
+],
+"skills": [
+"B3.2.9",
+"B3.2.10"
+],
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 4,
+"path": "b32-lesson4",
+"id": "DP1-B32-L4",
+"title": "B3.2 Transport · Lesson 4 (HL): Tissue fluid, lymph and single versus double circulation",
+"level": "HL",
+"range": "B3.2.11 – B3.2.14",
+"understandings": [
+"B3.2.11",
+"B3.2.12",
+"B3.2.13",
+"B3.2.14"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 4"
+},
+{
+"n": 5,
+"path": "b32-lesson5",
+"id": "DP-B32-L5",
+"title": "B3.2 Transport · Lesson 5 (HL): The heart, the cardiac cycle, root pressure and phloem",
+"level": "HL",
+"range": "B3.2.15 – B3.2.18",
+"understandings": [
+"B3.2.15",
+"B3.2.16",
+"B3.2.17",
+"B3.2.18"
+],
+"skills": [
+"B3.2.16"
+],
+"minutes": 60,
+"hour": "Hour 5"
+}
+]
+},
+{
+"code": "B3.3",
+"name": "Muscle and motility",
+"theme": "B",
+"hl_only": true,
+"sl_hours": 0,
+"ahl_hours": 3,
+"hl_hours": 3,
+"understandings": {
+"SL": 0,
+"HL": 10
+},
+"skills": [
+{
+"code": "B3.3.7",
+"text": "Range of motion of a joint",
+"level": "HL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "b33-lesson1",
+"id": "DP1-B33-L1",
+"title": "B3.3 Muscle and motility · Lesson 1 (HL): Movement, the sliding filament model, titin and motor units",
+"level": "HL",
+"range": "B3.3.1 – B3.3.4",
+"understandings": [
+"B3.3.1",
+"B3.3.2",
+"B3.3.3",
+"B3.3.4"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "b33-lesson2",
+"id": "DP1-B33-L2",
+"title": "B3.3 Muscle and motility · Lesson 2 (HL): Skeletons, synovial joints and range of motion",
+"level": "HL",
+"range": "B3.3.5 – B3.3.7",
+"understandings": [
+"B3.3.5",
+"B3.3.6",
+"B3.3.7"
+],
+"skills": [
+"B3.3.7"
+],
+"minutes": 55,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "b33-lesson3",
+"id": "DP-B33-L3",
+"title": "B3.3 Muscle and motility · Lesson 3 (HL): Intercostal muscles, reasons for locomotion and swimming mammals",
+"level": "HL",
+"range": "B3.3.8 – B3.3.10",
+"understandings": [
+"B3.3.8",
+"B3.3.9",
+"B3.3.10"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hour 3"
+}
+]
+},
+{
+"code": "B4.1",
+"name": "Adaptation to environment",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 0,
+"hl_hours": 3,
+"understandings": {
+"SL": 8,
+"HL": 0
+},
+"skills": [
+{
+"code": "B4.1.4",
+"text": "Range of tolerance of a limiting factor",
+"level": "SL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "b41-lesson1",
+"id": "DP-B41-L1",
+"title": "B4.1 Adaptation to environment · Lesson 1: Habitats, adaptations, abiotic variables and tolerance",
+"level": "SL",
+"range": "B4.1.1 – B4.1.4",
+"understandings": [
+"B4.1.1",
+"B4.1.2",
+"B4.1.3",
+"B4.1.4"
+],
+"skills": [
+"B4.1.4"
+],
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "b41-lesson2",
+"id": "DP-B41-L2",
+"title": "B4.1 Adaptation to environment · Lesson 2: Coral reefs, biomes and adaptations to deserts and rainforests",
+"level": "SL",
+"range": "B4.1.5 – B4.1.8",
+"understandings": [
+"B4.1.5",
+"B4.1.6",
+"B4.1.7",
+"B4.1.8"
+],
+"skills": [],
+"minutes": 90,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "B4.2",
+"name": "Ecological niches",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 4,
+"ahl_hours": 0,
+"hl_hours": 4,
+"understandings": {
+"SL": 13,
+"HL": 0
+},
+"skills": [
+{
+"code": "B4.2.8",
+"text": "Relationship between dentition and the diet of omnivorous and herbivorous representative",
+"level": "SL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "b42-lesson1",
+"id": "DP-B42-L1",
+"title": "B4.2 Ecological niches · Lesson 1: Niches, oxygen tolerance, photosynthesis and holozoic nutrition",
+"level": "SL",
+"range": "B4.2.1 – B4.2.4",
+"understandings": [
+"B4.2.1",
+"B4.2.2",
+"B4.2.3",
+"B4.2.4"
+],
+"skills": [],
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "b42-lesson2",
+"id": "DP-B42-L2",
+"title": "B4.2 Ecological niches · Lesson 2: Mixotrophs, saprotrophs, archaea and hominid teeth",
+"level": "SL",
+"range": "B4.2.5 – B4.2.8",
+"understandings": [
+"B4.2.5",
+"B4.2.6",
+"B4.2.7",
+"B4.2.8"
+],
+"skills": [
+"B4.2.8"
+],
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "b42-lesson3",
+"id": "DP-B42-L3",
+"title": "B4.2 Ecological niches · Lesson 3: Herbivory, predation and harvesting light",
+"level": "SL",
+"range": "B4.2.9 – B4.2.11",
+"understandings": [
+"B4.2.9",
+"B4.2.10",
+"B4.2.11"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "b42-lesson4",
+"id": "DP-B42-L4",
+"title": "B4.2 Ecological niches · Lesson 4: Fundamental and realized niches, and competitive exclusion",
+"level": "SL",
+"range": "B4.2.12 – B4.2.13",
+"understandings": [
+"B4.2.12",
+"B4.2.13"
+],
+"skills": [],
+"minutes": 35,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "C1.1",
+"name": "Enzymes and metabolism",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 2,
+"hl_hours": 5,
+"understandings": {
+"SL": 10,
+"HL": 7
+},
+"skills": [
+{
+"code": "C1.1.8",
+"text": "Effects of temperature, pH and substrate concentration on the rate of enzyme activity",
+"level": "SL"
+},
+{
+"code": "C1.1.9",
+"text": "Measurements in enzyme-catalysed reactions",
+"level": "SL"
+},
+{
+"code": "C1.1.10",
+"text": "Effect of enzymes on activation energy",
+"level": "SL"
+}
+],
+"practicals": [
+{
+"path": "catalase-lab",
+"id": "DP1-C1.1-L3",
+"title": "Factors Affecting Enzyme Activity: Catalase Lab"
+}
+],
+"lessons": [
+{
+"n": 1,
+"path": "c11-lesson1",
+"id": "DP1-C1.1-L1",
+"title": "Enzymes as Catalysts & Metabolism",
+"level": "SL",
+"range": "C1.1.1 – C1.1.4",
+"understandings": [
+"C1.1.1",
+"C1.1.2",
+"C1.1.3",
+"C1.1.4"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "c11-lesson2",
+"id": "DP1-C1.1-L2",
+"title": "How Enzymes Work: Induced Fit, Collisions, Specificity & Activation Energy",
+"level": "SL",
+"range": "C1.1.5 – C1.1.7, C1.1.10",
+"understandings": [
+"C1.1.5",
+"C1.1.6",
+"C1.1.7",
+"C1.1.10"
+],
+"skills": [
+"C1.1.10"
+],
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "c11-lesson3",
+"id": "DP-C11-L3",
+"title": "C1.1 Enzymes and metabolism · Lesson 3: Effects of temperature, pH and substrate concentration, and measuring reaction rates",
+"level": "SL",
+"range": "C1.1.8 – C1.1.9",
+"understandings": [
+"C1.1.8",
+"C1.1.9"
+],
+"skills": [
+"C1.1.8",
+"C1.1.9"
+],
+"minutes": 40,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "c11-lesson4",
+"id": "DP1-C1.1-L4",
+"title": "Metabolism in Action: Where Enzymes Work, Heat & Pathways",
+"level": "HL",
+"range": "C1.1.11 – C1.1.13",
+"understandings": [
+"C1.1.11",
+"C1.1.12",
+"C1.1.13"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 4"
+},
+{
+"n": 5,
+"path": "c11-lesson5",
+"id": "DP1-C1.1-L5",
+"title": "Controlling Enzymes: Inhibition & Feedback",
+"level": "HL",
+"range": "C1.1.14 – C1.1.17",
+"understandings": [
+"C1.1.14",
+"C1.1.15",
+"C1.1.16",
+"C1.1.17"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 4–5"
+}
+]
+},
+{
+"code": "C1.2",
+"name": "Cell respiration",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 2,
+"ahl_hours": 3,
+"hl_hours": 5,
+"understandings": {
+"SL": 6,
+"HL": 11
+},
+"skills": [
+{
+"code": "C1.2.6",
+"text": "Variables affecting the rate of cell respiration",
+"level": "SL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "c12-lesson1",
+"id": "DP1-C12-L1",
+"title": "C1.2 Cell respiration · Lesson 1: ATP: the energy currency of cells",
+"level": "SL",
+"range": "C1.2.1 – C1.2.3",
+"understandings": [
+"C1.2.1",
+"C1.2.2",
+"C1.2.3"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "c12-lesson2",
+"id": "DP1-C12-L2",
+"title": "C1.2 Cell respiration · Lesson 2: Aerobic and anaerobic respiration and the rate of respiration",
+"level": "SL",
+"range": "C1.2.4 – C1.2.6",
+"understandings": [
+"C1.2.4",
+"C1.2.5",
+"C1.2.6"
+],
+"skills": [
+"C1.2.6"
+],
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "c12-lesson3",
+"id": "DP1-C12-L3",
+"title": "C1.2 Cell respiration · Lesson 3 (HL): NAD, glycolysis and anaerobic pathways",
+"level": "HL",
+"range": "C1.2.7 – C1.2.10",
+"understandings": [
+"C1.2.7",
+"C1.2.8",
+"C1.2.9",
+"C1.2.10"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "c12-lesson4",
+"id": "DP-C12-L4",
+"title": "C1.2 Cell respiration · Lesson 4 (HL): The link reaction, the Krebs cycle and reduced NAD",
+"level": "HL",
+"range": "C1.2.11 – C1.2.13",
+"understandings": [
+"C1.2.11",
+"C1.2.12",
+"C1.2.13"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 4"
+},
+{
+"n": 5,
+"path": "c12-lesson5",
+"id": "DP-C12-L5",
+"title": "C1.2 Cell respiration · Lesson 5 (HL): Electron transport, chemiosmosis, oxygen and respiratory substrates",
+"level": "HL",
+"range": "C1.2.14 – C1.2.17",
+"understandings": [
+"C1.2.14",
+"C1.2.15",
+"C1.2.16",
+"C1.2.17"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 4–5"
+}
+]
+},
+{
+"code": "C1.3",
+"name": "Photosynthesis",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 3,
+"hl_hours": 6,
+"understandings": {
+"SL": 8,
+"HL": 11
+},
+"skills": [
+{
+"code": "C1.3.4",
+"text": "Separation and identification of photosynthetic pigments by chromatography",
+"level": "SL"
+},
+{
+"code": "C1.3.6",
+"text": "Similarities and differences of absorption and action spectra",
+"level": "SL"
+},
+{
+"code": "C1.3.7",
+"text": "Techniques for varying concentrations of carbon dioxide, light intensity or temperature",
+"level": "SL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "c13-lesson1",
+"id": "DP1-C13-L1",
+"title": "C1.3 Photosynthesis · Lesson 1: Energy transformation, the equation and photosynthetic pigments",
+"level": "SL",
+"range": "C1.3.1 – C1.3.4",
+"understandings": [
+"C1.3.1",
+"C1.3.2",
+"C1.3.3",
+"C1.3.4"
+],
+"skills": [
+"C1.3.4"
+],
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "c13-lesson2",
+"id": "DP1-C13-L2",
+"title": "C1.3 Photosynthesis · Lesson 2: Absorption and action spectra, limiting factors and CO₂ enrichment",
+"level": "SL",
+"range": "C1.3.5 – C1.3.8",
+"understandings": [
+"C1.3.5",
+"C1.3.6",
+"C1.3.7",
+"C1.3.8"
+],
+"skills": [
+"C1.3.6",
+"C1.3.7"
+],
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "c13-lesson3",
+"id": "DP1-C13-L3",
+"title": "C1.3 Photosynthesis · Lesson 3 (HL): Photosystems, photolysis and chemiosmosis in thylakoids",
+"level": "HL",
+"range": "C1.3.9 – C1.3.12",
+"understandings": [
+"C1.3.9",
+"C1.3.10",
+"C1.3.11",
+"C1.3.12"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "c13-lesson4",
+"id": "DP1-C13-L4",
+"title": "C1.3 Photosynthesis · Lesson 4 (HL): NADP reduction, the thylakoid and carbon fixation by Rubisco",
+"level": "HL",
+"range": "C1.3.13 – C1.3.15",
+"understandings": [
+"C1.3.13",
+"C1.3.14",
+"C1.3.15"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 5"
+},
+{
+"n": 5,
+"path": "c13-lesson5",
+"id": "DP-C13-L5",
+"title": "C1.3 Photosynthesis · Lesson 5 (HL): Triose phosphate, regenerating RuBP, making biomass and interdependence",
+"level": "HL",
+"range": "C1.3.16 – C1.3.19",
+"understandings": [
+"C1.3.16",
+"C1.3.17",
+"C1.3.18",
+"C1.3.19"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "C2.1",
+"name": "Chemical signalling",
+"theme": "C",
+"hl_only": true,
+"sl_hours": 0,
+"ahl_hours": 4,
+"hl_hours": 4,
+"understandings": {
+"SL": 0,
+"HL": 14
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "c21-lesson1",
+"id": "DP1-C21-L1",
+"title": "C2.1 Chemical signalling · Lesson 1 (HL): Receptors, quorum sensing and kinds of signalling chemicals",
+"level": "HL",
+"range": "C2.1.1 – C2.1.4",
+"understandings": [
+"C2.1.1",
+"C2.1.2",
+"C2.1.3",
+"C2.1.4"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "c21-lesson2",
+"id": "DP1-C21-L2",
+"title": "C2.1 Chemical signalling · Lesson 2 (HL): Local and distant signals, receptor types and the acetylcholine receptor",
+"level": "HL",
+"range": "C2.1.5 – C2.1.8",
+"understandings": [
+"C2.1.5",
+"C2.1.6",
+"C2.1.7",
+"C2.1.8"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "c21-lesson3",
+"id": "DP-C21-L3",
+"title": "C2.1 Chemical signalling · Lesson 3 (HL): G protein-coupled receptors, adrenaline and insulin receptors",
+"level": "HL",
+"range": "C2.1.9 – C2.1.11",
+"understandings": [
+"C2.1.9",
+"C2.1.10",
+"C2.1.11"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "c21-lesson4",
+"id": "DP-C21-L4",
+"title": "C2.1 Chemical signalling · Lesson 4 (HL): Intracellular receptors, sex hormones and feedback",
+"level": "HL",
+"range": "C2.1.12 – C2.1.14",
+"understandings": [
+"C2.1.12",
+"C2.1.13",
+"C2.1.14"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "C2.2",
+"name": "Neural signalling",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 3,
+"hl_hours": 6,
+"understandings": {
+"SL": 7,
+"HL": 9
+},
+"skills": [
+{
+"code": "C2.2.4",
+"text": "Variation in the speed of nerve impulses",
+"level": "SL"
+},
+{
+"code": "C2.2.10",
+"text": "Oscilloscope traces showing resting potentials and action potentials",
+"level": "HL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "c22-lesson1",
+"id": "DP1-C22-L1",
+"title": "C2.2 Neural signalling · Lesson 1: Neurons, resting potentials, impulses and their speed",
+"level": "SL",
+"range": "C2.2.1 – C2.2.4",
+"understandings": [
+"C2.2.1",
+"C2.2.2",
+"C2.2.3",
+"C2.2.4"
+],
+"skills": [
+"C2.2.4"
+],
+"minutes": 105,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "c22-lesson2",
+"id": "DP1-C22-L2",
+"title": "C2.2 Neural signalling · Lesson 2: Synapses, neurotransmitter release and excitatory postsynaptic potentials",
+"level": "SL",
+"range": "C2.2.5 – C2.2.7",
+"understandings": [
+"C2.2.5",
+"C2.2.6",
+"C2.2.7"
+],
+"skills": [],
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "c22-lesson3",
+"id": "DP1-C22-L3",
+"title": "C2.2 Neural signalling · Lesson 3 (HL): Action potentials: channels, local currents, oscilloscope traces and saltatory conduction",
+"level": "HL",
+"range": "C2.2.8 – C2.2.11",
+"understandings": [
+"C2.2.8",
+"C2.2.9",
+"C2.2.10",
+"C2.2.11"
+],
+"skills": [
+"C2.2.10"
+],
+"minutes": 80,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "c22-lesson4",
+"id": "DP-C22-L4",
+"title": "C2.2 Neural signalling · Lesson 4 (HL): Exogenous chemicals, inhibitory synapses and summation",
+"level": "HL",
+"range": "C2.2.12 – C2.2.14",
+"understandings": [
+"C2.2.12",
+"C2.2.13",
+"C2.2.14"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "c22-lesson5",
+"id": "DP-C22-L5",
+"title": "C2.2 Neural signalling · Lesson 5 (HL): Pain and consciousness",
+"level": "HL",
+"range": "C2.2.15 – C2.2.16",
+"understandings": [
+"C2.2.15",
+"C2.2.16"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hour 6"
+}
+]
+},
+{
+"code": "C3.1",
+"name": "Integration of body systems",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 5,
+"ahl_hours": 2,
+"hl_hours": 7,
+"understandings": {
+"SL": 16,
+"HL": 7
+},
+"skills": [
+{
+"code": "C3.1.17",
+"text": "Observations of tropic responses in seedlings",
+"level": "HL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "c31-lesson1",
+"id": "DP1-C31-L1",
+"title": "C3.1 Integration of body systems · Lesson 1: System integration and the nervous, endocrine and blood systems",
+"level": "SL",
+"range": "C3.1.1 – C3.1.3",
+"understandings": [
+"C3.1.1",
+"C3.1.2",
+"C3.1.3"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "c31-lesson2",
+"id": "DP1-C31-L2",
+"title": "C3.1 Integration of body systems · Lesson 2: The brain and spinal cord as integrating centres",
+"level": "SL",
+"range": "C3.1.4 – C3.1.5",
+"understandings": [
+"C3.1.4",
+"C3.1.5"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hours 1–2"
+},
+{
+"n": 3,
+"path": "c31-lesson3",
+"id": "DP1-C31-L3",
+"title": "C3.1 Integration of body systems · Lesson 3: Sensory and motor neurons and nerves",
+"level": "SL",
+"range": "C3.1.6 – C3.1.8",
+"understandings": [
+"C3.1.6",
+"C3.1.7",
+"C3.1.8"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hours 2–3"
+},
+{
+"n": 4,
+"path": "c31-lesson4",
+"id": "DP-C31-L4",
+"title": "C3.1 Integration of body systems · Lesson 4: Pain reflex arcs and the cerebellum",
+"level": "SL",
+"range": "C3.1.9 – C3.1.10",
+"understandings": [
+"C3.1.9",
+"C3.1.10"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hours 3–4"
+},
+{
+"n": 5,
+"path": "c31-lesson5",
+"id": "DP-C31-L5",
+"title": "C3.1 Integration of body systems · Lesson 5: Hormonal control: melatonin, adrenaline and the hypothalamus–pituitary",
+"level": "SL",
+"range": "C3.1.11 – C3.1.13",
+"understandings": [
+"C3.1.11",
+"C3.1.12",
+"C3.1.13"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hours 4–5"
+},
+{
+"n": 6,
+"path": "c31-lesson6",
+"id": "DP-C31-L6",
+"title": "C3.1 Integration of body systems · Lesson 6: Feedback control of heart rate, ventilation and peristalsis",
+"level": "SL",
+"range": "C3.1.14 – C3.1.16",
+"understandings": [
+"C3.1.14",
+"C3.1.15",
+"C3.1.16"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hour 5"
+},
+{
+"n": 7,
+"path": "c31-lesson7",
+"id": "DP-C31-L7",
+"title": "C3.1 Integration of body systems · Lesson 7 (HL): Tropisms, phototropism, phytohormones and auxin transport",
+"level": "HL",
+"range": "C3.1.17 – C3.1.20",
+"understandings": [
+"C3.1.17",
+"C3.1.18",
+"C3.1.19",
+"C3.1.20"
+],
+"skills": [
+"C3.1.17"
+],
+"minutes": 70,
+"hour": "Hours 6–7"
+},
+{
+"n": 8,
+"path": "c31-lesson8",
+"id": "DP-C31-L8",
+"title": "C3.1 Integration of body systems · Lesson 8 (HL): Auxin and cell growth, auxin–cytokinin interactions and ethylene",
+"level": "HL",
+"range": "C3.1.21 – C3.1.23",
+"understandings": [
+"C3.1.21",
+"C3.1.22",
+"C3.1.23"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 7"
+}
+]
+},
+{
+"code": "C3.2",
+"name": "Defence against disease",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 5,
+"ahl_hours": 0,
+"hl_hours": 5,
+"understandings": {
+"SL": 18,
+"HL": 0
+},
+"skills": [
+{
+"code": "C3.2.18",
+"text": "Evaluation of data related to the COVID-19 pandemic",
+"level": "SL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "c32-lesson1",
+"id": "DP-C32-L1",
+"title": "C3.2 Defence against disease · Lesson 1: Pathogens, primary defences, clotting and two immune systems",
+"level": "SL",
+"range": "C3.2.1 – C3.2.4",
+"understandings": [
+"C3.2.1",
+"C3.2.2",
+"C3.2.3",
+"C3.2.4"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "c32-lesson2",
+"id": "DP-C32-L2",
+"title": "C3.2 Defence against disease · Lesson 2: Phagocytes, lymphocytes, antigens and B-cell activation",
+"level": "SL",
+"range": "C3.2.5 – C3.2.8",
+"understandings": [
+"C3.2.5",
+"C3.2.6",
+"C3.2.7",
+"C3.2.8"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "c32-lesson3",
+"id": "DP-C32-L3",
+"title": "C3.2 Defence against disease · Lesson 3: Clonal selection, immunological memory, HIV and AIDS",
+"level": "SL",
+"range": "C3.2.9 – C3.2.12",
+"understandings": [
+"C3.2.9",
+"C3.2.10",
+"C3.2.11",
+"C3.2.12"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "c32-lesson4",
+"id": "DP-C32-L4",
+"title": "C3.2 Defence against disease · Lesson 4: Antibiotics, antibiotic resistance and zoonoses",
+"level": "SL",
+"range": "C3.2.13 – C3.2.15",
+"understandings": [
+"C3.2.13",
+"C3.2.14",
+"C3.2.15"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "c32-lesson5",
+"id": "DP-C32-L5",
+"title": "C3.2 Defence against disease · Lesson 5: Vaccines, herd immunity and evaluating COVID-19 data",
+"level": "SL",
+"range": "C3.2.16 – C3.2.18",
+"understandings": [
+"C3.2.16",
+"C3.2.17",
+"C3.2.18"
+],
+"skills": [
+"C3.2.18"
+],
+"minutes": 50,
+"hour": "Hour 5"
+}
+]
+},
+{
+"code": "C4.1",
+"name": "Populations and communities",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 5,
+"ahl_hours": 0,
+"hl_hours": 5,
+"understandings": {
+"SL": 18,
+"HL": 0
+},
+"skills": [
+{
+"code": "C4.1.3",
+"text": "Random quadrat sampling to estimate population size for sessile organisms",
+"level": "SL"
+},
+{
+"code": "C4.1.4",
+"text": "Capture–mark–release–recapture and the Lincoln index to estimate population size for motile",
+"level": "SL"
+},
+{
+"code": "C4.1.7",
+"text": "Population growth curves",
+"level": "SL"
+},
+{
+"code": "C4.1.8",
+"text": "Modelling of the sigmoid population growth curve",
+"level": "SL"
+},
+{
+"code": "C4.1.15",
+"text": "Use of the chi-squared test for association between two species",
+"level": "SL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "c41-lesson1",
+"id": "DP-C41-L1",
+"title": "C4.1 Populations and communities · Lesson 1: Populations and estimating population size",
+"level": "SL",
+"range": "C4.1.1 – C4.1.4",
+"understandings": [
+"C4.1.1",
+"C4.1.2",
+"C4.1.3",
+"C4.1.4"
+],
+"skills": [
+"C4.1.3",
+"C4.1.4"
+],
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "c41-lesson2",
+"id": "DP-C41-L2",
+"title": "C4.1 Populations and communities · Lesson 2: Carrying capacity, density-dependent control and population growth",
+"level": "SL",
+"range": "C4.1.5 – C4.1.8",
+"understandings": [
+"C4.1.5",
+"C4.1.6",
+"C4.1.7",
+"C4.1.8"
+],
+"skills": [
+"C4.1.7",
+"C4.1.8"
+],
+"minutes": 65,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "c41-lesson3",
+"id": "DP-C41-L3",
+"title": "C4.1 Populations and communities · Lesson 3: Intraspecific relationships, communities and interspecific relationships",
+"level": "SL",
+"range": "C4.1.9 – C4.1.12",
+"understandings": [
+"C4.1.9",
+"C4.1.10",
+"C4.1.11",
+"C4.1.12"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "c41-lesson4",
+"id": "DP-C41-L4",
+"title": "C4.1 Populations and communities · Lesson 4: Invasive species and testing for interspecific competition",
+"level": "SL",
+"range": "C4.1.13 – C4.1.15",
+"understandings": [
+"C4.1.13",
+"C4.1.14",
+"C4.1.15"
+],
+"skills": [
+"C4.1.15"
+],
+"minutes": 55,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "c41-lesson5",
+"id": "DP-C41-L5",
+"title": "C4.1 Populations and communities · Lesson 5: Predator–prey cycles, top-down and bottom-up control, and allelopathy",
+"level": "SL",
+"range": "C4.1.16 – C4.1.18",
+"understandings": [
+"C4.1.16",
+"C4.1.17",
+"C4.1.18"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 5"
+}
+]
+},
+{
+"code": "C4.2",
+"name": "Transfers of energy and matter",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 5,
+"ahl_hours": 0,
+"hl_hours": 5,
+"understandings": {
+"SL": 22,
+"HL": 0
+},
+"skills": [
+{
+"code": "C4.2.11",
+"text": "Construction of energy pyramids",
+"level": "SL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "c42-lesson1",
+"id": "DP-C42-L1",
+"title": "C4.2 Transfers of energy and matter · Lesson 1: Ecosystems as open systems, sunlight and food chains",
+"level": "SL",
+"range": "C4.2.1 – C4.2.4",
+"understandings": [
+"C4.2.1",
+"C4.2.2",
+"C4.2.3",
+"C4.2.4"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "c42-lesson2",
+"id": "DP-C42-L2",
+"title": "C4.2 Transfers of energy and matter · Lesson 2: Decomposers and autotrophs",
+"level": "SL",
+"range": "C4.2.5 – C4.2.7",
+"understandings": [
+"C4.2.5",
+"C4.2.6",
+"C4.2.7"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hours 1–2"
+},
+{
+"n": 3,
+"path": "c42-lesson3",
+"id": "DP-C42-L3",
+"title": "C4.2 Transfers of energy and matter · Lesson 3: Heterotrophs and the release of energy by respiration",
+"level": "SL",
+"range": "C4.2.8 – C4.2.9",
+"understandings": [
+"C4.2.8",
+"C4.2.9"
+],
+"skills": [],
+"minutes": 30,
+"hour": "Hours 2–3"
+},
+{
+"n": 4,
+"path": "c42-lesson4",
+"id": "DP-C42-L4",
+"title": "C4.2 Transfers of energy and matter · Lesson 4: Trophic levels and energy pyramids",
+"level": "SL",
+"range": "C4.2.10 – C4.2.11",
+"understandings": [
+"C4.2.10",
+"C4.2.11"
+],
+"skills": [
+"C4.2.11"
+],
+"minutes": 25,
+"hour": "Hour 3"
+},
+{
+"n": 5,
+"path": "c42-lesson5",
+"id": "DP-C42-L5",
+"title": "C4.2 Transfers of energy and matter · Lesson 5: Energy losses and the limits on food chains",
+"level": "SL",
+"range": "C4.2.12 – C4.2.14",
+"understandings": [
+"C4.2.12",
+"C4.2.13",
+"C4.2.14"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hours 3–4"
+},
+{
+"n": 6,
+"path": "c42-lesson6",
+"id": "DP-C42-L6",
+"title": "C4.2 Transfers of energy and matter · Lesson 6: Primary and secondary production, and the carbon cycle",
+"level": "SL",
+"range": "C4.2.15 – C4.2.18",
+"understandings": [
+"C4.2.15",
+"C4.2.16",
+"C4.2.17",
+"C4.2.18"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hours 4–5"
+},
+{
+"n": 7,
+"path": "c42-lesson7",
+"id": "DP-C42-L7",
+"title": "C4.2 Transfers of energy and matter · Lesson 7: Combustion, the Keeling Curve and recycling of elements",
+"level": "SL",
+"range": "C4.2.19 – C4.2.22",
+"understandings": [
+"C4.2.19",
+"C4.2.20",
+"C4.2.21",
+"C4.2.22"
+],
+"skills": [],
+"minutes": 55,
+"hour": "Hour 5"
+}
+]
+},
+{
+"code": "D1.1",
+"name": "DNA replication",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 2,
+"ahl_hours": 2,
+"hl_hours": 4,
+"understandings": {
+"SL": 5,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "d11-lesson1",
+"id": "DP1-D11-L1",
+"title": "D1.1 DNA replication · Lesson 1: Semi-conservative replication, helicase and DNA polymerase",
+"level": "SL",
+"range": "D1.1.1 – D1.1.3",
+"understandings": [
+"D1.1.1",
+"D1.1.2",
+"D1.1.3"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "d11-lesson2",
+"id": "DP1-D11-L2",
+"title": "D1.1 DNA replication · Lesson 2: PCR, gel electrophoresis and their applications",
+"level": "SL",
+"range": "D1.1.4 – D1.1.5",
+"understandings": [
+"D1.1.4",
+"D1.1.5"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "d11-lesson3",
+"id": "DP-D11-L3",
+"title": "D1.1 DNA replication · Lesson 3 (HL): Directionality, leading and lagging strands, enzymes and proofreading",
+"level": "HL",
+"range": "D1.1.6 – D1.1.9",
+"understandings": [
+"D1.1.6",
+"D1.1.7",
+"D1.1.8",
+"D1.1.9"
+],
+"skills": [],
+"minutes": 120,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "D1.2",
+"name": "Protein synthesis",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 3,
+"hl_hours": 6,
+"understandings": {
+"SL": 11,
+"HL": 8
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "d12-lesson1",
+"id": "DP1-D12-L1",
+"title": "D1.2 Protein synthesis · Lesson 1: Transcription: making RNA from a DNA template",
+"level": "SL",
+"range": "D1.2.1 – D1.2.4",
+"understandings": [
+"D1.2.1",
+"D1.2.2",
+"D1.2.3",
+"D1.2.4"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "d12-lesson2",
+"id": "DP1-D12-L2",
+"title": "D1.2 Protein synthesis · Lesson 2: Translation, tRNA and the genetic code",
+"level": "SL",
+"range": "D1.2.5 – D1.2.8",
+"understandings": [
+"D1.2.5",
+"D1.2.6",
+"D1.2.7",
+"D1.2.8"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "d12-lesson3",
+"id": "DP1-D12-L3",
+"title": "D1.2 Protein synthesis · Lesson 3: Reading the code table, elongation and point mutations",
+"level": "SL",
+"range": "D1.2.9 – D1.2.11",
+"understandings": [
+"D1.2.9",
+"D1.2.10",
+"D1.2.11"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "d12-lesson4",
+"id": "DP-D12-L4",
+"title": "D1.2 Protein synthesis · Lesson 4 (HL): Directionality, promoters, non-coding DNA and mRNA processing",
+"level": "HL",
+"range": "D1.2.12 – D1.2.15",
+"understandings": [
+"D1.2.12",
+"D1.2.13",
+"D1.2.14",
+"D1.2.15"
+],
+"skills": [],
+"minutes": 90,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "d12-lesson5",
+"id": "DP-D12-L5",
+"title": "D1.2 Protein synthesis · Lesson 5 (HL): Alternative splicing, initiation of translation, protein modification and proteasomes",
+"level": "HL",
+"range": "D1.2.16 – D1.2.19",
+"understandings": [
+"D1.2.16",
+"D1.2.17",
+"D1.2.18",
+"D1.2.19"
+],
+"skills": [],
+"minutes": 90,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "D1.3",
+"name": "Mutation and gene editing",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 2,
+"hl_hours": 5,
+"understandings": {
+"SL": 7,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "d13-lesson1",
+"id": "DP1-D13-L1",
+"title": "D1.3 Mutation and gene editing · Lesson 1: Types of gene mutation and their consequences",
+"level": "SL",
+"range": "D1.3.1 – D1.3.3",
+"understandings": [
+"D1.3.1",
+"D1.3.2",
+"D1.3.3"
+],
+"skills": [],
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "d13-lesson2",
+"id": "DP1-D13-L2",
+"title": "D1.3 Mutation and gene editing · Lesson 2: Causes, randomness, germ and somatic mutations, and variation",
+"level": "SL",
+"range": "D1.3.4 – D1.3.7",
+"understandings": [
+"D1.3.4",
+"D1.3.5",
+"D1.3.6",
+"D1.3.7"
+],
+"skills": [],
+"minutes": 105,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "d13-lesson3",
+"id": "DP-D13-L3",
+"title": "D1.3 Mutation and gene editing · Lesson 3 (HL): Gene knockout, CRISPR–Cas9 and conserved sequences",
+"level": "HL",
+"range": "D1.3.8 – D1.3.10",
+"understandings": [
+"D1.3.8",
+"D1.3.9",
+"D1.3.10"
+],
+"skills": [],
+"minutes": 120,
+"hour": "Hours 4–5"
+}
+]
+},
+{
+"code": "D2.1",
+"name": "Cell and nuclear division",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 1,
+"hl_hours": 4,
+"understandings": {
+"SL": 11,
+"HL": 6
+},
+"skills": [
+{
+"code": "D2.1.8",
+"text": "Identification of phases of mitosis",
+"level": "SL"
+},
+{
+"code": "D2.1.17",
+"text": "Differences between tumours in rates of cell division and growth and in the capacity for",
+"level": "HL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "d21-lesson1",
+"id": "DP-D21-L1",
+"title": "D2.1 Cell and nuclear division · Lesson 1: Cell division, cytokinesis and the roles of mitosis and meiosis",
+"level": "SL",
+"range": "D2.1.1 – D2.1.4",
+"understandings": [
+"D2.1.1",
+"D2.1.2",
+"D2.1.3",
+"D2.1.4"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "d21-lesson2",
+"id": "DP-D21-L2",
+"title": "D2.1 Cell and nuclear division · Lesson 2: Replication, chromosome condensation and the phases of mitosis",
+"level": "SL",
+"range": "D2.1.5 – D2.1.8",
+"understandings": [
+"D2.1.5",
+"D2.1.6",
+"D2.1.7",
+"D2.1.8"
+],
+"skills": [
+"D2.1.8"
+],
+"minutes": 65,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "d21-lesson3",
+"id": "DP-D21-L3",
+"title": "D2.1 Cell and nuclear division · Lesson 3: Meiosis, non-disjunction and genetic variation",
+"level": "SL",
+"range": "D2.1.9 – D2.1.11",
+"understandings": [
+"D2.1.9",
+"D2.1.10",
+"D2.1.11"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "d21-lesson4",
+"id": "DP-D21-L4",
+"title": "D2.1 Cell and nuclear division · Lesson 4 (HL): Cell proliferation and the cell cycle",
+"level": "HL",
+"range": "D2.1.12 – D2.1.14",
+"understandings": [
+"D2.1.12",
+"D2.1.13",
+"D2.1.14"
+],
+"skills": [],
+"minutes": 30,
+"hour": "Hour 4"
+},
+{
+"n": 5,
+"path": "d21-lesson5",
+"id": "DP-D21-L5",
+"title": "D2.1 Cell and nuclear division · Lesson 5 (HL): Cyclins, cancer genes and tumours",
+"level": "HL",
+"range": "D2.1.15 – D2.1.17",
+"understandings": [
+"D2.1.15",
+"D2.1.16",
+"D2.1.17"
+],
+"skills": [
+"D2.1.17"
+],
+"minutes": 30,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "D2.2",
+"name": "Gene expression",
+"theme": "D",
+"hl_only": true,
+"sl_hours": 0,
+"ahl_hours": 3,
+"hl_hours": 3,
+"understandings": {
+"SL": 0,
+"HL": 11
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "d22-lesson1",
+"id": "DP1-D22-L1",
+"title": "D2.2 Gene expression · Lesson 1 (HL): Gene expression, transcription control and mRNA degradation",
+"level": "HL",
+"range": "D2.2.1 – D2.2.3",
+"understandings": [
+"D2.2.1",
+"D2.2.2",
+"D2.2.3"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "d22-lesson2",
+"id": "DP1-D22-L2",
+"title": "D2.2 Gene expression · Lesson 2 (HL): Epigenesis, the transcriptome and proteome, methylation and epigenetic inheritance",
+"level": "HL",
+"range": "D2.2.4 – D2.2.7",
+"understandings": [
+"D2.2.4",
+"D2.2.5",
+"D2.2.6",
+"D2.2.7"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 3,
+"path": "d22-lesson3",
+"id": "DP-D22-L3",
+"title": "D2.2 Gene expression · Lesson 3 (HL): Environment and gene expression: pollution, ligers and tigons, twins, hormones and lactose",
+"level": "HL",
+"range": "D2.2.8 – D2.2.11",
+"understandings": [
+"D2.2.8",
+"D2.2.9",
+"D2.2.10",
+"D2.2.11"
+],
+"skills": [],
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "D2.3",
+"name": "Water potential",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 2,
+"ahl_hours": 2,
+"hl_hours": 4,
+"understandings": {
+"SL": 7,
+"HL": 4
+},
+"skills": [
+{
+"code": "D2.3.4",
+"text": "Changes due to water movement in plant tissue bathed in hypotonic and those bathed in",
+"level": "SL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "d23-lesson1",
+"id": "DP1-D23-L1",
+"title": "D2.3 Water potential · Lesson 1: Solvation, tonicity and osmosis in tissues",
+"level": "SL",
+"range": "D2.3.1 – D2.3.4",
+"understandings": [
+"D2.3.1",
+"D2.3.2",
+"D2.3.3",
+"D2.3.4"
+],
+"skills": [
+"D2.3.4"
+],
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "d23-lesson2",
+"id": "DP1-D23-L2",
+"title": "D2.3 Water potential · Lesson 2: Cells with and without walls, and isotonic solutions in medicine",
+"level": "SL",
+"range": "D2.3.5 – D2.3.7",
+"understandings": [
+"D2.3.5",
+"D2.3.6",
+"D2.3.7"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "d23-lesson3",
+"id": "DP-D23-L3",
+"title": "D2.3 Water potential · Lesson 3 (HL): Water potential, solute and pressure potential",
+"level": "HL",
+"range": "D2.3.8 – D2.3.11",
+"understandings": [
+"D2.3.8",
+"D2.3.9",
+"D2.3.10",
+"D2.3.11"
+],
+"skills": [],
+"minutes": 120,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "D3.1",
+"name": "Reproduction",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 5,
+"ahl_hours": 3,
+"hl_hours": 8,
+"understandings": {
+"SL": 12,
+"HL": 8
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "d31-lesson1",
+"id": "DP-D31-L1",
+"title": "D3.1 Reproduction · Lesson 1: Sexual and asexual reproduction, the sexes and human reproductive systems",
+"level": "SL",
+"range": "D3.1.1 – D3.1.4",
+"understandings": [
+"D3.1.1",
+"D3.1.2",
+"D3.1.3",
+"D3.1.4"
+],
+"skills": [],
+"minutes": 100,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "d31-lesson2",
+"id": "DP-D31-L2",
+"title": "D3.1 Reproduction · Lesson 2: The menstrual cycle, fertilisation and IVF",
+"level": "SL",
+"range": "D3.1.5 – D3.1.7",
+"understandings": [
+"D3.1.5",
+"D3.1.6",
+"D3.1.7"
+],
+"skills": [],
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "d31-lesson3",
+"id": "DP-D31-L3",
+"title": "D3.1 Reproduction · Lesson 3: Sexual reproduction and insect-pollinated flowers",
+"level": "SL",
+"range": "D3.1.8 – D3.1.9",
+"understandings": [
+"D3.1.8",
+"D3.1.9"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "d31-lesson4",
+"id": "DP-D31-L4",
+"title": "D3.1 Reproduction · Lesson 4: Cross-pollination, self-incompatibility, dispersal and germination",
+"level": "SL",
+"range": "D3.1.10 – D3.1.12",
+"understandings": [
+"D3.1.10",
+"D3.1.11",
+"D3.1.12"
+],
+"skills": [],
+"minutes": 75,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "d31-lesson5",
+"id": "DP-D31-L5",
+"title": "D3.1 Reproduction · Lesson 5 (HL): Puberty, gametogenesis, preventing polyspermy and implantation",
+"level": "HL",
+"range": "D3.1.13 – D3.1.16",
+"understandings": [
+"D3.1.13",
+"D3.1.14",
+"D3.1.15",
+"D3.1.16"
+],
+"skills": [],
+"minutes": 90,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "d31-lesson6",
+"id": "DP-D31-L6",
+"title": "D3.1 Reproduction · Lesson 6 (HL): hCG, the placenta, pregnancy, childbirth and HRT",
+"level": "HL",
+"range": "D3.1.17 – D3.1.20",
+"understandings": [
+"D3.1.17",
+"D3.1.18",
+"D3.1.19",
+"D3.1.20"
+],
+"skills": [],
+"minutes": 90,
+"hour": "Hours 7–8"
+}
+]
+},
+{
+"code": "D3.2",
+"name": "Inheritance",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 5,
+"ahl_hours": 3,
+"hl_hours": 8,
+"understandings": {
+"SL": 15,
+"HL": 6
+},
+"skills": [
+{
+"code": "D3.2.14",
+"text": "Continuous variation due to polygenic inheritance and/or environmental factors",
+"level": "SL"
+},
+{
+"code": "D3.2.15",
+"text": "Box-and-whisker plots to represent data for a continuous variable such as student height",
+"level": "SL"
+},
+{
+"code": "D3.2.18",
+"text": "Loci of human genes and their polypeptide products",
+"level": "HL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "d32-lesson1",
+"id": "DP-D32-L1",
+"title": "D3.2 Inheritance · Lesson 1: Gametes, genetic crosses and genotype",
+"level": "SL",
+"range": "D3.2.1 – D3.2.3",
+"understandings": [
+"D3.2.1",
+"D3.2.2",
+"D3.2.3"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "d32-lesson2",
+"id": "DP-D32-L2",
+"title": "D3.2 Inheritance · Lesson 2: Phenotype, dominance and the environment",
+"level": "SL",
+"range": "D3.2.4 – D3.2.5",
+"understandings": [
+"D3.2.4",
+"D3.2.5"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "d32-lesson3",
+"id": "DP-D32-L3",
+"title": "D3.2 Inheritance · Lesson 3: Phenotypic plasticity, PKU and multiple alleles",
+"level": "SL",
+"range": "D3.2.6 – D3.2.8",
+"understandings": [
+"D3.2.6",
+"D3.2.7",
+"D3.2.8"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hours 2–3"
+},
+{
+"n": 4,
+"path": "d32-lesson4",
+"id": "DP-D32-L4",
+"title": "D3.2 Inheritance · Lesson 4: ABO blood groups, codominance and incomplete dominance",
+"level": "SL",
+"range": "D3.2.9 – D3.2.10",
+"understandings": [
+"D3.2.9",
+"D3.2.10"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hours 3–4"
+},
+{
+"n": 5,
+"path": "d32-lesson5",
+"id": "DP-D32-L5",
+"title": "D3.2 Inheritance · Lesson 5: Sex determination, sex linkage and pedigree charts",
+"level": "SL",
+"range": "D3.2.11 – D3.2.13",
+"understandings": [
+"D3.2.11",
+"D3.2.12",
+"D3.2.13"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hours 4–5"
+},
+{
+"n": 6,
+"path": "d32-lesson6",
+"id": "DP-D32-L6",
+"title": "D3.2 Inheritance · Lesson 6: Continuous variation and box-and-whisker plots",
+"level": "SL",
+"range": "D3.2.14 – D3.2.15",
+"understandings": [
+"D3.2.14",
+"D3.2.15"
+],
+"skills": [
+"D3.2.14",
+"D3.2.15"
+],
+"minutes": 40,
+"hour": "Hour 5"
+},
+{
+"n": 7,
+"path": "d32-lesson7",
+"id": "DP-D32-L7",
+"title": "D3.2 Inheritance · Lesson 7 (HL): Independent assortment, dihybrid crosses and gene loci",
+"level": "HL",
+"range": "D3.2.16 – D3.2.18",
+"understandings": [
+"D3.2.16",
+"D3.2.17",
+"D3.2.18"
+],
+"skills": [
+"D3.2.18"
+],
+"minutes": 90,
+"hour": "Hours 6–7"
+},
+{
+"n": 8,
+"path": "d32-lesson8",
+"id": "DP-D32-L8",
+"title": "D3.2 Inheritance · Lesson 8 (HL): Linkage, recombinants and the chi-squared test",
+"level": "HL",
+"range": "D3.2.19 – D3.2.21",
+"understandings": [
+"D3.2.19",
+"D3.2.20",
+"D3.2.21"
+],
+"skills": [],
+"minutes": 90,
+"hour": "Hours 7–8"
+}
+]
+},
+{
+"code": "D3.3",
+"name": "Homeostasis",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 2,
+"ahl_hours": 2,
+"hl_hours": 4,
+"understandings": {
+"SL": 6,
+"HL": 5
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "d33-lesson1",
+"id": "DP-D33-L1",
+"title": "D3.3 Homeostasis · Lesson 1: Homeostasis, negative feedback, blood glucose and diabetes",
+"level": "SL",
+"range": "D3.3.1 – D3.3.4",
+"understandings": [
+"D3.3.1",
+"D3.3.2",
+"D3.3.3",
+"D3.3.4"
+],
+"skills": [],
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "d33-lesson2",
+"id": "DP-D33-L2",
+"title": "D3.3 Homeostasis · Lesson 2: Thermoregulation",
+"level": "SL",
+"range": "D3.3.5 – D3.3.6",
+"understandings": [
+"D3.3.5",
+"D3.3.6"
+],
+"skills": [],
+"minutes": 40,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "d33-lesson3",
+"id": "DP-D33-L3",
+"title": "D3.3 Homeostasis · Lesson 3 (HL): The kidney: excretion, filtration and the loop of Henle",
+"level": "HL",
+"range": "D3.3.7 – D3.3.9",
+"understandings": [
+"D3.3.7",
+"D3.3.8",
+"D3.3.9"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "d33-lesson4",
+"id": "DP-D33-L4",
+"title": "D3.3 Homeostasis · Lesson 4 (HL): ADH, the collecting duct and changing blood supply",
+"level": "HL",
+"range": "D3.3.10 – D3.3.11",
+"understandings": [
+"D3.3.10",
+"D3.3.11"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "D4.1",
+"name": "Natural selection",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 2,
+"ahl_hours": 2,
+"hl_hours": 4,
+"understandings": {
+"SL": 8,
+"HL": 7
+},
+"skills": [
+{
+"code": "D4.1.8",
+"text": "Modelling of sexual and natural selection based on experimental control of selection pressures",
+"level": "SL"
+},
+{
+"code": "D4.1.10",
+"text": "Allele frequencies of geographically isolated populations",
+"level": "HL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "d41-lesson1",
+"id": "DP-D41-L1",
+"title": "D4.1 Natural selection · Lesson 1: Natural selection, variation, overproduction and selection pressures",
+"level": "SL",
+"range": "D4.1.1 – D4.1.4",
+"understandings": [
+"D4.1.1",
+"D4.1.2",
+"D4.1.3",
+"D4.1.4"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "d41-lesson2",
+"id": "DP-D41-L2",
+"title": "D4.1 Natural selection · Lesson 2: Fitness, heritability, sexual selection and Endler’s guppies",
+"level": "SL",
+"range": "D4.1.5 – D4.1.8",
+"understandings": [
+"D4.1.5",
+"D4.1.6",
+"D4.1.7",
+"D4.1.8"
+],
+"skills": [
+"D4.1.8"
+],
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "d41-lesson3",
+"id": "DP-D41-L3",
+"title": "D4.1 Natural selection · Lesson 3 (HL): Gene pools, allele frequencies and patterns of selection",
+"level": "HL",
+"range": "D4.1.9 – D4.1.12",
+"understandings": [
+"D4.1.9",
+"D4.1.10",
+"D4.1.11",
+"D4.1.12"
+],
+"skills": [
+"D4.1.10"
+],
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "d41-lesson4",
+"id": "DP-D41-L4",
+"title": "D4.1 Natural selection · Lesson 4 (HL): Hardy–Weinberg equilibrium and artificial selection",
+"level": "HL",
+"range": "D4.1.13 – D4.1.15",
+"understandings": [
+"D4.1.13",
+"D4.1.14",
+"D4.1.15"
+],
+"skills": [],
+"minutes": 50,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "D4.2",
+"name": "Stability and change",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 4,
+"ahl_hours": 2,
+"hl_hours": 6,
+"understandings": {
+"SL": 11,
+"HL": 4
+},
+"skills": [
+{
+"code": "D4.2.3",
+"text": "Deforestation of Amazon rainforest as an example of a possible tipping point in ecosystem",
+"level": "SL"
+}
+],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "d42-lesson1",
+"id": "DP-D42-L1",
+"title": "D4.2 Stability and change · Lesson 1: Ecosystem stability, its requirements, tipping points and mesocosms",
+"level": "SL",
+"range": "D4.2.1 – D4.2.4",
+"understandings": [
+"D4.2.1",
+"D4.2.2",
+"D4.2.3",
+"D4.2.4"
+],
+"skills": [
+"D4.2.3"
+],
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "d42-lesson2",
+"id": "DP-D42-L2",
+"title": "D4.2 Stability and change · Lesson 2: Keystone species, sustainable harvesting and sustainable agriculture",
+"level": "SL",
+"range": "D4.2.5 – D4.2.7",
+"understandings": [
+"D4.2.5",
+"D4.2.6",
+"D4.2.7"
+],
+"skills": [],
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "d42-lesson3",
+"id": "DP-D42-L3",
+"title": "D4.2 Stability and change · Lesson 3: Eutrophication, biomagnification, plastics and rewilding",
+"level": "SL",
+"range": "D4.2.8 – D4.2.11",
+"understandings": [
+"D4.2.8",
+"D4.2.9",
+"D4.2.10",
+"D4.2.11"
+],
+"skills": [],
+"minutes": 85,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "d42-lesson4",
+"id": "DP-D42-L4",
+"title": "D4.2 Stability and change · Lesson 4 (HL): Ecological succession and climax communities",
+"level": "HL",
+"range": "D4.2.12 – D4.2.15",
+"understandings": [
+"D4.2.12",
+"D4.2.13",
+"D4.2.14",
+"D4.2.15"
+],
+"skills": [],
+"minutes": 120,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "D4.3",
+"name": "Climate change",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 3,
+"ahl_hours": 1,
+"hl_hours": 4,
+"understandings": {
+"SL": 8,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "d43-lesson1",
+"id": "DP-D43-L1",
+"title": "D4.3 Climate change · Lesson 1: Causes of climate change, positive feedbacks, boreal tipping points and polar ice",
+"level": "SL",
+"range": "D4.3.1 – D4.3.4",
+"understandings": [
+"D4.3.1",
+"D4.3.2",
+"D4.3.3",
+"D4.3.4"
+],
+"skills": [],
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "d43-lesson2",
+"id": "DP-D43-L2",
+"title": "D4.3 Climate change · Lesson 2: Ocean upwelling, range shifts, coral reefs and carbon sequestration",
+"level": "SL",
+"range": "D4.3.5 – D4.3.8",
+"understandings": [
+"D4.3.5",
+"D4.3.6",
+"D4.3.7",
+"D4.3.8"
+],
+"skills": [],
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "d43-lesson3",
+"id": "DP-D43-L3",
+"title": "D4.3 Climate change · Lesson 3 (HL): Phenology, mismatched timing, insect life cycles and evolution",
+"level": "HL",
+"range": "D4.3.9 – D4.3.12",
+"understandings": [
+"D4.3.9",
+"D4.3.10",
+"D4.3.11",
+"D4.3.12"
+],
+"skills": [],
+"minutes": 60,
+"hour": "Hour 4"
+}
+]
+}
+]
+}

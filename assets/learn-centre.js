@@ -68,7 +68,7 @@
         if (lk) return '<div class="lcard" style="opacity:.92"><span class="ic">🔒</span><span><b>' + E(l.title) + '</b><span class="small muted">' + E(l.summary || '') + ' · opens when your teacher approves it</span></span>' +
           (lk.status === 'pending' ? '<span class="pill">Requested · waiting</span>' : '<button type="button" class="btn sm" data-ask="' + l.id + '" data-cls="' + lk.class_id + '">' + (lk.status === 'declined' ? 'Ask again' : 'Request') + '</button>') + '</div>';
         var p = prog[l.id], pc = p ? p.percent : 0, il = /^IL-/.test(l.external_id || '');
-        return '<a class="lcard" href="' + E(l.url || '#') + '"><span class="ic">' + (il ? '📘' : '🧪') + '</span><span><b>' + E(l.title) + '</b><span class="small muted">' + E(l.summary || '') + (l.max_marks ? ' · ' + l.max_marks + ' marks' : '') + '</span>' +
+        return '<a class="lcard" href="' + E(l.url || '#') + '"><span class="ic">' + (il ? '📘' : '🧪') + '</span><span><b>' + E(l.title) + '</b><span class="small muted">' + E(l.summary || '') + (l.minutes ? ' · ' + l.minutes + ' min' + (l.minutes > 75 ? ' (2 sessions)' : '') : '') + (l.max_marks ? ' · ' + l.max_marks + ' marks' : '') + '</span>' + (/^AHL\b|HL only|\(HL\)/.test(l.title || '') ? '<span class="pill" title="Higher Level only">HL</span>' : '') +
           '<span class="bar" title="' + pc + '% done"><i style="width:' + pc + '%"></i></span></span><span class="go">' + (p && p.status === 'completed' ? 'Review ✓' : p ? 'Continue' : 'Start') + '</span>' + (me.admin && l.id ? S.del('lesson', l.id, l.title) : '') + '</a>';
       }
       function items(t) {
