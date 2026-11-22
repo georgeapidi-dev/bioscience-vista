@@ -1,4 +1,4 @@
-/* Mastery · BioscienceVista · by BioscienceVista (phase 6)
+/* Mastery · BioscienceVista · by George Apidi (phase 6)
    Students: how secure each topic and skill is, from every marked answer (lessons and assessments: item_results), with
    recent work counting more; which topics are due for spaced review; recurring mistakes; one click to a practice set
    aimed at weak questions (practice_make). Teachers: a class heatmap of students × topics, skills and common mistakes.

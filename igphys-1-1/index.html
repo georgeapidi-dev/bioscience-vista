@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1.1 Measurement, mass, weight and density: Measuring length, volume and time; scalars and vectors (Extended); mass and weight; and density, including floating · IGCSE Physics</title><style>
+
+:root{--bg:#f6f8f6;--card:#ffffff;--ink:#1f2a24;--muted:#5d6b62;--green:#1b6b3a;--green2:#2e8b57;--tint:#e8f3ec;--amber:#fff4d6;--amberline:#c98a00;--line:#d5e0d8;--red:#b03a2e;--focus:#2e86ab}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111714;--card:#1a221d;--ink:#e6efe9;--muted:#9fb0a5;--green:#5fbf83;--green2:#7fd19b;--tint:#203028;--amber:#3a3220;--amberline:#d9a641;--line:#2f3d34;--red:#e7786c;--focus:#7cc3e0}}
+:root[data-theme="dark"]{--bg:#111714;--card:#1a221d;--ink:#e6efe9;--muted:#9fb0a5;--green:#5fbf83;--green2:#7fd19b;--tint:#203028;--amber:#3a3220;--amberline:#d9a641;--line:#2f3d34;--red:#e7786c;--focus:#7cc3e0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:16px}
+header.hero{background:var(--green);color:#fff;border-radius:14px;padding:22px 22px 18px}
+:root[data-theme="dark"] header.hero{color:#0d1510}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) header.hero{color:#0d1510}}
+.hero h1{margin:0 0 4px;font-size:clamp(1.4rem,4vw,1.9rem);line-height:1.2}
+.hero .meta{opacity:.9;font-size:.9rem}
+.hero .big{margin-top:12px;font-size:1.1rem;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:14px}
+.signin{display:grid;grid-template-columns:1fr 140px;gap:10px}
+@media(max-width:520px){.signin{grid-template-columns:1fr}}
+label.f{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}
+input[type=text],input[type=number],textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+textarea{min-height:76px;resize:vertical}
+input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.progress{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 6px}
+.dots{display:flex;gap:6px}
+.dot{flex:1;text-align:center;font-size:.72rem;color:var(--muted);text-decoration:none}
+.dot span{display:block;height:8px;border-radius:5px;background:var(--line);margin-bottom:4px}
+.dot.done span{background:var(--green2)}
+.dot.done{color:var(--green);font-weight:600}
+.step{scroll-margin-top:70px}
+.stephead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:26px}
+.chip{background:var(--green);color:#fff;border-radius:999px;padding:3px 12px;font-weight:700;font-size:.8rem;letter-spacing:.04em}
+:root[data-theme="dark"] .chip{color:#0d1510}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip{color:#0d1510}}
+.stephead h2{margin:0;font-size:1.3rem}
+.mins{color:var(--muted);font-size:.85rem}
+.notes{background:var(--tint);border-color:transparent}
+.notes h3,.task h3{margin:0 0 6px;font-size:1rem;color:var(--green)}
+.notes ul{margin:0;padding-left:20px}
+.notes li{margin:3px 0}
+.withqr{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start}
+.qr{text-align:center;font-size:.75rem;color:var(--muted);max-width:120px}
+.qr img{width:96px;height:96px;background:#fff;padding:4px;border-radius:6px}
+figure{margin:14px 0 0;text-align:center}
+figure img{max-width:100%;border-radius:8px}
+figcaption{font-size:.85rem;color:var(--muted);font-style:italic}
+.credit{font-size:.72rem;color:var(--muted)}
+.choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.choices label{border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer;background:var(--card)}
+.choices input{accent-color:var(--green)}
+ol.method{padding-left:22px;margin:6px 0}
+.safety{border-left:0;background:color-mix(in srgb,var(--red) 10%,var(--card));border-color:color-mix(in srgb,var(--red) 40%,transparent)}
+.safety b{color:var(--red)}
+.task{border:2px solid var(--green)}
+.q{margin:12px 0}
+.q .ql{font-weight:600;margin-bottom:4px}
+.q .ql em{font-style:normal;color:var(--muted);font-weight:400;font-size:.8rem}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:6px;text-align:center}
+th{background:var(--tint)}
+td input{min-width:52px;text-align:center;padding:6px 4px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+button{font:inherit;border:0;border-radius:9px;padding:10px 18px;cursor:pointer;background:var(--green);color:#fff;font-weight:600}
+:root[data-theme="dark"] button{color:#0d1510}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button{color:#0d1510}}
+button.ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
+button[disabled]{opacity:.6;cursor:wait}
+.status{font-size:.88rem;color:var(--muted)}
+.status.ok{color:var(--green);font-weight:600}
+.status.err{color:var(--red);font-weight:600}
+canvas{width:100%;max-width:640px;height:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;margin-top:10px}
+footer{color:var(--muted);font-size:.78rem;margin:30px 0 40px}
+footer a{color:var(--green)}
+.banner{background:var(--amber);border:1px solid var(--amberline);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:.9rem}
+.hidden{display:none}
+.simcard h3{margin:0 0 2px;font-size:1.05rem;color:var(--green)}
+.simgrid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;margin-top:10px}
+@media(max-width:700px){.simgrid{grid-template-columns:1fr}}
+.ctrl{margin:8px 0}
+.ctrl label{display:flex;justify-content:space-between;font-size:.9rem;font-weight:600}
+.ctrl input[type=range]{width:100%;accent-color:var(--green)}
+.ctrl select{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.readout div{background:var(--tint);border-radius:8px;padding:8px;text-align:center}
+.readout b{display:block;font-size:1.35rem;color:var(--green);font-variant-numeric:tabular-nums}
+.readout span{font-size:.75rem;color:var(--muted)}
+#simcanvas{width:100%;margin-top:0;aspect-ratio:4/3}
+#simgraph{width:100%;max-width:none}
+.simtable td,.simtable th{font-variant-numeric:tabular-nums}
+.simtable td.mean{font-weight:700;color:var(--green)}
+.feedback{margin-top:12px;border-radius:10px;padding:12px 14px;background:var(--tint);border:1px solid var(--line)}
+.feedback h4{margin:0 0 6px;font-size:1rem;color:var(--green)}
+.feedback ul{margin:4px 0 0;padding-left:20px}
+.feedback li{margin:4px 0}
+.feedback .got{color:var(--green);font-weight:700}
+.feedback .tip{color:var(--ink)}
+.feedback .small{font-size:.8rem;color:var(--muted);margin-top:6px}
+.x{background:none;color:var(--muted);padding:2px 8px;border:1px solid var(--line);font-weight:400}
+
+.feedback{margin-top:12px;border-radius:10px;padding:12px 14px;background:var(--tint);border:1px solid var(--line)}
+.feedback h4{margin:0 0 6px;font-size:1rem;color:var(--green)}
+.feedback ul{margin:4px 0 0;padding-left:20px}
+.feedback li{margin:4px 0}
+.feedback .got{color:var(--green);font-weight:700}
+.feedback .small{font-size:.8rem;color:var(--muted);margin-top:6px}
+.cards{display:grid;gap:8px;margin-top:8px}
+.cardrow{display:grid;grid-template-columns:44px 1fr 110px;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--card)}
+.cardrow b{display:inline-flex;width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;align-items:center;justify-content:center}
+:root[data-theme="dark"] .cardrow b{color:#0d1510}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cardrow b{color:#0d1510}}
+.cardrow select,.sel{padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;width:100%}
+.chain{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;font-size:.9rem}
+.chain span.link{background:var(--tint);border-radius:8px;padding:4px 8px}
+.quiz{display:grid;gap:12px}
+.qq{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.qq .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:6px}
+@media(max-width:560px){.qq .opts{grid-template-columns:1fr}}
+.qq label{border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;background:var(--card)}
+.qq input{accent-color:var(--green)}
+.tl{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:6px 0}
+.tl .btns{display:flex;gap:4px}
+.tl label{padding:4px 10px;border-radius:999px;border:1px solid var(--line);cursor:pointer;font-size:.85rem}
+.tl input{display:none}
+.tl input:checked+span{font-weight:700}
+.tl .g input:checked+span{color:#2e7d32}.tl .a input:checked+span{color:#b7791f}.tl .r input:checked+span{color:#c0392b}
+.figs2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.figs2{grid-template-columns:1fr}}
+.totalbar{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:8px 16px;font-size:.9rem;text-align:center;z-index:5}
+
+.small{font-size:.82rem}figure img{height:auto}.muted{color:var(--muted)}
+details.card summary{cursor:pointer}
+table.left td,table.left th{text-align:left}
+.udl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.udl>div{background:var(--tint);border-radius:10px;padding:10px 12px}
+.udl b{color:var(--green)}.udl ul{margin:4px 0 0;padding-left:18px;font-size:.9rem}
+@media(max-width:640px){.udl{grid-template-columns:1fr}}
+.notes{position:relative}
+.say{position:absolute;top:8px;right:8px;background:var(--card);color:var(--ink);border:1px solid var(--line);padding:4px 9px;font-size:1rem}
+:root[data-theme="dark"] .say{color:var(--ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .say{color:var(--ink)}}
+.notes ul,.notes ol{padding-right:40px}
+.videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:10px;margin-top:14px}
+.vid{display:grid;gap:2px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--card);text-decoration:none;color:var(--ink)}
+.vid b{color:var(--green)}.vid span{font-size:.8rem;color:var(--muted)}
+.vid:hover{border-color:var(--green)}
+.matchlist{display:grid;gap:8px}
+.mrow{display:grid;grid-template-columns:1fr minmax(0,220px);gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+@media(max-width:560px){.mrow{grid-template-columns:1fr}}
+.order{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media(max-width:560px){.order{grid-template-columns:1fr 1fr}}
+.order label{display:grid;gap:4px}.order label span{font-weight:700;color:var(--green)}
+.tick{display:inline-flex;gap:8px;align-items:center}
+.hint{font-weight:400;font-size:.8rem;color:var(--muted)}
+#sim{width:100%;max-width:none;margin-top:0;aspect-ratio:4/3;background:#f4f7f5}
+.ctrl select{width:100%}
+
+.withlink{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.btnlink{display:inline-block;background:var(--green);color:#fff;text-decoration:none;font-weight:600;border-radius:9px;padding:9px 16px}
+:root[data-theme="dark"] .btnlink{color:#0d1510}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btnlink{color:#0d1510}}
+.notes h3{padding-right:40px}
+details.hint{margin-top:4px;font-size:.88rem;color:var(--muted)}
+details.hint summary{cursor:pointer;color:var(--green)}
+.chal{border-top:1px dashed var(--line);padding-top:10px}
+table.sort td.lbl{text-align:left}
+table.sort select{min-width:136px}
+.model{margin-top:10px}
+.model summary{cursor:pointer}
+.model ul{margin:6px 0 0;padding-left:20px}
+.model li{margin:4px 0}
+details.card>.model{background:var(--tint);border-radius:8px;padding:8px 12px}
+.tl .btns label{min-width:34px;text-align:center}
+
+h3.nh{margin:18px 0 0;font-size:1.02rem;color:var(--green)}
+figure.wide img{background:#fff;padding:6px}
+textarea.cell{min-height:60px;min-width:200px}
+.savecard{border-style:dashed}
+.where{display:grid;gap:6px;margin:0}.where div{display:grid;grid-template-columns:150px 1fr;gap:10px}
+@media(max-width:560px){.where div{grid-template-columns:1fr;gap:0}}
+.linkrow{display:flex;flex-wrap:wrap;gap:8px}
+.tl .btns label{min-width:38px;text-align:center}
+.skip{position:absolute;left:-9999px;top:auto}.skip:focus{left:12px;top:12px;background:#fff;color:#111;padding:8px 12px;border-radius:8px;z-index:50}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+.a11y{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
+.a11y span{font-weight:700;margin-right:4px}
+.a11y button{border:2px solid currentColor;background:#fff;color:#1f2937;border-radius:9px;padding:8px 12px;font-weight:600;font-size:.95rem;cursor:pointer}
+.a11y button[aria-pressed="true"]{background:#1f2937;color:#fff}
+body.a11y-big{font-size:118%}
+body.a11y-dys{font-family:Verdana,Arial,sans-serif;letter-spacing:.04em;word-spacing:.12em;line-height:1.8}
+body.a11y-hc{background:#000!important;color:#fff!important}
+body.a11y-hc .card,body.a11y-hc .hero{background:#111!important;color:#fff!important;border:2px solid #fff!important}
+body.a11y-hc a,body.a11y-hc .btnlink{color:#ffe600!important}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+header.hero{background:linear-gradient(135deg,#1e3a8a 0%,#6d28d9 55%,#be185d 100%)!important;color:#fff;border-radius:16px;padding:22px 24px;border:0}
+header.hero h1{color:#fff}header.hero .meta{color:#e0e7ff}header.hero .big{color:#fff;font-weight:700}
+header.hero a{color:#fff}header.hero .linkrow a{background:#fff;color:#1e3a8a;border-radius:999px;padding:4px 12px;text-decoration:none;font-weight:700}
+.hook{background:#fef08a;color:#1f2937;border-radius:14px;padding:16px 18px;border-left:8px solid #f59e0b;margin:12px 0}
+.hook b{display:block;font-size:.9rem;text-transform:uppercase;letter-spacing:.06em;color:#78350f}
+.hook p{margin:6px 0 0;font-size:1.1rem}
+#step1 .chip{background:#fcd34d;color:#111827}#step2 .chip{background:#6ee7b7;color:#111827}#step3 .chip{background:#93c5fd;color:#111827}
+#step4 .chip{background:#c4b5fd;color:#111827}#step5 .chip{background:#f9a8d4;color:#111827}#step6 .chip{background:#5eead4;color:#111827}
+#step1,#step2,#step3,#step4,#step5,#step6{border-top:6px solid #cbd5e1}
+#step1{border-top-color:#f59e0b}#step2{border-top-color:#10b981}#step3{border-top-color:#3b82f6}#step4{border-top-color:#8b5cf6}#step5{border-top-color:#ec4899}#step6{border-top-color:#14b8a6}
+body.a11y-hc header.hero{background:#000!important;color:#fff;border:3px solid #fff}body.a11y-hc header.hero .linkrow a{background:#fff;color:#000}
+body.a11y-hc .hook{background:#fff;color:#000;border:3px solid #000;border-left-width:12px}body.a11y-hc .hook b{color:#000}
+body.a11y-hc .step .chip{background:#fff;color:#000;border:2px solid #000}
+body.a11y-hc .step{border-top-color:#000}
+.card.notes{background:#ede9fe;border-color:#c4b5fd}
+body.a11y-hc .card.notes{background:#fff;border:2px solid #000}
+</style></head>
+<body><a class="skip" href="#lessonmain">Skip to the lesson</a><div class="wrap" id="lessonmain">
+<header class="hero"><h1>1.1 Measurement, mass, weight and density: Measuring length, volume and time; scalars and vectors (Extended); mass and weight; and density, including floating</h1><div class="meta">Cambridge IGCSE Physics 0625 · 1.1 Measurement, mass, weight and density · 1.1.1 – 1.4.4 · IGCSE · 60 minutes · Prepared by BioscienceVista</div><div class="big">Guiding question: Why does a steel ship float but a steel nail sinks?</div><div class="linkrow"><a class="btnlink" href="/simulations/" target="_blank" rel="noopener">Virtual labs</a><a class="btnlink" href="/tools/" target="_blank" rel="noopener">Graph and drawing tools</a></div></header><section class="hook" aria-labelledby="hookh"><b id="hookh">🎯 Start here</b><p>A nail sinks in the Indian Ocean but a steel ferry at Likoni floats. It is not about mass alone: it is about how mass compares with volume. That is density.</p><button type="button" class="say" aria-label="Read the hook aloud">🔊 Read aloud</button></section><nav class="a11y" aria-label="Reading options"><span>Make it easier to read:</span>
+<button type="button" data-a11y="big">Bigger text</button><button type="button" data-a11y="dys">Easy-read font</button><button type="button" data-a11y="hc">High contrast</button></nav><div class="card"><div class="signin">
+<div><label class="f" for="sname">Your full name</label><input id="sname" type="text" autocomplete="name" placeholder="e.g. Amina Otieno"></div>
+<div><label class="f" for="scls">Class</label><input id="scls" type="text" placeholder="IGCSE Physics"></div></div>
+<div class="status" style="margin-top:8px">Write your answers in your exercise book as usual, then type them here. Answer every question in a step and press <b>Save step</b>: it marks your work, shows the model answers and sends your mark to your teacher. <b>Your first save of each step is the mark that counts.</b></div></div><div class="progress"><div class="dots" id="dots"></div></div><div class="card notes"><h3>By the end of this lesson I will be able to</h3><ul><li>use rulers, measuring cylinders and clocks, take multiple measurements to find small values, and distinguish scalars and vectors (Extended)</li><li>distinguish mass and weight, and use W = mg with gravitational field strength</li><li>define density, use ρ = m/V, describe how to find the density of solids and liquids, and predict floating</li></ul></div><div class="card"><div class="where"><div><b>The big idea</b><span>Mass is the amount of matter (kg); weight is the gravitational force on it (N), W = mg with g = 9.8 N/kg; density ρ = m/V; objects less dense than a liquid float in it.</span></div><div><b>Your book</b><span>Head the page with the syllabus code and title. Answer IB-style: use the command term (state, outline, describe, explain, compare, distinguish).</span></div><div><b>Assessment</b><span>12 marks, marked as you save each step. Written answers are marked against mark-scheme points; your teacher checks every mark.</span></div></div></div><div class="card"><h3 style="margin:0 0 6px;font-size:1rem">Choose how you learn and show it</h3><div class="udl"><div><b>Engage</b><ul><li>Start from a real question</li><li>Videos chosen by your teacher</li><li>Exam-style challenge at the end</li></ul></div><div><b>Learn</b><ul><li>Notes plus labelled diagrams</li><li>Press 🔊 to hear the notes read aloud</li><li>Support hint under written questions</li></ul></div><div><b>Show</b><ul><li>Write in your book, type here</li><li>Drawings and flow charts go in your book</li><li>Model answers appear after you save</li></ul></div></div><div class="small muted" style="margin-top:8px"><b>Key terms, spell them correctly:</b> measuring cylinder · displacement · scalar · vector · mass · weight · gravitational field strength · newton · density · kg/m³ · g/cm³ · float · sink</div><div class="videos"><a class="vid" href="https://www.youtube.com/results?search_query=IGCSE+physics+density+measurement+irregular+object+displacement+mass+weight" target="_blank" rel="noopener"><b>▶ Density IGCSE physics</b><span>Opens YouTube search results chosen by your teacher</span></a></div></div><script type="application/json" id="sx-data">{"misc": [["Mass and weight are the same thing.", false, "Weight is a force; mass is matter."], ["Weight changes on the Moon but mass does not.", true, "g is smaller."], ["Heavy objects always sink.", false, "Density decides."], ["Displacement measures the volume of irregular solids.", true, "Rise in water level."]], "ext": {"2": "Measure the density of a stone.", "4": "Calculate densities from data.", "5": "Explain why ships float lower in fresh water than sea water."}}</script><main><section class="step" id="step1"><div class="stephead"><span class="chip">STEP 1 · QUESTION</span><h2>Measuring</h2><span class="mins">0 – 8 min · 1.1.1 – 1.1.3</span></div><div class="card notes"><button type="button" class="say" aria-label="Read the notes aloud">🔊</button><ul><li>Length: ruler; volume of liquid: measuring cylinder (read the bottom of the meniscus); time: stopwatch.</li><li>For small quantities measure many and divide: time 20 swings of a pendulum, then divide by 20.</li><li>(Extended) <b>Scalars</b> have size only (speed, mass, energy); <b>vectors</b> have size and direction (velocity, force, acceleration).</li></ul></div><figure class="wide"><img alt="Figure 1 · Vernier calipers measure small lengths." src="https://commons.wikimedia.org/wiki/Special:FilePath/Vernier caliper.svg?width=900" loading="lazy" style="max-height:460px;object-fit:contain" onerror="this.closest('figure').remove()"><figcaption>Figure 1 · Vernier calipers measure small lengths.</figcaption><div class="credit">Image: Vernier calipers measure small lengths · Joaquim Alves Gaspar, modified by ed g2s, CC BY 2.5, via <a href="https://commons.wikimedia.org/wiki/File:Vernier caliper.svg" target="_blank" rel="noopener">Wikimedia Commons</a></div></figure><div class="card task"><h3>In your book, then here</h3><div class="q"><div class="ql">Q1. Scalar or vector? (Extended) <em>[4]</em></div><div class="matchlist"><div class="mrow"><span>mass</span><select class="sel" data-save="q1_0_0" aria-label="mass"><option value="">choose…</option><option>Vector</option><option>Scalar</option></select></div><div class="mrow"><span>force</span><select class="sel" data-save="q1_0_1" aria-label="force"><option value="">choose…</option><option>Vector</option><option>Scalar</option></select></div><div class="mrow"><span>speed</span><select class="sel" data-save="q1_0_2" aria-label="speed"><option value="">choose…</option><option>Vector</option><option>Scalar</option></select></div><div class="mrow"><span>acceleration</span><select class="sel" data-save="q1_0_3" aria-label="acceleration"><option value="">choose…</option><option>Vector</option><option>Scalar</option></select></div></div></div></div><div class="card task savecard"><div class="row"><button type="button" data-step="1">Save step 1</button><span class="status" id="st1"></span><span class="muted small">This step: 4 marks</span></div><div class="feedback hidden" id="fb1"></div></div></section><section class="step" id="step2"><div class="stephead"><span class="chip">STEP 2 · EXPLORE</span><h2>Mass and weight</h2><span class="mins">8 – 20 min · 1.3.1 – 1.3.4</span></div><div class="card notes"><button type="button" class="say" aria-label="Read the notes aloud">🔊</button><ul><li><b>Mass</b>: amount of matter, in kg; same everywhere.</li><li><b>Weight</b>: the gravitational force on a mass, in newtons (N).</li><li><b>W = mg</b>; on Earth g ≈ 9.8 N/kg (often 10). On the Moon g ≈ 1.6 N/kg.</li><li>Weights (and masses) are compared with a balance.</li></ul></div><figure class="wide"><img alt="Figure 2 · Earth&#x27;s gravitational field." src="https://commons.wikimedia.org/wiki/Special:FilePath/Gravitational field Earth lines.svg?width=900" loading="lazy" style="max-height:460px;object-fit:contain" onerror="this.closest('figure').remove()"><figcaption>Figure 2 · Earth&#x27;s gravitational field.</figcaption><div class="credit">Image: Earth&#x27;s gravitational field · MikeRun, CC BY-SA 4.0, via <a href="https://commons.wikimedia.org/wiki/File:Gravitational field Earth lines.svg" target="_blank" rel="noopener">Wikimedia Commons</a></div></figure><div class="card task"><h3>In your book, then here</h3><div class="q"><div class="ql">Q2. An astronaut has a mass of 70 kg. Calculate her weight on the Moon (g = 1.6 N/kg). <em>[2]</em></div><textarea data-save="q2_0" data-label="Q2"></textarea><details class="hint"><summary>Support hint</summary>W = mg.</details></div></div><div class="card task savecard"><div class="row"><button type="button" data-step="2">Save step 2</button><span class="status" id="st2"></span><span class="muted small">This step: 2 marks</span></div><div class="feedback hidden" id="fb2"></div></div></section><section class="step" id="step3"><div class="stephead"><span class="chip">STEP 3 · TEST</span><h2>Density</h2><span class="mins">20 – 32 min · 1.4.1 – 1.4.3</span></div><div class="card notes"><button type="button" class="say" aria-label="Read the notes aloud">🔊</button><ul><li><b>ρ = m ÷ V</b>; units kg/m³ or g/cm³.</li><li>Regular solid: measure sides, V = l × w × h. Irregular solid: displacement in a measuring cylinder.</li><li>Liquid: mass of empty and filled measuring cylinder; volume read directly.</li></ul></div><figure class="wide"><img alt="Figure 3 · A measuring cylinder." src="https://commons.wikimedia.org/wiki/Special:FilePath/Measuring cylinder.jpg?width=900" loading="lazy" style="max-height:460px;object-fit:contain" onerror="this.closest('figure').remove()"><figcaption>Figure 3 · A measuring cylinder.</figcaption><div class="credit">Image: A measuring cylinder · Srini297, CC BY-SA 4.0, via <a href="https://commons.wikimedia.org/wiki/File:Measuring cylinder.jpg" target="_blank" rel="noopener">Wikimedia Commons</a></div></figure><details class="worked" open><summary>✏️ Worked example: Density of a liquid</summary><ol><li>Mass of empty cylinder: 120 g.</li><li>Add 50 cm³ of cooking oil; mass now 166 g.</li><li>Mass of oil = 46 g.</li><li>Density = 46 ÷ 50 = 0.92 g/cm³ (less than water, so it floats on water).</li></ol></details><div class="card task"><h3>In your book, then here</h3><div class="q"><div class="ql">Q3. A stone of mass 60 g raises the water in a measuring cylinder from 50 cm³ to 74 cm³. Calculate its density. <em>[2]</em></div><textarea data-save="q3_0" data-label="Q3"></textarea><details class="hint"><summary>Support hint</summary>Volume from the rise.</details></div></div><div class="card task savecard"><div class="row"><button type="button" data-step="3">Save step 3</button><span class="status" id="st3"></span><span class="muted small">This step: 2 marks</span></div><div class="feedback hidden" id="fb3"></div></div></section><section class="step" id="step4"><div class="stephead"><span class="chip">STEP 4 · EXPLAIN</span><h2>Floating and sinking</h2><span class="mins">32 – 46 min · 1.4.4</span></div><div class="card notes"><button type="button" class="say" aria-label="Read the notes aloud">🔊</button><ul><li>An object floats in a liquid if its density is less than the liquid's; sinks if greater.</li><li>A liquid less dense than another floats on it (oil on water).</li><li>A ship floats because its overall density (steel plus air inside) is less than water.</li></ul></div><figure class="wide"><img alt="Figure 4 · A micrometer screw gauge." src="https://commons.wikimedia.org/wiki/Special:FilePath/Micrometer screw gauge.jpg?width=900" loading="lazy" style="max-height:460px;object-fit:contain" onerror="this.closest('figure').remove()"><figcaption>Figure 4 · A micrometer screw gauge.</figcaption><div class="credit">Image: A micrometer screw gauge · Stephanie cheks, CC BY-SA 4.0, via <a href="https://commons.wikimedia.org/wiki/File:Micrometer screw gauge.jpg" target="_blank" rel="noopener">Wikimedia Commons</a></div></figure><div class="card task"><h3>In your book, then here</h3><div class="q"><div class="ql">Q4. Explain why a solid steel nail sinks but a steel ship floats. <em>[2]</em></div><textarea data-save="q4_0" data-label="Q4"></textarea><details class="hint"><summary>Support hint</summary>Average density.</details></div></div><div class="card task savecard"><div class="row"><button type="button" data-step="4">Save step 4</button><span class="status" id="st4"></span><span class="muted small">This step: 2 marks</span></div><div class="feedback hidden" id="fb4"></div></div></section><section class="step" id="step5"><div class="stephead"><span class="chip">STEP 5 · CHALLENGE</span><h2>Exam-style challenge: small measurements</h2><span class="mins">46 – 58 min · 1.1.2</span></div><div class="card notes"><button type="button" class="say" aria-label="Read the notes aloud">🔊</button><ul><li>Improve accuracy.</li></ul></div><div class="card task"><h3>In your book, then here</h3><div class="q"><div class="ql">Q5. Describe how to find the thickness of one sheet of paper using a ruler. <em>[2]</em></div><textarea data-save="q5_0" data-label="Q5"></textarea><details class="hint"><summary>Support hint</summary>Measure many.</details></div></div><div class="card task savecard"><div class="row"><button type="button" data-step="5">Save step 5</button><span class="status" id="st5"></span><span class="muted small">This step: 2 marks</span></div><div class="feedback hidden" id="fb5"></div></div></section><section class="step" id="step6"><div class="stephead"><span class="chip">STEP 6 · REFLECT</span><h2>Content check</h2><span class="mins">5 min</span></div><div class="card task"><h3>In your book, then here</h3><div class="q"><div class="ql">Exit ticket. What is the unit of weight? <em>not marked</em></div><textarea data-save="q6_0" data-label="Exit ticket"></textarea></div><h3>Tick, half-tick or cross each statement (not marked)</h3><div class="tl"><span>I can measure accurately and identify scalars and vectors</span><span class="btns"><label class="g"><input type="radio" name="cc0" value="tick" data-save="cc0"><span>✓</span></label><label class="a"><input type="radio" name="cc0" value="half" data-save="cc0"><span>½</span></label><label class="r"><input type="radio" name="cc0" value="cross" data-save="cc0"><span>✗</span></label></span></div><div class="tl"><span>I can distinguish mass and weight</span><span class="btns"><label class="g"><input type="radio" name="cc1" value="tick" data-save="cc1"><span>✓</span></label><label class="a"><input type="radio" name="cc1" value="half" data-save="cc1"><span>½</span></label><label class="r"><input type="radio" name="cc1" value="cross" data-save="cc1"><span>✗</span></label></span></div><div class="tl"><span>I can calculate density and predict floating</span><span class="btns"><label class="g"><input type="radio" name="cc2" value="tick" data-save="cc2"><span>✓</span></label><label class="a"><input type="radio" name="cc2" value="half" data-save="cc2"><span>½</span></label><label class="r"><input type="radio" name="cc2" value="cross" data-save="cc2"><span>✗</span></label></span></div><div class="q"><div class="ql">Anything not ticked is your revision list. Which will you revise first, and how?</div><textarea data-save="s6rev" data-label="Revision plan"></textarea></div><div class="q"><div class="ql">One question you still have</div><textarea data-save="s6q" data-label="Question"></textarea></div><div class="row"><button type="button" data-step="6">Save step 6</button><span class="status" id="st6"></span><span class="muted small"></span></div><div class="feedback hidden" id="fb6"></div></div></section><section class="card" id="lv-exam" style="border-left:8px solid #7c3aed;background:#f5f3ff;color:#1f2937"><h3 style="margin:0 0 6px">📝 Exam-style questions</h3><p style="margin:0 0 10px">5 questions, 7 marks, written in the style of the Cambridge IGCSE Physics (0625) papers and based on this lesson. Answer them after the six steps. You get detailed feedback on every answer when you submit.</p><a class="btnlink" style="background:#7c3aed;color:#fff" href="/quizzes/#5d079b60-c28c-53e5-b938-8f5be2385010">Open the exam-style questions</a></section></main><footer>Lesson by George Apidi. Set out as an interactive lesson for the Cambridge IGCSE Physics (0625) syllabus 2026-2028. Images from Wikimedia Commons (credited under each image). Videos open on YouTube.<br>Prepared by BioscienceVista • Cambridge IGCSE Physics 0625</footer></div>
+<div class="totalbar" id="totalbar">Marked so far: 0 / 12</div>
+<script>var SB_URL = 'https://syfwkraeylsvkavfmiha.supabase.co', SB_KEY = 'sb_publishable_Tm8gdqIuBo1DvcGcpZ8P1Q_L6jyh8y9';
+(function(){
+  var K='bv-reading';
+  function load(){try{return JSON.parse(localStorage.getItem(K))||{};}catch(e){return {};}}
+  function save(o){try{localStorage.setItem(K,JSON.stringify(o));}catch(e){}}
+  var st=load();
+  function apply(){
+    var b=document.body;
+    b.classList.toggle('a11y-big',!!st.big); b.classList.toggle('a11y-dys',!!st.dys); b.classList.toggle('a11y-hc',!!st.hc);
+    document.querySelectorAll('[data-a11y]').forEach(function(x){x.setAttribute('aria-pressed',String(!!st[x.getAttribute('data-a11y')]));});
+  }
+  document.querySelectorAll('[data-a11y]').forEach(function(x){
+    x.addEventListener('click',function(){var k=x.getAttribute('data-a11y'); st[k]=!st[k]; save(st); apply();});
+  });
+  document.querySelectorAll('textarea[data-label]').forEach(function(t){ if(!t.getAttribute('aria-label')) t.setAttribute('aria-label', t.getAttribute('data-label')); });
+  document.querySelectorAll('.stepnotes').forEach(function(c){
+    var b=document.createElement('button'); b.type='button'; b.className='say'; b.setAttribute('aria-label','Read these notes aloud'); b.textContent='🔊';
+    c.insertBefore(b, c.firstChild);
+  });
+  apply();
+})();
+
+var SPEC = {"id": "IGPHYS-1-1", "total": 12, "marks": {"1": [{"kind": "choice", "id": "q1_0", "q": "Q1", "max": 4, "n": 4, "ans": ["Scalar", "Vector", "Scalar", "Vector"], "tip": "Does direction matter?"}], "2": [{"kind": "text", "id": "q2_0", "q": "Q2", "max": 2, "pts": [["m × g", "mg", "70 × 1.6"], ["112"]], "tips": ["W = mg."]}], "3": [{"kind": "text", "id": "q3_0", "q": "Q3", "max": 2, "pts": [["24"], ["2.5"]], "tips": ["Volume from the rise."]}], "4": [{"kind": "text", "id": "q4_0", "q": "Q4", "max": 2, "pts": [["nail", "denser than water", "greater density"], ["air", "average density", "less dense", "hollow"]], "tips": ["Average density."]}], "5": [{"kind": "text", "id": "q5_0", "q": "Q5", "max": 2, "pts": [["many sheets", "stack", "100 sheets"], ["divide", "number of sheets"]], "tips": ["Measure many."]}]}, "models": {"1": [["Q1", "Mass and speed: scalar; force and acceleration: vector."]], "2": [["Q2", "W = mg = 70 × 1.6 [1] = 112 N [1]."]], "3": [["Q3", "Volume = 74 − 50 = 24 cm³ [1]; density = 60 ÷ 24 = 2.5 g/cm³ [1]."]], "4": [["Q4", "The nail is denser than water, so it sinks [1]; the ship contains a lot of air, so its average density is less than water and it floats [1]."]], "5": [["Q5", "Measure the thickness of a stack of many sheets (e.g. 100) [1]; divide by the number of sheets [1]."]], "6": [["Exit ticket", "The newton (N)."]]}};
+var LESSON_ID = SPEC.id, TOTAL_MAX = SPEC.total;
+var FORM = { url: '',
+  lesson: 'entry.278587299', name: 'entry.1904342126', cls: 'entry.386386694', step: 'entry.221444120', answers: 'entry.1787489026' };
+var KEY = LESSON_ID + ':';
+var store = { get: function (k) { try { return JSON.parse(localStorage.getItem(KEY + k)); } catch (e) { return null; } },
+  set: function (k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch (e) {} } };
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function norm(s) { return ' ' + String(s || '').toLowerCase().replace(/α/g, ' alpha ').replace(/β/g, ' beta ').replace(/δ\s*[−–-]/g, ' partial negative ').replace(/δ\s*\+/g, ' partial positive ').replace(/₂/g, '2').replace(/[^a-z0-9]+/g, ' ').trim() + ' '; }
+function hit(t, alt) { return alt.split('+').every(function (p) { var core = norm(p).trim(); return t.indexOf(' ' + core + (/\s$/.test(p) ? ' ' : '')) >= 0; }); }
+
+/* read-aloud for notes (UDL) */
+document.querySelectorAll('button.say').forEach(function (b) {
+  if (!('speechSynthesis' in window)) { b.remove(); return; }
+  b.addEventListener('click', function () {
+    if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
+    var t = b.parentNode.cloneNode(true); t.querySelectorAll('button').forEach(function (x) { x.remove(); });
+    var u = new SpeechSynthesisUtterance(t.textContent.replace(/\s+/g, ' ')); u.rate = 0.95; speechSynthesis.speak(u);
+  });
+});
+
+/* drafts */
+var draft = store.get('draft') || {};
+document.querySelectorAll('[data-save]').forEach(function (inp) {
+  var k = inp.getAttribute('data-save');
+  if (inp.type === 'radio') { if (draft[k] === inp.value) inp.checked = true; } else if (draft[k] != null) inp.value = draft[k];
+  function keep() { if (inp.type !== 'radio' || inp.checked) { draft[k] = inp.value; store.set('draft', draft); } }
+  inp.addEventListener('change', keep); inp.addEventListener('input', keep);
+});
+var who = store.get('who') || {}, nameEl = document.getElementById('sname'), clsEl = document.getElementById('scls');
+nameEl.value = who.name || ''; clsEl.value = who.cls || "IGCSE Physics";
+[nameEl, clsEl].forEach(function (x) { x.addEventListener('input', function () { store.set('who', { name: nameEl.value, cls: clsEl.value }); }); });
+function val(k) { var e = document.querySelector('[data-save="' + k + '"]:not([type=radio])') || document.querySelector('[data-save="' + k + '"]:checked'); return e ? e.value : ''; }
+
+/* marking */
+function mark(n) {
+  var items = SPEC.marks[n]; if (!items) return null;
+  var out = [], missing = 0;
+  items.forEach(function (it) {
+    if (it.kind === 'text') {
+      var raw = val(it.id); if (raw.trim().length < 3) missing++;
+      var t = norm(raw), got = 0, tips = [];
+      it.pts.forEach(function (alts, i) {
+        if (alts.some(function (a) { return hit(t, a); })) got++; else if (it.tips[i] && !it.ms) tips.push(it.tips[i]);
+      });
+      got = Math.min(got, it.max); if (got >= it.max) tips = [];
+      if (it.ms && got < it.max) tips.push('Compare your answer with the mark scheme below.');
+      out.push({ q: it.q, got: got, max: it.max, tip: tips.join(' ') });
+    } else if (it.kind === 'mcq') {
+      var v = val(it.id); if (!v) missing++;
+      out.push({ q: it.q, got: v === it.ans ? 1 : 0, max: 1, tip: v === it.ans ? '' : 'Check the model answer below and why the other options are wrong.' });
+    } else if (it.kind === 'choice') {
+      var right = 0;
+      for (var ci = 0; ci < it.n; ci++) { var cv = val(it.id + '_' + ci); if (!cv) missing++; if (cv === it.ans[ci]) right++; }
+      var g = right === it.n ? it.max : Math.min(it.max - 1, Math.floor(right * it.max / it.n));
+      out.push({ q: it.q, got: g, max: it.max, tip: g < it.max ? it.tip + ' (' + right + ' of ' + it.n + ' right)' : '' });
+    } else if (it.kind === 'rows') {
+      var okr = 0, bad = [];
+      it.rows.forEach(function (row, ri) {
+        var good = true;
+        (row.sel || []).forEach(function (ans, si) { var x = val(it.id + '_r' + ri + '_s' + si); if (!x) missing++; if (x !== ans) good = false; });
+        if (row.pts && row.pts.length) { var raw = val(it.id + '_r' + ri + '_t'); if (raw.trim().length < 3) missing++;
+          var tt = norm(raw); row.pts.forEach(function (alts) { if (!alts.some(function (a) { return hit(tt, a); })) good = false; }); }
+        if (good) okr++; else bad.push(row.label);
+      });
+      out.push({ q: it.q, got: okr, max: it.rows.length, tip: bad.length ? it.tip + ' Check: ' + bad.join(', ') + '.' : '' });
+    } else if (it.kind === 'sort') {
+      var ok = 0, wrong = [];
+      for (var r = 0; r < it.rows; r++) {
+        var all = true;
+        for (var c = 0; c < it.cols; c++) { var x = val('sort' + r + '_' + c); if (!x) missing++; if (it.ans[r][c].indexOf(x) < 0) all = false; }
+        if (all) ok++; else wrong.push(r + 1);
+      }
+      out.push({ q: 'Table', got: ok, max: it.rows, tip: wrong.length ? 'Check row' + (wrong.length > 1 ? 's ' : ' ') + wrong.join(', ') + ' against the notes, then correct it in your book.' : '' });
+    }
+  });
+  var m = { score: 0, max: 0, items: out, missing: missing };
+  out.forEach(function (i) { m.score += i.got; m.max += i.max; });
+  return m;
+}
+var marks = store.get('marks') || {};
+function total() { var s = 0; Object.keys(marks).forEach(function (k) { s += marks[k].score; }); return s; }
+function lead(m) { var p = m.max ? m.score / m.max : 0; return p === 1 ? 'Excellent: full marks.' : p >= 0.6 ? 'Good work. To reach full marks:' : p > 0 ? 'A start. To improve:' : 'Not there yet. Use these to improve:'; }
+function tipsOf(m) { var t = []; m.items.forEach(function (it) { if (it.tip) t.push(it.q + ': ' + it.tip); }); return t; }
+function modelsHtml(n) {
+  var md = SPEC.models[n]; if (!md || !md.length) return '';
+  return '<details class="model" open><summary><b>Model answers: check your work and correct it in your book</b></summary><ul>' +
+    md.map(function (x) { return '<li><b>' + esc(x[0]) + '</b> ' + esc(x[1]) + '</li>'; }).join('') + '</ul></details>';
+}
+function show(n, m) {
+  var box = document.getElementById('fb' + n);
+  if (!m) { box.innerHTML = '<h4>Saved</h4><div>This step is not marked. Well done for completing it.</div>' + modelsHtml(n); box.classList.remove('hidden'); return; }
+  var tips = tipsOf(m);
+  box.innerHTML = '<h4>Marked: ' + m.score + ' / ' + m.max + '</h4><div>' + esc(lead(m)) + '</div>' +
+    (tips.length ? '<ul>' + tips.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
+    '<div class="small">' + m.items.map(function (it) { return it.q + ': ' + it.got + '/' + it.max; }).join(' · ') + '</div>' +
+    modelsHtml(n) + '<div class="small">This mark is locked. Your teacher checks every mark and may adjust it.</div>';
+  box.classList.remove('hidden');
+}
+function bar() { document.getElementById('totalbar').textContent = 'Marked so far: ' + total() + ' / ' + TOTAL_MAX; }
+Object.keys(marks).forEach(function (n) { show(Number(n), marks[n]); }); bar();
+
+/* progress dots */
+var saved = store.get('saved') || {};
+['Question', 'Explore', 'Test', 'Explain', 'Challenge', 'Reflect'].forEach(function (s, i) {
+  document.getElementById('dots').insertAdjacentHTML('beforeend', '<a class="dot" id="dot' + (i + 1) + '" href="#step' + (i + 1) + '"><span></span>' + (i + 1) + ' ' + s + '</a>'); });
+function paint() { for (var i = 1; i <= 6; i++) document.getElementById('dot' + i).classList.toggle('done', !!saved[i]); }
+paint();
+
+/* save and send */
+document.querySelectorAll('button[data-step]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var n = Number(btn.getAttribute('data-step')), st = document.getElementById('st' + n);
+    var name = nameEl.value.trim(), cls = clsEl.value.trim();
+    if (!name || !cls) { st.className = 'status err'; st.textContent = 'Type your name and class at the top first.'; nameEl.focus(); return; }
+    var m = mark(n);
+    if (m && !marks[n] && m.missing) { st.className = 'status err'; st.textContent = 'Answer every question in this step first (' + m.missing + ' still empty). Your first save is the mark that counts.'; return; }
+    if (m && !marks[n]) { delete m.missing; marks[n] = m; store.set('marks', marks); }
+    show(n, m ? marks[n] : null); bar();
+    var parts = [], sec = document.getElementById('step' + n);
+    sec.querySelectorAll('select[data-save]').length && parts.push('Table: ' + Array.prototype.map.call(sec.querySelectorAll('tr'), function (tr) {
+      var s = tr.querySelectorAll('select'); return s.length ? Array.prototype.map.call(s, function (x) { return x.value || '-'; }).join('/') : null; }).filter(Boolean).join('; '));
+    sec.querySelectorAll('.opts').forEach(function (o, i) { var c = o.querySelector('input:checked'); parts.push(o.parentNode.querySelector('b').textContent.split(' ')[0] + ': ' + (c ? c.value : '-')); });
+    var fmt = sec.querySelector('[name^=fmt]:checked'); if (fmt) parts.push('Format: ' + fmt.value);
+    if (n === 6) parts.push('Confidence: ' + Array.prototype.map.call(sec.querySelectorAll('.tl'), function (r, i) { return 'O' + (i + 1) + '=' + (val('ob' + i) || '-'); }).join(', '));
+    sec.querySelectorAll('textarea').forEach(function (t) { parts.push(t.getAttribute('data-label') + ': ' + (t.value.trim() || '-').replace(/\s*\n\s*/g, ' / ')); });
+    var fb = Object.keys(marks).sort().map(function (s) { var t = tipsOf(marks[s]); return 'Step ' + s + ' (' + marks[s].score + '/' + marks[s].max + '): ' + lead(marks[s]) + (t.length ? ' ' + t.join(' ') : ''); });
+    var line = '[AUTO A=' + total() + ' TOTAL=' + total() + '/' + TOTAL_MAX + (marks[n] ? ' THIS=' + marks[n].score + '/' + marks[n].max : '') + '] ' + parts.join('  ‖  ') + '  ‖  Feedback: ' + (fb.length ? fb.join(' | ') : 'no marked steps yet.');
+    var body = new URLSearchParams();
+    body.append(FORM.lesson, LESSON_ID); body.append(FORM.name, name); body.append(FORM.cls, cls); body.append(FORM.step, String(n)); body.append(FORM.answers, line);
+    btn.disabled = true; st.className = 'status'; st.textContent = 'Saving...';
+    var time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    fetch(SB_URL + '/rest/v1/lesson_work', { method: 'POST', headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ lesson: LESSON_ID, student_name: name, class_name: cls, step: n, answers: line }) }).then(function (r) { if (!r.ok) throw new Error('save failed'); })
+      .then(function () { btn.disabled = false; st.className = 'status ok'; st.textContent = (marks[n] ? 'Marked and sent' : 'Sent') + ' to your teacher at ' + time; saved[n] = 1; store.set('saved', saved); paint(); })
+      .catch(function () { btn.disabled = false; st.className = 'status err'; st.textContent = 'Not sent. Check your internet and press Save again.'; });
+  });
+});
+</script>
+</body></html>

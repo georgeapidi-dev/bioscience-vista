@@ -1,4 +1,4 @@
-/* Join or sign in with a code · BioscienceVista · by BioscienceVista (21 Nov 2026, migration 071)
+/* Join or sign in with a code · BioscienceVista · by George Apidi (21 Nov 2026, migration 071)
    Students need no email or password. One code box takes every kind of code:
    • website code (8 characters, personal, from BioscienceVista): the first time it makes your place on the site and you choose a PIN;
      after that, website code + PIN signs you in.

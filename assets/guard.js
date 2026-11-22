@@ -1,4 +1,4 @@
-/* Material protection · BioscienceVista · by BioscienceVista (17 Nov 2026)
+/* Material protection · BioscienceVista · by George Apidi (17 Nov 2026)
    Runs on every page but acts only on locked material pages (window.BV_LOCKED, set inside the encrypted page by protect.py).
    For students and other non-staff accounts: a faint watermark with the person's name, email and the date on every screen
    (so screenshots and photos can be traced), and no right-click, copying, dragging, printing or saving of the page.

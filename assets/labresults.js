@@ -1,4 +1,4 @@
-/* My lab results · BioscienceVista · by BioscienceVista
+/* My lab results · BioscienceVista · by George Apidi
    Every virtual laboratory and simulator result a student has recorded (table sim_attempts), on any device:
    the data table, analysis score, hand-in state and the teacher's comment, with CSV download and a link back to the lab. */
 (function () {
