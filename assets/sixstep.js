@@ -32,6 +32,7 @@
   var MYP = !!window.BV_MYP || /MYP/.test(($('.hero .meta') || {}).textContent || '');
   var steps = [1, 2, 3, 4, 5, 6].map(function (n) { return document.getElementById('step' + n); });
   var terms = (function () {   // the lesson's key terms, from its "Key terms" line
+    var wb = $$('.bv-wb .bv-term'); if (wb.length) return wb.map(function (x) { return x.textContent.trim(); });   // word bank buttons (23 Nov 2026)
     var el = $$('.small, .muted').filter(function (x) { return /Key terms/.test(x.textContent); })[0];
     if (!el) return [];
     return el.textContent.replace(/^[^:]*:\s*/, '').split('·').map(function (t) { return t.trim(); }).filter(Boolean);
@@ -81,7 +82,7 @@
     body.insertAdjacentHTML('beforeend', '<p class="sx-pathhelp small"></p>');
     if (whereCard) body.appendChild(whereCard);
     if (udlCard) {   // keep the key-term line; the fixed "choose how you learn" text is replaced by the pathways
-      var kt = $$('.small', udlCard).filter(function (x) { return /Key terms/.test(x.textContent); })[0];
+      var kt = $$('.small', udlCard).filter(function (x) { return /Key terms|Word bank/.test(x.textContent); })[0];
       if (kt) body.appendChild(kt);
       var vids = $('.videos', udlCard); if (vids) { vids.classList.add('sx-videos'); STATE._v = 1; window.__sxVideos = vids; }
       udlCard.style.display = 'none';
@@ -124,7 +125,7 @@
   /* ---------- Support: vocabulary bank and sentence starters ---------- */
   if (terms.length) steps.slice(0, 5).forEach(function (sec) {
     var t = $('.card.task:not(.savecard)', sec); if (!t) return;
-    t.insertAdjacentHTML('afterbegin', '<div class="sx-only-support sx-vocab"><b>Vocabulary bank</b> ' + terms.map(function (x) { return '<span>' + E(x) + '</span>'; }).join('') + '</div>');
+    t.insertAdjacentHTML('afterbegin', '<div class="sx-only-support sx-vocab"><b>Vocabulary bank</b> ' + terms.map(function (x) { return '<button type="button" class="bv-term">' + E(x) + '</button>'; }).join('') + '</div>');
   });
   var STARTERS = [
     [/\bcalculate|work out|determine\b/i, 'Write the equation → put in the numbers with units → give the answer with its unit.'],
