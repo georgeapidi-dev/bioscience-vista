@@ -2834,6 +2834,7 @@
           '.tcm-add{background:#0d9488;color:#fff;border:0;border-radius:8px;padding:5px 12px;font-weight:700;cursor:pointer}.tcm-rm{background:none;border:1px solid #e2e8f0;border-radius:8px;padding:4px 9px;cursor:pointer;color:#64748b}.tcm-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:4px 0}'; document.head.appendChild(st); }
       t.innerHTML = '<div class="tcm-seg"><button type="button" data-m="in">📘 In this class (<b id="mn">' + Object.keys(have).length + '</b>)</button><button type="button" data-m="out">➕ Add from main site</button></div>' +
         '<div class="tcm-bar"><select id="mcourse" aria-label="Main-site course"><option value="">All courses</option>' + courses.map(function (k) { return '<option' + (k === mine && mode === 'out' ? ' selected' : '') + '>' + E(k) + '</option>'; }).join('') + '</select><input id="mq" placeholder="🔍 Search" aria-label="Search"></div>' +
+        '<p class="small muted" style="margin:0 0 8px">Your school\'s framework puts a topic in a different grade? Open <b>➕ Add from main site</b>, choose that grade\'s course and press <b>Add whole topic</b>; remove a topic you teach elsewhere with <b>✕ Remove topic</b>. Students keep their saved work.</p>' +
         '<div class="tcm-top" id="mtop"></div><div id="mlist"></div>';
       var save = function (pth, add) { return (add ? S.db.from('class_materials').insert({ class_id: c.id, path: pth, added_by: ME.user.id, sort: Object.keys(have).length }) : S.db.from('class_materials').delete().eq('class_id', c.id).eq('path', pth)).then(function (r) {
         if (r.error) { toast(S.nice(r.error), true); return false; } if (add) have[pth] = 1; else delete have[pth]; delete MATS[c.id]; t.querySelector('#mn').textContent = Object.keys(have).length; return true; }); };
@@ -2842,7 +2843,11 @@
         var q = t.querySelector('#mq').value.trim().toLowerCase(), crs = t.querySelector('#mcourse').value;
         var all = CAT.filter(function (m) { return (mode === 'in') === !!have[m.path] && (!crs || coursesOf(m).indexOf(crs) >= 0) && (!q || (m.title + ' ' + (m.unit || '')).toLowerCase().indexOf(q) >= 0); }), rows = all.slice(0, 400);
         t.querySelector('#mtop').innerHTML = mode === 'out' && all.length ? '<span class="small muted">' + all.length + ' to add</span><button type="button" class="tcm-add" id="maddall">➕ Add all ' + all.length + '</button>' : '';
-        var mrows = function (list) { var last = ''; return list.map(function (m) { var u = /^MYP /.test(m.subject || '') && m.unit ? m.unit : (m.unit || m.subject), hd = u !== last ? '<p class="label" style="margin-top:10px">' + E(u) + '</p>' : ''; last = u;
+        // a whole topic (unit) can be added to or removed from this class in one go: a teacher can teach a topic in another grade (23 Nov 2026)
+        var TU = []; var unitOf = function (m) { return /^MYP /.test(m.subject || '') && m.unit ? m.unit : (m.unit || m.subject); };
+        var mrows = function (list) { var last = ''; return list.map(function (m) { var u = unitOf(m), ti = TU.indexOf(u); if (ti < 0) { ti = TU.length; TU.push(u); }
+          var hd = u !== last ? '<p class="label tcm-unit" style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span>' + E(u) + '</span>' +
+            (mode === 'out' ? '<button type="button" class="tcm-add" data-tadd="' + ti + '" title="Add every lesson of this topic to this class">➕ Add whole topic</button>' : '<button type="button" class="tcm-rm" data-trm="' + ti + '" title="Remove every lesson of this topic from this class">✕ Remove topic</button>') + '</p>' : ''; last = u;
           return hd + '<div class="tcm-row"><span><a href="' + E(m.path) + '" target="_blank" rel="noopener">' + E(m.title) + '</a>' + (m.level === 'HL only' ? ' <span class="pill">HL</span>' : '') + '</span>' +
             (mode === 'out' ? '<button type="button" class="tcm-add" data-a="' + E(m.path) + '">+ Add</button>' : '<button type="button" class="tcm-rm" data-r="' + E(m.path) + '" title="Remove from this class">✕</button>') + '</div>'; }).join(''); };
         t.querySelector('#mlist').innerHTML = rows.length ? BV.subj.split(rows, function (m) { return /^MYP /.test(m.subject || '') ? BV.subj.of(m.subject) : ''; }, mrows) : '<p class="small muted">' + (mode === 'out' ? '✓ Everything here is already in the class.' : 'Nothing here yet: press ➕ Add from main site.') + '</p>';
@@ -2851,6 +2856,16 @@
         var sg = ev.target.closest('[data-m]'); if (sg) { mode = sg.getAttribute('data-m'); TC.madd = mode === 'out'; var cs = t.querySelector('#mcourse'); cs.value = mode === 'out' && courses.indexOf(mine) >= 0 ? mine : ''; list(); return; }
         var a = ev.target.closest('[data-a],[data-r]'); if (a) { a.disabled = true; var add = a.hasAttribute('data-a');
           save(a.getAttribute(add ? 'data-a' : 'data-r'), add).then(function (okk) { if (okk) { var row = a.closest('.tcm-row'); row.style.opacity = .4; setTimeout(list, 250); } else a.disabled = false; }); return; }
+        var tb = ev.target.closest('[data-tadd],[data-trm]'); if (tb) { var tadd = tb.hasAttribute('data-tadd'), tu = TU[+tb.getAttribute(tadd ? 'data-tadd' : 'data-trm')];
+          var tp = CAT.filter(function (m) { return unitOf(m) === tu && (tadd ? !have[m.path] : !!have[m.path]); }).map(function (m) { return m.path; });
+          if (!tp.length) return; if (!tadd && !confirm('Remove all ' + tp.length + ' lessons of "' + tu + '" from this class? Students keep their saved work; you can add the topic back at any time.')) return;
+          tb.disabled = true; var n1 = Object.keys(have).length;
+          (tadd ? S.db.from('class_materials').upsert(tp.map(function (pth, i) { return { class_id: c.id, path: pth, added_by: ME.user.id, sort: n1 + i }; }), { onConflict: 'class_id,path', ignoreDuplicates: true })
+                : S.db.from('class_materials').delete().eq('class_id', c.id).in('path', tp)).then(function (r) {
+            if (r.error) { tb.disabled = false; return toast(S.nice(r.error), true); }
+            tp.forEach(function (pth) { if (tadd) have[pth] = 1; else delete have[pth]; }); delete MATS[c.id]; t.querySelector('#mn').textContent = Object.keys(have).length;
+            toast((tadd ? 'Added ' : 'Removed ') + tp.length + ' lesson' + (tp.length === 1 ? '' : 's') + ': ' + tu); list(); });
+          return; }
         var b = ev.target.closest('#maddall'); if (!b) return; var paths = [].map.call(t.querySelectorAll('#mlist [data-a]'), function (x) { return x.getAttribute('data-a'); });
         if (!paths.length) return; b.disabled = true; var n0 = Object.keys(have).length;
         S.db.from('class_materials').upsert(paths.map(function (pth, i) { return { class_id: c.id, path: pth, added_by: ME.user.id, sort: n0 + i }; }), { onConflict: 'class_id,path', ignoreDuplicates: true }).then(function (r) {
