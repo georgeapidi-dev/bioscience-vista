@@ -1,0 +1,1909 @@
+{
+"subject": "IB Diploma Physics",
+"name": "IB Physics",
+"key": "phys",
+"url": "/ib-physics-plan/",
+"classes": {
+"SL": "phys-sl",
+"HL": "phys-hl"
+},
+"class_names": {
+"SL": "IB Physics SL",
+"HL": "IB Physics HL"
+},
+"theme_prefix": "Theme ",
+"about": "IB Diploma Physics teaching-hour plan. Hours from the IB guide; lesson durations share each topic's hours. Built by lessongen/ib_plan.py.",
+"source": "IB Physics guide, first assessment 2025 (understandings numbered here in guide order, SL then AHL).",
+"themes": {
+"A": "Space, time and motion",
+"B": "The particulate nature of matter",
+"C": "Wave behaviour",
+"D": "Fields",
+"E": "Nuclear and quantum physics"
+},
+"totals": {
+"SL": 110,
+"HL": 180
+},
+"differences": [],
+"topics": [
+{
+"code": "A.1",
+"name": "Kinematics",
+"theme": "A",
+"hl_only": false,
+"sl_hours": 9.0,
+"ahl_hours": 0.0,
+"hl_hours": 9.0,
+"understandings": {
+"SL": 8,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-a1-lesson1",
+"id": "PHYS-A1-L1",
+"title": "Describing motion: position, distance and displacement, scalars and vectors",
+"level": "SL",
+"range": "A.1.1, A.1.3",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-a1-lesson2",
+"id": "PHYS-A1-L2",
+"title": "Velocity and acceleration as rates of change; average and instantaneous values",
+"level": "SL",
+"range": "A.1.2, A.1.4",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-a1-lesson3",
+"id": "PHYS-A1-L3",
+"title": "Motion graphs: displacement–time, velocity–time and acceleration–time for uniform and non-uniform acceleration",
+"level": "SL",
+"range": "A.1.6",
+"minutes": 90,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "phys-a1-lesson4",
+"id": "PHYS-A1-L4",
+"title": "The equations of motion for uniform acceleration (suvat), including free fall",
+"level": "SL",
+"range": "A.1.5",
+"minutes": 90,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "phys-a1-lesson5",
+"id": "PHYS-A1-L5",
+"title": "Projectile motion without air resistance: independent horizontal and vertical components",
+"level": "SL",
+"range": "A.1.7",
+"minutes": 90,
+"hour": "Hours 7–8"
+},
+{
+"n": 6,
+"path": "phys-a1-lesson6",
+"id": "PHYS-A1-L6",
+"title": "The effect of fluid resistance on projectiles and falling objects: range, trajectory, time of flight and terminal speed",
+"level": "SL",
+"range": "A.1.8",
+"minutes": 90,
+"hour": "Hours 8–9"
+}
+]
+},
+{
+"code": "A.2",
+"name": "Forces and momentum",
+"theme": "A",
+"hl_only": false,
+"sl_hours": 10.0,
+"ahl_hours": 0.0,
+"hl_hours": 10.0,
+"understandings": {
+"SL": 8,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-a2-lesson1",
+"id": "PHYS-A2-L1",
+"title": "Newton's three laws of motion and forces as interactions between bodies",
+"level": "SL",
+"range": "A.2.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-a2-lesson2",
+"id": "PHYS-A2-L2",
+"title": "Free-body diagrams, resolving forces and finding the resultant force; equilibrium and inclined planes",
+"level": "SL",
+"range": "A.2.2",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-a2-lesson3",
+"id": "PHYS-A2-L3",
+"title": "Types of force: contact forces (normal, friction, tension, elastic, viscous drag, buoyancy) and field forces (gravitational, electric, magnetic)",
+"level": "SL",
+"range": "A.2.3, A.2.4",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "phys-a2-lesson4",
+"id": "PHYS-A2-L4",
+"title": "Linear momentum and its conservation in the absence of a resultant external force",
+"level": "SL",
+"range": "A.2.5",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "phys-a2-lesson5",
+"id": "PHYS-A2-L5",
+"title": "Impulse, force–time graphs and F = Δp/Δt, including systems where mass changes",
+"level": "SL",
+"range": "A.2.6",
+"minutes": 85,
+"hour": "Hours 6–8"
+},
+{
+"n": 6,
+"path": "phys-a2-lesson6",
+"id": "PHYS-A2-L6",
+"title": "Elastic and inelastic collisions and explosions: momentum and kinetic energy",
+"level": "SL",
+"range": "A.2.7",
+"minutes": 85,
+"hour": "Hours 8–9"
+},
+{
+"n": 7,
+"path": "phys-a2-lesson7",
+"id": "PHYS-A2-L7",
+"title": "Circular motion: angular velocity, centripetal acceleration and centripetal force",
+"level": "SL",
+"range": "A.2.8",
+"minutes": 85,
+"hour": "Hours 9–10"
+}
+]
+},
+{
+"code": "A.3",
+"name": "Work, energy and power",
+"theme": "A",
+"hl_only": false,
+"sl_hours": 8.0,
+"ahl_hours": 0.0,
+"hl_hours": 8.0,
+"understandings": {
+"SL": 5,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-a3-lesson1",
+"id": "PHYS-A3-L1",
+"title": "Conservation of energy, energy stores and transfers, and Sankey diagrams",
+"level": "SL",
+"range": "A.3.1",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-a3-lesson2",
+"id": "PHYS-A3-L2",
+"title": "Work done by a force: W = Fs cos θ, and the area under force–displacement graphs",
+"level": "SL",
+"range": "A.3.2",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-a3-lesson3",
+"id": "PHYS-A3-L3",
+"title": "Kinetic energy and gravitational potential energy, and their interconversion",
+"level": "SL",
+"range": "A.3.3",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-a3-lesson4",
+"id": "PHYS-A3-L4",
+"title": "Elastic potential energy and energy conservation in systems with springs",
+"level": "SL",
+"range": "A.3.3",
+"minutes": 80,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "phys-a3-lesson5",
+"id": "PHYS-A3-L5",
+"title": "Power as the rate of energy transfer, P = Fv, and efficiency",
+"level": "SL",
+"range": "A.3.4",
+"minutes": 80,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "phys-a3-lesson6",
+"id": "PHYS-A3-L6",
+"title": "Energy density and specific energy of fuel sources",
+"level": "SL",
+"range": "A.3.5",
+"minutes": 80,
+"hour": "Hours 7–8"
+}
+]
+},
+{
+"code": "A.4",
+"name": "Rigid body mechanics",
+"theme": "A",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 7.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 0,
+"HL": 6
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-a4-lesson1",
+"id": "PHYS-A4-L1",
+"title": "Torque, rotational equilibrium and the effect of an unbalanced torque",
+"level": "HL",
+"range": "A.4.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-a4-lesson2",
+"id": "PHYS-A4-L2",
+"title": "Rotational kinematics: angular displacement, velocity and acceleration, and the rotational equations of motion",
+"level": "HL",
+"range": "A.4.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-a4-lesson3",
+"id": "PHYS-A4-L3",
+"title": "Moment of inertia: distribution of mass about an axis, for point masses and standard shapes",
+"level": "HL",
+"range": "A.4.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-a4-lesson4",
+"id": "PHYS-A4-L4",
+"title": "Newton's second law for rotation: τ = Iα, with combined linear and rotational systems",
+"level": "HL",
+"range": "A.4.4",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "phys-a4-lesson5",
+"id": "PHYS-A4-L5",
+"title": "Angular momentum, angular impulse and conservation of angular momentum",
+"level": "HL",
+"range": "A.4.5",
+"minutes": 70,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "phys-a4-lesson6",
+"id": "PHYS-A4-L6",
+"title": "Rotational kinetic energy and rolling: total kinetic energy of a rolling body",
+"level": "HL",
+"range": "A.4.6",
+"minutes": 70,
+"hour": "Hours 6–7"
+}
+]
+},
+{
+"code": "A.5",
+"name": "Galilean and special relativity",
+"theme": "A",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 8.0,
+"hl_hours": 8.0,
+"understandings": {
+"SL": 0,
+"HL": 7
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-a5-lesson1",
+"id": "PHYS-A5-L1",
+"title": "Reference frames, Galilean relativity and Galilean velocity addition",
+"level": "HL",
+"range": "A.5.1",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-a5-lesson2",
+"id": "PHYS-A5-L2",
+"title": "Einstein's two postulates and the Lorentz transformations",
+"level": "HL",
+"range": "A.5.2",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-a5-lesson3",
+"id": "PHYS-A5-L3",
+"title": "Relativistic velocity addition and the invariant spacetime interval",
+"level": "HL",
+"range": "A.5.3, A.5.4",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-a5-lesson4",
+"id": "PHYS-A5-L4",
+"title": "Proper time and proper length, time dilation and length contraction",
+"level": "HL",
+"range": "A.5.5",
+"minutes": 80,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "phys-a5-lesson5",
+"id": "PHYS-A5-L5",
+"title": "Relativity of simultaneity and spacetime (Minkowski) diagrams",
+"level": "HL",
+"range": "A.5.6",
+"minutes": 80,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "phys-a5-lesson6",
+"id": "PHYS-A5-L6",
+"title": "Muon decay experiments as evidence for time dilation and length contraction",
+"level": "HL",
+"range": "A.5.7",
+"minutes": 80,
+"hour": "Hours 7–8"
+}
+]
+},
+{
+"code": "B.1",
+"name": "Thermal energy transfers",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 6.0,
+"ahl_hours": 0.0,
+"hl_hours": 6.0,
+"understandings": {
+"SL": 13,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-b1-lesson1",
+"id": "PHYS-B1-L1",
+"title": "The molecular model of solids, liquids and gases; density; Kelvin and Celsius temperature scales",
+"level": "SL",
+"range": "B.1.1 – B.1.2",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "phys-b1-lesson2",
+"id": "PHYS-B1-L2",
+"title": "Temperature and average kinetic energy, internal energy, and the direction of thermal energy transfer",
+"level": "SL",
+"range": "B.1.3 – B.1.5",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "phys-b1-lesson3",
+"id": "PHYS-B1-L3",
+"title": "Specific heat capacity, specific latent heat and phase changes at constant temperature",
+"level": "SL",
+"range": "B.1.6 – B.1.7",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "phys-b1-lesson4",
+"id": "PHYS-B1-L4",
+"title": "Conduction, convection and thermal radiation; the rate of conduction ΔQ/Δt = kAΔT/Δx",
+"level": "SL",
+"range": "B.1.8 – B.1.10",
+"minutes": 60,
+"hour": "Hour 4"
+},
+{
+"n": 5,
+"path": "phys-b1-lesson5",
+"id": "PHYS-B1-L5",
+"title": "Black-body radiation, the Stefan–Boltzmann law, luminosity and apparent brightness",
+"level": "SL",
+"range": "B.1.11 – B.1.12",
+"minutes": 60,
+"hour": "Hour 5"
+},
+{
+"n": 6,
+"path": "phys-b1-lesson6",
+"id": "PHYS-B1-L6",
+"title": "The black-body spectrum and Wien's displacement law",
+"level": "SL",
+"range": "B.1.13",
+"minutes": 60,
+"hour": "Hour 6"
+}
+]
+},
+{
+"code": "B.2",
+"name": "Greenhouse effect",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 6.0,
+"ahl_hours": 0.0,
+"hl_hours": 6.0,
+"understandings": {
+"SL": 10,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-b2-lesson1",
+"id": "PHYS-B2-L1",
+"title": "Energy balance of the Earth: conservation of energy, emissivity and albedo",
+"level": "SL",
+"range": "B.2.1 – B.2.3",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-b2-lesson2",
+"id": "PHYS-B2-L2",
+"title": "Variation of albedo, the solar constant and the mean incoming intensity S/4",
+"level": "SL",
+"range": "B.2.4 – B.2.6",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-b2-lesson3",
+"id": "PHYS-B2-L3",
+"title": "Greenhouse gases and their sources; absorption of infrared by molecular energy levels",
+"level": "SL",
+"range": "B.2.7 – B.2.8",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-b2-lesson4",
+"id": "PHYS-B2-L4",
+"title": "Models of the greenhouse effect: resonance, molecular energy levels and a simple energy-balance calculation",
+"level": "SL",
+"range": "B.2.9",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "phys-b2-lesson5",
+"id": "PHYS-B2-L5",
+"title": "The enhanced greenhouse effect: evidence, feedbacks and responses",
+"level": "SL",
+"range": "B.2.10",
+"minutes": 70,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "B.3",
+"name": "Gas laws",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 6.0,
+"ahl_hours": 0.0,
+"hl_hours": 6.0,
+"understandings": {
+"SL": 8,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-b3-lesson1",
+"id": "PHYS-B3-L1",
+"title": "Pressure as force per unit area, and amount of substance (the mole and Avogadro constant)",
+"level": "SL",
+"range": "B.3.1 – B.3.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-b3-lesson2",
+"id": "PHYS-B3-L2",
+"title": "The ideal gas model and the empirical gas laws (Boyle, Charles, Gay-Lussac)",
+"level": "SL",
+"range": "B.3.3 – B.3.4",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-b3-lesson3",
+"id": "PHYS-B3-L3",
+"title": "The ideal gas equation PV = nRT = NkT",
+"level": "SL",
+"range": "B.3.5",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-b3-lesson4",
+"id": "PHYS-B3-L4",
+"title": "Kinetic theory: pressure from molecular momentum changes, P = ⅓ρv̄², and molecular speeds",
+"level": "SL",
+"range": "B.3.6",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "phys-b3-lesson5",
+"id": "PHYS-B3-L5",
+"title": "Internal energy of an ideal monatomic gas, and when real gases behave ideally",
+"level": "SL",
+"range": "B.3.7 – B.3.8",
+"minutes": 70,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "B.4",
+"name": "Thermodynamics",
+"theme": "B",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 8.0,
+"hl_hours": 8.0,
+"understandings": {
+"SL": 0,
+"HL": 13
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-b4-lesson1",
+"id": "PHYS-B4-L1",
+"title": "The first law of thermodynamics Q = ΔU + W, work done by a gas W = PΔV, and ΔU = (3/2)nRΔT",
+"level": "HL",
+"range": "B.4.1 – B.4.3",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-b4-lesson2",
+"id": "PHYS-B4-L2",
+"title": "Thermodynamic processes: isovolumetric, isobaric, isothermal and adiabatic; PV^(5/3) = constant",
+"level": "HL",
+"range": "B.4.9 – B.4.10",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-b4-lesson3",
+"id": "PHYS-B4-L3",
+"title": "Entropy: a measure of disorder, ΔS = ΔQ/T and S = k_B ln Ω",
+"level": "HL",
+"range": "B.4.4 – B.4.5",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-b4-lesson4",
+"id": "PHYS-B4-L4",
+"title": "The second law of thermodynamics, irreversibility and local decreases of entropy",
+"level": "HL",
+"range": "B.4.6 – B.4.8",
+"minutes": 80,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "phys-b4-lesson5",
+"id": "PHYS-B4-L5",
+"title": "Cyclic gas processes and heat engines; efficiency η = useful work ÷ input energy",
+"level": "HL",
+"range": "B.4.11 – B.4.12",
+"minutes": 80,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "phys-b4-lesson6",
+"id": "PHYS-B4-L6",
+"title": "The Carnot cycle and the Carnot limit η = 1 − T_c/T_h",
+"level": "HL",
+"range": "B.4.13",
+"minutes": 80,
+"hour": "Hours 7–8"
+}
+]
+},
+{
+"code": "B.5",
+"name": "Current and circuits",
+"theme": "B",
+"hl_only": false,
+"sl_hours": 6.0,
+"ahl_hours": 0.0,
+"hl_hours": 6.0,
+"understandings": {
+"SL": 12,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-b5-lesson1",
+"id": "PHYS-B5-L1",
+"title": "Cells as sources of emf, circuit diagrams, electric current I = Δq/Δt and potential difference V = W/q",
+"level": "SL",
+"range": "B.5.1 – B.5.4",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-b5-lesson2",
+"id": "PHYS-B5-L2",
+"title": "Conductors and insulators, the origin of resistance, R = V/I and resistivity ρ = RA/L",
+"level": "SL",
+"range": "B.5.5 – B.5.7",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-b5-lesson3",
+"id": "PHYS-B5-L3",
+"title": "Ohm's law, ohmic and non-ohmic I–V characteristics, and electrical power P = IV = I²R = V²/R",
+"level": "SL",
+"range": "B.5.8 – B.5.9",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-b5-lesson4",
+"id": "PHYS-B5-L4",
+"title": "Series and parallel combinations of resistors and circuit analysis",
+"level": "SL",
+"range": "B.5.10",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "phys-b5-lesson5",
+"id": "PHYS-B5-L5",
+"title": "Emf and internal resistance ε = I(R + r), and variable resistors as rheostats and potential dividers",
+"level": "SL",
+"range": "B.5.11 – B.5.12",
+"minutes": 70,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "C.1",
+"name": "Simple harmonic motion",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 4.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 7,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-c1-lesson1",
+"id": "PHYS-C1-L1",
+"title": "Conditions for simple harmonic motion and the defining equation a = −ω²x",
+"level": "SL",
+"range": "C.1.1 – C.1.2",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "phys-c1-lesson2",
+"id": "PHYS-C1-L2",
+"title": "Describing SHM: period, frequency, angular frequency, amplitude, displacement and their graphs; T = 1/f = 2π/ω",
+"level": "SL",
+"range": "C.1.3 – C.1.4",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "phys-c1-lesson3",
+"id": "PHYS-C1-L3",
+"title": "The mass–spring system T = 2π√(m/k), the simple pendulum T = 2π√(l/g), and energy changes in SHM",
+"level": "SL",
+"range": "C.1.5 – C.1.7",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "phys-c1-lesson4",
+"id": "PHYS-C1-L4",
+"title": "Phase angle and the SHM equations x = x₀ sin(ωt + φ) and v = ωx₀ cos(ωt + φ)",
+"level": "HL",
+"range": "C.1.8 – C.1.9",
+"minutes": 80,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "phys-c1-lesson5",
+"id": "PHYS-C1-L5",
+"title": "Velocity as a function of displacement: v = ±ω√(x₀² − x²)",
+"level": "HL",
+"range": "C.1.10",
+"minutes": 80,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "phys-c1-lesson6",
+"id": "PHYS-C1-L6",
+"title": "Energy in SHM: E_T = ½mω²x₀², E_p = ½mω²x² and E_k = ½mω²(x₀² − x²)",
+"level": "HL",
+"range": "C.1.11",
+"minutes": 80,
+"hour": "Hours 6–7"
+}
+]
+},
+{
+"code": "C.2",
+"name": "Wave model",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 0.0,
+"hl_hours": 3.0,
+"understandings": {
+"SL": 5,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-c2-lesson1",
+"id": "PHYS-C2-L1",
+"title": "Transverse and longitudinal travelling waves; wavelength, frequency, period and v = fλ",
+"level": "SL",
+"range": "C.2.1 – C.2.2",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "phys-c2-lesson2",
+"id": "PHYS-C2-L2",
+"title": "The nature of sound waves: compressions, rarefactions, speed in different media and audible range",
+"level": "SL",
+"range": "C.2.3",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "phys-c2-lesson3",
+"id": "PHYS-C2-L3",
+"title": "Electromagnetic waves and the EM spectrum; differences between mechanical and electromagnetic waves",
+"level": "SL",
+"range": "C.2.4 – C.2.5",
+"minutes": 60,
+"hour": "Hour 3"
+}
+]
+},
+{
+"code": "C.3",
+"name": "Wave phenomena",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 5.0,
+"ahl_hours": 6.0,
+"hl_hours": 11.0,
+"understandings": {
+"SL": 11,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-c3-lesson1",
+"id": "PHYS-C3-L1",
+"title": "Wavefronts and rays; reflection, refraction and transmission at boundaries",
+"level": "SL",
+"range": "C.3.1 – C.3.2",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "phys-c3-lesson2",
+"id": "PHYS-C3-L2",
+"title": "Diffraction around obstacles and through apertures; wavefront–ray diagrams",
+"level": "SL",
+"range": "C.3.3 – C.3.4",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "phys-c3-lesson3",
+"id": "PHYS-C3-L3",
+"title": "Snell's law, refractive index, critical angle and total internal reflection",
+"level": "SL",
+"range": "C.3.5 – C.3.6",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "phys-c3-lesson4",
+"id": "PHYS-C3-L4",
+"title": "Superposition of waves and pulses, and coherent sources",
+"level": "SL",
+"range": "C.3.7 – C.3.8",
+"minutes": 60,
+"hour": "Hour 4"
+},
+{
+"n": 5,
+"path": "phys-c3-lesson5",
+"id": "PHYS-C3-L5",
+"title": "Interference conditions (path difference nλ and (n + ½)λ) and Young's double-slit experiment s = λD/d",
+"level": "SL",
+"range": "C.3.9 – C.3.11",
+"minutes": 60,
+"hour": "Hour 5"
+},
+{
+"n": 6,
+"path": "phys-c3-lesson6",
+"id": "PHYS-C3-L6",
+"title": "Single-slit diffraction: the intensity pattern and the first minimum θ = λ/b",
+"level": "HL",
+"range": "C.3.12",
+"minutes": 90,
+"hour": "Hours 6–7"
+},
+{
+"n": 7,
+"path": "phys-c3-lesson7",
+"id": "PHYS-C3-L7",
+"title": "Single-slit diffraction modulating the double-slit interference pattern",
+"level": "HL",
+"range": "C.3.13",
+"minutes": 90,
+"hour": "Hours 7–8"
+},
+{
+"n": 8,
+"path": "phys-c3-lesson8",
+"id": "PHYS-C3-L8",
+"title": "Multiple slits and diffraction gratings: nλ = d sin θ",
+"level": "HL",
+"range": "C.3.14",
+"minutes": 90,
+"hour": "Hours 9–10"
+},
+{
+"n": 9,
+"path": "phys-c3-lesson9",
+"id": "PHYS-C3-L9",
+"title": "Applications of diffraction gratings: spectra, spectroscopy and comparing interference arrangements",
+"level": "HL",
+"range": "C.3.14",
+"minutes": 90,
+"hour": "Hours 10–11"
+}
+]
+},
+{
+"code": "C.4",
+"name": "Standing waves and resonance",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 6,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-c4-lesson1",
+"id": "PHYS-C4-L1",
+"title": "Formation of standing waves; nodes, antinodes, amplitude and phase along a standing wave",
+"level": "SL",
+"range": "C.4.1 – C.4.2",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "phys-c4-lesson2",
+"id": "PHYS-C4-L2",
+"title": "Standing waves on strings: harmonics and the frequencies f = nv/2L",
+"level": "SL",
+"range": "C.4.3",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "phys-c4-lesson3",
+"id": "PHYS-C4-L3",
+"title": "Standing waves in pipes: open and closed ends, harmonics and resonance tubes",
+"level": "SL",
+"range": "C.4.3",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "phys-c4-lesson4",
+"id": "PHYS-C4-L4",
+"title": "Resonance, natural frequency, driving frequency and damping (light, critical, heavy)",
+"level": "SL",
+"range": "C.4.4 – C.4.6",
+"minutes": 60,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "C.5",
+"name": "Doppler effect",
+"theme": "C",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 2.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 4,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-c5-lesson1",
+"id": "PHYS-C5-L1",
+"title": "The Doppler effect for sound and electromagnetic waves, and wavefront diagrams for moving sources and observers",
+"level": "SL",
+"range": "C.5.1 – C.5.2",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "phys-c5-lesson2",
+"id": "PHYS-C5-L2",
+"title": "The Doppler equation for light Δf/f = Δλ/λ ≈ v/c, and red-shift of stars and galaxies",
+"level": "SL",
+"range": "C.5.3 – C.5.4",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "phys-c5-lesson3",
+"id": "PHYS-C5-L3",
+"title": "Doppler equation for sound with a moving source: f′ = f v/(v ± u_s)",
+"level": "HL",
+"range": "C.5.5",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "phys-c5-lesson4",
+"id": "PHYS-C5-L4",
+"title": "Doppler equation for sound with a moving observer: f′ = f (v ± u_o)/v, and comparing the two cases",
+"level": "HL",
+"range": "C.5.6",
+"minutes": 60,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "D.1",
+"name": "Gravitational fields",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 5.0,
+"ahl_hours": 7.0,
+"hl_hours": 12.0,
+"understandings": {
+"SL": 5,
+"HL": 7
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-d1-lesson1",
+"id": "PHYS-D1-L1",
+"title": "Kepler's three laws of planetary motion",
+"level": "SL",
+"range": "D.1.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-d1-lesson2",
+"id": "PHYS-D1-L2",
+"title": "Newton's universal law of gravitation F = Gm₁m₂/r², and treating spherical bodies as point masses",
+"level": "SL",
+"range": "D.1.2 – D.1.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-d1-lesson3",
+"id": "PHYS-D1-L3",
+"title": "Gravitational field strength g = F/m = GM/r²",
+"level": "SL",
+"range": "D.1.4",
+"minutes": 75,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-d1-lesson4",
+"id": "PHYS-D1-L4",
+"title": "Gravitational field lines: radial and uniform fields, and representing combined fields",
+"level": "SL",
+"range": "D.1.5",
+"minutes": 75,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "phys-d1-lesson5",
+"id": "PHYS-D1-L5",
+"title": "Gravitational potential energy E_p = −Gm₁m₂/r as work done assembling a system from infinity",
+"level": "HL",
+"range": "D.1.6",
+"minutes": 70,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "phys-d1-lesson6",
+"id": "PHYS-D1-L6",
+"title": "Gravitational potential V_g = −GM/r and field strength as the potential gradient g = −ΔV_g/Δr",
+"level": "HL",
+"range": "D.1.7 – D.1.8",
+"minutes": 70,
+"hour": "Hours 7–8"
+},
+{
+"n": 7,
+"path": "phys-d1-lesson7",
+"id": "PHYS-D1-L7",
+"title": "Work done moving a mass W = mΔV_g, and equipotential surfaces",
+"level": "HL",
+"range": "D.1.9 – D.1.10",
+"minutes": 70,
+"hour": "Hours 8–9"
+},
+{
+"n": 8,
+"path": "phys-d1-lesson8",
+"id": "PHYS-D1-L8",
+"title": "Escape speed v_esc = √(2GM/r) and orbital speed v_orbit = √(GM/r)",
+"level": "HL",
+"range": "D.1.11",
+"minutes": 70,
+"hour": "Hours 9–10"
+},
+{
+"n": 9,
+"path": "phys-d1-lesson9",
+"id": "PHYS-D1-L9",
+"title": "Energy of orbiting satellites: E_k = GMm/2r, E_p = −GMm/r, E_total = −GMm/2r, and changing orbits",
+"level": "HL",
+"range": "D.1.11",
+"minutes": 70,
+"hour": "Hours 10–11"
+},
+{
+"n": 10,
+"path": "phys-d1-lesson10",
+"id": "PHYS-D1-L10",
+"title": "Orbital decay: the qualitative effect of a small viscous drag on orbital height and speed",
+"level": "HL",
+"range": "D.1.12",
+"minutes": 70,
+"hour": "Hours 11–12"
+}
+]
+},
+{
+"code": "D.2",
+"name": "Electric and magnetic fields",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 8.0,
+"ahl_hours": 6.0,
+"hl_hours": 14.0,
+"understandings": {
+"SL": 9,
+"HL": 5
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-d2-lesson1",
+"id": "PHYS-D2-L1",
+"title": "Electric charge: like charges repel, unlike attract; conservation of charge and the elementary charge",
+"level": "SL",
+"range": "D.2.1, D.2.3",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-d2-lesson2",
+"id": "PHYS-D2-L2",
+"title": "Coulomb's law F = kq₁q₂/r², with k = 1/4πε₀",
+"level": "SL",
+"range": "D.2.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-d2-lesson3",
+"id": "PHYS-D2-L3",
+"title": "Charging by friction, contact and induction, including grounding",
+"level": "SL",
+"range": "D.2.5",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-d2-lesson4",
+"id": "PHYS-D2-L4",
+"title": "Millikan's oil-drop experiment as evidence for the quantization of charge",
+"level": "SL",
+"range": "D.2.4",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "phys-d2-lesson5",
+"id": "PHYS-D2-L5",
+"title": "Electric field strength E = F/q and electric field lines; field of a point charge",
+"level": "SL",
+"range": "D.2.6 – D.2.7",
+"minutes": 70,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "phys-d2-lesson6",
+"id": "PHYS-D2-L6",
+"title": "Uniform electric field between parallel plates: E = V/d",
+"level": "SL",
+"range": "D.2.8",
+"minutes": 65,
+"hour": "Hours 6–7"
+},
+{
+"n": 7,
+"path": "phys-d2-lesson7",
+"id": "PHYS-D2-L7",
+"title": "Magnetic field lines: bar magnets, straight wires, coils and solenoids",
+"level": "SL",
+"range": "D.2.9",
+"minutes": 65,
+"hour": "Hours 7–8"
+},
+{
+"n": 8,
+"path": "phys-d2-lesson8",
+"id": "PHYS-D2-L8",
+"title": "Electric potential energy E_p = kq₁q₂/r as work done assembling charges from infinity",
+"level": "HL",
+"range": "D.2.10",
+"minutes": 90,
+"hour": "Hours 9–10"
+},
+{
+"n": 9,
+"path": "phys-d2-lesson9",
+"id": "PHYS-D2-L9",
+"title": "Electric potential V_e = kQ/r as a scalar, zero at infinity",
+"level": "HL",
+"range": "D.2.11",
+"minutes": 90,
+"hour": "Hours 10–11"
+},
+{
+"n": 10,
+"path": "phys-d2-lesson10",
+"id": "PHYS-D2-L10",
+"title": "Field strength as potential gradient E = −ΔV_e/Δr, and V–r and E–r graphs",
+"level": "HL",
+"range": "D.2.12",
+"minutes": 90,
+"hour": "Hours 12–13"
+},
+{
+"n": 11,
+"path": "phys-d2-lesson11",
+"id": "PHYS-D2-L11",
+"title": "Work done moving a charge W = qΔV_e, and electric equipotential surfaces",
+"level": "HL",
+"range": "D.2.13 – D.2.14",
+"minutes": 90,
+"hour": "Hours 13–14"
+}
+]
+},
+{
+"code": "D.3",
+"name": "Motion in electromagnetic fields",
+"theme": "D",
+"hl_only": false,
+"sl_hours": 6.0,
+"ahl_hours": 0.0,
+"hl_hours": 6.0,
+"understandings": {
+"SL": 6,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-d3-lesson1",
+"id": "PHYS-D3-L1",
+"title": "Motion of charged particles in uniform electric fields: acceleration and parabolic deflection",
+"level": "SL",
+"range": "D.3.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-d3-lesson2",
+"id": "PHYS-D3-L2",
+"title": "The magnetic force on a moving charge F = qvB sin θ and Fleming's left-hand rule",
+"level": "SL",
+"range": "D.3.4",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-d3-lesson3",
+"id": "PHYS-D3-L3",
+"title": "Circular motion of charged particles in uniform magnetic fields: r = mv/qB",
+"level": "SL",
+"range": "D.3.2",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-d3-lesson4",
+"id": "PHYS-D3-L4",
+"title": "Motion in perpendicular electric and magnetic fields: the velocity selector v = E/B",
+"level": "SL",
+"range": "D.3.3",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "phys-d3-lesson5",
+"id": "PHYS-D3-L5",
+"title": "Force on a current-carrying conductor F = BIL sin θ, and force between parallel wires F/L = μ₀I₁I₂/2πr",
+"level": "SL",
+"range": "D.3.5 – D.3.6",
+"minutes": 70,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "D.4",
+"name": "Induction",
+"theme": "D",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 6.0,
+"hl_hours": 6.0,
+"understandings": {
+"SL": 0,
+"HL": 6
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-d4-lesson1",
+"id": "PHYS-D4-L1",
+"title": "Magnetic flux Φ = BA cos θ and flux linkage",
+"level": "HL",
+"range": "D.4.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-d4-lesson2",
+"id": "PHYS-D4-L2",
+"title": "Faraday's law of induction ε = −NΔΦ/Δt",
+"level": "HL",
+"range": "D.4.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-d4-lesson3",
+"id": "PHYS-D4-L3",
+"title": "Motional emf: ε = BvL for a straight conductor moving perpendicular to a field",
+"level": "HL",
+"range": "D.4.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-d4-lesson4",
+"id": "PHYS-D4-L4",
+"title": "Lenz's law: the induced current opposes the change producing it, as a consequence of energy conservation",
+"level": "HL",
+"range": "D.4.4",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "phys-d4-lesson5",
+"id": "PHYS-D4-L5",
+"title": "The a.c. generator: sinusoidal emf from a rotating coil, and the effect of rotation frequency",
+"level": "HL",
+"range": "D.4.5 – D.4.6",
+"minutes": 70,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "E.1",
+"name": "Structure of the atom",
+"theme": "E",
+"hl_only": false,
+"sl_hours": 6.0,
+"ahl_hours": 3.0,
+"hl_hours": 9.0,
+"understandings": {
+"SL": 6,
+"HL": 5
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-e1-lesson1",
+"id": "PHYS-E1-L1",
+"title": "The Geiger–Marsden–Rutherford experiment and the discovery of the nucleus",
+"level": "SL",
+"range": "E.1.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-e1-lesson2",
+"id": "PHYS-E1-L2",
+"title": "Nuclear notation ᴬ_Z X: nucleon number, proton number and nuclides",
+"level": "SL",
+"range": "E.1.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-e1-lesson3",
+"id": "PHYS-E1-L3",
+"title": "Emission and absorption spectra as evidence for discrete atomic energy levels; photon emission and absorption",
+"level": "SL",
+"range": "E.1.3 – E.1.4",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-e1-lesson4",
+"id": "PHYS-E1-L4",
+"title": "Photon energy E = hf = hc/λ and energy level calculations in eV and J",
+"level": "SL",
+"range": "E.1.5",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "phys-e1-lesson5",
+"id": "PHYS-E1-L5",
+"title": "Spectra as evidence of chemical composition: identifying elements in lamps, flames and stars",
+"level": "SL",
+"range": "E.1.6",
+"minutes": 70,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "phys-e1-lesson6",
+"id": "PHYS-E1-L6",
+"title": "Nuclear radius R = R₀A^(1/3) and the constant density of nuclear matter",
+"level": "HL",
+"range": "E.1.7",
+"minutes": 60,
+"hour": "Hour 7"
+},
+{
+"n": 7,
+"path": "phys-e1-lesson7",
+"id": "PHYS-E1-L7",
+"title": "Distance of closest approach and deviations from Rutherford scattering at high energies",
+"level": "HL",
+"range": "E.1.8 – E.1.9",
+"minutes": 60,
+"hour": "Hour 8"
+},
+{
+"n": 8,
+"path": "phys-e1-lesson8",
+"id": "PHYS-E1-L8",
+"title": "The Bohr model of hydrogen: E = −13.6/n² eV and quantized angular momentum mvr = nh/2π",
+"level": "HL",
+"range": "E.1.10 – E.1.11",
+"minutes": 60,
+"hour": "Hour 9"
+}
+]
+},
+{
+"code": "E.2",
+"name": "Quantum physics",
+"theme": "E",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 8.0,
+"hl_hours": 8.0,
+"understandings": {
+"SL": 0,
+"HL": 8
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-e2-lesson1",
+"id": "PHYS-E2-L1",
+"title": "The photoelectric effect as evidence for the particle nature of light, and threshold frequency",
+"level": "HL",
+"range": "E.2.1 – E.2.2",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-e2-lesson2",
+"id": "PHYS-E2-L2",
+"title": "Einstein's photoelectric equation E_max = hf − Φ, stopping potential and graphs",
+"level": "HL",
+"range": "E.2.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-e2-lesson3",
+"id": "PHYS-E2-L3",
+"title": "Diffraction of particles as evidence for the wave nature of matter, and wave–particle duality",
+"level": "HL",
+"range": "E.2.4 – E.2.5",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-e2-lesson4",
+"id": "PHYS-E2-L4",
+"title": "The de Broglie wavelength λ = h/p for particles",
+"level": "HL",
+"range": "E.2.6",
+"minutes": 80,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "phys-e2-lesson5",
+"id": "PHYS-E2-L5",
+"title": "Compton scattering as further evidence for the particle nature of light",
+"level": "HL",
+"range": "E.2.7",
+"minutes": 80,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "phys-e2-lesson6",
+"id": "PHYS-E2-L6",
+"title": "The Compton shift Δλ = (h/m_e c)(1 − cos θ)",
+"level": "HL",
+"range": "E.2.8",
+"minutes": 80,
+"hour": "Hours 7–8"
+}
+]
+},
+{
+"code": "E.3",
+"name": "Radioactive decay",
+"theme": "E",
+"hl_only": false,
+"sl_hours": 7.0,
+"ahl_hours": 5.0,
+"hl_hours": 12.0,
+"understandings": {
+"SL": 13,
+"HL": 9
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-e3-lesson1",
+"id": "PHYS-E3-L1",
+"title": "Isotopes, mass defect and nuclear binding energy",
+"level": "SL",
+"range": "E.3.1 – E.3.2",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-e3-lesson2",
+"id": "PHYS-E3-L2",
+"title": "Binding energy per nucleon against nucleon number, and mass–energy equivalence E = mc² in nuclear reactions",
+"level": "SL",
+"range": "E.3.3 – E.3.4",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-e3-lesson3",
+"id": "PHYS-E3-L3",
+"title": "The strong nuclear force, and the random, spontaneous nature of radioactive decay",
+"level": "SL",
+"range": "E.3.5 – E.3.6",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-e3-lesson4",
+"id": "PHYS-E3-L4",
+"title": "Alpha, beta-minus, beta-plus and gamma decay: changes in the nucleus, decay equations and neutrinos",
+"level": "SL",
+"range": "E.3.7 – E.3.9",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "phys-e3-lesson5",
+"id": "PHYS-E3-L5",
+"title": "Penetration and ionizing ability of alpha, beta and gamma radiation, and safety",
+"level": "SL",
+"range": "E.3.10",
+"minutes": 70,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "phys-e3-lesson6",
+"id": "PHYS-E3-L6",
+"title": "Activity, count rate and half-life; decay over integer half-lives and correcting for background radiation",
+"level": "SL",
+"range": "E.3.11 – E.3.13",
+"minutes": 70,
+"hour": "Hours 6–7"
+},
+{
+"n": 7,
+"path": "phys-e3-lesson7",
+"id": "PHYS-E3-L7",
+"title": "Evidence for the strong force, the neutron–proton ratio and stability, and constant binding energy per nucleon above A ≈ 60",
+"level": "HL",
+"range": "E.3.14 – E.3.16",
+"minutes": 75,
+"hour": "Hours 8–9"
+},
+{
+"n": 8,
+"path": "phys-e3-lesson8",
+"id": "PHYS-E3-L8",
+"title": "Discrete nuclear energy levels from alpha and gamma spectra, and the continuous beta spectrum as evidence for the neutrino",
+"level": "HL",
+"range": "E.3.17 – E.3.18",
+"minutes": 75,
+"hour": "Hours 9–10"
+},
+{
+"n": 9,
+"path": "phys-e3-lesson9",
+"id": "PHYS-E3-L9",
+"title": "The decay law N = N₀e^(−λt), the decay constant, and λ as the probability of decay per unit time",
+"level": "HL",
+"range": "E.3.19 – E.3.20",
+"minutes": 75,
+"hour": "Hours 10–11"
+},
+{
+"n": 10,
+"path": "phys-e3-lesson10",
+"id": "PHYS-E3-L10",
+"title": "Activity A = λN = λN₀e^(−λt) and the relationship T½ = ln 2/λ",
+"level": "HL",
+"range": "E.3.21 – E.3.22",
+"minutes": 75,
+"hour": "Hours 11–12"
+}
+]
+},
+{
+"code": "E.4",
+"name": "Fission",
+"theme": "E",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-e4-lesson1",
+"id": "PHYS-E4-L1",
+"title": "Spontaneous and neutron-induced fission and the energy released",
+"level": "SL",
+"range": "E.4.1",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-e4-lesson2",
+"id": "PHYS-E4-L2",
+"title": "Chain reactions: critical mass, controlled and uncontrolled chain reactions",
+"level": "SL",
+"range": "E.4.2",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-e4-lesson3",
+"id": "PHYS-E4-L3",
+"title": "Nuclear power stations: moderator, control rods, heat exchanger and shielding; fission products and waste management",
+"level": "SL",
+"range": "E.4.3 – E.4.4",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "E.5",
+"name": "Fusion and stars",
+"theme": "E",
+"hl_only": false,
+"sl_hours": 6.0,
+"ahl_hours": 0.0,
+"hl_hours": 6.0,
+"understandings": {
+"SL": 7,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "phys-e5-lesson1",
+"id": "PHYS-E5-L1",
+"title": "Stellar equilibrium between radiation pressure and gravity, and fusion as the energy source of stars",
+"level": "SL",
+"range": "E.5.1 – E.5.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "phys-e5-lesson2",
+"id": "PHYS-E5-L2",
+"title": "Conditions for fusion (high temperature and density), and the effect of stellar mass on evolution",
+"level": "SL",
+"range": "E.5.3 – E.5.4",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "phys-e5-lesson3",
+"id": "PHYS-E5-L3",
+"title": "The Hertzsprung–Russell diagram: main sequence, red giants, supergiants and white dwarfs",
+"level": "SL",
+"range": "E.5.5",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "phys-e5-lesson4",
+"id": "PHYS-E5-L4",
+"title": "Stellar parallax: measuring distance d (pc) = 1/p (arcsec)",
+"level": "SL",
+"range": "E.5.6",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "phys-e5-lesson5",
+"id": "PHYS-E5-L5",
+"title": "Determining stellar radii from luminosity and temperature",
+"level": "SL",
+"range": "E.5.7",
+"minutes": 70,
+"hour": "Hours 5–6"
+}
+]
+}
+]
+}

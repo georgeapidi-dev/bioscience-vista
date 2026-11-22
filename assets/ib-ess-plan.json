@@ -1,0 +1,2105 @@
+{
+"subject": "IB Environmental Systems & Societies",
+"name": "IB ESS",
+"key": "ess",
+"url": "/ib-ess-plan/",
+"classes": {
+"SL": "ess-sl",
+"HL": "ess-hl"
+},
+"class_names": {
+"SL": "IB ESS SL",
+"HL": "IB ESS HL"
+},
+"theme_prefix": "Topic ",
+"about": "IB Environmental Systems & Societies teaching-hour plan. Hours from the IB guide; lesson durations share each topic's hours. Built by lessongen/ib_plan.py.",
+"source": "IB ESS guide, first assessment 2026 (topic hours from the guide; subtopic hours shared by number of understandings, except topic 1 where the guide gives them).",
+"themes": {
+"1": "Foundation",
+"2": "Ecology",
+"3": "Biodiversity and conservation",
+"4": "Water",
+"5": "Land",
+"6": "Atmosphere and climate change",
+"7": "Natural resources",
+"8": "Human populations and urban systems",
+"HL": "HL lenses"
+},
+"totals": {
+"SL": 100,
+"HL": 190
+},
+"differences": [],
+"topics": [
+{
+"code": "1.1",
+"name": "Perspectives",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 0.0,
+"hl_hours": 3.0,
+"understandings": {
+"SL": 10,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess11-lesson1",
+"id": "ESS-11-L1",
+"title": "Perspectives, the influences that shape them, and values in environmental communication",
+"level": "SL",
+"range": "1.1.1 – 1.1.4",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "ess11-lesson2",
+"id": "ESS-11-L2",
+"title": "Values surveys, worldviews and environmental value systems: technocentric, anthropocentric and ecocentric",
+"level": "SL",
+"range": "1.1.5 – 1.1.8",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "ess11-lesson3",
+"id": "ESS-11-L3",
+"title": "How environmental perspectives change over time, and the history of the environmental movement",
+"level": "SL",
+"range": "1.1.9 – 1.1.10",
+"minutes": 60,
+"hour": "Hour 3"
+}
+]
+},
+{
+"code": "1.2",
+"name": "Systems",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 5.0,
+"ahl_hours": 0.0,
+"hl_hours": 5.0,
+"understandings": {
+"SL": 18,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess12-lesson1",
+"id": "ESS-12-L1",
+"title": "Systems, the systems approach, storages and flows, and transfers versus transformations",
+"level": "SL",
+"range": "1.2.1 – 1.2.4",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "ess12-lesson2",
+"id": "ESS-12-L2",
+"title": "Open and closed systems, the Earth as a system and the Gaia hypothesis, and systems at different scales",
+"level": "SL",
+"range": "1.2.5 – 1.2.7",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "ess12-lesson3",
+"id": "ESS-12-L3",
+"title": "Negative feedback and Daisyworld, stable equilibrium, and positive feedback",
+"level": "SL",
+"range": "1.2.8 – 1.2.10",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "ess12-lesson4",
+"id": "ESS-12-L4",
+"title": "Tipping points, new stable states such as eutrophication, and the uses and limits of models",
+"level": "SL",
+"range": "1.2.11 – 1.2.14",
+"minutes": 60,
+"hour": "Hour 4"
+},
+{
+"n": 5,
+"path": "ess12-lesson5",
+"id": "ESS-12-L5",
+"title": "Emergent properties, resilience, and how diversity, storage size and human activity affect resilience",
+"level": "SL",
+"range": "1.2.15 – 1.2.18",
+"minutes": 60,
+"hour": "Hour 5"
+}
+]
+},
+{
+"code": "1.3",
+"name": "Sustainability",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 8.0,
+"ahl_hours": 0.0,
+"hl_hours": 8.0,
+"understandings": {
+"SL": 21,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess13-lesson1",
+"id": "ESS-13-L1",
+"title": "Sustainability, its three pillars, strong and weak models, and environmental and social sustainability",
+"level": "SL",
+"range": "1.3.1 – 1.3.4",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess13-lesson2",
+"id": "ESS-13-L2",
+"title": "Economic sustainability, sustainable development, collapse of the Newfoundland cod fishery, and GDP versus green GDP",
+"level": "SL",
+"range": "1.3.5 – 1.3.8",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess13-lesson3",
+"id": "ESS-13-L3",
+"title": "Environmental justice, inequality and access, scales of sustainability, and sustainability indicators",
+"level": "SL",
+"range": "1.3.9 – 1.3.12",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess13-lesson4",
+"id": "ESS-13-L4",
+"title": "Ecological footprints, carbon and water footprints, and biocapacity",
+"level": "SL",
+"range": "1.3.13 – 1.3.15",
+"minutes": 80,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "ess13-lesson5",
+"id": "ESS-13-L5",
+"title": "Citizen science, the uses and limits of sustainability models, and the UN Sustainable Development Goals",
+"level": "SL",
+"range": "1.3.16 – 1.3.18",
+"minutes": 80,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "ess13-lesson6",
+"id": "ESS-13-L6",
+"title": "Planetary boundaries, doughnut economics and the circular economy",
+"level": "SL",
+"range": "1.3.19 – 1.3.21",
+"minutes": 80,
+"hour": "Hours 7–8"
+}
+]
+},
+{
+"code": "2.1",
+"name": "Individuals, populations, communities, and ecosystems",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 8.0,
+"ahl_hours": 2.0,
+"hl_hours": 10.0,
+"understandings": {
+"SL": 25,
+"HL": 5
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess21-lesson1",
+"id": "ESS-21-L1",
+"title": "Levels of organisation in the biosphere, species, classification and identifying organisms",
+"level": "SL",
+"range": "2.1.1 – 2.1.4",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess21-lesson2",
+"id": "ESS-21-L2",
+"title": "Populations, distribution, abiotic factors and limits of tolerance, and the niche",
+"level": "SL",
+"range": "2.1.5 – 2.1.8",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess21-lesson3",
+"id": "ESS-21-L3",
+"title": "Interactions between populations, carrying capacity, and density-dependent regulation by negative feedback",
+"level": "SL",
+"range": "2.1.9 – 2.1.11",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess21-lesson4",
+"id": "ESS-21-L4",
+"title": "J-shaped and S-shaped population curves, removing limiting factors, and human carrying capacity",
+"level": "SL",
+"range": "2.1.12 – 2.1.14",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "ess21-lesson5",
+"id": "ESS-21-L5",
+"title": "Sampling strategies, random quadrats for non-mobile organisms, and mark–release–recapture with the Lincoln index",
+"level": "SL",
+"range": "2.1.15 – 2.1.17",
+"minutes": 70,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "ess21-lesson6",
+"id": "ESS-21-L6",
+"title": "Communities, habitats, ecosystems as open systems, and sustainability as a natural property of ecosystems",
+"level": "SL",
+"range": "2.1.18 – 2.1.21",
+"minutes": 65,
+"hour": "Hours 6–7"
+},
+{
+"n": 7,
+"path": "ess21-lesson7",
+"id": "ESS-21-L7",
+"title": "Ecosystem tipping points, keystone species, and the crossed biosphere integrity boundary",
+"level": "SL",
+"range": "2.1.22 – 2.1.25",
+"minutes": 65,
+"hour": "Hours 7–8"
+},
+{
+"n": 8,
+"path": "ess21-lesson8",
+"id": "ESS-21-L8",
+"title": "Clades, cladograms and how traditional taxonomic ranks relate to evolutionary divergence",
+"level": "HL",
+"range": "2.1.26 – 2.1.27",
+"minutes": 60,
+"hour": "Hour 9"
+},
+{
+"n": 9,
+"path": "ess21-lesson9",
+"id": "ESS-21-L9",
+"title": "Fundamental and realized niches, r- and K-strategists, and using classification and niches to assess human impacts",
+"level": "HL",
+"range": "2.1.28 – 2.1.30",
+"minutes": 60,
+"hour": "Hour 10"
+}
+]
+},
+{
+"code": "2.2",
+"name": "Energy and biomass in ecosystems",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 6.0,
+"ahl_hours": 3.0,
+"hl_hours": 9.0,
+"understandings": {
+"SL": 20,
+"HL": 9
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess22-lesson1",
+"id": "ESS-22-L1",
+"title": "Energy and matter in ecosystems: conservation of energy, and photosynthesis as the entry point for energy",
+"level": "SL",
+"range": "2.2.1 – 2.2.4",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess22-lesson2",
+"id": "ESS-22-L2",
+"title": "Producers, cellular respiration, heat loss and the inefficiency of energy transformations",
+"level": "SL",
+"range": "2.2.5 – 2.2.8",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess22-lesson3",
+"id": "ESS-22-L3",
+"title": "Consumers, food chains and trophic levels, and the loss of energy and matter at each step",
+"level": "SL",
+"range": "2.2.9 – 2.2.12",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess22-lesson4",
+"id": "ESS-22-L4",
+"title": "Gross and net productivity, the ten per cent rule, food webs and measuring biomass",
+"level": "SL",
+"range": "2.2.13 – 2.2.16",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "ess22-lesson5",
+"id": "ESS-22-L5",
+"title": "Ecological pyramids, bioaccumulation and biomagnification, microplastics, and human disruption of energy and matter flows",
+"level": "SL",
+"range": "2.2.17 – 2.2.20",
+"minutes": 70,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "ess22-lesson6",
+"id": "ESS-22-L6",
+"title": "Autotrophs and heterotrophs, photoautotrophs and chemoautotrophs, and primary productivity",
+"level": "HL",
+"range": "2.2.21 – 2.2.23",
+"minutes": 60,
+"hour": "Hour 7"
+},
+{
+"n": 7,
+"path": "ess22-lesson7",
+"id": "ESS-22-L7",
+"title": "Secondary productivity, net primary productivity as the base of food chains, and maximum sustainable yield",
+"level": "HL",
+"range": "2.2.24 – 2.2.26",
+"minutes": 60,
+"hour": "Hour 8"
+},
+{
+"n": 8,
+"path": "ess22-lesson8",
+"id": "ESS-22-L8",
+"title": "Higher sustainable yields at lower trophic levels, ecological efficiency, and entropy in ecosystems",
+"level": "HL",
+"range": "2.2.27 – 2.2.29",
+"minutes": 60,
+"hour": "Hour 9"
+}
+]
+},
+{
+"code": "2.3",
+"name": "Biogeochemical cycles",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 4.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 11,
+"HL": 14
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess23-lesson1",
+"id": "ESS-23-L1",
+"title": "Biogeochemical cycles, stores, sinks and sources, and the stores and flows of the carbon cycle",
+"level": "SL",
+"range": "2.3.1 – 2.3.4",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "ess23-lesson2",
+"id": "ESS-23-L2",
+"title": "Carbon sequestration, ecosystems as stores, sinks or sources, fossil fuels, and agricultural systems in the carbon cycle",
+"level": "SL",
+"range": "2.3.5 – 2.3.8",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "ess23-lesson3",
+"id": "ESS-23-L3",
+"title": "Ocean uptake of CO₂, ocean acidification and its effects, and measures to reduce human impacts on the carbon cycle",
+"level": "SL",
+"range": "2.3.9 – 2.3.11",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "ess23-lesson4",
+"id": "ESS-23-L4",
+"title": "Carbon in the lithosphere: limestone formed by corals and molluscs, and the formation of coal, oil and gas",
+"level": "HL",
+"range": "2.3.12 – 2.3.14",
+"minutes": 60,
+"hour": "Hour 4"
+},
+{
+"n": 5,
+"path": "ess23-lesson5",
+"id": "ESS-23-L5",
+"title": "Methanogenic bacteria, the atmospheric lifetime of methane, and the stores of the nitrogen cycle",
+"level": "HL",
+"range": "2.3.15 – 2.3.17",
+"minutes": 60,
+"hour": "Hour 5"
+},
+{
+"n": 6,
+"path": "ess23-lesson6",
+"id": "ESS-23-L6",
+"title": "Bacteria in the nitrogen cycle: fixation, nitrification, denitrification in anaerobic soils, mutualism with legumes, and nitrogen flows",
+"level": "HL",
+"range": "2.3.18 – 2.3.21",
+"minutes": 60,
+"hour": "Hour 6"
+},
+{
+"n": 7,
+"path": "ess23-lesson7",
+"id": "ESS-23-L7",
+"title": "Human changes to the nitrogen cycle, the Haber process, the crossed nitrogen boundary, and global cooperation on nitrogen",
+"level": "HL",
+"range": "2.3.22 – 2.3.25",
+"minutes": 60,
+"hour": "Hour 7"
+}
+]
+},
+{
+"code": "2.4",
+"name": "Climate and biomes",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 2.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 7,
+"HL": 6
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess24-lesson1",
+"id": "ESS-24-L1",
+"title": "Climate and weather, biomes, the abiotic factors that set biome distribution, and the characteristics of biome groups",
+"level": "SL",
+"range": "2.4.1 – 2.4.4",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "ess24-lesson2",
+"id": "ESS-24-L2",
+"title": "The tricellular model of atmospheric circulation, ocean heat transport, and biome shifts with global warming",
+"level": "SL",
+"range": "2.4.5 – 2.4.7",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "ess24-lesson3",
+"id": "ESS-24-L3",
+"title": "Three general climate types and their biomes, why predicted biomes may not develop, and the El Niño–Southern Oscillation",
+"level": "HL",
+"range": "2.4.8 – 2.4.10",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "ess24-lesson4",
+"id": "ESS-24-L4",
+"title": "Effects of El Niño and La Niña on marine productivity, tropical cyclones, and warming oceans and cyclone intensity",
+"level": "HL",
+"range": "2.4.11 – 2.4.13",
+"minutes": 60,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "2.5",
+"name": "Zonation, succession and change in ecosystems",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 2.0,
+"hl_hours": 5.0,
+"understandings": {
+"SL": 8,
+"HL": 5
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess25-lesson1",
+"id": "ESS-25-L1",
+"title": "Zonation along environmental gradients, transects, succession, and seral stages leading to a climax community",
+"level": "SL",
+"range": "2.5.1 – 2.5.4",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess25-lesson2",
+"id": "ESS-25-L2",
+"title": "Primary and secondary succession, changes in energy, productivity, diversity and soil during succession, and resilience to disturbance",
+"level": "SL",
+"range": "2.5.5 – 2.5.8",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess25-lesson3",
+"id": "ESS-25-L3",
+"title": "Factors shaping succession: climate, bedrock, fire, weather and consumers, and net productivity through succession",
+"level": "HL",
+"range": "2.5.9 – 2.5.10",
+"minutes": 60,
+"hour": "Hour 4"
+},
+{
+"n": 4,
+"path": "ess25-lesson4",
+"id": "ESS-25-L4",
+"title": "r- and K-strategists in pioneer and climax communities, debates about the climax concept, and plagioclimax communities",
+"level": "HL",
+"range": "2.5.11 – 2.5.13",
+"minutes": 60,
+"hour": "Hour 5"
+}
+]
+},
+{
+"code": "3.1",
+"name": "Biodiversity and evolution",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 5.0,
+"ahl_hours": 6.0,
+"hl_hours": 11.0,
+"understandings": {
+"SL": 9,
+"HL": 10
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess31-lesson1",
+"id": "ESS-31-L1",
+"title": "Biodiversity at habitat, species and genetic levels, and how each level supports ecosystem resilience",
+"level": "SL",
+"range": "3.1.1 – 3.1.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess31-lesson2",
+"id": "ESS-31-L2",
+"title": "Biodiversity arising through evolution, and natural selection: its conditions and long-term change",
+"level": "SL",
+"range": "3.1.3 – 3.1.5",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess31-lesson3",
+"id": "ESS-31-L3",
+"title": "Speciation through isolation and divergence, and species diversity as richness plus evenness",
+"level": "SL",
+"range": "3.1.6 – 3.1.7",
+"minutes": 75,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess31-lesson4",
+"id": "ESS-31-L4",
+"title": "Calculating Simpson's reciprocal index to compare species diversity, and using biodiversity knowledge in conservation",
+"level": "SL",
+"range": "3.1.8 – 3.1.9",
+"minutes": 75,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "ess31-lesson5",
+"id": "ESS-31-L5",
+"title": "How mutation and sexual reproduction increase genetic diversity, and the mechanisms of reproductive isolation",
+"level": "HL",
+"range": "3.1.10 – 3.1.11",
+"minutes": 90,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "ess31-lesson6",
+"id": "ESS-31-L6",
+"title": "The uneven distribution of biodiversity and tropical hotspots, human-altered selection pressures, and artificial selection",
+"level": "HL",
+"range": "3.1.12 – 3.1.14",
+"minutes": 90,
+"hour": "Hours 7–8"
+},
+{
+"n": 7,
+"path": "ess31-lesson7",
+"id": "ESS-31-L7",
+"title": "The age of Earth and the fossil record, the geologic time scale, and mass extinctions followed by rapid speciation",
+"level": "HL",
+"range": "3.1.15 – 3.1.17",
+"minutes": 90,
+"hour": "Hours 9–10"
+},
+{
+"n": 8,
+"path": "ess31-lesson8",
+"id": "ESS-31-L8",
+"title": "The Anthropocene as a proposed epoch, and the marks human activity will leave in the geological record",
+"level": "HL",
+"range": "3.1.18 – 3.1.19",
+"minutes": 90,
+"hour": "Hours 10–11"
+}
+]
+},
+{
+"code": "3.2",
+"name": "Human impact on biodiversity",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 4.0,
+"hl_hours": 8.0,
+"understandings": {
+"SL": 7,
+"HL": 6
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess32-lesson1",
+"id": "ESS-32-L1",
+"title": "Direct and indirect human threats to biodiversity, multiple interacting impacts, and invasive alien species",
+"level": "SL",
+"range": "3.2.1 – 3.2.3",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess32-lesson2",
+"id": "ESS-32-L2",
+"title": "The IUCN Red List and its criteria, and how conservation status guides priorities",
+"level": "SL",
+"range": "3.2.4 – 3.2.5",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess32-lesson3",
+"id": "ESS-32-L3",
+"title": "Case studies of an extinct, a critically endangered and a recovered species, and the tragedy of the commons",
+"level": "SL",
+"range": "3.2.6 – 3.2.7",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess32-lesson4",
+"id": "ESS-32-L4",
+"title": "Threats to tropical biodiversity hotspots, and the identification of Key Biodiversity Areas",
+"level": "HL",
+"range": "3.2.8 – 3.2.9",
+"minutes": 80,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "ess32-lesson5",
+"id": "ESS-32-L5",
+"title": "Conflicts between exploitation, development and conservation in Key Biodiversity Areas, and Indigenous land management",
+"level": "HL",
+"range": "3.2.10 – 3.2.11",
+"minutes": 80,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "ess32-lesson6",
+"id": "ESS-32-L6",
+"title": "Conservation and environmental justice, and extinction rates beyond the planetary threshold",
+"level": "HL",
+"range": "3.2.12 – 3.2.13",
+"minutes": 80,
+"hour": "Hours 7–8"
+}
+]
+},
+{
+"code": "3.3",
+"name": "Conservation and regeneration",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 3.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 9,
+"HL": 5
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess33-lesson1",
+"id": "ESS-33-L1",
+"title": "Arguments for preserving biodiversity, in situ and ex situ conservation, and mixed approaches using flagship and keystone species",
+"level": "SL",
+"range": "3.3.1 – 3.3.3",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess33-lesson2",
+"id": "ESS-33-L2",
+"title": "The Convention on Biological Diversity, protecting or actively managing habitats, and designing effective reserves",
+"level": "SL",
+"range": "3.3.4 – 3.3.6",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess33-lesson3",
+"id": "ESS-33-L3",
+"title": "Rewilding through keystone species and connectivity, reversing biodiversity decline within planetary limits, and values in conservation choices",
+"level": "SL",
+"range": "3.3.7 – 3.3.9",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess33-lesson4",
+"id": "ESS-33-L4",
+"title": "Factors in the success of conservation organisations, and rewilding as positive feedback that restores stable ecosystems",
+"level": "HL",
+"range": "3.3.10 – 3.3.11",
+"minutes": 90,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "ess33-lesson5",
+"id": "ESS-33-L5",
+"title": "Benefits and limits of rewilding, assessing conservation success at three levels, and ecotourism",
+"level": "HL",
+"range": "3.3.12 – 3.3.14",
+"minutes": 90,
+"hour": "Hours 6–7"
+}
+]
+},
+{
+"code": "4.1",
+"name": "Water systems",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 3.0,
+"hl_hours": 5.0,
+"understandings": {
+"SL": 6,
+"HL": 8
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess41-lesson1",
+"id": "ESS-41-L1",
+"title": "Solar radiation and gravity as drivers of the water cycle, its stores and flows, and the relative sizes of water stores",
+"level": "SL",
+"range": "4.1.1 – 4.1.3",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "ess41-lesson2",
+"id": "ESS-41-L2",
+"title": "Hydrological flows, human alteration of the water cycle, and flow diagrams to show steady states and sustainable harvest rates",
+"level": "SL",
+"range": "4.1.4 – 4.1.6",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "ess41-lesson3",
+"id": "ESS-41-L3",
+"title": "Unique properties of water, oceans as a carbon sink, acidification and long-term sediment storage, and the density maximum at 4 °C",
+"level": "HL",
+"range": "4.1.7 – 4.1.10",
+"minutes": 90,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess41-lesson4",
+"id": "ESS-41-L4",
+"title": "Stratification and the thermocline, intensifying stratification, upwelling, and thermohaline circulation",
+"level": "HL",
+"range": "4.1.11 – 4.1.14",
+"minutes": 90,
+"hour": "Hours 4–5"
+}
+]
+},
+{
+"code": "4.2",
+"name": "Water access, use and security",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 4.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 8,
+"HL": 11
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess42-lesson1",
+"id": "ESS-42-L1",
+"title": "Water security, factors affecting access, growing demand, and ways to increase supply",
+"level": "SL",
+"range": "4.2.1 – 4.2.4",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess42-lesson2",
+"id": "ESS-42-L2",
+"title": "Physical and economic water scarcity, domestic water conservation, water-efficient food production, and mitigation strategies in named countries",
+"level": "SL",
+"range": "4.2.5 – 4.2.8",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess42-lesson3",
+"id": "ESS-42-L3",
+"title": "The freshwater planetary boundary, water governance, water footprints, and citizen science in water management",
+"level": "HL",
+"range": "4.2.9 – 4.2.12",
+"minutes": 80,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "ess42-lesson4",
+"id": "ESS-42-L4",
+"title": "Water stress beyond quantity, the 1 700 m³ threshold, and how causes of water stress depend on socio-economic context",
+"level": "HL",
+"range": "4.2.13 – 4.2.15",
+"minutes": 80,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "ess42-lesson5",
+"id": "ESS-42-L5",
+"title": "Transboundary water disputes, industrial water strategies and their environmental costs, and unequal access to water and sanitation",
+"level": "HL",
+"range": "4.2.16 – 4.2.19",
+"minutes": 80,
+"hour": "Hours 6–7"
+}
+]
+},
+{
+"code": "4.3",
+"name": "Aquatic food production systems",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 2.0,
+"hl_hours": 6.0,
+"understandings": {
+"SL": 10,
+"HL": 6
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess43-lesson1",
+"id": "ESS-43-L1",
+"title": "Producers in aquatic food webs, human use of aquatic organisms, rising demand, and destructive harvesting methods",
+"level": "SL",
+"range": "4.3.1 – 4.3.4",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess43-lesson2",
+"id": "ESS-43-L2",
+"title": "Fishery collapse such as Grand Banks cod, maximum sustainable yield and quotas, and threats from climate change and acidification",
+"level": "SL",
+"range": "4.3.5 – 4.3.7",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess43-lesson3",
+"id": "ESS-43-L3",
+"title": "Policy and consumer choices, marine protected areas, and aquaculture and its environmental impacts",
+"level": "SL",
+"range": "4.3.8 – 4.3.10",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess43-lesson4",
+"id": "ESS-43-L4",
+"title": "Productivity, stratification and nutrient loading, stock assessment, and the risks of harvesting at MSY",
+"level": "HL",
+"range": "4.3.11 – 4.3.13",
+"minutes": 60,
+"hour": "Hour 5"
+},
+{
+"n": 5,
+"path": "ess43-lesson5",
+"id": "ESS-43-L5",
+"title": "Recovery of overexploited species through cooperation, coastal state regulation and the high seas, and the ethics of harvesting marine mammals",
+"level": "HL",
+"range": "4.3.14 – 4.3.16",
+"minutes": 60,
+"hour": "Hour 6"
+}
+]
+},
+{
+"code": "4.4",
+"name": "Water pollution",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 4.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 8,
+"HL": 9
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess44-lesson1",
+"id": "ESS-44-L1",
+"title": "Sources and impacts of water pollution, marine plastics, water quality indicators, and biochemical oxygen demand",
+"level": "SL",
+"range": "4.4.1 – 4.4.4",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess44-lesson2",
+"id": "ESS-44-L2",
+"title": "Eutrophication: nutrient inputs, the sequence to oxygen depletion, impacts on ecosystem services, and management at three levels",
+"level": "SL",
+"range": "4.4.5 – 4.4.8",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess44-lesson3",
+"id": "ESS-44-L3",
+"title": "Types of water pollutants, toxic algal blooms, and the spread of hypoxic and anoxic waters",
+"level": "HL",
+"range": "4.4.9 – 4.4.11",
+"minutes": 80,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "ess44-lesson4",
+"id": "ESS-44-L4",
+"title": "Sewage treatment stages and equitable access, indicator species, and biotic indices such as the Trent index",
+"level": "HL",
+"range": "4.4.12 – 4.4.14",
+"minutes": 80,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "ess44-lesson5",
+"id": "ESS-44-L5",
+"title": "Water quality indices, WHO drinking-water guidelines and national standards, and individual and citizen action against pollution",
+"level": "HL",
+"range": "4.4.15 – 4.4.17",
+"minutes": 80,
+"hour": "Hours 6–7"
+}
+]
+},
+{
+"code": "5.1",
+"name": "Soil",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 3.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 14,
+"HL": 7
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess51-lesson1",
+"id": "ESS-51-L1",
+"title": "Soil as a dynamic system, its components, the development of soil horizons, and inputs to soil",
+"level": "SL",
+"range": "5.1.1 – 5.1.4",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "ess51-lesson2",
+"id": "ESS-51-L2",
+"title": "Soil outputs, transfers and transformations, and systems flow diagrams for soil",
+"level": "SL",
+"range": "5.1.5 – 5.1.8",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "ess51-lesson3",
+"id": "ESS-51-L3",
+"title": "How soil supports plants, soil as habitat for biodiversity, and decomposers recycling elements",
+"level": "SL",
+"range": "5.1.9 – 5.1.11",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "ess51-lesson4",
+"id": "ESS-51-L4",
+"title": "Soil texture, how texture affects primary productivity, and soils as carbon sinks, stores or sources",
+"level": "SL",
+"range": "5.1.12 – 5.1.14",
+"minutes": 60,
+"hour": "Hour 4"
+},
+{
+"n": 5,
+"path": "ess51-lesson5",
+"id": "ESS-51-L5",
+"title": "Classifying soils by profile, O A B C horizons and their loss under intensive farming, topsoil vulnerability, and soil-forming factors",
+"level": "HL",
+"range": "5.1.15 – 5.1.18",
+"minutes": 90,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "ess51-lesson6",
+"id": "ESS-51-L6",
+"title": "Particle size and cation-exchange capacity, measuring soil properties, and soil carbon release and tipping points",
+"level": "HL",
+"range": "5.1.19 – 5.1.21",
+"minutes": 90,
+"hour": "Hours 6–7"
+}
+]
+},
+{
+"code": "5.2",
+"name": "Agriculture and food",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 4.0,
+"hl_hours": 8.0,
+"understandings": {
+"SL": 12,
+"HL": 8
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess52-lesson1",
+"id": "ESS-52-L1",
+"title": "Finite land and a growing population, land use and marginalised groups, food production, distribution and waste, and how soils and climate shape farming",
+"level": "SL",
+"range": "5.2.1 – 5.2.4",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess52-lesson2",
+"id": "ESS-52-L2",
+"title": "Types of farming systems, traditional pastoralism and shifting cultivation, the Green Revolution, and synthetic fertilizers and alternatives",
+"level": "SL",
+"range": "5.2.5 – 5.2.8",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess52-lesson3",
+"id": "ESS-52-L3",
+"title": "Soil conservation, plant-based diets and trophic levels, global strategies to cut waste, emissions and land expansion, and food security",
+"level": "SL",
+"range": "5.2.9 – 5.2.12",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess52-lesson4",
+"id": "ESS-52-L4",
+"title": "Contrasting agricultural choices shaped by soils and climate, alternative farming approaches, and regenerative agriculture and permaculture",
+"level": "HL",
+"range": "5.2.13 – 5.2.15",
+"minutes": 80,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "ess52-lesson5",
+"id": "ESS-52-L5",
+"title": "High-tech greenhouses and vertical farms, diet sustainability and food miles, and traditional wild harvesting",
+"level": "HL",
+"range": "5.2.16 – 5.2.18",
+"minutes": 80,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "ess52-lesson6",
+"id": "ESS-52-L6",
+"title": "Testing claims about low-productivity sustainable systems against global food needs, and why malnutrition and famine are about distribution and quality",
+"level": "HL",
+"range": "5.2.19 – 5.2.20",
+"minutes": 80,
+"hour": "Hours 7–8"
+}
+]
+},
+{
+"code": "6.1",
+"name": "Introduction to the atmosphere",
+"theme": "6",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 3.0,
+"hl_hours": 5.0,
+"understandings": {
+"SL": 4,
+"HL": 5
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess61-lesson1",
+"id": "ESS-61-L1",
+"title": "The atmosphere as the boundary of the biosphere and its life-supporting composition, and differential heating driving tricellular circulation",
+"level": "SL",
+"range": "6.1.1 – 6.1.2",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "ess61-lesson2",
+"id": "ESS-61-L2",
+"title": "Greenhouse gases and aerosols absorbing and re-emitting infrared radiation, and the natural and enhanced greenhouse effects",
+"level": "SL",
+"range": "6.1.3 – 6.1.4",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "ess61-lesson3",
+"id": "ESS-61-L3",
+"title": "The atmosphere as a dynamic system, thinning with altitude and the lapse rate, and Milankovitch cycles",
+"level": "HL",
+"range": "6.1.5 – 6.1.7",
+"minutes": 90,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess61-lesson4",
+"id": "ESS-61-L4",
+"title": "Global warming moving Earth beyond the Quaternary glacial–interglacial pattern, and the co-evolution of life and the atmosphere",
+"level": "HL",
+"range": "6.1.8 – 6.1.9",
+"minutes": 90,
+"hour": "Hours 4–5"
+}
+]
+},
+{
+"code": "6.2",
+"name": "Climate change—causes and impacts",
+"theme": "6",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 3.0,
+"hl_hours": 6.0,
+"understandings": {
+"SL": 9,
+"HL": 6
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess62-lesson1",
+"id": "ESS-62-L1",
+"title": "Climate defined by temperature and precipitation, the rise in anthropogenic CO₂ since 1950, and proxy evidence linking CO₂ and temperature",
+"level": "SL",
+"range": "6.2.1 – 6.2.3",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "ess62-lesson2",
+"id": "ESS-62-L2",
+"title": "Human emissions enhancing the greenhouse effect, ecosystem impacts and biome shifts, and societal impacts that vary with scale and socio-economic conditions",
+"level": "SL",
+"range": "6.2.4 – 6.2.6",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "ess62-lesson3",
+"id": "ESS-62-L3",
+"title": "Feedback diagrams for climate change and the energy balance, the crossed climate planetary boundary, and differing perspectives on climate change",
+"level": "SL",
+"range": "6.2.7 – 6.2.9",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "ess62-lesson4",
+"id": "ESS-62-L4",
+"title": "Direct and proxy climate data, climate models and hindcasting, and scenarios predicting impacts such as sea-level rise and precipitation change",
+"level": "HL",
+"range": "6.2.10 – 6.2.12",
+"minutes": 90,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "ess62-lesson5",
+"id": "ESS-62-L5",
+"title": "Climate tipping points, tipping cascades, and climate justice: differing responsibility and vulnerability",
+"level": "HL",
+"range": "6.2.13 – 6.2.15",
+"minutes": 90,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "6.3",
+"name": "Climate change—mitigation and adaptation",
+"theme": "6",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 5.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 5,
+"HL": 9
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess63-lesson1",
+"id": "ESS-63-L1",
+"title": "The need for global action, decarbonisation and carbon neutrality, and mitigation strategies",
+"level": "SL",
+"range": "6.3.1 – 6.3.3",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "ess63-lesson2",
+"id": "ESS-63-L2",
+"title": "Adaptation through structural and non-structural strategies, and National Adaptation Programmes of Action",
+"level": "SL",
+"range": "6.3.4 – 6.3.5",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "ess63-lesson3",
+"id": "ESS-63-L3",
+"title": "Government and non-government responses, the UNFCCC, IPCC and COP summits, and IPCC emission scenarios",
+"level": "HL",
+"range": "6.3.6 – 6.3.8",
+"minutes": 75,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess63-lesson4",
+"id": "ESS-63-L4",
+"title": "Technology and smart cities in mitigation, and barriers to climate action",
+"level": "HL",
+"range": "6.3.9 – 6.3.10",
+"minutes": 75,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "ess63-lesson5",
+"id": "ESS-63-L5",
+"title": "Geoengineering: treating symptoms not causes and its drawbacks, and how stakeholders shape individual climate perspectives",
+"level": "HL",
+"range": "6.3.11 – 6.3.12",
+"minutes": 75,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "ess63-lesson6",
+"id": "ESS-63-L6",
+"title": "Differing views on climate action by age, development and economic interests, and the tragedy of the commons requiring international cooperation",
+"level": "HL",
+"range": "6.3.13 – 6.3.14",
+"minutes": 75,
+"hour": "Hours 6–7"
+}
+]
+},
+{
+"code": "6.4",
+"name": "Stratospheric ozone",
+"theme": "6",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 2.0,
+"hl_hours": 5.0,
+"understandings": {
+"SL": 9,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess64-lesson1",
+"id": "ESS-64-L1",
+"title": "The solar spectrum and UV radiation, why shorter UV wavelengths are more dangerous, and how stratospheric ozone absorbs UV",
+"level": "SL",
+"range": "6.4.1 – 6.4.3",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "ess64-lesson2",
+"id": "ESS-64-L2",
+"title": "Damage by UV to phytoplankton, DNA, skin and eyes, the natural balance of ozone formation and destruction, and ozone-depleting substances",
+"level": "SL",
+"range": "6.4.4 – 6.4.6",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "ess64-lesson3",
+"id": "ESS-64-L3",
+"title": "Effects of increased UVB, the Montreal Protocol as a success of international cooperation, and keeping within the ozone planetary boundary",
+"level": "SL",
+"range": "6.4.7 – 6.4.9",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "ess64-lesson4",
+"id": "ESS-64-L4",
+"title": "How ODSs release chlorine and fluorine that break down ozone, and polar spring ozone depletion from unique stratospheric conditions",
+"level": "HL",
+"range": "6.4.10 – 6.4.11",
+"minutes": 60,
+"hour": "Hour 4"
+},
+{
+"n": 5,
+"path": "ess64-lesson5",
+"id": "ESS-64-L5",
+"title": "HFCs as ozone-safe but potent greenhouse gases and the Kigali Amendment, and air conditioning, energy use and alternatives",
+"level": "HL",
+"range": "6.4.12 – 6.4.13",
+"minutes": 60,
+"hour": "Hour 5"
+}
+]
+},
+{
+"code": "7.1",
+"name": "Natural resources—uses and management",
+"theme": "7",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 5.0,
+"hl_hours": 9.0,
+"understandings": {
+"SL": 11,
+"HL": 10
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess71-lesson1",
+"id": "ESS-71-L1",
+"title": "Natural resources, natural capital and natural income, and natural capital as a model that views nature as a resource",
+"level": "SL",
+"range": "7.1.1 – 7.1.4",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess71-lesson2",
+"id": "ESS-71-L2",
+"title": "Ecosystem services, renewable and non-renewable resources, types of value, and how the value of natural capital changes",
+"level": "SL",
+"range": "7.1.5 – 7.1.8",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess71-lesson3",
+"id": "ESS-71-L3",
+"title": "Managing natural capital within regeneration and absorption limits, resource security, and the factors behind resource choices",
+"level": "SL",
+"range": "7.1.9 – 7.1.11",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess71-lesson4",
+"id": "ESS-71-L4",
+"title": "Management and intervention strategies for natural capital, and the SDGs as a framework for sustainable resource management",
+"level": "HL",
+"range": "7.1.12 – 7.1.13",
+"minutes": 75,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "ess71-lesson5",
+"id": "ESS-71-L5",
+"title": "Environmental impact assessments, differences in EIA guidance between countries, and public participation in EIAs",
+"level": "HL",
+"range": "7.1.14 – 7.1.16",
+"minutes": 75,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "ess71-lesson6",
+"id": "ESS-71-L6",
+"title": "Renewable resources extracted or processed unsustainably, and short-term economic interests depleting resources such as fish and forests",
+"level": "HL",
+"range": "7.1.17 – 7.1.18",
+"minutes": 75,
+"hour": "Hours 7–8"
+},
+{
+"n": 7,
+"path": "ess71-lesson7",
+"id": "ESS-71-L7",
+"title": "Resource insecurity, development and conflict, improving resource security, and globalisation and national resource security",
+"level": "HL",
+"range": "7.1.19 – 7.1.21",
+"minutes": 75,
+"hour": "Hours 8–9"
+}
+]
+},
+{
+"code": "7.2",
+"name": "Energy sources—uses and management",
+"theme": "7",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 3.0,
+"hl_hours": 6.0,
+"understandings": {
+"SL": 6,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess72-lesson1",
+"id": "ESS-72-L1",
+"title": "Renewable and non-renewable energy sources, rising global energy consumption, and the sustainability and environmental costs of energy sources",
+"level": "SL",
+"range": "7.2.1 – 7.2.3",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess72-lesson2",
+"id": "ESS-72-L2",
+"title": "Factors in national energy choices, storage for intermittent renewables, and conservation and efficiency to reduce import dependence",
+"level": "SL",
+"range": "7.2.4 – 7.2.6",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess72-lesson3",
+"id": "ESS-72-L3",
+"title": "Energy security as affordable and reliable supply, and the global economy's reliance on finite fossil fuel reserves",
+"level": "HL",
+"range": "7.2.7 – 7.2.8",
+"minutes": 90,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "ess72-lesson4",
+"id": "ESS-72-L4",
+"title": "Nuclear power: low carbon with mining, thermal, accident and waste concerns, and battery minerals: lithium, cobalt and rare earths",
+"level": "HL",
+"range": "7.2.9 – 7.2.10",
+"minutes": 90,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "7.3",
+"name": "Solid waste",
+"theme": "7",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 0.0,
+"hl_hours": 3.0,
+"understandings": {
+"SL": 9,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess73-lesson1",
+"id": "ESS-73-L1",
+"title": "Classifying waste by source and type, the composition of solid domestic waste, and factors affecting waste volume and composition",
+"level": "SL",
+"range": "7.3.1 – 7.3.3",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "ess73-lesson2",
+"id": "ESS-73-L2",
+"title": "Distant impacts and waste exports, pollution as input exceeding breakdown, and why prevention beats restoration",
+"level": "SL",
+"range": "7.3.4 – 7.3.6",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "ess73-lesson3",
+"id": "ESS-73-L3",
+"title": "Disposal options and trade-offs, promoting sustainable waste management through policy and education, and circular economy principles",
+"level": "SL",
+"range": "7.3.7 – 7.3.9",
+"minutes": 60,
+"hour": "Hour 3"
+}
+]
+},
+{
+"code": "8.1",
+"name": "Human populations",
+"theme": "8",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 2.0,
+"hl_hours": 5.0,
+"understandings": {
+"SL": 8,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess81-lesson1",
+"id": "ESS-81-L1",
+"title": "Population inputs and outputs, demographic measures (fertility, life expectancy, doubling time, natural increase), and UN projections",
+"level": "SL",
+"range": "8.1.1 – 8.1.4",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess81-lesson2",
+"id": "ESS-81-L2",
+"title": "Pro-natalist and anti-natalist policies, development policies that indirectly change population, age–sex pyramids, and the demographic transition model",
+"level": "SL",
+"range": "8.1.5 – 8.1.8",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess81-lesson3",
+"id": "ESS-81-L3",
+"title": "Rapid population growth and pressure on planetary boundaries, and dependency ratio and population momentum from age–sex pyramids",
+"level": "HL",
+"range": "8.1.9 – 8.1.10",
+"minutes": 60,
+"hour": "Hour 4"
+},
+{
+"n": 4,
+"path": "ess81-lesson4",
+"id": "ESS-81-L4",
+"title": "Population patterns in two countries at different DTM stages, and environmental migration driven by climate change and degradation",
+"level": "HL",
+"range": "8.1.11 – 8.1.12",
+"minutes": 60,
+"hour": "Hour 5"
+}
+]
+},
+{
+"code": "8.2",
+"name": "Urban systems and urban planning",
+"theme": "8",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 2.0,
+"hl_hours": 6.0,
+"understandings": {
+"SL": 10,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess82-lesson1",
+"id": "ESS-82-L1",
+"title": "Urban ecosystems, urban versus rural areas, the city as an interconnected system, and urbanisation",
+"level": "SL",
+"range": "8.2.1 – 8.2.4",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "ess82-lesson2",
+"id": "ESS-82-L2",
+"title": "Rural–urban migration and push and pull factors, suburbanisation and urban sprawl, and environmental impacts of urban expansion",
+"level": "SL",
+"range": "8.2.5 – 8.2.7",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "ess82-lesson3",
+"id": "ESS-82-L3",
+"title": "Urban planning and stakeholders, sustainable urban planning, and ecological urban planning that treats cities as ecosystems",
+"level": "SL",
+"range": "8.2.8 – 8.2.10",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "ess82-lesson4",
+"id": "ESS-82-L4",
+"title": "Compact cities, mixed land use and social mix to reduce sprawl and improve equity, and circular economy and doughnut models in cities",
+"level": "HL",
+"range": "8.2.11 – 8.2.12",
+"minutes": 60,
+"hour": "Hour 5"
+},
+{
+"n": 5,
+"path": "ess82-lesson5",
+"id": "ESS-82-L5",
+"title": "Green architecture: environmentally friendly materials, design and practices",
+"level": "HL",
+"range": "8.2.13",
+"minutes": 60,
+"hour": "Hour 6"
+}
+]
+},
+{
+"code": "8.3",
+"name": "Urban air pollution",
+"theme": "8",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 2.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 7,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "ess83-lesson1",
+"id": "ESS-83-L1",
+"title": "Urban air pollutants, natural and human sources, fossil fuel combustion, and strategies to reduce urban air pollution",
+"level": "SL",
+"range": "8.3.1 – 8.3.4",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "ess83-lesson2",
+"id": "ESS-83-L2",
+"title": "Formation of acid deposition from NOₓ and SO₂, its impacts on ecosystems, buildings and health, and management strategies",
+"level": "SL",
+"range": "8.3.5 – 8.3.7",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "ess83-lesson3",
+"id": "ESS-83-L3",
+"title": "Photochemical smog formation from primary to secondary pollutants, and how sunlight, low wind and temperature inversions intensify it",
+"level": "HL",
+"range": "8.3.8 – 8.3.9",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "ess83-lesson4",
+"id": "ESS-83-L4",
+"title": "Effects of tropospheric ozone on plants, eyes, lungs and materials, and the economic, healthcare and equity costs of ozone pollution",
+"level": "HL",
+"range": "8.3.10 – 8.3.11",
+"minutes": 60,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "HL.a",
+"name": "Environmental law",
+"theme": "HL",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 5.0,
+"hl_hours": 5.0,
+"understandings": {
+"SL": 0,
+"HL": 12
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "esshla-lesson1",
+"id": "ESS-HLA-L1",
+"title": "What laws are, environmental law and its aims, and how environmental law supports justice but faces lobbying",
+"level": "HL",
+"range": "HL.a.1 – HL.a.3",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "esshla-lesson2",
+"id": "ESS-HLA-L2",
+"title": "Effectiveness of environmental law, environmental constitutionalism, and local, national and international levels of law",
+"level": "HL",
+"range": "HL.a.4 – HL.a.6",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "esshla-lesson3",
+"id": "ESS-HLA-L3",
+"title": "International law for transboundary pollution and shared resources, conventions and protocols, and institutions created by agreements",
+"level": "HL",
+"range": "HL.a.7 – HL.a.9",
+"minutes": 75,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "esshla-lesson4",
+"id": "ESS-HLA-L4",
+"title": "International courts and tribunals, legal personhood of natural entities, and combining legal and economic strategies",
+"level": "HL",
+"range": "HL.a.10 – HL.a.12",
+"minutes": 75,
+"hour": "Hours 4–5"
+}
+]
+},
+{
+"code": "HL.b",
+"name": "Environmental economics",
+"theme": "HL",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 7.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 0,
+"HL": 17
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "esshlb-lesson1",
+"id": "ESS-HLB-L1",
+"title": "Economics and environmental economics, market failure and externalities, and the polluter-pays principle",
+"level": "HL",
+"range": "HL.b.1 – HL.b.4",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "esshlb-lesson2",
+"id": "ESS-HLB-L2",
+"title": "Greenwashing, the tragedy of the commons and property rights, environmental accounting, and non-use values estimated by surveys",
+"level": "HL",
+"range": "HL.b.5 – HL.b.8",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "esshlb-lesson3",
+"id": "ESS-HLB-L3",
+"title": "Ecological economics, valuing ecosystem services and compensating resource-rich countries, and economic growth and GDP",
+"level": "HL",
+"range": "HL.b.9 – HL.b.11",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "esshlb-lesson4",
+"id": "ESS-HLB-L4",
+"title": "Growth-focused economics ignoring degradation, growth both raising pollution and funding protection, and eco-economic decoupling",
+"level": "HL",
+"range": "HL.b.12 – HL.b.14",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "esshlb-lesson5",
+"id": "ESS-HLB-L5",
+"title": "Degrowth and zero growth, the difficulties of dismantling growth-dependent systems, and circular and doughnut economics as ecological economics",
+"level": "HL",
+"range": "HL.b.15 – HL.b.17",
+"minutes": 80,
+"hour": "Hours 6–7"
+}
+]
+},
+{
+"code": "HL.c",
+"name": "Environmental ethics",
+"theme": "HL",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 5.0,
+"hl_hours": 5.0,
+"understandings": {
+"SL": 0,
+"HL": 13
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "esshlc-lesson1",
+"id": "ESS-HLC-L1",
+"title": "Ethics, environmental ethics, and how views of the human–nature relationship produce different ethical frameworks",
+"level": "HL",
+"range": "HL.c.1 – HL.c.3",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "esshlc-lesson2",
+"id": "ESS-HLC-L2",
+"title": "Instrumental and intrinsic value, how they can coexist, and moral standing",
+"level": "HL",
+"range": "HL.c.4 – HL.c.7",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "esshlc-lesson3",
+"id": "ESS-HLC-L3",
+"title": "Three traditional ethical approaches: virtue ethics, consequentialist ethics and rights-based ethics",
+"level": "HL",
+"range": "HL.c.8 – HL.c.10",
+"minutes": 75,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "esshlc-lesson4",
+"id": "ESS-HLC-L4",
+"title": "Rights-based ethics and contested rights, the appeal-to-nature fallacy, and the converging environmental and social justice movements",
+"level": "HL",
+"range": "HL.c.11 – HL.c.13",
+"minutes": 75,
+"hour": "Hours 4–5"
+}
+]
+}
+]
+}

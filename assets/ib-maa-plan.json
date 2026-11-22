@@ -1,0 +1,3282 @@
+{
+"subject": "IB Mathematics: Analysis and Approaches",
+"name": "IB Maths AA",
+"key": "maa",
+"url": "/ib-maths-aa-plan/",
+"classes": {
+"SL": "maths-aa-sl",
+"HL": "maths-aa-hl"
+},
+"class_names": {
+"SL": "IB Maths AA SL",
+"HL": "IB Maths AA HL"
+},
+"theme_prefix": "Topic ",
+"about": "IB Mathematics: Analysis and Approaches teaching-hour plan. Hours from the IB guide; lesson durations share each topic's hours. Built by lessongen/ib_plan.py.",
+"source": "IB Mathematics AA guide, first assessment 2021: topic hours from the guide; subtopic hours shared by number of content statements (paraphrased here, numbered in guide order).",
+"themes": {
+"1": "Number and algebra",
+"2": "Functions",
+"3": "Geometry and trigonometry",
+"4": "Statistics and probability",
+"5": "Calculus"
+},
+"totals": {
+"SL": 120,
+"HL": 210
+},
+"differences": [],
+"topics": [
+{
+"code": "1.1",
+"name": "Standard form",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 1.25,
+"ahl_hours": 0.0,
+"hl_hours": 1.25,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-11-lesson1",
+"id": "MAA-11-L1",
+"title": "Standard form: writing, converting and calculating with very large and very small numbers",
+"level": "SL",
+"range": "1.1.1 – 1.1.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "1.2",
+"name": "Arithmetic sequences and series",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-12-lesson1",
+"id": "MAA-12-L1",
+"title": "Arithmetic sequences, the nth term, sigma notation and arithmetic series",
+"level": "SL",
+"range": "1.2.1 – 1.2.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-12-lesson2",
+"id": "MAA-12-L2",
+"title": "Applications of arithmetic sequences: simple interest, growth in equal steps and linear models",
+"level": "SL",
+"range": "1.2.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "1.3",
+"name": "Geometric sequences and series",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-13-lesson1",
+"id": "MAA-13-L1",
+"title": "Geometric sequences, the nth term and finite geometric series",
+"level": "SL",
+"range": "1.3.1 – 1.3.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-13-lesson2",
+"id": "MAA-13-L2",
+"title": "Applications of geometric sequences: percentage growth and decay, populations and spread",
+"level": "SL",
+"range": "1.3.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "1.4",
+"name": "Financial applications",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-14-lesson1",
+"id": "MAA-14-L1",
+"title": "Compound interest with different compounding periods, and depreciation",
+"level": "SL",
+"range": "1.4.1 – 1.4.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-14-lesson2",
+"id": "MAA-14-L2",
+"title": "Financial problems with technology: solving for any variable with the TVM solver",
+"level": "SL",
+"range": "1.4.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "1.5",
+"name": "Exponents and logarithms (introduction)",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-15-lesson1",
+"id": "MAA-15-L1",
+"title": "Laws of exponents with integer exponents",
+"level": "SL",
+"range": "1.5.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-15-lesson2",
+"id": "MAA-15-L2",
+"title": "Introduction to logarithms: base 10 and base e, and evaluating logarithms with technology",
+"level": "SL",
+"range": "1.5.2 – 1.5.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "1.6",
+"name": "Simple deductive proof",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 1.5,
+"ahl_hours": 0.0,
+"hl_hours": 1.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-16-lesson1",
+"id": "MAA-16-L1",
+"title": "Simple deductive proof: numerical and algebraic, LHS to RHS and the ≡ symbol",
+"level": "SL",
+"range": "1.6.1 – 1.6.2",
+"minutes": 90,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "1.7",
+"name": "Laws of exponents and logarithms",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 3.25,
+"ahl_hours": 0.0,
+"hl_hours": 3.25,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-17-lesson1",
+"id": "MAA-17-L1",
+"title": "Laws of exponents with rational exponents",
+"level": "SL",
+"range": "1.7.1",
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-17-lesson2",
+"id": "MAA-17-L2",
+"title": "Laws of logarithms and change of base",
+"level": "SL",
+"range": "1.7.2 – 1.7.3",
+"minutes": 65,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-17-lesson3",
+"id": "MAA-17-L3",
+"title": "Solving exponential and logarithmic equations",
+"level": "SL",
+"range": "1.7.4",
+"minutes": 65,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "1.8",
+"name": "Infinite geometric series",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 1.5,
+"ahl_hours": 0.0,
+"hl_hours": 1.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-18-lesson1",
+"id": "MAA-18-L1",
+"title": "Sum of an infinite geometric series and the condition |r| < 1",
+"level": "SL",
+"range": "1.8.1 – 1.8.2",
+"minutes": 90,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "1.9",
+"name": "Binomial theorem",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 1.5,
+"ahl_hours": 0.0,
+"hl_hours": 1.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-19-lesson1",
+"id": "MAA-19-L1",
+"title": "The binomial theorem, binomial coefficients and Pascal's triangle",
+"level": "SL",
+"range": "1.9.1 – 1.9.2",
+"minutes": 90,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "1.10",
+"name": "Counting principles and extended binomial theorem",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.5,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-110-lesson1",
+"id": "MAA-110-L1",
+"title": "Counting principles: permutations and combinations",
+"level": "HL",
+"range": "1.10.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-110-lesson2",
+"id": "MAA-110-L2",
+"title": "Extension of the binomial theorem to fractional and negative indices",
+"level": "HL",
+"range": "1.10.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "1.11",
+"name": "Partial fractions",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.25,
+"hl_hours": 1.25,
+"understandings": {
+"SL": 0,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-111-lesson1",
+"id": "MAA-111-L1",
+"title": "Partial fractions with distinct linear denominators",
+"level": "HL",
+"range": "1.11.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "1.12",
+"name": "Complex numbers",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.5,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-112-lesson1",
+"id": "MAA-112-L1",
+"title": "The number i and complex numbers in Cartesian form z = a + bi",
+"level": "HL",
+"range": "1.12.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-112-lesson2",
+"id": "MAA-112-L2",
+"title": "Products, quotients, conjugates, modulus and argument",
+"level": "HL",
+"range": "1.12.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-112-lesson3",
+"id": "MAA-112-L3",
+"title": "The complex plane (Argand diagram)",
+"level": "HL",
+"range": "1.12.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "1.13",
+"name": "Polar and Euler forms",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.5,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-113-lesson1",
+"id": "MAA-113-L1",
+"title": "Modulus–argument (polar) form z = r cis θ",
+"level": "HL",
+"range": "1.13.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-113-lesson2",
+"id": "MAA-113-L2",
+"title": "Euler form z = re^(iθ)",
+"level": "HL",
+"range": "1.13.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-113-lesson3",
+"id": "MAA-113-L3",
+"title": "Sums, products and quotients in polar and Euler form; geometric interpretation",
+"level": "HL",
+"range": "1.13.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "1.14",
+"name": "Complex roots and De Moivre",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.5,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-114-lesson1",
+"id": "MAA-114-L1",
+"title": "Complex conjugate roots of polynomials with real coefficients",
+"level": "HL",
+"range": "1.14.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-114-lesson2",
+"id": "MAA-114-L2",
+"title": "De Moivre's theorem and its proof by induction",
+"level": "HL",
+"range": "1.14.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-114-lesson3",
+"id": "MAA-114-L3",
+"title": "Powers and roots of complex numbers; nth roots of unity",
+"level": "HL",
+"range": "1.14.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "1.15",
+"name": "Proof by induction, contradiction and counterexample",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.5,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-115-lesson1",
+"id": "MAA-115-L1",
+"title": "Proof by mathematical induction",
+"level": "HL",
+"range": "1.15.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-115-lesson2",
+"id": "MAA-115-L2",
+"title": "Proof by contradiction",
+"level": "HL",
+"range": "1.15.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-115-lesson3",
+"id": "MAA-115-L3",
+"title": "Disproof by counterexample",
+"level": "HL",
+"range": "1.15.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "1.16",
+"name": "Systems of linear equations",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-116-lesson1",
+"id": "MAA-116-L1",
+"title": "Solving systems of up to three linear equations",
+"level": "HL",
+"range": "1.16.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-116-lesson2",
+"id": "MAA-116-L2",
+"title": "Systems with unique, no or infinitely many solutions",
+"level": "HL",
+"range": "1.16.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "2.1",
+"name": "Equations of straight lines",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 0.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-21-lesson1",
+"id": "MAA-21-L1",
+"title": "Equations of straight lines: gradient and the three forms y = mx + c, ax + by + d = 0 and y − y₁ = m(x − x₁)",
+"level": "SL",
+"range": "2.1.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-21-lesson2",
+"id": "MAA-21-L2",
+"title": "Parallel and perpendicular lines",
+"level": "SL",
+"range": "2.1.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "2.2",
+"name": "Functions: concept, domain, range, inverse",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 0.0,
+"hl_hours": 3.0,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-22-lesson1",
+"id": "MAA-22-L1",
+"title": "Functions: notation, domain and range",
+"level": "SL",
+"range": "2.2.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-22-lesson2",
+"id": "MAA-22-L2",
+"title": "Inverse functions as reflections in y = x, and functions as mathematical models",
+"level": "SL",
+"range": "2.2.2 – 2.2.3",
+"minutes": 90,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "2.3",
+"name": "Graphs of functions",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 0.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-23-lesson1",
+"id": "MAA-23-L1",
+"title": "Graphs of functions: plotting, drawing and choosing scales with and without technology",
+"level": "SL",
+"range": "2.3.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-23-lesson2",
+"id": "MAA-23-L2",
+"title": "Creating sketches from information or context",
+"level": "SL",
+"range": "2.3.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "2.4",
+"name": "Key features of graphs",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-24-lesson1",
+"id": "MAA-24-L1",
+"title": "Key features of graphs: maximum, minimum, intercepts, symmetry, vertex, zeros and asymptotes",
+"level": "SL",
+"range": "2.4.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-24-lesson2",
+"id": "MAA-24-L2",
+"title": "Using technology to find points of intersection and solve equations graphically",
+"level": "SL",
+"range": "2.4.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "2.5",
+"name": "Composite and inverse functions",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-25-lesson1",
+"id": "MAA-25-L1",
+"title": "Composite functions",
+"level": "SL",
+"range": "2.5.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-25-lesson2",
+"id": "MAA-25-L2",
+"title": "The identity function and inverse functions",
+"level": "SL",
+"range": "2.5.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "2.6",
+"name": "Quadratic functions",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-26-lesson1",
+"id": "MAA-26-L1",
+"title": "The quadratic function: intercepts, vertex and axis of symmetry",
+"level": "SL",
+"range": "2.6.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-26-lesson2",
+"id": "MAA-26-L2",
+"title": "Forms of a quadratic: standard, factorised and vertex form",
+"level": "SL",
+"range": "2.6.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "2.7",
+"name": "Solving quadratics and the discriminant",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-27-lesson1",
+"id": "MAA-27-L1",
+"title": "Solving quadratic equations and inequalities",
+"level": "SL",
+"range": "2.7.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-27-lesson2",
+"id": "MAA-27-L2",
+"title": "The quadratic formula and the discriminant: nature of roots",
+"level": "SL",
+"range": "2.7.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "2.8",
+"name": "Reciprocal and rational functions",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-28-lesson1",
+"id": "MAA-28-L1",
+"title": "The reciprocal function y = 1/x: graph and self-inverse property",
+"level": "SL",
+"range": "2.8.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-28-lesson2",
+"id": "MAA-28-L2",
+"title": "Rational functions (ax + b)/(cx + d) and their asymptotes",
+"level": "SL",
+"range": "2.8.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "2.9",
+"name": "Exponential and logarithmic functions",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-29-lesson1",
+"id": "MAA-29-L1",
+"title": "Exponential functions and their graphs",
+"level": "SL",
+"range": "2.9.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-29-lesson2",
+"id": "MAA-29-L2",
+"title": "Logarithmic functions and their graphs",
+"level": "SL",
+"range": "2.9.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "2.10",
+"name": "Solving equations",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-210-lesson1",
+"id": "MAA-210-L1",
+"title": "Solving equations analytically and graphically",
+"level": "SL",
+"range": "2.10.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-210-lesson2",
+"id": "MAA-210-L2",
+"title": "Applications of graphing skills to real-life situations",
+"level": "SL",
+"range": "2.10.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "2.11",
+"name": "Transformations of graphs",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-211-lesson1",
+"id": "MAA-211-L1",
+"title": "Transformations of graphs: translations, reflections and stretches",
+"level": "SL",
+"range": "2.11.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-211-lesson2",
+"id": "MAA-211-L2",
+"title": "Composite transformations",
+"level": "SL",
+"range": "2.11.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "2.12",
+"name": "Polynomial functions",
+"theme": "2",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.75,
+"hl_hours": 2.75,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-212-lesson1",
+"id": "MAA-212-L1",
+"title": "Polynomial functions: graphs, zeros and end behaviour",
+"level": "HL",
+"range": "2.12.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-212-lesson2",
+"id": "MAA-212-L2",
+"title": "Factor and remainder theorems; sum and product of roots",
+"level": "HL",
+"range": "2.12.2 – 2.12.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "2.13",
+"name": "Rational functions",
+"theme": "2",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.75,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-213-lesson1",
+"id": "MAA-213-L1",
+"title": "Rational functions with quadratic denominators",
+"level": "HL",
+"range": "2.13.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-213-lesson2",
+"id": "MAA-213-L2",
+"title": "Rational functions with oblique asymptotes",
+"level": "HL",
+"range": "2.13.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "2.14",
+"name": "Odd, even and self-inverse functions",
+"theme": "2",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.75,
+"hl_hours": 2.75,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-214-lesson1",
+"id": "MAA-214-L1",
+"title": "Odd and even functions",
+"level": "HL",
+"range": "2.14.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-214-lesson2",
+"id": "MAA-214-L2",
+"title": "Inverses with domain restriction and self-inverse functions",
+"level": "HL",
+"range": "2.14.2 – 2.14.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "2.15",
+"name": "Inequalities",
+"theme": "2",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.0,
+"hl_hours": 1.0,
+"understandings": {
+"SL": 0,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-215-lesson1",
+"id": "MAA-215-L1",
+"title": "Solving polynomial inequalities g(x) ≥ f(x) graphically and analytically",
+"level": "HL",
+"range": "2.15.1",
+"minutes": 60,
+"hour": "Hour 1"
+}
+]
+},
+{
+"code": "2.16",
+"name": "Modulus and transformed graphs",
+"theme": "2",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.75,
+"hl_hours": 2.75,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-216-lesson1",
+"id": "MAA-216-L1",
+"title": "Graphs of y = |f(x)| and y = f(|x|)",
+"level": "HL",
+"range": "2.16.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-216-lesson2",
+"id": "MAA-216-L2",
+"title": "Graphs of 1/f(x), f(ax + b) and [f(x)]²; solving modulus equations and inequalities",
+"level": "HL",
+"range": "2.16.2 – 2.16.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.1",
+"name": "3D geometry: distance, volume and surface area",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-31-lesson1",
+"id": "MAA-31-L1",
+"title": "Distance and midpoint between points in three dimensions",
+"level": "SL",
+"range": "3.1.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-31-lesson2",
+"id": "MAA-31-L2",
+"title": "Volume and surface area of 3D solids: prisms, pyramids, cylinders, cones, spheres and composites",
+"level": "SL",
+"range": "3.1.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-31-lesson3",
+"id": "MAA-31-L3",
+"title": "Angles in 3D: between two lines and between a line and a plane",
+"level": "SL",
+"range": "3.1.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.2",
+"name": "Trigonometry in triangles",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-32-lesson1",
+"id": "MAA-32-L1",
+"title": "Right-angled trigonometry: sine, cosine and tangent",
+"level": "SL",
+"range": "3.2.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-32-lesson2",
+"id": "MAA-32-L2",
+"title": "The sine rule and the cosine rule for any triangle",
+"level": "SL",
+"range": "3.2.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-32-lesson3",
+"id": "MAA-32-L3",
+"title": "Area of a triangle using ½ab sin C, and combined problems",
+"level": "SL",
+"range": "3.2.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.3",
+"name": "Applications of trigonometry",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-33-lesson1",
+"id": "MAA-33-L1",
+"title": "Angles of elevation and depression",
+"level": "SL",
+"range": "3.3.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-33-lesson2",
+"id": "MAA-33-L2",
+"title": "Bearings and navigation",
+"level": "SL",
+"range": "3.3.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-33-lesson3",
+"id": "MAA-33-L3",
+"title": "Constructing labelled diagrams from written statements and solving multi-step problems",
+"level": "SL",
+"range": "3.3.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.4",
+"name": "The circle: radians, arcs and sectors",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-34-lesson1",
+"id": "MAA-34-L1",
+"title": "Radian measure",
+"level": "SL",
+"range": "3.4.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-34-lesson2",
+"id": "MAA-34-L2",
+"title": "Length of an arc and area of a sector",
+"level": "SL",
+"range": "3.4.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.5",
+"name": "The unit circle",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-35-lesson1",
+"id": "MAA-35-L1",
+"title": "Defining sin θ and cos θ with the unit circle",
+"level": "SL",
+"range": "3.5.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-35-lesson2",
+"id": "MAA-35-L2",
+"title": "tan θ = sin θ / cos θ and exact values",
+"level": "SL",
+"range": "3.5.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-35-lesson3",
+"id": "MAA-35-L3",
+"title": "The ambiguous case of the sine rule",
+"level": "SL",
+"range": "3.5.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.6",
+"name": "Trigonometric identities",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-36-lesson1",
+"id": "MAA-36-L1",
+"title": "The Pythagorean identity cos²θ + sin²θ = 1",
+"level": "SL",
+"range": "3.6.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-36-lesson2",
+"id": "MAA-36-L2",
+"title": "Double angle identities for sine and cosine",
+"level": "SL",
+"range": "3.6.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.7",
+"name": "Circular functions",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-37-lesson1",
+"id": "MAA-37-L1",
+"title": "Graphs of sin, cos and tan: amplitude and period",
+"level": "SL",
+"range": "3.7.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-37-lesson2",
+"id": "MAA-37-L2",
+"title": "Composite trigonometric functions f(x) = a sin(b(x + c)) + d",
+"level": "SL",
+"range": "3.7.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-37-lesson3",
+"id": "MAA-37-L3",
+"title": "Transformations of circular functions and real-life contexts",
+"level": "SL",
+"range": "3.7.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.8",
+"name": "Solving trigonometric equations",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-38-lesson1",
+"id": "MAA-38-L1",
+"title": "Solving trigonometric equations in a finite interval",
+"level": "SL",
+"range": "3.8.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-38-lesson2",
+"id": "MAA-38-L2",
+"title": "Trigonometric equations leading to quadratics",
+"level": "SL",
+"range": "3.8.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.9",
+"name": "Reciprocal and inverse trigonometric functions",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.75,
+"hl_hours": 3.75,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-39-lesson1",
+"id": "MAA-39-L1",
+"title": "Reciprocal trigonometric functions: sec, cosec and cot",
+"level": "HL",
+"range": "3.9.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-39-lesson2",
+"id": "MAA-39-L2",
+"title": "Pythagorean identities 1 + tan²θ = sec²θ and 1 + cot²θ = cosec²θ",
+"level": "HL",
+"range": "3.9.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-39-lesson3",
+"id": "MAA-39-L3",
+"title": "Inverse trigonometric functions arcsin, arccos and arctan",
+"level": "HL",
+"range": "3.9.3",
+"minutes": 75,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.10",
+"name": "Compound angle identities",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.5,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-310-lesson1",
+"id": "MAA-310-L1",
+"title": "Compound angle identities for sine and cosine",
+"level": "HL",
+"range": "3.10.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-310-lesson2",
+"id": "MAA-310-L2",
+"title": "Compound and double angle identities for tan",
+"level": "HL",
+"range": "3.10.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.11",
+"name": "Symmetry of trigonometric functions",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.5,
+"hl_hours": 1.5,
+"understandings": {
+"SL": 0,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-311-lesson1",
+"id": "MAA-311-L1",
+"title": "Relationships between trigonometric functions and symmetry of their graphs",
+"level": "HL",
+"range": "3.11.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "3.12",
+"name": "Introduction to vectors",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.5,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-312-lesson1",
+"id": "MAA-312-L1",
+"title": "Vectors, position vectors and displacement",
+"level": "HL",
+"range": "3.12.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-312-lesson2",
+"id": "MAA-312-L2",
+"title": "Base vectors i, j, k; components, magnitude and unit vectors",
+"level": "HL",
+"range": "3.12.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-312-lesson3",
+"id": "MAA-312-L3",
+"title": "Algebraic and geometric approaches: collinearity, ratios and midpoints",
+"level": "HL",
+"range": "3.12.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.13",
+"name": "Scalar product",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-313-lesson1",
+"id": "MAA-313-L1",
+"title": "The scalar product and the angle between two vectors",
+"level": "HL",
+"range": "3.13.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-313-lesson2",
+"id": "MAA-313-L2",
+"title": "Perpendicular and parallel vectors",
+"level": "HL",
+"range": "3.13.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.14",
+"name": "Vector equation of a line",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.5,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-314-lesson1",
+"id": "MAA-314-L1",
+"title": "Vector equation of a line: vector, parametric and Cartesian forms",
+"level": "HL",
+"range": "3.14.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-314-lesson2",
+"id": "MAA-314-L2",
+"title": "The angle between two lines",
+"level": "HL",
+"range": "3.14.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-314-lesson3",
+"id": "MAA-314-L3",
+"title": "Simple kinematics with vectors",
+"level": "HL",
+"range": "3.14.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.15",
+"name": "Lines in 3D",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-315-lesson1",
+"id": "MAA-315-L1",
+"title": "Coincident, parallel, intersecting and skew lines",
+"level": "HL",
+"range": "3.15.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-315-lesson2",
+"id": "MAA-315-L2",
+"title": "Points of intersection of two lines",
+"level": "HL",
+"range": "3.15.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.16",
+"name": "Vector product",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-316-lesson1",
+"id": "MAA-316-L1",
+"title": "The vector product and its properties",
+"level": "HL",
+"range": "3.16.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-316-lesson2",
+"id": "MAA-316-L2",
+"title": "Areas of parallelograms and triangles using the vector product",
+"level": "HL",
+"range": "3.16.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.17",
+"name": "Equations of planes",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-317-lesson1",
+"id": "MAA-317-L1",
+"title": "Vector equation of a plane",
+"level": "HL",
+"range": "3.17.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-317-lesson2",
+"id": "MAA-317-L2",
+"title": "Normal form r · n = a · n and the Cartesian equation of a plane",
+"level": "HL",
+"range": "3.17.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.18",
+"name": "Intersections and angles with planes",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-318-lesson1",
+"id": "MAA-318-L1",
+"title": "Intersections of a line with a plane, and of two or three planes",
+"level": "HL",
+"range": "3.18.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-318-lesson2",
+"id": "MAA-318-L2",
+"title": "Angles between a line and a plane, and between two planes",
+"level": "HL",
+"range": "3.18.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "4.1",
+"name": "Collecting data and sampling",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-41-lesson1",
+"id": "MAA-41-L1",
+"title": "Populations, samples and types of data",
+"level": "SL",
+"range": "4.1.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-41-lesson2",
+"id": "MAA-41-L2",
+"title": "Reliability of data, bias and outliers",
+"level": "SL",
+"range": "4.1.2 – 4.1.3",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-41-lesson3",
+"id": "MAA-41-L3",
+"title": "Sampling techniques: simple random, convenience, systematic, quota and stratified",
+"level": "SL",
+"range": "4.1.4",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "4.2",
+"name": "Presenting data",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 2.75,
+"ahl_hours": 0.0,
+"hl_hours": 2.75,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-42-lesson1",
+"id": "MAA-42-L1",
+"title": "Presenting data: frequency distributions and histograms",
+"level": "SL",
+"range": "4.2.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-42-lesson2",
+"id": "MAA-42-L2",
+"title": "Cumulative frequency, quartiles, percentiles and box-and-whisker diagrams",
+"level": "SL",
+"range": "4.2.2 – 4.2.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "4.3",
+"name": "Measures of central tendency and dispersion",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 2.75,
+"ahl_hours": 0.0,
+"hl_hours": 2.75,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-43-lesson1",
+"id": "MAA-43-L1",
+"title": "Measures of central tendency: mean, median and mode, including grouped data",
+"level": "SL",
+"range": "4.3.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-43-lesson2",
+"id": "MAA-43-L2",
+"title": "Measures of dispersion: range, IQR, standard deviation and variance, and the effect of constant changes",
+"level": "SL",
+"range": "4.3.2 – 4.3.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "4.4",
+"name": "Correlation and regression",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 2.75,
+"ahl_hours": 0.0,
+"hl_hours": 2.75,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-44-lesson1",
+"id": "MAA-44-L1",
+"title": "Bivariate data: scatter diagrams and Pearson's correlation coefficient r",
+"level": "SL",
+"range": "4.4.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-44-lesson2",
+"id": "MAA-44-L2",
+"title": "Regression line of y on x, interpolation and extrapolation",
+"level": "SL",
+"range": "4.4.2 – 4.4.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "4.5",
+"name": "Concepts of probability",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 2.75,
+"ahl_hours": 0.0,
+"hl_hours": 2.75,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-45-lesson1",
+"id": "MAA-45-L1",
+"title": "Concepts of probability: trials, outcomes, sample space and events",
+"level": "SL",
+"range": "4.5.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-45-lesson2",
+"id": "MAA-45-L2",
+"title": "Probability of an event, complementary events and expected number of occurrences",
+"level": "SL",
+"range": "4.5.2 – 4.5.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "4.6",
+"name": "Venn, tree diagrams and combined events",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 2.75,
+"ahl_hours": 0.0,
+"hl_hours": 2.75,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-46-lesson1",
+"id": "MAA-46-L1",
+"title": "Venn diagrams, tree diagrams, tables and combined events",
+"level": "SL",
+"range": "4.6.1 – 4.6.2",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-46-lesson2",
+"id": "MAA-46-L2",
+"title": "Conditional probability and independent events",
+"level": "SL",
+"range": "4.6.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "4.7",
+"name": "Discrete random variables",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-47-lesson1",
+"id": "MAA-47-L1",
+"title": "Discrete random variables and their probability distributions",
+"level": "SL",
+"range": "4.7.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-47-lesson2",
+"id": "MAA-47-L2",
+"title": "Expected value E(X) and fair games",
+"level": "SL",
+"range": "4.7.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "4.8",
+"name": "Binomial distribution",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-48-lesson1",
+"id": "MAA-48-L1",
+"title": "The binomial distribution: conditions and probabilities with technology",
+"level": "SL",
+"range": "4.8.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-48-lesson2",
+"id": "MAA-48-L2",
+"title": "Mean and variance of the binomial distribution",
+"level": "SL",
+"range": "4.8.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "4.9",
+"name": "Normal distribution",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-49-lesson1",
+"id": "MAA-49-L1",
+"title": "The normal distribution: properties and the 68–95–99.7 pattern",
+"level": "SL",
+"range": "4.9.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-49-lesson2",
+"id": "MAA-49-L2",
+"title": "Normal probability calculations and inverse normal with technology",
+"level": "SL",
+"range": "4.9.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "4.10",
+"name": "Regression line x on y",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-410-lesson1",
+"id": "MAA-410-L1",
+"title": "The regression line of x on y",
+"level": "SL",
+"range": "4.10.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-410-lesson2",
+"id": "MAA-410-L2",
+"title": "Using regression lines for prediction",
+"level": "SL",
+"range": "4.10.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "4.11",
+"name": "Formal conditional probability",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 1.0,
+"ahl_hours": 0.0,
+"hl_hours": 1.0,
+"understandings": {
+"SL": 1,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-411-lesson1",
+"id": "MAA-411-L1",
+"title": "Formal definition and use of conditional probability and independence",
+"level": "SL",
+"range": "4.11.1",
+"minutes": 60,
+"hour": "Hour 1"
+}
+]
+},
+{
+"code": "4.12",
+"name": "Standardisation of normal variables",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 1.75,
+"ahl_hours": 0.0,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-412-lesson1",
+"id": "MAA-412-L1",
+"title": "Standardisation of normal variables: z-values",
+"level": "SL",
+"range": "4.12.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-412-lesson2",
+"id": "MAA-412-L2",
+"title": "Inverse normal calculations to find an unknown mean or standard deviation",
+"level": "SL",
+"range": "4.12.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "4.13",
+"name": "Bayes' theorem",
+"theme": "4",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.25,
+"hl_hours": 1.25,
+"understandings": {
+"SL": 0,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-413-lesson1",
+"id": "MAA-413-L1",
+"title": "Bayes' theorem for up to three events",
+"level": "HL",
+"range": "4.13.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "4.14",
+"name": "Continuous random variables",
+"theme": "4",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 4.75,
+"hl_hours": 4.75,
+"understandings": {
+"SL": 0,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-414-lesson1",
+"id": "MAA-414-L1",
+"title": "Variance of a discrete random variable",
+"level": "HL",
+"range": "4.14.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-414-lesson2",
+"id": "MAA-414-L2",
+"title": "Continuous random variables and probability density functions",
+"level": "HL",
+"range": "4.14.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-414-lesson3",
+"id": "MAA-414-L3",
+"title": "Mode, median, mean and variance of a continuous random variable",
+"level": "HL",
+"range": "4.14.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "maa-414-lesson4",
+"id": "MAA-414-L4",
+"title": "Effect of linear transformations on E(X) and Var(X)",
+"level": "HL",
+"range": "4.14.4",
+"minutes": 70,
+"hour": "Hours 4–5"
+}
+]
+},
+{
+"code": "5.1",
+"name": "Introduction to the derivative",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 0.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-51-lesson1",
+"id": "MAA-51-L1",
+"title": "Limits and the derivative as the gradient of a curve",
+"level": "SL",
+"range": "5.1.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-51-lesson2",
+"id": "MAA-51-L2",
+"title": "The derivative as a rate of change and dy/dx notation",
+"level": "SL",
+"range": "5.1.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "5.2",
+"name": "Increasing and decreasing functions",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 0.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-52-lesson1",
+"id": "MAA-52-L1",
+"title": "Increasing and decreasing functions",
+"level": "SL",
+"range": "5.2.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-52-lesson2",
+"id": "MAA-52-L2",
+"title": "Graphical interpretation of f′(x): sketching gradient functions",
+"level": "SL",
+"range": "5.2.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "5.3",
+"name": "Derivatives of powers",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 0.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-53-lesson1",
+"id": "MAA-53-L1",
+"title": "Derivative of axⁿ: the power rule",
+"level": "SL",
+"range": "5.3.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "maa-53-lesson2",
+"id": "MAA-53-L2",
+"title": "Derivatives of sums, differences and multiples; simplifying before differentiating",
+"level": "SL",
+"range": "5.3.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "5.4",
+"name": "Tangents and normals",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 2.25,
+"ahl_hours": 0.0,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-54-lesson1",
+"id": "MAA-54-L1",
+"title": "Equations of tangents at a given point",
+"level": "SL",
+"range": "5.4.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-54-lesson2",
+"id": "MAA-54-L2",
+"title": "Equations of normals at a given point",
+"level": "SL",
+"range": "5.4.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.5",
+"name": "Introduction to integration",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 3.25,
+"ahl_hours": 0.0,
+"hl_hours": 3.25,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-55-lesson1",
+"id": "MAA-55-L1",
+"title": "Anti-differentiation and finding f(x) with a boundary condition",
+"level": "SL",
+"range": "5.5.1",
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-55-lesson2",
+"id": "MAA-55-L2",
+"title": "Definite integrals and their evaluation with technology",
+"level": "SL",
+"range": "5.5.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-55-lesson3",
+"id": "MAA-55-L3",
+"title": "Area between a curve and the x-axis",
+"level": "SL",
+"range": "5.5.3",
+"minutes": 65,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "5.6",
+"name": "Derivatives of standard functions and rules",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 3.25,
+"ahl_hours": 0.0,
+"hl_hours": 3.25,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-56-lesson1",
+"id": "MAA-56-L1",
+"title": "Derivatives of xⁿ, sin x, cos x, eˣ and ln x",
+"level": "SL",
+"range": "5.6.1",
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-56-lesson2",
+"id": "MAA-56-L2",
+"title": "The chain rule for composite functions",
+"level": "SL",
+"range": "5.6.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-56-lesson3",
+"id": "MAA-56-L3",
+"title": "The product and quotient rules",
+"level": "SL",
+"range": "5.6.3",
+"minutes": 65,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "5.7",
+"name": "The second derivative",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 2.25,
+"ahl_hours": 0.0,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-57-lesson1",
+"id": "MAA-57-L1",
+"title": "The second derivative",
+"level": "SL",
+"range": "5.7.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-57-lesson2",
+"id": "MAA-57-L2",
+"title": "Graphical behaviour of f, f′ and f″",
+"level": "SL",
+"range": "5.7.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.8",
+"name": "Stationary points, optimisation and inflexion",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 3.25,
+"ahl_hours": 0.0,
+"hl_hours": 3.25,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-58-lesson1",
+"id": "MAA-58-L1",
+"title": "Local maximum and minimum points and their testing",
+"level": "SL",
+"range": "5.8.1",
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-58-lesson2",
+"id": "MAA-58-L2",
+"title": "Optimisation",
+"level": "SL",
+"range": "5.8.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-58-lesson3",
+"id": "MAA-58-L3",
+"title": "Points of inflexion with zero and non-zero gradient",
+"level": "SL",
+"range": "5.8.3",
+"minutes": 65,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "5.9",
+"name": "Kinematics",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 2.25,
+"ahl_hours": 0.0,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-59-lesson1",
+"id": "MAA-59-L1",
+"title": "Kinematics: displacement, velocity and acceleration",
+"level": "SL",
+"range": "5.9.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-59-lesson2",
+"id": "MAA-59-L2",
+"title": "Distance travelled using integrals of |v|",
+"level": "SL",
+"range": "5.9.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.10",
+"name": "Indefinite integrals and substitution",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 2.25,
+"ahl_hours": 0.0,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-510-lesson1",
+"id": "MAA-510-L1",
+"title": "Indefinite integrals of xⁿ, sin x, cos x, 1/x and eˣ",
+"level": "SL",
+"range": "5.10.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-510-lesson2",
+"id": "MAA-510-L2",
+"title": "Integration by inspection and substitution of the form ∫ f(g(x)) g′(x) dx",
+"level": "SL",
+"range": "5.10.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.11",
+"name": "Definite integrals and area",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 3.25,
+"ahl_hours": 0.0,
+"hl_hours": 3.25,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-511-lesson1",
+"id": "MAA-511-L1",
+"title": "Definite integrals evaluated analytically",
+"level": "SL",
+"range": "5.11.1",
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-511-lesson2",
+"id": "MAA-511-L2",
+"title": "Areas between a curve and the x-axis, including regions below the axis",
+"level": "SL",
+"range": "5.11.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-511-lesson3",
+"id": "MAA-511-L3",
+"title": "Areas between two curves",
+"level": "SL",
+"range": "5.11.3",
+"minutes": 65,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "5.12",
+"name": "First principles, continuity and differentiability",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.75,
+"hl_hours": 3.75,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-512-lesson1",
+"id": "MAA-512-L1",
+"title": "Continuity and differentiability",
+"level": "HL",
+"range": "5.12.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-512-lesson2",
+"id": "MAA-512-L2",
+"title": "Derivatives from first principles",
+"level": "HL",
+"range": "5.12.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-512-lesson3",
+"id": "MAA-512-L3",
+"title": "Higher derivatives",
+"level": "HL",
+"range": "5.12.3",
+"minutes": 75,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "5.13",
+"name": "Limits and L'Hôpital's rule",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-513-lesson1",
+"id": "MAA-513-L1",
+"title": "Evaluating limits of the forms 0/0 and ∞/∞",
+"level": "HL",
+"range": "5.13.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-513-lesson2",
+"id": "MAA-513-L2",
+"title": "L'Hôpital's rule, including repeated use",
+"level": "HL",
+"range": "5.13.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.14",
+"name": "Implicit differentiation, related rates and optimisation",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.5,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-514-lesson1",
+"id": "MAA-514-L1",
+"title": "Implicit differentiation",
+"level": "HL",
+"range": "5.14.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-514-lesson2",
+"id": "MAA-514-L2",
+"title": "Related rates of change",
+"level": "HL",
+"range": "5.14.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-514-lesson3",
+"id": "MAA-514-L3",
+"title": "Optimisation problems (extended)",
+"level": "HL",
+"range": "5.14.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "5.15",
+"name": "Further derivatives",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.5,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-515-lesson1",
+"id": "MAA-515-L1",
+"title": "Derivatives of tan, sec, cosec, cot, aˣ and logₐx",
+"level": "HL",
+"range": "5.15.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-515-lesson2",
+"id": "MAA-515-L2",
+"title": "Derivatives of arcsin, arccos and arctan",
+"level": "HL",
+"range": "5.15.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-515-lesson3",
+"id": "MAA-515-L3",
+"title": "Integrals from further derivatives and partial fractions",
+"level": "HL",
+"range": "5.15.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "5.16",
+"name": "Integration techniques",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.5,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-516-lesson1",
+"id": "MAA-516-L1",
+"title": "Integration by substitution (including definite integrals)",
+"level": "HL",
+"range": "5.16.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-516-lesson2",
+"id": "MAA-516-L2",
+"title": "Integration by parts",
+"level": "HL",
+"range": "5.16.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-516-lesson3",
+"id": "MAA-516-L3",
+"title": "Repeated integration by parts",
+"level": "HL",
+"range": "5.16.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "5.17",
+"name": "Area and volumes of revolution",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-517-lesson1",
+"id": "MAA-517-L1",
+"title": "Area of a region bounded by a curve and the y-axis",
+"level": "HL",
+"range": "5.17.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-517-lesson2",
+"id": "MAA-517-L2",
+"title": "Volumes of revolution about the x-axis or y-axis",
+"level": "HL",
+"range": "5.17.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.18",
+"name": "Differential equations",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 4.75,
+"hl_hours": 4.75,
+"understandings": {
+"SL": 0,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-518-lesson1",
+"id": "MAA-518-L1",
+"title": "First-order differential equations and Euler's method",
+"level": "HL",
+"range": "5.18.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-518-lesson2",
+"id": "MAA-518-L2",
+"title": "Separable differential equations",
+"level": "HL",
+"range": "5.18.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-518-lesson3",
+"id": "MAA-518-L3",
+"title": "Homogeneous differential equations solved with y = vx",
+"level": "HL",
+"range": "5.18.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "maa-518-lesson4",
+"id": "MAA-518-L4",
+"title": "Linear differential equations and the integrating factor",
+"level": "HL",
+"range": "5.18.4",
+"minutes": 70,
+"hour": "Hours 4–5"
+}
+]
+},
+{
+"code": "5.19",
+"name": "Maclaurin series",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.5,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "maa-519-lesson1",
+"id": "MAA-519-L1",
+"title": "Maclaurin series of eˣ, sin x, cos x, ln(1 + x) and (1 + x)ᵖ",
+"level": "HL",
+"range": "5.19.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "maa-519-lesson2",
+"id": "MAA-519-L2",
+"title": "New series by substitution, products, integration and differentiation",
+"level": "HL",
+"range": "5.19.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "maa-519-lesson3",
+"id": "MAA-519-L3",
+"title": "Maclaurin series from differential equations",
+"level": "HL",
+"range": "5.19.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+}
+]
+}

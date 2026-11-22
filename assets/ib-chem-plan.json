@@ -1,0 +1,1920 @@
+{
+"subject": "IB Diploma Chemistry",
+"name": "IB Chemistry",
+"key": "chem",
+"url": "/ib-chemistry-plan/",
+"classes": {
+"SL": "chem-sl",
+"HL": "chem-hl"
+},
+"class_names": {
+"SL": "IB Chemistry SL",
+"HL": "IB Chemistry HL"
+},
+"theme_prefix": "",
+"about": "IB Diploma Chemistry teaching-hour plan. Hours from the IB guide; lesson durations share each topic's hours. Built by lessongen/ib_plan.py.",
+"source": "IB Chemistry guide, first assessment 2025: recommended teaching hours per topic (syllabus content SL 110 h, HL 180 h; experimental programme SL 40 h, HL 60 h)..",
+"themes": {
+"S1": "Models of the particulate nature of matter",
+"S2": "Models of bonding and structure",
+"S3": "Classification of matter",
+"R1": "What drives chemical reactions?",
+"R2": "How much, how fast and how far?",
+"R3": "What are the mechanisms of chemical change?"
+},
+"totals": {
+"SL": 110,
+"HL": 180,
+"experimental": {
+"SL": 40,
+"HL": 60
+}
+},
+"differences": [],
+"topics": [
+{
+"code": "S1.1",
+"name": "Introduction to the particulate nature of matter",
+"theme": "S1",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 0.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-s11-lesson1",
+"id": "CHEM-S11-L1",
+"title": "Elements, compounds and mixtures, and how the properties of the components let us separate a mixture",
+"level": "SL",
+"range": "S1.1.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "chem-s11-lesson2",
+"id": "CHEM-S11-L2",
+"title": "The kinetic molecular theory, changes of state and heating curves, and the Kelvin scale as a measure of average kinetic energy",
+"level": "SL",
+"range": "S1.1.2 – S1.1.3",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "S1.2",
+"name": "The nuclear atom",
+"theme": "S1",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 1.0,
+"hl_hours": 3.0,
+"understandings": {
+"SL": 2,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-s12-lesson1",
+"id": "CHEM-S12-L1",
+"title": "The nuclear model of the atom: protons, neutrons and electrons, their relative masses and charges, and nuclear symbols",
+"level": "SL",
+"range": "S1.2.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "chem-s12-lesson2",
+"id": "CHEM-S12-L2",
+"title": "Isotopes: same element, different numbers of neutrons, their properties, and relative atomic mass from isotopic abundance",
+"level": "SL",
+"range": "S1.2.2",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "chem-s12-lesson3",
+"id": "CHEM-S12-L3",
+"title": "Mass spectra of elements: how a mass spectrometer works and how to read isotopic composition and relative atomic mass from a spectrum",
+"level": "HL",
+"range": "S1.2.3",
+"minutes": 60,
+"hour": "Hour 3"
+}
+]
+},
+{
+"code": "S1.3",
+"name": "Electron configurations",
+"theme": "S1",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 3.0,
+"hl_hours": 6.0,
+"understandings": {
+"SL": 5,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-s13-lesson1",
+"id": "CHEM-S13-L1",
+"title": "Emission spectra: continuous and line spectra, the electromagnetic spectrum, and how the hydrogen spectrum shows discrete energy levels",
+"level": "SL",
+"range": "S1.3.1 – S1.3.2",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "chem-s13-lesson2",
+"id": "CHEM-S13-L2",
+"title": "Main energy levels (2n² electrons), sublevels s, p, d and f, atomic orbitals and the shapes of s and p orbitals",
+"level": "SL",
+"range": "S1.3.3 – S1.3.4",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "chem-s13-lesson3",
+"id": "CHEM-S13-L3",
+"title": "Writing full and condensed electron configurations and orbital diagrams up to Z = 36 using the Aufbau principle, Hund's rule and the Pauli principle",
+"level": "SL",
+"range": "S1.3.5",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "chem-s13-lesson4",
+"id": "CHEM-S13-L4",
+"title": "The convergence limit of the hydrogen emission spectrum and calculating the first ionization energy from it",
+"level": "HL",
+"range": "S1.3.6",
+"minutes": 90,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "chem-s13-lesson5",
+"id": "CHEM-S13-L5",
+"title": "Successive ionization energies as evidence for main energy levels and sublevels, and deducing the group of an element",
+"level": "HL",
+"range": "S1.3.7",
+"minutes": 90,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "S1.4",
+"name": "Counting particles by mass: The mole",
+"theme": "S1",
+"hl_only": false,
+"sl_hours": 7.0,
+"ahl_hours": 0.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 6,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-s14-lesson1",
+"id": "CHEM-S14-L1",
+"title": "The mole as the SI unit of amount of substance, the Avogadro constant, and converting between amount and number of particles",
+"level": "SL",
+"range": "S1.4.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-s14-lesson2",
+"id": "CHEM-S14-L2",
+"title": "Relative atomic mass and relative formula mass on the carbon-12 scale, including hydrated salts",
+"level": "SL",
+"range": "S1.4.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-s14-lesson3",
+"id": "CHEM-S14-L3",
+"title": "Molar mass in g mol⁻¹ and the triangle n = m ÷ M linking mass, amount and number of particles",
+"level": "SL",
+"range": "S1.4.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "chem-s14-lesson4",
+"id": "CHEM-S14-L4",
+"title": "Empirical and molecular formulas from masses, percentage composition and combustion data",
+"level": "SL",
+"range": "S1.4.4",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "chem-s14-lesson5",
+"id": "CHEM-S14-L5",
+"title": "Molar concentration, mass concentration, standard solutions and dilution",
+"level": "SL",
+"range": "S1.4.5",
+"minutes": 70,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "chem-s14-lesson6",
+"id": "CHEM-S14-L6",
+"title": "Avogadro's law: equal volumes of gases contain equal numbers of particles, and volume ratios in reactions of gases",
+"level": "SL",
+"range": "S1.4.6",
+"minutes": 70,
+"hour": "Hours 6–7"
+}
+]
+},
+{
+"code": "S1.5",
+"name": "Ideal gases",
+"theme": "S1",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 0.0,
+"hl_hours": 3.0,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-s15-lesson1",
+"id": "CHEM-S15-L1",
+"title": "The ideal gas model and why real gases deviate from it at low temperature and high pressure",
+"level": "SL",
+"range": "S1.5.1 – S1.5.2",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "chem-s15-lesson2",
+"id": "CHEM-S15-L2",
+"title": "The molar volume of an ideal gas at STP and calculations linking gas volume, amount and mass",
+"level": "SL",
+"range": "S1.5.3",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "chem-s15-lesson3",
+"id": "CHEM-S15-L3",
+"title": "The ideal gas equation pV = nRT, the gas laws and their graphs, and finding molar mass experimentally",
+"level": "SL",
+"range": "S1.5.4",
+"minutes": 60,
+"hour": "Hour 3"
+}
+]
+},
+{
+"code": "S2.1",
+"name": "The ionic model",
+"theme": "S2",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-s21-lesson1",
+"id": "CHEM-S21-L1",
+"title": "Forming cations and anions: predicting ionic charges from the periodic table, and transition elements with more than one ion",
+"level": "SL",
+"range": "S2.1.1",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-s21-lesson2",
+"id": "CHEM-S21-L2",
+"title": "The ionic bond as electrostatic attraction between oppositely charged ions, and writing and naming formulas including polyatomic ions",
+"level": "SL",
+"range": "S2.1.2",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-s21-lesson3",
+"id": "CHEM-S21-L3",
+"title": "Ionic lattices, lattice enthalpy and how the ionic model explains the properties of ionic compounds",
+"level": "SL",
+"range": "S2.1.3",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "S2.2",
+"name": "The covalent model",
+"theme": "S2",
+"hl_only": false,
+"sl_hours": 10.0,
+"ahl_hours": 8.0,
+"hl_hours": 18.0,
+"understandings": {
+"SL": 10,
+"HL": 6
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-s22-lesson1",
+"id": "CHEM-S22-L1",
+"title": "The covalent bond as the attraction between a shared pair of electrons and two nuclei, the octet rule and drawing Lewis formulas",
+"level": "SL",
+"range": "S2.2.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-s22-lesson2",
+"id": "CHEM-S22-L2",
+"title": "Single, double and triple bonds, the link between bond order, length and strength, and coordination (dative) bonds",
+"level": "SL",
+"range": "S2.2.2 – S2.2.3",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-s22-lesson3",
+"id": "CHEM-S22-L3",
+"title": "VSEPR theory: electron domains, electron domain geometry and molecular geometry for two, three and four domains",
+"level": "SL",
+"range": "S2.2.4",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "chem-s22-lesson4",
+"id": "CHEM-S22-L4",
+"title": "Electronegativity, bond polarity and partial charges",
+"level": "SL",
+"range": "S2.2.5",
+"minutes": 65,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "chem-s22-lesson5",
+"id": "CHEM-S22-L5",
+"title": "Molecular polarity: how bond polarity and molecular geometry together decide whether a molecule has a net dipole",
+"level": "SL",
+"range": "S2.2.6",
+"minutes": 65,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "chem-s22-lesson6",
+"id": "CHEM-S22-L6",
+"title": "Covalent network structures of carbon (diamond, graphite, graphene, fullerene) and silicon and silicon dioxide, and their properties",
+"level": "SL",
+"range": "S2.2.7",
+"minutes": 65,
+"hour": "Hours 6–7"
+},
+{
+"n": 7,
+"path": "chem-s22-lesson7",
+"id": "CHEM-S22-L7",
+"title": "Intermolecular forces: London dispersion forces, dipole–induced dipole, dipole–dipole forces and hydrogen bonding",
+"level": "SL",
+"range": "S2.2.8",
+"minutes": 65,
+"hour": "Hours 7–8"
+},
+{
+"n": 8,
+"path": "chem-s22-lesson8",
+"id": "CHEM-S22-L8",
+"title": "Relative strengths of intermolecular forces and how they explain volatility, boiling points, solubility and conductivity of molecular substances",
+"level": "SL",
+"range": "S2.2.9",
+"minutes": 65,
+"hour": "Hours 8–9"
+},
+{
+"n": 9,
+"path": "chem-s22-lesson9",
+"id": "CHEM-S22-L9",
+"title": "Chromatography: separation by relative attraction to the mobile and stationary phases, paper and thin-layer chromatography, and Rf values",
+"level": "SL",
+"range": "S2.2.10",
+"minutes": 65,
+"hour": "Hours 9–10"
+},
+{
+"n": 10,
+"path": "chem-s22-lesson10",
+"id": "CHEM-S22-L10",
+"title": "Resonance structures, delocalized electrons and fractional bond orders in ozone, carbonate, nitrate and carboxylate ions",
+"level": "HL",
+"range": "S2.2.11",
+"minutes": 80,
+"hour": "Hours 11–12"
+},
+{
+"n": 11,
+"path": "chem-s22-lesson11",
+"id": "CHEM-S22-L11",
+"title": "Benzene: evidence against the Kekulé structure and the delocalized π electron ring",
+"level": "HL",
+"range": "S2.2.12",
+"minutes": 80,
+"hour": "Hours 12–13"
+},
+{
+"n": 12,
+"path": "chem-s22-lesson12",
+"id": "CHEM-S22-L12",
+"title": "Expanded octets and the shapes of molecules with five and six electron domains",
+"level": "HL",
+"range": "S2.2.13",
+"minutes": 80,
+"hour": "Hours 13–14"
+},
+{
+"n": 13,
+"path": "chem-s22-lesson13",
+"id": "CHEM-S22-L13",
+"title": "Formal charge and using it to choose the preferred Lewis formula",
+"level": "HL",
+"range": "S2.2.14",
+"minutes": 80,
+"hour": "Hours 15–16"
+},
+{
+"n": 14,
+"path": "chem-s22-lesson14",
+"id": "CHEM-S22-L14",
+"title": "Sigma and pi bonds: head-on and sideways overlap of orbitals, and counting σ and π bonds in molecules",
+"level": "HL",
+"range": "S2.2.15",
+"minutes": 80,
+"hour": "Hours 16–17"
+},
+{
+"n": 15,
+"path": "chem-s22-lesson15",
+"id": "CHEM-S22-L15",
+"title": "Hybridization: sp³, sp² and sp hybrid orbitals and linking them to electron domains and molecular shape",
+"level": "HL",
+"range": "S2.2.16",
+"minutes": 80,
+"hour": "Hours 17–18"
+}
+]
+},
+{
+"code": "S2.3",
+"name": "The metallic model",
+"theme": "S2",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 1.0,
+"hl_hours": 3.0,
+"understandings": {
+"SL": 2,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-s23-lesson1",
+"id": "CHEM-S23-L1",
+"title": "Metallic bonding as a lattice of cations in a sea of delocalized electrons, and how it explains conductivity, malleability and ductility",
+"level": "SL",
+"range": "S2.3.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "chem-s23-lesson2",
+"id": "CHEM-S23-L2",
+"title": "The strength of metallic bonding: how ionic charge and radius explain melting point trends across period 3 and down group 1",
+"level": "SL",
+"range": "S2.3.2",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "chem-s23-lesson3",
+"id": "CHEM-S23-L3",
+"title": "Transition elements and their delocalized d-electrons: high melting points, conductivity and strength",
+"level": "HL",
+"range": "S2.3.3",
+"minutes": 60,
+"hour": "Hour 3"
+}
+]
+},
+{
+"code": "S2.4",
+"name": "From models to materials",
+"theme": "S2",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 1.0,
+"hl_hours": 5.0,
+"understandings": {
+"SL": 5,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-s24-lesson1",
+"id": "CHEM-S24-L1",
+"title": "Bonding as a continuum between ionic, covalent and metallic models, and using the bonding (van Arkel–Ketelaar) triangle",
+"level": "SL",
+"range": "S2.4.1 – S2.4.2",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-s24-lesson2",
+"id": "CHEM-S24-L2",
+"title": "Alloys as mixtures of a metal with other metals or non-metals, and why their properties are enhanced",
+"level": "SL",
+"range": "S2.4.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-s24-lesson3",
+"id": "CHEM-S24-L3",
+"title": "Polymers as macromolecules of repeating units, addition polymerization of alkenes, and the properties and environmental impact of plastics",
+"level": "SL",
+"range": "S2.4.4 – S2.4.5",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "chem-s24-lesson4",
+"id": "CHEM-S24-L4",
+"title": "Condensation polymers: polyesters and polyamides, the small molecule released, and their hydrolysis and biodegradability",
+"level": "HL",
+"range": "S2.4.6",
+"minutes": 60,
+"hour": "Hour 5"
+}
+]
+},
+{
+"code": "S3.1",
+"name": "The periodic table: Classification of elements",
+"theme": "S3",
+"hl_only": false,
+"sl_hours": 7.0,
+"ahl_hours": 4.0,
+"hl_hours": 11.0,
+"understandings": {
+"SL": 6,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-s31-lesson1",
+"id": "CHEM-S31-L1",
+"title": "Periods, groups and blocks of the periodic table, and linking an element's position to its electron configuration",
+"level": "SL",
+"range": "S3.1.1 – S3.1.2",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-s31-lesson2",
+"id": "CHEM-S31-L2",
+"title": "Periodic trends in atomic radius and ionic radius explained by nuclear charge, shielding and energy levels",
+"level": "SL",
+"range": "S3.1.3",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-s31-lesson3",
+"id": "CHEM-S31-L3",
+"title": "Periodic trends in first ionization energy, electron affinity and electronegativity",
+"level": "SL",
+"range": "S3.1.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "chem-s31-lesson4",
+"id": "CHEM-S31-L4",
+"title": "Group trends: the reactivity of group 1 metals with water and of group 17 halogens in displacement reactions",
+"level": "SL",
+"range": "S3.1.4",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "chem-s31-lesson5",
+"id": "CHEM-S31-L5",
+"title": "The metallic to non-metallic continuum and the acid–base character of the oxides of period 3",
+"level": "SL",
+"range": "S3.1.5",
+"minutes": 70,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "chem-s31-lesson6",
+"id": "CHEM-S31-L6",
+"title": "Oxidation states: the rules for assigning them, and naming compounds and oxyanions with Roman numerals",
+"level": "SL",
+"range": "S3.1.6",
+"minutes": 70,
+"hour": "Hours 6–7"
+},
+{
+"n": 7,
+"path": "chem-s31-lesson7",
+"id": "CHEM-S31-L7",
+"title": "Discontinuities in first ionization energy across a period: the dips at group 13 and group 16 as evidence for sublevels and electron pairing",
+"level": "HL",
+"range": "S3.1.7",
+"minutes": 60,
+"hour": "Hour 8"
+},
+{
+"n": 8,
+"path": "chem-s31-lesson8",
+"id": "CHEM-S31-L8",
+"title": "Transition elements: incomplete d sublevels and their characteristic properties (variable oxidation states, complex ions, colour, catalysis, magnetism)",
+"level": "HL",
+"range": "S3.1.8",
+"minutes": 60,
+"hour": "Hour 9"
+},
+{
+"n": 9,
+"path": "chem-s31-lesson9",
+"id": "CHEM-S31-L9",
+"title": "Variable oxidation states of transition elements: why they occur and the common oxidation states of the first row",
+"level": "HL",
+"range": "S3.1.9",
+"minutes": 60,
+"hour": "Hour 10"
+},
+{
+"n": 10,
+"path": "chem-s31-lesson10",
+"id": "CHEM-S31-L10",
+"title": "Why transition element complexes are coloured: splitting of d orbitals by ligands, absorption of light and complementary colours",
+"level": "HL",
+"range": "S3.1.10",
+"minutes": 60,
+"hour": "Hour 11"
+}
+]
+},
+{
+"code": "S3.2",
+"name": "Functional groups: Classification of organic compounds",
+"theme": "S3",
+"hl_only": false,
+"sl_hours": 9.0,
+"ahl_hours": 11.0,
+"hl_hours": 20.0,
+"understandings": {
+"SL": 6,
+"HL": 6
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-s32-lesson1",
+"id": "CHEM-S32-L1",
+"title": "Representing organic molecules: empirical, molecular, full and condensed structural, skeletal and stereochemical formulas",
+"level": "SL",
+"range": "S3.2.1",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-s32-lesson2",
+"id": "CHEM-S32-L2",
+"title": "Functional groups and the classes of organic compounds they define",
+"level": "SL",
+"range": "S3.2.2",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-s32-lesson3",
+"id": "CHEM-S32-L3",
+"title": "Homologous series, their general formulas, and trends in physical properties such as boiling point and solubility",
+"level": "SL",
+"range": "S3.2.3 – S3.2.4",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "chem-s32-lesson4",
+"id": "CHEM-S32-L4",
+"title": "IUPAC naming I: alkanes, alkenes, alkynes and halogenoalkanes, including branched chains and locants",
+"level": "SL",
+"range": "S3.2.5",
+"minutes": 75,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "chem-s32-lesson5",
+"id": "CHEM-S32-L5",
+"title": "IUPAC naming II: alcohols, aldehydes, ketones, carboxylic acids, ethers, esters, amines and amides",
+"level": "SL",
+"range": "S3.2.5",
+"minutes": 75,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "chem-s32-lesson6",
+"id": "CHEM-S32-L6",
+"title": "Structural isomers: chain, position and functional group isomers",
+"level": "SL",
+"range": "S3.2.6",
+"minutes": 75,
+"hour": "Hours 7–8"
+},
+{
+"n": 7,
+"path": "chem-s32-lesson7",
+"id": "CHEM-S32-L7",
+"title": "Classifying alcohols, halogenoalkanes and amines as primary, secondary or tertiary, and isomer practice",
+"level": "SL",
+"range": "S3.2.6",
+"minutes": 75,
+"hour": "Hours 8–9"
+},
+{
+"n": 8,
+"path": "chem-s32-lesson8",
+"id": "CHEM-S32-L8",
+"title": "Stereoisomers I: conformational and configurational isomers, and cis–trans isomerism in alkenes and cycloalkanes",
+"level": "HL",
+"range": "S3.2.7",
+"minutes": 75,
+"hour": "Hours 10–11"
+},
+{
+"n": 9,
+"path": "chem-s32-lesson9",
+"id": "CHEM-S32-L9",
+"title": "Stereoisomers II: chiral carbons, enantiomers, optical activity, polarimetry and racemic mixtures",
+"level": "HL",
+"range": "S3.2.7",
+"minutes": 75,
+"hour": "Hours 11–12"
+},
+{
+"n": 10,
+"path": "chem-s32-lesson10",
+"id": "CHEM-S32-L10",
+"title": "Mass spectrometry of organic compounds: the molecular ion and fragmentation patterns",
+"level": "HL",
+"range": "S3.2.8",
+"minutes": 75,
+"hour": "Hours 12–13"
+},
+{
+"n": 11,
+"path": "chem-s32-lesson11",
+"id": "CHEM-S32-L11",
+"title": "Infrared spectroscopy: bond vibrations, absorption ranges and identifying functional groups",
+"level": "HL",
+"range": "S3.2.9",
+"minutes": 75,
+"hour": "Hours 13–14"
+},
+{
+"n": 12,
+"path": "chem-s32-lesson12",
+"id": "CHEM-S32-L12",
+"title": "¹H NMR spectroscopy I: hydrogen environments, number of signals, chemical shift and the TMS reference",
+"level": "HL",
+"range": "S3.2.10",
+"minutes": 75,
+"hour": "Hours 15–16"
+},
+{
+"n": 13,
+"path": "chem-s32-lesson13",
+"id": "CHEM-S32-L13",
+"title": "¹H NMR spectroscopy II: integration traces, relative numbers of hydrogens and assigning spectra",
+"level": "HL",
+"range": "S3.2.10",
+"minutes": 75,
+"hour": "Hours 16–17"
+},
+{
+"n": 14,
+"path": "chem-s32-lesson14",
+"id": "CHEM-S32-L14",
+"title": "¹H NMR spectroscopy III: spin–spin splitting and the n + 1 rule (singlets, doublets, triplets, quartets)",
+"level": "HL",
+"range": "S3.2.11",
+"minutes": 70,
+"hour": "Hours 17–18"
+},
+{
+"n": 15,
+"path": "chem-s32-lesson15",
+"id": "CHEM-S32-L15",
+"title": "Combined structural analysis I: index of hydrogen deficiency and combining MS and IR data",
+"level": "HL",
+"range": "S3.2.12",
+"minutes": 70,
+"hour": "Hours 18–19"
+},
+{
+"n": 16,
+"path": "chem-s32-lesson16",
+"id": "CHEM-S32-L16",
+"title": "Combined structural analysis II: solving full problems with MS, IR and ¹H NMR together",
+"level": "HL",
+"range": "S3.2.12",
+"minutes": 70,
+"hour": "Hours 19–20"
+}
+]
+},
+{
+"code": "R1.1",
+"name": "Measuring enthalpy changes",
+"theme": "R1",
+"hl_only": false,
+"sl_hours": 5.0,
+"ahl_hours": 0.0,
+"hl_hours": 5.0,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-r11-lesson1",
+"id": "CHEM-R11-L1",
+"title": "Energy transfer between a system and its surroundings, conservation of energy, and the difference between heat and temperature",
+"level": "SL",
+"range": "R1.1.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-r11-lesson2",
+"id": "CHEM-R11-L2",
+"title": "Exothermic and endothermic reactions, the sign of ΔH, relative stability, and energy profile diagrams",
+"level": "SL",
+"range": "R1.1.2 – R1.1.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-r11-lesson3",
+"id": "CHEM-R11-L3",
+"title": "Standard enthalpy change ΔH⦵, calculating heat transferred with Q = mcΔT, and enthalpy changes of reactions in solution",
+"level": "SL",
+"range": "R1.1.4",
+"minutes": 75,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "chem-r11-lesson4",
+"id": "CHEM-R11-L4",
+"title": "Calorimetry experiments: measuring enthalpy of combustion and of reactions in solution, temperature–time graphs, and sources of error",
+"level": "SL",
+"range": "R1.1.4",
+"minutes": 75,
+"hour": "Hours 4–5"
+}
+]
+},
+{
+"code": "R1.2",
+"name": "Energy cycles in reactions",
+"theme": "R1",
+"hl_only": false,
+"sl_hours": 3.0,
+"ahl_hours": 5.0,
+"hl_hours": 8.0,
+"understandings": {
+"SL": 2,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-r12-lesson1",
+"id": "CHEM-R12-L1",
+"title": "Bond breaking and bond forming, average bond enthalpies, and estimating ΔH from bond enthalpy data",
+"level": "SL",
+"range": "R1.2.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "chem-r12-lesson2",
+"id": "CHEM-R12-L2",
+"title": "Hess's law and constructing energy cycles to find enthalpy changes that cannot be measured directly",
+"level": "SL",
+"range": "R1.2.2",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "chem-r12-lesson3",
+"id": "CHEM-R12-L3",
+"title": "Hess's law by combining thermochemical equations: reversing, multiplying and adding",
+"level": "SL",
+"range": "R1.2.2",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "chem-r12-lesson4",
+"id": "CHEM-R12-L4",
+"title": "Standard enthalpy changes of formation and combustion: definitions, equations and data",
+"level": "HL",
+"range": "R1.2.3",
+"minutes": 75,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "chem-r12-lesson5",
+"id": "CHEM-R12-L5",
+"title": "Calculating ΔH from enthalpy of formation data and from enthalpy of combustion data",
+"level": "HL",
+"range": "R1.2.4",
+"minutes": 75,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "chem-r12-lesson6",
+"id": "CHEM-R12-L6",
+"title": "Born–Haber cycles: the enthalpy steps in forming an ionic solid and calculating lattice enthalpy",
+"level": "HL",
+"range": "R1.2.5",
+"minutes": 75,
+"hour": "Hours 6–7"
+},
+{
+"n": 7,
+"path": "chem-r12-lesson7",
+"id": "CHEM-R12-L7",
+"title": "Born–Haber cycles in practice: unknown steps, comparing lattice enthalpies and explaining which ionic compounds form",
+"level": "HL",
+"range": "R1.2.5",
+"minutes": 75,
+"hour": "Hours 7–8"
+}
+]
+},
+{
+"code": "R1.3",
+"name": "Energy from fuels",
+"theme": "R1",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 5,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-r13-lesson1",
+"id": "CHEM-R13-L1",
+"title": "Complete and incomplete combustion of metals, non-metals and organic compounds, and the hazards of carbon monoxide and soot",
+"level": "SL",
+"range": "R1.3.1 – R1.3.2",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "chem-r13-lesson2",
+"id": "CHEM-R13-L2",
+"title": "Fossil fuels: coal, crude oil and natural gas, their specific energy and energy density, and their advantages and disadvantages",
+"level": "SL",
+"range": "R1.3.3",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "chem-r13-lesson3",
+"id": "CHEM-R13-L3",
+"title": "Biofuels: carbon fixed recently by photosynthesis, bioethanol, biodiesel and biogas, and whether they are carbon neutral",
+"level": "SL",
+"range": "R1.3.4",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "chem-r13-lesson4",
+"id": "CHEM-R13-L4",
+"title": "Fuel cells: converting chemical energy directly to electrical energy, the hydrogen and methanol fuel cells, and their advantages",
+"level": "SL",
+"range": "R1.3.5",
+"minutes": 60,
+"hour": "Hour 4"
+}
+]
+},
+{
+"code": "R1.4",
+"name": "Entropy and spontaneity",
+"theme": "R1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 5.0,
+"hl_hours": 5.0,
+"understandings": {
+"SL": 0,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-r14-lesson1",
+"id": "CHEM-R14-L1",
+"title": "Entropy as a measure of dispersal of matter and energy, predicting the sign of ΔS, and calculating standard entropy changes",
+"level": "HL",
+"range": "R1.4.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-r14-lesson2",
+"id": "CHEM-R14-L2",
+"title": "Gibbs energy change, ΔG = ΔH − TΔS, and calculating ΔG⦵ with consistent units",
+"level": "HL",
+"range": "R1.4.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-r14-lesson3",
+"id": "CHEM-R14-L3",
+"title": "Spontaneity: the sign of ΔG, the four combinations of ΔH and ΔS, and the temperature at which a reaction becomes spontaneous",
+"level": "HL",
+"range": "R1.4.3",
+"minutes": 75,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "chem-r14-lesson4",
+"id": "CHEM-R14-L4",
+"title": "Gibbs energy and equilibrium: why ΔG becomes less negative as a reaction proceeds and reaches zero at equilibrium",
+"level": "HL",
+"range": "R1.4.4",
+"minutes": 75,
+"hour": "Hours 4–5"
+}
+]
+},
+{
+"code": "R2.1",
+"name": "How much? The amount of chemical change",
+"theme": "R2",
+"hl_only": false,
+"sl_hours": 7.0,
+"ahl_hours": 0.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 5,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-r21-lesson1",
+"id": "CHEM-R21-L1",
+"title": "Balanced chemical equations with state symbols, and ionic equations with spectator ions",
+"level": "SL",
+"range": "R2.1.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-r21-lesson2",
+"id": "CHEM-R21-L2",
+"title": "Reacting masses: using mole ratios to calculate the masses of reactants and products",
+"level": "SL",
+"range": "R2.1.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-r21-lesson3",
+"id": "CHEM-R21-L3",
+"title": "Mole ratios with gas volumes and solution concentrations, including titration calculations",
+"level": "SL",
+"range": "R2.1.2",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "chem-r21-lesson4",
+"id": "CHEM-R21-L4",
+"title": "The limiting reactant, reactants in excess, and the theoretical yield",
+"level": "SL",
+"range": "R2.1.3",
+"minutes": 70,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "chem-r21-lesson5",
+"id": "CHEM-R21-L5",
+"title": "Percentage yield: comparing experimental and theoretical yield, and why yields are below 100 %",
+"level": "SL",
+"range": "R2.1.4",
+"minutes": 70,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "chem-r21-lesson6",
+"id": "CHEM-R21-L6",
+"title": "Atom economy as a measure of efficiency in green chemistry, and comparing synthetic routes",
+"level": "SL",
+"range": "R2.1.5",
+"minutes": 70,
+"hour": "Hours 6–7"
+}
+]
+},
+{
+"code": "R2.2",
+"name": "How fast? The rate of chemical change",
+"theme": "R2",
+"hl_only": false,
+"sl_hours": 9.0,
+"ahl_hours": 6.0,
+"hl_hours": 15.0,
+"understandings": {
+"SL": 5,
+"HL": 8
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-r22-lesson1",
+"id": "CHEM-R22-L1",
+"title": "Rate of reaction as change in concentration per unit time, its units, and finding rates from the gradients of graphs",
+"level": "SL",
+"range": "R2.2.1",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-r22-lesson2",
+"id": "CHEM-R22-L2",
+"title": "Experimental methods for measuring rate: gas volume, mass loss, colour change, conductivity and clock reactions",
+"level": "SL",
+"range": "R2.2.1",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-r22-lesson3",
+"id": "CHEM-R22-L3",
+"title": "Collision theory: particles must collide with sufficient energy and correct orientation",
+"level": "SL",
+"range": "R2.2.2",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "chem-r22-lesson4",
+"id": "CHEM-R22-L4",
+"title": "How concentration, pressure, surface area and temperature affect rate, explained by collision theory",
+"level": "SL",
+"range": "R2.2.3",
+"minutes": 75,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "chem-r22-lesson5",
+"id": "CHEM-R22-L5",
+"title": "Activation energy and the Maxwell–Boltzmann distribution: explaining the effect of temperature on the fraction of particles able to react",
+"level": "SL",
+"range": "R2.2.4",
+"minutes": 75,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "chem-r22-lesson6",
+"id": "CHEM-R22-L6",
+"title": "Catalysts: providing an alternative pathway with lower activation energy, shown on energy profiles and Maxwell–Boltzmann curves",
+"level": "SL",
+"range": "R2.2.5",
+"minutes": 75,
+"hour": "Hours 7–8"
+},
+{
+"n": 7,
+"path": "chem-r22-lesson7",
+"id": "CHEM-R22-L7",
+"title": "Investigating rate in practice: designing, carrying out and evaluating a rate experiment",
+"level": "SL",
+"range": "R2.2.3",
+"minutes": 75,
+"hour": "Hours 8–9"
+},
+{
+"n": 8,
+"path": "chem-r22-lesson8",
+"id": "CHEM-R22-L8",
+"title": "Reaction mechanisms: elementary steps, intermediates, the rate-determining step and energy profiles of multi-step reactions",
+"level": "HL",
+"range": "R2.2.6 – R2.2.7",
+"minutes": 75,
+"hour": "Hours 10–11"
+},
+{
+"n": 9,
+"path": "chem-r22-lesson9",
+"id": "CHEM-R22-L9",
+"title": "Molecularity of elementary steps, and why rate equations must be found experimentally and can be linked to mechanisms",
+"level": "HL",
+"range": "R2.2.8 – R2.2.9",
+"minutes": 75,
+"hour": "Hours 11–12"
+},
+{
+"n": 10,
+"path": "chem-r22-lesson10",
+"id": "CHEM-R22-L10",
+"title": "Orders of reaction: deducing orders from initial-rate data and from concentration–time and rate–concentration graphs",
+"level": "HL",
+"range": "R2.2.10",
+"minutes": 70,
+"hour": "Hours 12–13"
+},
+{
+"n": 11,
+"path": "chem-r22-lesson11",
+"id": "CHEM-R22-L11",
+"title": "The rate constant k: calculating it from data, deducing its units from the overall order, and its temperature dependence",
+"level": "HL",
+"range": "R2.2.11",
+"minutes": 70,
+"hour": "Hours 13–14"
+},
+{
+"n": 12,
+"path": "chem-r22-lesson12",
+"id": "CHEM-R22-L12",
+"title": "The Arrhenius equation: finding activation energy from ln k against 1/T, and the meaning of the frequency factor A",
+"level": "HL",
+"range": "R2.2.12 – R2.2.13",
+"minutes": 70,
+"hour": "Hours 14–15"
+}
+]
+},
+{
+"code": "R2.3",
+"name": "How far? The extent of chemical change",
+"theme": "R2",
+"hl_only": false,
+"sl_hours": 5.0,
+"ahl_hours": 4.0,
+"hl_hours": 9.0,
+"understandings": {
+"SL": 4,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-r23-lesson1",
+"id": "CHEM-R23-L1",
+"title": "Dynamic equilibrium in a closed system: equal forward and backward rates and constant concentrations",
+"level": "SL",
+"range": "R2.3.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-r23-lesson2",
+"id": "CHEM-R23-L2",
+"title": "The equilibrium law: writing equilibrium constant expressions (K) for homogeneous equilibria",
+"level": "SL",
+"range": "R2.3.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-r23-lesson3",
+"id": "CHEM-R23-L3",
+"title": "The magnitude of K and the extent of reaction at equilibrium",
+"level": "SL",
+"range": "R2.3.3",
+"minutes": 75,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "chem-r23-lesson4",
+"id": "CHEM-R23-L4",
+"title": "Le Châtelier's principle: effects of concentration, pressure, temperature and catalysts on position of equilibrium and on K, with industrial examples",
+"level": "SL",
+"range": "R2.3.4",
+"minutes": 75,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "chem-r23-lesson5",
+"id": "CHEM-R23-L5",
+"title": "The reaction quotient Q and comparing it with K to predict the direction a reaction will shift",
+"level": "HL",
+"range": "R2.3.5",
+"minutes": 80,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "chem-r23-lesson6",
+"id": "CHEM-R23-L6",
+"title": "Quantifying equilibrium composition: ICE tables, calculating K from initial and equilibrium data, and equilibrium concentrations from K",
+"level": "HL",
+"range": "R2.3.6",
+"minutes": 80,
+"hour": "Hours 7–8"
+},
+{
+"n": 7,
+"path": "chem-r23-lesson7",
+"id": "CHEM-R23-L7",
+"title": "Linking equilibrium and thermodynamics: ΔG⦵ = −RT ln K, and calculating K from ΔG⦵ and vice versa",
+"level": "HL",
+"range": "R2.3.7",
+"minutes": 80,
+"hour": "Hours 8–9"
+}
+]
+},
+{
+"code": "R3.1",
+"name": "Proton transfer reactions",
+"theme": "R3",
+"hl_only": false,
+"sl_hours": 8.0,
+"ahl_hours": 9.0,
+"hl_hours": 17.0,
+"understandings": {
+"SL": 8,
+"HL": 9
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-r31-lesson1",
+"id": "CHEM-R31-L1",
+"title": "Brønsted–Lowry acids and bases: proton donors and acceptors, and conjugate acid–base pairs",
+"level": "SL",
+"range": "R3.1.1 – R3.1.2",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-r31-lesson2",
+"id": "CHEM-R31-L2",
+"title": "Amphiprotic species, and neutralization reactions of acids with bases, carbonates and metals",
+"level": "SL",
+"range": "R3.1.3, R3.1.7",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-r31-lesson3",
+"id": "CHEM-R31-L3",
+"title": "The pH scale: pH = −log₁₀[H⁺], calculating pH and [H⁺], and measuring pH",
+"level": "SL",
+"range": "R3.1.4",
+"minutes": 80,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "chem-r31-lesson4",
+"id": "CHEM-R31-L4",
+"title": "The ionic product of water, Kw, and the pH of strong bases",
+"level": "SL",
+"range": "R3.1.5",
+"minutes": 80,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "chem-r31-lesson5",
+"id": "CHEM-R31-L5",
+"title": "Strong and weak acids and bases: extent of ionization, and experiments that distinguish them",
+"level": "SL",
+"range": "R3.1.6",
+"minutes": 80,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "chem-r31-lesson6",
+"id": "CHEM-R31-L6",
+"title": "Acid–base titrations and pH curves for strong acid–strong base reactions",
+"level": "SL",
+"range": "R3.1.8",
+"minutes": 80,
+"hour": "Hours 7–8"
+},
+{
+"n": 7,
+"path": "chem-r31-lesson7",
+"id": "CHEM-R31-L7",
+"title": "pOH, pKw and the relationship pH + pOH = 14 at 298 K; temperature dependence of Kw",
+"level": "HL",
+"range": "R3.1.9",
+"minutes": 80,
+"hour": "Hours 9–10"
+},
+{
+"n": 8,
+"path": "chem-r31-lesson8",
+"id": "CHEM-R31-L8",
+"title": "Acid and base dissociation constants Ka, Kb, pKa and pKb, and calculating the pH of weak acids and bases",
+"level": "HL",
+"range": "R3.1.10",
+"minutes": 80,
+"hour": "Hours 10–11"
+},
+{
+"n": 9,
+"path": "chem-r31-lesson9",
+"id": "CHEM-R31-L9",
+"title": "Conjugate pairs: Ka × Kb = Kw and pKa + pKb = pKw, and the inverse strengths of conjugates",
+"level": "HL",
+"range": "R3.1.11",
+"minutes": 80,
+"hour": "Hours 11–12"
+},
+{
+"n": 10,
+"path": "chem-r31-lesson10",
+"id": "CHEM-R31-L10",
+"title": "The pH of salt solutions: hydrolysis of ions from weak acids and weak bases",
+"level": "HL",
+"range": "R3.1.12",
+"minutes": 75,
+"hour": "Hours 13–14"
+},
+{
+"n": 11,
+"path": "chem-r31-lesson11",
+"id": "CHEM-R31-L11",
+"title": "pH curves involving weak acids and weak bases: shape, buffer region, half-equivalence (pH = pKa) and equivalence pH",
+"level": "HL",
+"range": "R3.1.13",
+"minutes": 75,
+"hour": "Hours 14–15"
+},
+{
+"n": 12,
+"path": "chem-r31-lesson12",
+"id": "CHEM-R31-L12",
+"title": "Acid–base indicators as weak acids, their pH range, and choosing the right indicator for a titration",
+"level": "HL",
+"range": "R3.1.14 – R3.1.15",
+"minutes": 75,
+"hour": "Hours 15–16"
+},
+{
+"n": 13,
+"path": "chem-r31-lesson13",
+"id": "CHEM-R31-L13",
+"title": "Buffer solutions: composition, how they resist pH change, and calculating buffer pH",
+"level": "HL",
+"range": "R3.1.16 – R3.1.17",
+"minutes": 75,
+"hour": "Hours 16–17"
+}
+]
+},
+{
+"code": "R3.2",
+"name": "Electron transfer reactions",
+"theme": "R3",
+"hl_only": false,
+"sl_hours": 10.0,
+"ahl_hours": 5.0,
+"hl_hours": 15.0,
+"understandings": {
+"SL": 11,
+"HL": 5
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-r32-lesson1",
+"id": "CHEM-R32-L1",
+"title": "Oxidation and reduction: electron transfer, oxidation states, oxygen and hydrogen, and oxidizing and reducing agents",
+"level": "SL",
+"range": "R3.2.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "chem-r32-lesson2",
+"id": "CHEM-R32-L2",
+"title": "Half-equations, and balancing redox equations in acidic solution",
+"level": "SL",
+"range": "R3.2.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "chem-r32-lesson3",
+"id": "CHEM-R32-L3",
+"title": "Relative ease of oxidation and reduction: the activity series of metals and halogens, displacement reactions, and acids with metals",
+"level": "SL",
+"range": "R3.2.3 – R3.2.4",
+"minutes": 75,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "chem-r32-lesson4",
+"id": "CHEM-R32-L4",
+"title": "Primary (voltaic) cells: converting chemical energy from spontaneous redox reactions into electrical energy",
+"level": "SL",
+"range": "R3.2.5",
+"minutes": 75,
+"hour": "Hours 4–5"
+},
+{
+"n": 5,
+"path": "chem-r32-lesson5",
+"id": "CHEM-R32-L5",
+"title": "Secondary (rechargeable) cells and fuel cells: advantages, disadvantages and the redox reactions involved",
+"level": "SL",
+"range": "R3.2.6 – R3.2.7",
+"minutes": 75,
+"hour": "Hours 6–7"
+},
+{
+"n": 6,
+"path": "chem-r32-lesson6",
+"id": "CHEM-R32-L6",
+"title": "Electrolytic cells: using electrical energy to drive non-spontaneous redox, and electrolysis of molten salts",
+"level": "SL",
+"range": "R3.2.8",
+"minutes": 75,
+"hour": "Hours 7–8"
+},
+{
+"n": 7,
+"path": "chem-r32-lesson7",
+"id": "CHEM-R32-L7",
+"title": "Oxidation of organic compounds: primary, secondary and tertiary alcohols with acidified dichromate",
+"level": "SL",
+"range": "R3.2.9",
+"minutes": 75,
+"hour": "Hours 8–9"
+},
+{
+"n": 8,
+"path": "chem-r32-lesson8",
+"id": "CHEM-R32-L8",
+"title": "Reduction of organic compounds: carboxylic acids, aldehydes and ketones to alcohols, and hydrogenation of alkenes and alkynes",
+"level": "SL",
+"range": "R3.2.10 – R3.2.11",
+"minutes": 75,
+"hour": "Hours 9–10"
+},
+{
+"n": 9,
+"path": "chem-r32-lesson9",
+"id": "CHEM-R32-L9",
+"title": "Standard electrode potentials and the standard hydrogen electrode",
+"level": "HL",
+"range": "R3.2.12",
+"minutes": 75,
+"hour": "Hours 11–12"
+},
+{
+"n": 10,
+"path": "chem-r32-lesson10",
+"id": "CHEM-R32-L10",
+"title": "Standard cell potentials, predicting spontaneity, and the link ΔG⦵ = −nFE⦵",
+"level": "HL",
+"range": "R3.2.13 – R3.2.14",
+"minutes": 75,
+"hour": "Hours 12–13"
+},
+{
+"n": 11,
+"path": "chem-r32-lesson11",
+"id": "CHEM-R32-L11",
+"title": "Electrolysis of aqueous solutions: competing reactions of water and the effects of electrode and concentration",
+"level": "HL",
+"range": "R3.2.15",
+"minutes": 75,
+"hour": "Hours 13–14"
+},
+{
+"n": 12,
+"path": "chem-r32-lesson12",
+"id": "CHEM-R32-L12",
+"title": "Electroplating: coating objects with a metal film, and quantitative aspects",
+"level": "HL",
+"range": "R3.2.16",
+"minutes": 75,
+"hour": "Hours 14–15"
+}
+]
+},
+{
+"code": "R3.3",
+"name": "Electron sharing reactions",
+"theme": "R3",
+"hl_only": false,
+"sl_hours": 2.0,
+"ahl_hours": 0.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-r33-lesson1",
+"id": "CHEM-R33-L1",
+"title": "Radicals: species with unpaired electrons, formed by homolytic fission using UV light or heat",
+"level": "SL",
+"range": "R3.3.1 – R3.3.2",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "chem-r33-lesson2",
+"id": "CHEM-R33-L2",
+"title": "Radical substitution of alkanes: initiation, propagation and termination, and why a mixture of products forms",
+"level": "SL",
+"range": "R3.3.3",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "R3.4",
+"name": "Electron-pair sharing reactions",
+"theme": "R3",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 7.0,
+"hl_hours": 11.0,
+"understandings": {
+"SL": 5,
+"HL": 8
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "chem-r34-lesson1",
+"id": "CHEM-R34-L1",
+"title": "Nucleophiles as electron-pair donors, and heterolytic fission forming ions",
+"level": "SL",
+"range": "R3.4.1, R3.4.3",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "chem-r34-lesson2",
+"id": "CHEM-R34-L2",
+"title": "Nucleophilic substitution of halogenoalkanes with hydroxide ions to form alcohols",
+"level": "SL",
+"range": "R3.4.2",
+"minutes": 60,
+"hour": "Hour 2"
+},
+{
+"n": 3,
+"path": "chem-r34-lesson3",
+"id": "CHEM-R34-L3",
+"title": "Electrophiles as electron-pair acceptors, and the electron-rich C=C bond",
+"level": "SL",
+"range": "R3.4.4",
+"minutes": 60,
+"hour": "Hour 3"
+},
+{
+"n": 4,
+"path": "chem-r34-lesson4",
+"id": "CHEM-R34-L4",
+"title": "Electrophilic addition reactions of alkenes with hydrogen halides, halogens and water",
+"level": "SL",
+"range": "R3.4.5",
+"minutes": 60,
+"hour": "Hour 4"
+},
+{
+"n": 5,
+"path": "chem-r34-lesson5",
+"id": "CHEM-R34-L5",
+"title": "Lewis acids and bases: electron-pair acceptors and donors, and nucleophiles and electrophiles as Lewis bases and acids",
+"level": "HL",
+"range": "R3.4.6, R3.4.8",
+"minutes": 70,
+"hour": "Hours 5–6"
+},
+{
+"n": 6,
+"path": "chem-r34-lesson6",
+"id": "CHEM-R34-L6",
+"title": "Coordination bonds in complex ions: ligands as Lewis bases, coordination number and formulas of complexes",
+"level": "HL",
+"range": "R3.4.7",
+"minutes": 70,
+"hour": "Hours 6–7"
+},
+{
+"n": 7,
+"path": "chem-r34-lesson7",
+"id": "CHEM-R34-L7",
+"title": "Mechanisms of nucleophilic substitution: SN1 and SN2, rate equations and stereochemistry",
+"level": "HL",
+"range": "R3.4.9",
+"minutes": 70,
+"hour": "Hours 7–8"
+},
+{
+"n": 8,
+"path": "chem-r34-lesson8",
+"id": "CHEM-R34-L8",
+"title": "Factors affecting the rate of nucleophilic substitution: the leaving group, the class of halogenoalkane, the nucleophile and the solvent",
+"level": "HL",
+"range": "R3.4.10",
+"minutes": 70,
+"hour": "Hours 8–9"
+},
+{
+"n": 9,
+"path": "chem-r34-lesson9",
+"id": "CHEM-R34-L9",
+"title": "Mechanism of electrophilic addition with carbocations, and Markovnikov's rule for asymmetric alkenes",
+"level": "HL",
+"range": "R3.4.11 – R3.4.12",
+"minutes": 70,
+"hour": "Hours 9–10"
+},
+{
+"n": 10,
+"path": "chem-r34-lesson10",
+"id": "CHEM-R34-L10",
+"title": "Electrophilic substitution of benzene: nitration mechanism and why benzene substitutes rather than adds",
+"level": "HL",
+"range": "R3.4.13",
+"minutes": 70,
+"hour": "Hours 10–11"
+}
+]
+}
+]
+}

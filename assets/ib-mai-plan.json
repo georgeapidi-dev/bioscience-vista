@@ -1,0 +1,3077 @@
+{
+"subject": "IB Mathematics: Applications and Interpretation",
+"name": "IB Maths AI",
+"key": "mai",
+"url": "/ib-maths-ai-plan/",
+"classes": {
+"SL": "maths-ai-sl",
+"HL": "maths-ai-hl"
+},
+"class_names": {
+"SL": "IB Maths AI SL",
+"HL": "IB Maths AI HL"
+},
+"theme_prefix": "Topic ",
+"about": "IB Mathematics: Applications and Interpretation teaching-hour plan. Hours from the IB guide; lesson durations share each topic's hours. Built by lessongen/ib_plan.py.",
+"source": "IB Mathematics AI guide, first assessment 2021: topic hours from the guide; subtopic hours shared by number of content statements (paraphrased here, numbered in guide order).",
+"themes": {
+"1": "Number and algebra",
+"2": "Functions",
+"3": "Geometry and trigonometry",
+"4": "Statistics and probability",
+"5": "Calculus"
+},
+"totals": {
+"SL": 120,
+"HL": 210
+},
+"differences": [],
+"topics": [
+{
+"code": "1.1",
+"name": "Standard form",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 1.25,
+"ahl_hours": 0.0,
+"hl_hours": 1.25,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-11-lesson1",
+"id": "MAI-11-L1",
+"title": "Standard form: writing, converting and calculating with very large and very small numbers",
+"level": "SL",
+"range": "1.1.1 – 1.1.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "1.2",
+"name": "Arithmetic sequences and series",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-12-lesson1",
+"id": "MAI-12-L1",
+"title": "Arithmetic sequences, the nth term, sigma notation and arithmetic series",
+"level": "SL",
+"range": "1.2.1 – 1.2.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-12-lesson2",
+"id": "MAI-12-L2",
+"title": "Applications of arithmetic sequences: simple interest, growth in equal steps and linear models",
+"level": "SL",
+"range": "1.2.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "1.3",
+"name": "Geometric sequences and series",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-13-lesson1",
+"id": "MAI-13-L1",
+"title": "Geometric sequences, the nth term and finite geometric series",
+"level": "SL",
+"range": "1.3.1 – 1.3.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-13-lesson2",
+"id": "MAI-13-L2",
+"title": "Applications of geometric sequences: percentage growth and decay, populations and spread",
+"level": "SL",
+"range": "1.3.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "1.4",
+"name": "Financial applications",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-14-lesson1",
+"id": "MAI-14-L1",
+"title": "Compound interest with different compounding periods, and depreciation",
+"level": "SL",
+"range": "1.4.1 – 1.4.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-14-lesson2",
+"id": "MAI-14-L2",
+"title": "Financial problems with technology: solving for any variable with the TVM solver",
+"level": "SL",
+"range": "1.4.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "1.5",
+"name": "Exponents and logarithms (introduction)",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-15-lesson1",
+"id": "MAI-15-L1",
+"title": "Laws of exponents with integer exponents",
+"level": "SL",
+"range": "1.5.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-15-lesson2",
+"id": "MAI-15-L2",
+"title": "Introduction to logarithms: base 10 and base e, and evaluating logarithms with technology",
+"level": "SL",
+"range": "1.5.2 – 1.5.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "1.6",
+"name": "Approximation and errors",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-16-lesson1",
+"id": "MAI-16-L1",
+"title": "Decimal places, significant figures and upper and lower bounds",
+"level": "SL",
+"range": "1.6.1 – 1.6.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-16-lesson2",
+"id": "MAI-16-L2",
+"title": "Percentage error and estimation",
+"level": "SL",
+"range": "1.6.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "1.7",
+"name": "Amortization and annuities",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 0.75,
+"ahl_hours": 0.0,
+"hl_hours": 0.75,
+"understandings": {
+"SL": 1,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-17-lesson1",
+"id": "MAI-17-L1",
+"title": "Amortization and annuities using technology",
+"level": "SL",
+"range": "1.7.1",
+"minutes": 45,
+"hour": "Hour 1"
+}
+]
+},
+{
+"code": "1.8",
+"name": "Systems of equations and polynomials with technology",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 1.5,
+"ahl_hours": 0.0,
+"hl_hours": 1.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-18-lesson1",
+"id": "MAI-18-L1",
+"title": "Systems of linear equations and polynomial equations with technology",
+"level": "SL",
+"range": "1.8.1 – 1.8.2",
+"minutes": 90,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "1.9",
+"name": "Laws of logarithms",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-19-lesson1",
+"id": "MAI-19-L1",
+"title": "Laws of logarithms and change of base",
+"level": "HL",
+"range": "1.9.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "mai-19-lesson2",
+"id": "MAI-19-L2",
+"title": "Solving exponential and logarithmic equations",
+"level": "HL",
+"range": "1.9.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "1.10",
+"name": "Rational exponents",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.0,
+"hl_hours": 1.0,
+"understandings": {
+"SL": 0,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-110-lesson1",
+"id": "MAI-110-L1",
+"title": "Laws of exponents with rational exponents",
+"level": "HL",
+"range": "1.10.1",
+"minutes": 60,
+"hour": "Hour 1"
+}
+]
+},
+{
+"code": "1.11",
+"name": "Infinite geometric series",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 0.75,
+"hl_hours": 0.75,
+"understandings": {
+"SL": 0,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-111-lesson1",
+"id": "MAI-111-L1",
+"title": "Sum of an infinite geometric series and the condition |r| < 1",
+"level": "HL",
+"range": "1.11.1",
+"minutes": 45,
+"hour": "Hour 1"
+}
+]
+},
+{
+"code": "1.12",
+"name": "Complex numbers",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.75,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-112-lesson1",
+"id": "MAI-112-L1",
+"title": "The number i and complex numbers in Cartesian form z = a + bi",
+"level": "HL",
+"range": "1.12.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "mai-112-lesson2",
+"id": "MAI-112-L2",
+"title": "Products, quotients, conjugates, modulus and argument",
+"level": "HL",
+"range": "1.12.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "1.13",
+"name": "Polar and Euler forms",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.5,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-113-lesson1",
+"id": "MAI-113-L1",
+"title": "Sums, products and quotients in polar and Euler form; geometric interpretation",
+"level": "HL",
+"range": "1.13.1 – 1.13.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-113-lesson2",
+"id": "MAI-113-L2",
+"title": "Adding sinusoidal functions using complex numbers",
+"level": "HL",
+"range": "1.13.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "1.14",
+"name": "Matrices",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.5,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-114-lesson1",
+"id": "MAI-114-L1",
+"title": "Matrices: definitions and algebra",
+"level": "HL",
+"range": "1.14.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-114-lesson2",
+"id": "MAI-114-L2",
+"title": "Determinants, inverses and solving systems with matrices",
+"level": "HL",
+"range": "1.14.2 – 1.14.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "1.15",
+"name": "Eigenvalues and eigenvectors",
+"theme": "1",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.5,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-115-lesson1",
+"id": "MAI-115-L1",
+"title": "Eigenvalues, eigenvectors and the characteristic polynomial",
+"level": "HL",
+"range": "1.15.1 – 1.15.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-115-lesson2",
+"id": "MAI-115-L2",
+"title": "Diagonalization and powers of 2 × 2 matrices",
+"level": "HL",
+"range": "1.15.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "2.1",
+"name": "Equations of straight lines",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-21-lesson1",
+"id": "MAI-21-L1",
+"title": "Equations of straight lines: gradient and the three forms y = mx + c, ax + by + d = 0 and y − y₁ = m(x − x₁)",
+"level": "SL",
+"range": "2.1.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-21-lesson2",
+"id": "MAI-21-L2",
+"title": "Parallel and perpendicular lines",
+"level": "SL",
+"range": "2.1.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-21-lesson3",
+"id": "MAI-21-L3",
+"title": "Straight lines in context: rates, break-even and perpendicular paths",
+"level": "SL",
+"range": "2.1.1 – 2.1.2",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "2.2",
+"name": "Functions: concept, domain, range, inverse",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 5.5,
+"ahl_hours": 0.0,
+"hl_hours": 5.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-22-lesson1",
+"id": "MAI-22-L1",
+"title": "Functions: notation, domain and range",
+"level": "SL",
+"range": "2.2.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-22-lesson2",
+"id": "MAI-22-L2",
+"title": "Inverse functions as reflections in y = x, and functions as mathematical models",
+"level": "SL",
+"range": "2.2.2 – 2.2.3",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-22-lesson3",
+"id": "MAI-22-L3",
+"title": "Domain and range of models in context",
+"level": "SL",
+"range": "2.2.1 – 2.2.3",
+"minutes": 80,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "mai-22-lesson4",
+"id": "MAI-22-L4",
+"title": "Inverse functions in context: reversing a model",
+"level": "SL",
+"range": "2.2.2",
+"minutes": 80,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "2.3",
+"name": "Graphs of functions",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 3.75,
+"ahl_hours": 0.0,
+"hl_hours": 3.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-23-lesson1",
+"id": "MAI-23-L1",
+"title": "Graphs of functions: plotting, drawing and choosing scales with and without technology",
+"level": "SL",
+"range": "2.3.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-23-lesson2",
+"id": "MAI-23-L2",
+"title": "Creating sketches from information or context",
+"level": "SL",
+"range": "2.3.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-23-lesson3",
+"id": "MAI-23-L3",
+"title": "Graphing with technology: windows, scales and sketches from context",
+"level": "SL",
+"range": "2.3.1 – 2.3.2",
+"minutes": 75,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "2.4",
+"name": "Key features of graphs",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 3.75,
+"ahl_hours": 0.0,
+"hl_hours": 3.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-24-lesson1",
+"id": "MAI-24-L1",
+"title": "Key features of graphs: maximum, minimum, intercepts, symmetry, vertex, zeros and asymptotes",
+"level": "SL",
+"range": "2.4.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-24-lesson2",
+"id": "MAI-24-L2",
+"title": "Using technology to find points of intersection and solve equations graphically",
+"level": "SL",
+"range": "2.4.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-24-lesson3",
+"id": "MAI-24-L3",
+"title": "Interpreting key features of models",
+"level": "SL",
+"range": "2.4.1 – 2.4.2",
+"minutes": 75,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "2.5",
+"name": "Modelling with functions",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 9.0,
+"ahl_hours": 0.0,
+"hl_hours": 9.0,
+"understandings": {
+"SL": 5,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-25-lesson1",
+"id": "MAI-25-L1",
+"title": "Linear models",
+"level": "SL",
+"range": "2.5.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-25-lesson2",
+"id": "MAI-25-L2",
+"title": "Quadratic models",
+"level": "SL",
+"range": "2.5.2",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-25-lesson3",
+"id": "MAI-25-L3",
+"title": "Exponential growth models",
+"level": "SL",
+"range": "2.5.3",
+"minutes": 90,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "mai-25-lesson4",
+"id": "MAI-25-L4",
+"title": "Exponential decay models",
+"level": "SL",
+"range": "2.5.3",
+"minutes": 90,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "mai-25-lesson5",
+"id": "MAI-25-L5",
+"title": "Direct and inverse variation and cubic models",
+"level": "SL",
+"range": "2.5.4",
+"minutes": 90,
+"hour": "Hours 7–8"
+},
+{
+"n": 6,
+"path": "mai-25-lesson6",
+"id": "MAI-25-L6",
+"title": "Sinusoidal models",
+"level": "SL",
+"range": "2.5.5",
+"minutes": 90,
+"hour": "Hours 8–9"
+}
+]
+},
+{
+"code": "2.6",
+"name": "The modelling process",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 5.5,
+"ahl_hours": 0.0,
+"hl_hours": 5.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-26-lesson1",
+"id": "MAI-26-L1",
+"title": "Developing models: choosing a function type from context and data",
+"level": "SL",
+"range": "2.6.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-26-lesson2",
+"id": "MAI-26-L2",
+"title": "Fitting models with technology: regression",
+"level": "SL",
+"range": "2.6.1",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-26-lesson3",
+"id": "MAI-26-L3",
+"title": "Testing and reflecting on models",
+"level": "SL",
+"range": "2.6.2",
+"minutes": 80,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "mai-26-lesson4",
+"id": "MAI-26-L4",
+"title": "Using models to predict: domain and limitations",
+"level": "SL",
+"range": "2.6.3",
+"minutes": 80,
+"hour": "Hours 5–6"
+}
+]
+},
+{
+"code": "2.7",
+"name": "Composite and inverse functions",
+"theme": "2",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-27-lesson1",
+"id": "MAI-27-L1",
+"title": "Composite functions",
+"level": "HL",
+"range": "2.7.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "mai-27-lesson2",
+"id": "MAI-27-L2",
+"title": "Inverses with domain restriction and self-inverse functions",
+"level": "HL",
+"range": "2.7.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "2.8",
+"name": "Transformations of graphs",
+"theme": "2",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-28-lesson1",
+"id": "MAI-28-L1",
+"title": "Transformations of graphs: translations, reflections and stretches",
+"level": "HL",
+"range": "2.8.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "mai-28-lesson2",
+"id": "MAI-28-L2",
+"title": "Composite transformations",
+"level": "HL",
+"range": "2.8.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "2.9",
+"name": "Further modelling",
+"theme": "2",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 4.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 0,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-29-lesson1",
+"id": "MAI-29-L1",
+"title": "Exponential models including the logistic model",
+"level": "HL",
+"range": "2.9.1",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-29-lesson2",
+"id": "MAI-29-L2",
+"title": "Natural logarithmic models and sinusoidal models",
+"level": "HL",
+"range": "2.9.2 – 2.9.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-29-lesson3",
+"id": "MAI-29-L3",
+"title": "Piecewise models",
+"level": "HL",
+"range": "2.9.4",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "2.10",
+"name": "Scaling and linearizing data",
+"theme": "2",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.0,
+"hl_hours": 3.0,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-210-lesson1",
+"id": "MAI-210-L1",
+"title": "Scaling with logarithms and linearizing data",
+"level": "HL",
+"range": "2.10.1 – 2.10.2",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-210-lesson2",
+"id": "MAI-210-L2",
+"title": "Log–log and semi-log graphs",
+"level": "HL",
+"range": "2.10.3",
+"minutes": 90,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.1",
+"name": "3D geometry: distance, volume and surface area",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-31-lesson1",
+"id": "MAI-31-L1",
+"title": "Distance and midpoint between points in three dimensions",
+"level": "SL",
+"range": "3.1.1",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-31-lesson2",
+"id": "MAI-31-L2",
+"title": "Volume and surface area of 3D solids: prisms, pyramids, cylinders, cones, spheres and composites",
+"level": "SL",
+"range": "3.1.2",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-31-lesson3",
+"id": "MAI-31-L3",
+"title": "Angles in 3D: between two lines and between a line and a plane",
+"level": "SL",
+"range": "3.1.3",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.2",
+"name": "Trigonometry in triangles",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-32-lesson1",
+"id": "MAI-32-L1",
+"title": "Right-angled trigonometry: sine, cosine and tangent",
+"level": "SL",
+"range": "3.2.1",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-32-lesson2",
+"id": "MAI-32-L2",
+"title": "The sine rule and the cosine rule for any triangle",
+"level": "SL",
+"range": "3.2.2",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-32-lesson3",
+"id": "MAI-32-L3",
+"title": "Area of a triangle using ½ab sin C, and combined problems",
+"level": "SL",
+"range": "3.2.3",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.3",
+"name": "Applications of trigonometry",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 3.75,
+"ahl_hours": 0.0,
+"hl_hours": 3.75,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-33-lesson1",
+"id": "MAI-33-L1",
+"title": "Angles of elevation and depression",
+"level": "SL",
+"range": "3.3.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-33-lesson2",
+"id": "MAI-33-L2",
+"title": "Bearings and navigation",
+"level": "SL",
+"range": "3.3.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-33-lesson3",
+"id": "MAI-33-L3",
+"title": "Constructing labelled diagrams from written statements and solving multi-step problems",
+"level": "SL",
+"range": "3.3.3",
+"minutes": 75,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.4",
+"name": "The circle: arcs and sectors",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 1.25,
+"ahl_hours": 0.0,
+"hl_hours": 1.25,
+"understandings": {
+"SL": 1,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-34-lesson1",
+"id": "MAI-34-L1",
+"title": "Length of an arc and area of a sector (degrees)",
+"level": "SL",
+"range": "3.4.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "3.5",
+"name": "Equations of perpendicular bisectors",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 1.25,
+"ahl_hours": 0.0,
+"hl_hours": 1.25,
+"understandings": {
+"SL": 1,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-35-lesson1",
+"id": "MAI-35-L1",
+"title": "Equations of perpendicular bisectors",
+"level": "SL",
+"range": "3.5.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "3.6",
+"name": "Voronoi diagrams",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 3.75,
+"ahl_hours": 0.0,
+"hl_hours": 3.75,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-36-lesson1",
+"id": "MAI-36-L1",
+"title": "Voronoi diagrams: sites, vertices, edges and cells",
+"level": "SL",
+"range": "3.6.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-36-lesson2",
+"id": "MAI-36-L2",
+"title": "Adding a site and nearest neighbour interpolation",
+"level": "SL",
+"range": "3.6.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-36-lesson3",
+"id": "MAI-36-L3",
+"title": "The toxic waste dump problem",
+"level": "SL",
+"range": "3.6.3",
+"minutes": 75,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.7",
+"name": "Radian measure",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.25,
+"hl_hours": 1.25,
+"understandings": {
+"SL": 0,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-37-lesson1",
+"id": "MAI-37-L1",
+"title": "Length of an arc and area of a sector",
+"level": "HL",
+"range": "3.7.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "3.8",
+"name": "The unit circle and trigonometric equations",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.25,
+"hl_hours": 3.25,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-38-lesson1",
+"id": "MAI-38-L1",
+"title": "Defining sin θ and cos θ with the unit circle",
+"level": "HL",
+"range": "3.8.1",
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-38-lesson2",
+"id": "MAI-38-L2",
+"title": "The ambiguous case of the sine rule",
+"level": "HL",
+"range": "3.8.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-38-lesson3",
+"id": "MAI-38-L3",
+"title": "Solving trigonometric equations in a finite interval",
+"level": "HL",
+"range": "3.8.3",
+"minutes": 65,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.9",
+"name": "Geometric transformations with matrices",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.25,
+"hl_hours": 3.25,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-39-lesson1",
+"id": "MAI-39-L1",
+"title": "Geometric transformations with matrices",
+"level": "HL",
+"range": "3.9.1",
+"minutes": 65,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-39-lesson2",
+"id": "MAI-39-L2",
+"title": "Compositions of transformations",
+"level": "HL",
+"range": "3.9.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-39-lesson3",
+"id": "MAI-39-L3",
+"title": "Determinant and area under transformation",
+"level": "HL",
+"range": "3.9.3",
+"minutes": 65,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "3.10",
+"name": "Vectors",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.0,
+"hl_hours": 3.0,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-310-lesson1",
+"id": "MAI-310-L1",
+"title": "Vectors, position vectors and displacement",
+"level": "HL",
+"range": "3.10.1 – 3.10.2",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-310-lesson2",
+"id": "MAI-310-L2",
+"title": "Base vectors i, j, k; components, magnitude and unit vectors",
+"level": "HL",
+"range": "3.10.3",
+"minutes": 90,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.11",
+"name": "Vector equation of a line",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-311-lesson1",
+"id": "MAI-311-L1",
+"title": "Vector equation of a line: vector, parametric and Cartesian forms",
+"level": "HL",
+"range": "3.11.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "mai-311-lesson2",
+"id": "MAI-311-L2",
+"title": "Simple kinematics with vectors",
+"level": "HL",
+"range": "3.11.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "3.12",
+"name": "Vector applications to kinematics",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-312-lesson1",
+"id": "MAI-312-L1",
+"title": "Projectile motion and motion with variable velocity",
+"level": "HL",
+"range": "3.12.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "mai-312-lesson2",
+"id": "MAI-312-L2",
+"title": "Circular motion",
+"level": "HL",
+"range": "3.12.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "3.13",
+"name": "Scalar and vector product",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.0,
+"hl_hours": 3.0,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-313-lesson1",
+"id": "MAI-313-L1",
+"title": "The scalar product and the angle between two vectors",
+"level": "HL",
+"range": "3.13.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-313-lesson2",
+"id": "MAI-313-L2",
+"title": "Areas of parallelograms and triangles using the vector product",
+"level": "HL",
+"range": "3.13.2 – 3.13.3",
+"minutes": 90,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.14",
+"name": "Graph theory",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.0,
+"hl_hours": 3.0,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-314-lesson1",
+"id": "MAI-314-L1",
+"title": "Graphs: vertices, edges, adjacency and degree",
+"level": "HL",
+"range": "3.14.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-314-lesson2",
+"id": "MAI-314-L2",
+"title": "Types of graph: simple, complete, weighted, directed; subgraphs and trees",
+"level": "HL",
+"range": "3.14.2 – 3.14.3",
+"minutes": 90,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.15",
+"name": "Adjacency matrices",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.0,
+"hl_hours": 3.0,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-315-lesson1",
+"id": "MAI-315-L1",
+"title": "Adjacency matrices and walks",
+"level": "HL",
+"range": "3.15.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-315-lesson2",
+"id": "MAI-315-L2",
+"title": "Weighted adjacency tables and transition matrices for random walks",
+"level": "HL",
+"range": "3.15.2 – 3.15.3",
+"minutes": 90,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "3.16",
+"name": "Tree and cycle algorithms",
+"theme": "3",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 4.25,
+"hl_hours": 4.25,
+"understandings": {
+"SL": 0,
+"HL": 4
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-316-lesson1",
+"id": "MAI-316-L1",
+"title": "Eulerian and Hamiltonian trails and circuits",
+"level": "HL",
+"range": "3.16.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-316-lesson2",
+"id": "MAI-316-L2",
+"title": "Minimum spanning trees: Kruskal's and Prim's algorithms",
+"level": "HL",
+"range": "3.16.2",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-316-lesson3",
+"id": "MAI-316-L3",
+"title": "The Chinese postman problem and the travelling salesman problem",
+"level": "HL",
+"range": "3.16.3 – 3.16.4",
+"minutes": 85,
+"hour": "Hours 3–5"
+}
+]
+},
+{
+"code": "4.1",
+"name": "Collecting data and sampling",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 5.0,
+"ahl_hours": 0.0,
+"hl_hours": 5.0,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-41-lesson1",
+"id": "MAI-41-L1",
+"title": "Populations, samples and types of data",
+"level": "SL",
+"range": "4.1.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-41-lesson2",
+"id": "MAI-41-L2",
+"title": "Reliability of data, bias and outliers",
+"level": "SL",
+"range": "4.1.2 – 4.1.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-41-lesson3",
+"id": "MAI-41-L3",
+"title": "Sampling techniques: simple random, convenience, systematic, quota and stratified",
+"level": "SL",
+"range": "4.1.4",
+"minutes": 75,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "mai-41-lesson4",
+"id": "MAI-41-L4",
+"title": "Collecting data in practice: planning a school survey",
+"level": "SL",
+"range": "4.1.1 – 4.1.4",
+"minutes": 75,
+"hour": "Hours 4–5"
+}
+]
+},
+{
+"code": "4.2",
+"name": "Presenting data",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-42-lesson1",
+"id": "MAI-42-L1",
+"title": "Presenting data: frequency distributions and histograms",
+"level": "SL",
+"range": "4.2.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-42-lesson2",
+"id": "MAI-42-L2",
+"title": "Cumulative frequency, quartiles, percentiles and box-and-whisker diagrams",
+"level": "SL",
+"range": "4.2.2 – 4.2.3",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-42-lesson3",
+"id": "MAI-42-L3",
+"title": "Statistical graphs with technology and comparing distributions",
+"level": "SL",
+"range": "4.2.1 – 4.2.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "4.3",
+"name": "Measures of central tendency and dispersion",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-43-lesson1",
+"id": "MAI-43-L1",
+"title": "Measures of central tendency: mean, median and mode, including grouped data",
+"level": "SL",
+"range": "4.3.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-43-lesson2",
+"id": "MAI-43-L2",
+"title": "Measures of dispersion: range, IQR, standard deviation and variance, and the effect of constant changes",
+"level": "SL",
+"range": "4.3.2 – 4.3.3",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-43-lesson3",
+"id": "MAI-43-L3",
+"title": "Summary statistics with technology from frequency tables",
+"level": "SL",
+"range": "4.3.1 – 4.3.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "4.4",
+"name": "Correlation and regression",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-44-lesson1",
+"id": "MAI-44-L1",
+"title": "Bivariate data: scatter diagrams and Pearson's correlation coefficient r",
+"level": "SL",
+"range": "4.4.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-44-lesson2",
+"id": "MAI-44-L2",
+"title": "Regression line of y on x, interpolation and extrapolation",
+"level": "SL",
+"range": "4.4.2 – 4.4.3",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-44-lesson3",
+"id": "MAI-44-L3",
+"title": "A bivariate investigation with technology",
+"level": "SL",
+"range": "4.4.1 – 4.4.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "4.5",
+"name": "Concepts of probability",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-45-lesson1",
+"id": "MAI-45-L1",
+"title": "Concepts of probability: trials, outcomes, sample space and events",
+"level": "SL",
+"range": "4.5.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-45-lesson2",
+"id": "MAI-45-L2",
+"title": "Probability of an event, complementary events and expected number of occurrences",
+"level": "SL",
+"range": "4.5.2 – 4.5.3",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-45-lesson3",
+"id": "MAI-45-L3",
+"title": "Probability by experiment and simulation",
+"level": "SL",
+"range": "4.5.1 – 4.5.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "4.6",
+"name": "Venn, tree diagrams and combined events",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-46-lesson1",
+"id": "MAI-46-L1",
+"title": "Venn diagrams, tree diagrams, tables and combined events",
+"level": "SL",
+"range": "4.6.1 – 4.6.2",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-46-lesson2",
+"id": "MAI-46-L2",
+"title": "Conditional probability and independent events",
+"level": "SL",
+"range": "4.6.3",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-46-lesson3",
+"id": "MAI-46-L3",
+"title": "Probability in context: tables, trees and screening tests",
+"level": "SL",
+"range": "4.6.1 – 4.6.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "4.7",
+"name": "Discrete random variables",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-47-lesson1",
+"id": "MAI-47-L1",
+"title": "Discrete random variables and their probability distributions",
+"level": "SL",
+"range": "4.7.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-47-lesson2",
+"id": "MAI-47-L2",
+"title": "Expected value E(X) and fair games",
+"level": "SL",
+"range": "4.7.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "4.8",
+"name": "Binomial distribution",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-48-lesson1",
+"id": "MAI-48-L1",
+"title": "The binomial distribution: conditions and probabilities with technology",
+"level": "SL",
+"range": "4.8.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-48-lesson2",
+"id": "MAI-48-L2",
+"title": "Mean and variance of the binomial distribution",
+"level": "SL",
+"range": "4.8.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "4.9",
+"name": "Normal distribution",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-49-lesson1",
+"id": "MAI-49-L1",
+"title": "The normal distribution: properties and the 68–95–99.7 pattern",
+"level": "SL",
+"range": "4.9.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-49-lesson2",
+"id": "MAI-49-L2",
+"title": "Normal probability calculations and inverse normal with technology",
+"level": "SL",
+"range": "4.9.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "4.10",
+"name": "Spearman's rank correlation",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-410-lesson1",
+"id": "MAI-410-L1",
+"title": "Spearman's rank correlation coefficient",
+"level": "SL",
+"range": "4.10.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-410-lesson2",
+"id": "MAI-410-L2",
+"title": "Appropriateness of Pearson's and Spearman's coefficients",
+"level": "SL",
+"range": "4.10.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "4.11",
+"name": "Hypothesis testing",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 3.5,
+"ahl_hours": 0.0,
+"hl_hours": 3.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-411-lesson1",
+"id": "MAI-411-L1",
+"title": "Hypothesis testing: hypotheses, significance levels and p-values",
+"level": "SL",
+"range": "4.11.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-411-lesson2",
+"id": "MAI-411-L2",
+"title": "χ² tests for independence and goodness of fit",
+"level": "SL",
+"range": "4.11.2",
+"minutes": 70,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-411-lesson3",
+"id": "MAI-411-L3",
+"title": "The t-test for comparing two means",
+"level": "SL",
+"range": "4.11.3",
+"minutes": 70,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "4.12",
+"name": "Designing data collection",
+"theme": "4",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.75,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-412-lesson1",
+"id": "MAI-412-L1",
+"title": "Designing data collection methods and categorizing data",
+"level": "HL",
+"range": "4.12.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "mai-412-lesson2",
+"id": "MAI-412-L2",
+"title": "Reliability and validity checks",
+"level": "HL",
+"range": "4.12.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "4.13",
+"name": "Non-linear regression",
+"theme": "4",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.75,
+"hl_hours": 1.75,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-413-lesson1",
+"id": "MAI-413-L1",
+"title": "Non-linear regression models with technology",
+"level": "HL",
+"range": "4.13.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "mai-413-lesson2",
+"id": "MAI-413-L2",
+"title": "Least squares, sum of squared residuals and R²",
+"level": "HL",
+"range": "4.13.2",
+"minutes": 50,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "4.14",
+"name": "Linear transformation and combinations of random variables",
+"theme": "4",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-414-lesson1",
+"id": "MAI-414-L1",
+"title": "Effect of linear transformations on E(X) and Var(X)",
+"level": "HL",
+"range": "4.14.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "mai-414-lesson2",
+"id": "MAI-414-L2",
+"title": "Linear combinations of random variables and unbiased estimates",
+"level": "HL",
+"range": "4.14.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "4.15",
+"name": "Central limit theorem",
+"theme": "4",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-415-lesson1",
+"id": "MAI-415-L1",
+"title": "Linear combinations of normal random variables",
+"level": "HL",
+"range": "4.15.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "mai-415-lesson2",
+"id": "MAI-415-L2",
+"title": "The central limit theorem",
+"level": "HL",
+"range": "4.15.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "4.16",
+"name": "Confidence intervals",
+"theme": "4",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.0,
+"hl_hours": 1.0,
+"understandings": {
+"SL": 0,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-416-lesson1",
+"id": "MAI-416-L1",
+"title": "Confidence intervals for the mean of a normal population",
+"level": "HL",
+"range": "4.16.1",
+"minutes": 60,
+"hour": "Hour 1"
+}
+]
+},
+{
+"code": "4.17",
+"name": "Poisson distribution",
+"theme": "4",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.0,
+"hl_hours": 2.0,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-417-lesson1",
+"id": "MAI-417-L1",
+"title": "The Poisson distribution: probabilities, mean and variance",
+"level": "HL",
+"range": "4.17.1",
+"minutes": 60,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "mai-417-lesson2",
+"id": "MAI-417-L2",
+"title": "Sums of independent Poisson variables",
+"level": "HL",
+"range": "4.17.2",
+"minutes": 60,
+"hour": "Hour 2"
+}
+]
+},
+{
+"code": "4.18",
+"name": "Critical regions and errors",
+"theme": "4",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.75,
+"hl_hours": 2.75,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-418-lesson1",
+"id": "MAI-418-L1",
+"title": "Hypothesis tests for binomial and Poisson parameters",
+"level": "HL",
+"range": "4.18.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-418-lesson2",
+"id": "MAI-418-L2",
+"title": "Critical regions, type I and II errors; tests for a mean and for correlation",
+"level": "HL",
+"range": "4.18.2 – 4.18.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "4.19",
+"name": "Markov chains",
+"theme": "4",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.75,
+"hl_hours": 2.75,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-419-lesson1",
+"id": "MAI-419-L1",
+"title": "Markov chains: transition matrices and state vectors",
+"level": "HL",
+"range": "4.19.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-419-lesson2",
+"id": "MAI-419-L2",
+"title": "Powers of transition matrices and steady states",
+"level": "HL",
+"range": "4.19.2 – 4.19.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.1",
+"name": "Introduction to the derivative",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 2.75,
+"ahl_hours": 0.0,
+"hl_hours": 2.75,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-51-lesson1",
+"id": "MAI-51-L1",
+"title": "Limits and the derivative as the gradient of a curve",
+"level": "SL",
+"range": "5.1.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-51-lesson2",
+"id": "MAI-51-L2",
+"title": "The derivative as a rate of change and dy/dx notation",
+"level": "SL",
+"range": "5.1.2",
+"minutes": 80,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.2",
+"name": "Increasing and decreasing functions",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-52-lesson1",
+"id": "MAI-52-L1",
+"title": "Increasing and decreasing functions",
+"level": "SL",
+"range": "5.2.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-52-lesson2",
+"id": "MAI-52-L2",
+"title": "Graphical interpretation of f′(x): sketching gradient functions",
+"level": "SL",
+"range": "5.2.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.3",
+"name": "Derivatives of powers",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-53-lesson1",
+"id": "MAI-53-L1",
+"title": "Derivative of axⁿ: the power rule",
+"level": "SL",
+"range": "5.3.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-53-lesson2",
+"id": "MAI-53-L2",
+"title": "Derivatives of sums, differences and multiples; simplifying before differentiating",
+"level": "SL",
+"range": "5.3.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.4",
+"name": "Tangents and normals",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-54-lesson1",
+"id": "MAI-54-L1",
+"title": "Equations of tangents at a given point",
+"level": "SL",
+"range": "5.4.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-54-lesson2",
+"id": "MAI-54-L2",
+"title": "Equations of normals at a given point",
+"level": "SL",
+"range": "5.4.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.5",
+"name": "Introduction to integration",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 3.75,
+"ahl_hours": 0.0,
+"hl_hours": 3.75,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-55-lesson1",
+"id": "MAI-55-L1",
+"title": "Anti-differentiation and finding f(x) with a boundary condition",
+"level": "SL",
+"range": "5.5.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-55-lesson2",
+"id": "MAI-55-L2",
+"title": "Definite integrals and their evaluation with technology",
+"level": "SL",
+"range": "5.5.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-55-lesson3",
+"id": "MAI-55-L3",
+"title": "Area between a curve and the x-axis",
+"level": "SL",
+"range": "5.5.3",
+"minutes": 75,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "5.6",
+"name": "Stationary points",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 2.5,
+"ahl_hours": 0.0,
+"hl_hours": 2.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-56-lesson1",
+"id": "MAI-56-L1",
+"title": "Values of x where the gradient is zero",
+"level": "SL",
+"range": "5.6.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-56-lesson2",
+"id": "MAI-56-L2",
+"title": "Local maximum and minimum points",
+"level": "SL",
+"range": "5.6.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.7",
+"name": "Optimisation",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 1.25,
+"ahl_hours": 0.0,
+"hl_hours": 1.25,
+"understandings": {
+"SL": 1,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-57-lesson1",
+"id": "MAI-57-L1",
+"title": "Optimisation problems in context",
+"level": "SL",
+"range": "5.7.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "5.8",
+"name": "The trapezoidal rule",
+"theme": "5",
+"hl_only": false,
+"sl_hours": 1.25,
+"ahl_hours": 0.0,
+"hl_hours": 1.25,
+"understandings": {
+"SL": 1,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-58-lesson1",
+"id": "MAI-58-L1",
+"title": "Approximating areas using the trapezoidal rule",
+"level": "SL",
+"range": "5.8.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "5.9",
+"name": "Further differentiation",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 3.75,
+"hl_hours": 3.75,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-59-lesson1",
+"id": "MAI-59-L1",
+"title": "Derivatives of xⁿ, sin x, cos x, eˣ and ln x",
+"level": "HL",
+"range": "5.9.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-59-lesson2",
+"id": "MAI-59-L2",
+"title": "The product and quotient rules",
+"level": "HL",
+"range": "5.9.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "mai-59-lesson3",
+"id": "MAI-59-L3",
+"title": "Related rates of change",
+"level": "HL",
+"range": "5.9.3",
+"minutes": 75,
+"hour": "Hours 3–4"
+}
+]
+},
+{
+"code": "5.10",
+"name": "The second derivative",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-510-lesson1",
+"id": "MAI-510-L1",
+"title": "The second derivative",
+"level": "HL",
+"range": "5.10.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-510-lesson2",
+"id": "MAI-510-L2",
+"title": "Points of inflexion with zero and non-zero gradient",
+"level": "HL",
+"range": "5.10.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.11",
+"name": "Further integration",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-511-lesson1",
+"id": "MAI-511-L1",
+"title": "Indefinite integrals of xⁿ, sin x, cos x, 1/x and eˣ",
+"level": "HL",
+"range": "5.11.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-511-lesson2",
+"id": "MAI-511-L2",
+"title": "Integration by inspection and substitution of the form ∫ f(g(x)) g′(x) dx",
+"level": "HL",
+"range": "5.11.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.12",
+"name": "Area and volumes of revolution",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-512-lesson1",
+"id": "MAI-512-L1",
+"title": "Area of a region bounded by a curve and the y-axis",
+"level": "HL",
+"range": "5.12.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-512-lesson2",
+"id": "MAI-512-L2",
+"title": "Volumes of revolution about the x-axis or y-axis",
+"level": "HL",
+"range": "5.12.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.13",
+"name": "Kinematics",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-513-lesson1",
+"id": "MAI-513-L1",
+"title": "Kinematics: displacement, velocity and acceleration",
+"level": "HL",
+"range": "5.13.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-513-lesson2",
+"id": "MAI-513-L2",
+"title": "Distance travelled using integrals of |v|",
+"level": "HL",
+"range": "5.13.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.14",
+"name": "Setting up and solving differential equations",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-514-lesson1",
+"id": "MAI-514-L1",
+"title": "Setting up a model as a differential equation",
+"level": "HL",
+"range": "5.14.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-514-lesson2",
+"id": "MAI-514-L2",
+"title": "Separable differential equations",
+"level": "HL",
+"range": "5.14.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.15",
+"name": "Slope fields",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.25,
+"hl_hours": 1.25,
+"understandings": {
+"SL": 0,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-515-lesson1",
+"id": "MAI-515-L1",
+"title": "Slope fields and their diagrams",
+"level": "HL",
+"range": "5.15.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "5.16",
+"name": "Euler's method",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 1.25,
+"hl_hours": 1.25,
+"understandings": {
+"SL": 0,
+"HL": 1
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-516-lesson1",
+"id": "MAI-516-L1",
+"title": "Euler's method for first-order equations and coupled systems",
+"level": "HL",
+"range": "5.16.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+}
+]
+},
+{
+"code": "5.17",
+"name": "Phase portraits",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-517-lesson1",
+"id": "MAI-517-L1",
+"title": "Phase portraits for coupled linear systems",
+"level": "HL",
+"range": "5.17.1",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-517-lesson2",
+"id": "MAI-517-L2",
+"title": "Equilibrium points and stability using eigenvalues",
+"level": "HL",
+"range": "5.17.2",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+},
+{
+"code": "5.18",
+"name": "Second-order differential equations",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 2.25,
+"hl_hours": 2.25,
+"understandings": {
+"SL": 0,
+"HL": 2
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "mai-518-lesson1",
+"id": "MAI-518-L1",
+"title": "Second-order differential equations as coupled systems",
+"level": "HL",
+"range": "5.18.2",
+"minutes": 70,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "mai-518-lesson2",
+"id": "MAI-518-L2",
+"title": "Euler's method for second-order differential equations",
+"level": "HL",
+"range": "5.18.1",
+"minutes": 65,
+"hour": "Hours 2–3"
+}
+]
+}
+]
+}
