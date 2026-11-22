@@ -90,7 +90,7 @@
   ].join('\n'); document.head.appendChild(st); })();
   var TABHUE = { overview: '#7c3aed', work: '#2563eb', questions: '#db2777', labs: '#0891b2', approvals: '#ea580c', classes: '#059669', students: '#4f46e5', quizzes: '#ca8a04', lessons: '#0d9488', marking: '#dc2626', grading: '#7c3aed', bin: '#64748b', content: '#9333ea' };
 
-  S.guard(app, TEACH ? { school: true, allowPending: true } : { staff: true }).then(function (me) { ME = me; return TEACH ? courseRequests() : null; }).then(function () { if (TEACH && !teachGate(ME)) throw 'gate'; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(firstClasses).then(function () { window.addEventListener('hashchange', route); route(); })
+  S.guard(app, TEACH ? { school: true, allowPending: true } : { staff: true }).then(function (me) { ME = me; if (TEACH) S.acctStrip(me, app); return TEACH ? courseRequests() : null; }).then(function () { if (TEACH && !teachGate(ME)) throw 'gate'; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(firstClasses).then(function () { window.addEventListener('hashchange', route); route(); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
   function teachGate(me) {   // teachers from other schools: approved account + premium; the admin and main-site teachers always

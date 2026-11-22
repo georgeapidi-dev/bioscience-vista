@@ -25,58 +25,10 @@
     return '<fieldset class="grp" id="rcs" style="border:1px solid var(--line);border-radius:12px;padding:12px"><legend><b>' + label + '</b></legend>' + h + '</fieldset>';
   }
   function chosen() { var out = []; app.querySelectorAll('[data-course]:checked').forEach(function (b) { out.push(b.getAttribute('data-course')); }); return out; }
-  if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'student') { location.replace('/join/'); return; }   // students in a teacher's class need no account: class code + name + PIN
-  if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'learner') return accountForm('learner');
-  if (mode === 'register' && new URLSearchParams(location.search).get('as') === 'teacher') return accountForm('teacher');
-  if (mode === 'register') {   // no class codes: choose the kind of account first
-    app.innerHTML = '<div class="form narrow"><h2>Who are you?</h2>' +
-      '<a class="btn main" href="/join/" style="display:block;margin:10px 0;text-align:left">🎒 Student in a class <span style="display:block;font-weight:600;font-size:.85rem">No account needed: sign in with your code</span></a>' +
-      '<a class="btn main" href="/register/?as=learner" style="display:block;margin:10px 0;text-align:left">🚀 Learning on my own</a>' +
-      '<a class="btn main" href="/register/?as=teacher" style="display:block;margin:10px 0;text-align:left">🧑‍🏫 Teacher</a>' +
-      '<a class="btn main" href="/register/?as=parent" style="display:block;margin:10px 0;text-align:left">👪 Parent or carer</a>' +
-      '<p class="small">Have an account? <a href="/login/' + (next ? '?next=' + encodeURIComponent(next) : '') + '">Log in</a></p></div>';
+  if (mode === 'register') {   // Student, Teacher and Independent learner: the guided registration (register.js, migration 078)
+    var sc = document.createElement('script'); sc.src = '/assets/register.js?v=' + new Date().toISOString().slice(0, 13); sc.onload = function () { window.BVReg(); }; document.head.appendChild(sc);
     return;
   }
-  function accountForm(kind) {
-    var T = kind === 'teacher', L = kind === 'learner';
-    app.innerHTML = '<form class="form narrow" id="rf" novalidate><h2>' + (T ? 'Teacher account' : L ? 'Independent learner account' : 'Student account') + '</h2>' +
-      (L ? '<p class="muted small">Choose your courses below: one or as many as you like. You are in straight away, with no teacher to wait for, and you see everything in the courses you choose. You can add or drop courses later on your dashboard. Premium access opens the lessons.</p>' : !T ? '<p class="muted small">After signing up, press <b>Join a class</b> on your dashboard, choose your teacher, then choose your course from the courses your teacher offers. You see the lessons your teacher adds to the class.</p>' : '') +
-      '<p class="muted small">' + (T ? 'Your classes, students and materials are private to you and your students. The BioscienceVista admin approves new teachers and each course they teach; a premium subscription is needed to run classes.' :
-        L ? 'Independent learners can choose more than one course.' : 'After signing up you choose your teacher, then your course. Your teacher approves you, and premium access opens the class materials.') + '</p>' +
-      '<label class="f">Full name<input id="rn" autocomplete="name" required placeholder="' + (T ? 'Your name as students know it' : 'As it appears on your school records') + '"></label>' +
-      (T ? '<label class="f">School (choose it from the list, or type it if it is new; "Private tutor" if you have none)<input id="rs" list="rsl" autocomplete="organization" required maxlength="120"><datalist id="rsl"></datalist></label>' : '') +
-      (T ? coursePicker('Courses you teach: tick one or more. The BioscienceVista admin approves each course, and your class for a course is made when it is approved. After signing up, only the admin can add a course for you', true) : L ? coursePicker('Courses you want to learn: tick one or more (HL includes the SL lessons; AS Level and A Level are separate courses)') : '') +
-      '<label class="f">Email<input id="re" type="email" autocomplete="email" required></label>' +
-      '<label class="f">Password (at least 8 characters)<input id="rp" type="password" autocomplete="new-password" minlength="8" required></label>' +
-      '<label class="f">Confirm password<input id="rp2" type="password" autocomplete="new-password" required></label>' +
-      '<label class="chk"><input type="checkbox" id="ra" required> I will keep my password private' + (T ? ' and use student data only for teaching my own classes.' : ' and follow my school\'s rules for using this site.') + '</label>' +
-      '<button class="btn main" type="submit">Create account</button><p class="msg" id="rm" role="alert"></p>' +
-      '<p class="small">Already registered? <a href="/login/">Log in</a> · <a href="/register/">← Other account types</a></p></form>';
-    if (T) S.db.from('schools').select('name').order('name').then(function (r) { var dl = app.querySelector('#rsl'); if (dl) dl.innerHTML = (r.data || []).map(function (x) { return '<option value="' + E(x.name) + '">'; }).join(''); });
-    app.querySelector('#rf').addEventListener('submit', function (e) {
-      e.preventDefault(); var m = app.querySelector('#rm'); m.className = 'msg';
-      var n = app.querySelector('#rn').value.trim(), em = app.querySelector('#re').value.trim(), p = app.querySelector('#rp').value, p2 = app.querySelector('#rp2').value,
-          sc = T ? app.querySelector('#rs').value.trim() : '';
-      if (n.split(/\s+/).length < 2) return m.textContent = 'Please give your first and last name.';
-      if (T && sc.length < 2) return m.textContent = 'Please type your school, or "Private tutor".';
-      var picks = (T || L) ? chosen() : [];
-      if ((T || L) && !picks.length) return m.textContent = T ? 'Please tick at least one course you teach.' : 'Please tick at least one course.';
-      if (!/^\S+@\S+\.\S+$/.test(em)) return m.textContent = 'Please enter a valid email address.';
-      if (p.length < 8) return m.textContent = 'Your password needs at least 8 characters.';
-      if (p !== p2) return m.textContent = 'The two passwords do not match.';
-      if (!app.querySelector('#ra').checked) return m.textContent = 'Please tick the box to agree.';
-      m.textContent = 'Creating your account…';
-      var data = T ? { full_name: n, account_type: 'teacher', school_name: sc, courses: picks } : L ? { full_name: n, account_type: 'student', learner: 'independent', courses: picks } : { full_name: n, account_type: 'student' };
-      S.db.auth.signUp({ email: em, password: p, options: { data: data, emailRedirectTo: location.origin + '/login/' } }).then(function (res) {
-        if (res.error) { m.textContent = S.nice(res.error); return; }
-        if (res.data.session) { location.href = T ? '/teach/' : '/dashboard/'; return; }
-        app.innerHTML = '<section class="panel tint"><p class="label">Almost there</p><h2>Check your email</h2><p>We sent a confirmation link to <b>' + E(em) + '</b>. Open it to activate your account, then <a href="/login/">log in</a>' +
-          (T ? '. The BioscienceVista admin then approves your teacher account and each course you ticked. Your class for a course is made when that course is approved.' : L ? '. Your courses will be waiting on your dashboard.' : ', press Join a class and choose your teacher.') + '</p><p class="small muted">No email after a few minutes? Check your spam folder.</p></section>';
-      });
-    });
-  }
-
-  // ---- parent registration: needs the parent code the school gave for the child ----
   function parentRegister() {
     app.innerHTML = '<form class="form narrow" id="pf" novalidate><h2>Parent or carer account</h2>' +
       '<p class="muted small">You need the parent code for your child. Ask the school or the class teacher for it.</p>' +
@@ -110,19 +62,18 @@
 
   // ---- login ----
   var ROLE = {
-    student: ['Independent learner', 'Use the email and password you chose when you signed up. In a teacher\'s class? <a href="/join/">Sign in with your code and PIN</a> instead.', '<a href="/register/?as=learner">New independent learner? Create an account</a>'],
+    student: ['Student or independent learner', 'Use the email and password of your account. Used a code and PIN before? <a href="/join/">Move your account to email sign-in</a>.', '<a href="/register/">New here? Register</a>'],
     parent: ['Parent or carer', 'Use the email and password of your parent account. No account? <a href="/family/">See your child\'s progress with their code</a>.', '<a href="/register/?as=parent">New parent? Create a parent account</a>'],
-    teacher: ['Teacher', 'Use the email and password of your teacher account. Have a teacher code from BioscienceVista? <a href="/join/">Sign in with your code and PIN</a>.', '<a href="/register/?as=teacher">New teacher? Create a teacher account</a>']
+    teacher: ['Teacher', 'Use the email and password of your teacher account. Used a teacher code and PIN before? <a href="/join/">Move your account to email sign-in</a>.', '<a href="/register/?as=teacher">New teacher? Register</a>']
   };
   // step 1: ask who is logging in, so the right account type and page are used
   function chooser() {
-    try { var sv = JSON.parse(localStorage.getItem('bv-join-me') || 'null'); if (sv && sv.code && Date.now() - (+sv.at || 0) < 90 * 864e5) { location.replace('/join/'); return; } } catch (e) {}   // a student's device: straight to "type your PIN"
     app.innerHTML = '<div class="form narrow" id="rolepick"><h2>Who are you?</h2>' +
-      '<a class="btn main" href="/join/" style="display:block;width:100%;margin:10px 0;text-align:left">🎒 Student in a class <span style="display:block;font-weight:600;font-size:.85rem">Code and PIN</span></a>' +
-      '<button class="btn main" type="button" data-role="student" style="display:block;width:100%;margin:10px 0;text-align:left">🚀 Learning on my own</button>' +
+      '<button class="btn main" type="button" data-role="student" style="display:block;width:100%;margin:10px 0;text-align:left">🎒 Student or independent learner</button>' +
       '<button class="btn main" type="button" data-role="teacher" style="display:block;width:100%;margin:10px 0;text-align:left">🧑‍🏫 Teacher</button>' +
       '<button class="btn main" type="button" data-role="parent" style="display:block;width:100%;margin:10px 0;text-align:left">👪 Parent or carer</button>' +
-      '<p class="small" style="margin-top:12px"><a href="#" id="fp0">Forgot your password?</a> · <b><a href="/register/">New here? Create an account</a></b></p></div>';
+      '<p class="small" style="margin-top:12px"><a href="#" id="fp0">Forgot your password?</a> · <b><a href="/register/">New here? Register</a></b></p>' +
+      '<p class="small muted">Signed in with a code and PIN before? <a href="/join/">Move your account to email sign-in</a>.</p></div>';
     app.querySelectorAll('[data-role]').forEach(function (b) { b.addEventListener('click', function () { loginForm('', b.getAttribute('data-role')); }); });
     app.querySelector('#fp0').addEventListener('click', function (e) { e.preventDefault(); forgotForm(''); });
   }
@@ -139,7 +90,7 @@
       e.preventDefault(); var m = app.querySelector('#lm'); m.className = 'msg'; m.textContent = 'Logging in…';
       S.db.auth.signInWithPassword({ email: app.querySelector('#le').value.trim(), password: app.querySelector('#lp').value }).then(function (r) {
         if (r.error) { m.textContent = /confirm/i.test(r.error.message) ? 'Please confirm your email first: open the link we sent you.' : 'Email or password is not right.'; return; }
-        S.me().then(function (me) {
+        mfaStep(m).then(function () { return S.me(); }).then(function (me) {
           // the account must match the role chosen; otherwise sign out again
           var ok = !!me && (role === 'teacher' ? me.staff || me.school : role === 'parent' ? me.parent : !me.staff && !me.school);
           if (ok) return go(me);
@@ -149,6 +100,23 @@
     });
     app.querySelector('#chg').addEventListener('click', function (e) { e.preventDefault(); chooser(); });
     app.querySelector('#fp').addEventListener('click', function (e) { e.preventDefault(); forgotForm(app.querySelector('#le').value.trim()); });
+  }
+  // two-step sign-in (optional, set up on the Account page): ask for the 6-digit code from the authenticator app
+  function mfaStep(m) {
+    return S.db.auth.mfa.getAuthenticatorAssuranceLevel().then(function (r) {
+      var d = r.data || {}; if (d.nextLevel !== 'aal2' || d.currentLevel === 'aal2') return;
+      return S.db.auth.mfa.listFactors().then(function (lf) {
+        var f = ((lf.data && lf.data.totp) || []).filter(function (x) { return x.status === 'verified'; })[0]; if (!f) return;
+        return new Promise(function (ok) {
+          app.innerHTML = '<form class="form narrow" id="mf"><h2>Two-step sign-in</h2><p class="muted small">Type the 6-digit code from your authenticator app.</p>' +
+            '<label class="f">Code<input id="mc" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></label><button class="btn main" type="submit">Continue</button><p class="msg" id="mm" role="alert"></p></form>';
+          app.querySelector('#mc').focus();
+          app.querySelector('#mf').onsubmit = function (e) { e.preventDefault(); var mm = app.querySelector('#mm'); mm.textContent = 'Checking…';
+            S.db.auth.mfa.challengeAndVerify({ factorId: f.id, code: app.querySelector('#mc').value.trim() }).then(function (v) {
+              if (v.error) { mm.textContent = 'That code is not right. Try the newest code.'; return; } ok(); }); };
+        });
+      });
+    });
   }
   // forgotten password: email a reset link; the link opens this page with ?reset=1 and a one-time sign-in
   function forgotForm(email, note) {

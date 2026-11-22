@@ -25,13 +25,16 @@
       S.db.from('learning_progress').select('lesson_id,status,percent,last_step,updated_at').eq('student_id', me.user.id),
       S.db.from('quizzes').select('id,title,instructions,due_at').eq('category', 'lesson').in('published', (me.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).order('created_at', { ascending: false }),
       S.db.from('simulations').select('id,topic_id,title,url,is_internal').eq('published', true),
-      S.db.from('learner_preferences').select('programme,subjects').eq('user_id', me.user.id).maybeSingle().then(function (r) { return r; }, function () { return { data: null }; })
+      S.db.from('learner_preferences').select('programme,subjects').eq('user_id', me.user.id).maybeSingle().then(function (r) { return r; }, function () { return { data: null }; }),
+      S.db.rpc('my_visible_paths').then(function (r) { return r; }, function () { return { data: null }; })   // only the authorised subjects and approved classes (migration 078)
     ]).then(function (x) {
       var subjects = x[0].data || [], topics = (x[1].data || []).filter(function (t) { return t.published; }), prog = {}, mineIL = {};
       (x[4].data || []).forEach(function (p) { prog[p.lesson_id] = p; });
       (x[5].data || []).forEach(function (q) { mineIL['IL-' + q.id] = q; });   // interactive lessons set for this student's class
       // a teacher-built lesson is listed only if it is set for this student's class
       var lessons = (x[2].data || []).filter(function (l) { return l.published && (!/^IL-/.test(l.external_id || '') || me.staff || mineIL[l.external_id]); });
+      var VIS = x[8] && Array.isArray(x[8].data) ? x[8].data : null; if (VIS && !me.staff) { var vs = {}; VIS.forEach(function (p) { vs[p] = 1; }); lessons = lessons.filter(function (l) { return !/^\/[a-z0-9-]+\/$/.test(l.url || '') || vs[l.url] || /^IL-/.test(l.external_id || ''); });
+        topics = topics.filter(function (t) { return lessons.some(function (l) { return l.topic_id === t.id; }) || topics.some(function (k) { return k.parent_id === t.id && lessons.some(function (l) { return l.topic_id === k.id; }); }); }); }
       var by = function (list, k) { var m = {}; list.forEach(function (o) { (m[o[k]] = m[o[k]] || []).push(o); }); return m; };
       var L = by(lessons, 'topic_id'), R = by((x[3].data || []).filter(function (r) { return r.published; }), 'topic_id'), SIM = by(x[6].data || [], 'topic_id'), KIDS = by(topics.filter(function (t) { return t.parent_id; }), 'parent_id');
       var orphanIL = Object.keys(mineIL).filter(function (k) { return !lessons.some(function (l) { return l.external_id === k && l.topic_id; }); }).map(function (k) { return mineIL[k]; });

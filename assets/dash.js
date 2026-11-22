@@ -38,6 +38,7 @@
       });
     });
   }).then(function (me) {
+    S.acctStrip(me, app);
     var md = (me.user && me.user.user_metadata) || {}, tried = false; try { tried = sessionStorage.getItem('bv-courses-tried') === '1'; } catch (e) {}
     if (!me.view && !me.staff && md.learner === 'independent' && md.courses && md.courses.length && !md.courses_applied && !tried) {
       var SELF = { 'grade-6': '8088c43e-df14-450b-96bf-be2a3d22ddc3', 'grade-7': 'ffae26ae-0729-45ff-a74d-d00a6a175c5d', 'grade-8': '0a9ddb8d-fd87-4d87-a8a6-af930adeda5e', 'grade-9': 'd3035007-4aff-4e81-897b-98fee264c440', 'grade-10': '555803ba-f054-47e5-88c0-9f7e8bf7b980',

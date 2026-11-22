@@ -38,7 +38,7 @@
       if (r.error) throw r.error;
       if (NEXT) remember(NEXT);
       var pend = null; try { pend = sessionStorage.getItem(PEND); } catch (e) {}
-      location.href = then || (pend ? '/join/' : '/dashboard/');
+      location.href = then && then !== '/teach/' ? then : '/account/?move=1';
     });
   }
   function shell(step, inner) { app.innerHTML = '<div class="jn"><div class="jn-card"><div class="jn-steps">' + [1, 2, 3].map(function (i) { return '<span' + (i <= step ? ' class="on"' : '') + '></span>'; }).join('') + '</div>' + inner + '</div></div>'; }
@@ -48,15 +48,16 @@
 
   // ---------- signed out: one code box ----------
   function codeStep(pre, note) {
-    shell(1, '<h2>Sign in</h2><p class="lead">' + (note || 'Type the code from your teacher. No email or password.') + '</p>' +
+    shell(1, '<h2>Move to email sign-in</h2><p class="lead">' + (note || 'BioscienceVista now uses your own email and password. If you signed in with a code and PIN before, sign in with them one last time to set your password. New here? <a href="/register/">Register</a>.') + '</p>' +
       '<form id="jc"><label for="jcode">Your code</label><input id="jcode" class="jn-code" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" value="' + E(pre || '') + '">' +
       '<button class="jn-go" type="submit">Next ▶</button><p class="jn-msg" role="alert"></p></form>' +
-      '<p class="jn-note">Lost your code or PIN? Ask your teacher. · <a href="/login/">Teacher, parent or independent learner? Log in</a></p>');
+      '<p class="jn-note">Already moved? <a href="/login/">Log in with your email</a> · Lost your code or PIN? Ask your teacher.</p>');
     var f = app.querySelector('#jc'), inp = app.querySelector('#jcode'); inp.focus();
     f.onsubmit = function (e) { e.preventDefault(); var c = clean(inp.value), b = f.querySelector('button');
       if (c.length < 6 || c.length > 8) return msg('Type the whole code: 6, 7 or 8 letters and numbers.');
       busy(b, true, 'Checking…');
       call({ action: 'lookup', code: c }).then(function (d) { busy(b, false, 'Next ▶'); if (d.error) return msg(d.error); CODE = c; R = d;
+        if (d.kind === 'site' && !d.linked) return msg('New accounts are made with your email now. Please register: www.biosciencevista.com/register');
         if (d.kind === 'site') return newStep();
         if (d.kind === 'student') return pinStep({ name: d.name, pin: d.pin }, 'signin_code');
         if (d.kind === 'class') return nameStep();
@@ -91,7 +92,8 @@
         if (c.length !== 8) return msg('Your website code has 8 letters and numbers.');
         busy(b, true, 'Checking…');
         call({ action: 'lookup', code: c }).then(function (d) { busy(b, false, 'Next ▶'); if (d.error) return msg(d.error); CODE = c; R = d;
-          if (d.kind === 'site') return newStep();
+          if (d.kind === 'site' && !d.linked) return msg('New accounts are made with your email now. Please register: www.biosciencevista.com/register');
+        if (d.kind === 'site') return newStep();
           if (d.kind === 'student') return pinStep({ name: d.name, pin: d.pin }, 'signin_code');
           msg('That is not a website code. Type the 8-character code with your name on it.'); }); };
       return;
@@ -171,18 +173,29 @@
     var have = (inCls.length ? '<p class="jn-msg ok" style="display:block">✅ You are in ' + inCls.map(function (c) { return '<b>' + E(c.name) + '</b>'; }).join(', ') + '. <a href="/dashboard/">Open my dashboard ▶</a></p>' : '') +
       (waitCls.length ? '<p class="jn-note">⏳ Waiting to be confirmed for ' + waitCls.map(function (c) { return '<b>' + E(c.name) + '</b>'; }).join(', ') + '. You will see the lessons as soon as it is confirmed.</p>' : '');
     if (mine.length) first = false;
-    shell(first ? 2 : 1, '<h2>🎟 ' + (first ? 'Now join your class' : 'Join a class') + '</h2>' + have + '<p class="lead">' + (nm ? 'Hello ' + E(nm) + '. ' : '') + (mine.length ? 'Joining another class? ' : '') + 'Type the joining code your teacher gave you for the class. Each class has its own code, and each code works once.</p>' +
-      '<form id="jc"><label for="jcode">Joining code</label><input id="jcode" class="jn-code" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" value="' + E(pre || '') + '">' +
-      '<button class="jn-go" type="submit">Join ▶</button><p class="jn-msg" role="alert"></p></form><div id="jdone"></div><p class="jn-note"><a href="/dashboard/">Go to my dashboard ▶</a></p>');
+    shell(first ? 2 : 1, '<h2>🎟 ' + (first ? 'Now join your class' : 'Join a class') + '</h2>' + have + '<p class="lead">' + (nm ? 'Hello ' + E(nm) + '. ' : '') + (mine.length ? 'Joining another class? ' : '') + 'Type the class code your teacher gave you. You will see the class first, then send a request that your teacher approves.</p>' +
+      '<form id="jc"><label for="jcode">Class code</label><input id="jcode" class="jn-code" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" value="' + E(pre || '') + '">' +
+      '<div id="jdone"></div><button class="jn-go" type="submit">Check code ▶</button><p class="jn-msg" role="alert"></p></form><p class="jn-note"><a href="/dashboard/">Go to my dashboard ▶</a></p>');
     var f = app.querySelector('#jc'), inp = app.querySelector('#jcode'); inp.focus();
+    var info = null;
     var go = function () { var c = clean(inp.value), b = f.querySelector('button');
-      if (c.length === 8 || c.length === 6) return switchUser(me, c);   // a website code or class code: probably someone else's
-      if (c.length !== 7) return msg('A joining code has 7 letters and numbers.');
-      busy(b, true, 'Joining…');
-      S.db.rpc('redeem_class_code', { code: c }).then(function (r) { busy(b, false, 'Join ▶'); try { sessionStorage.removeItem(PEND); } catch (e) {}
-        if (r.error) return msg(S.nice(r.error));
-        inp.value = ''; msg('🎉 You are in ' + r.data + '. Have another joining code? Type it now.', true);
-        app.querySelector('#jdone').innerHTML = '<a class="jn-go" href="/dashboard/">Open my dashboard ▶</a>'; }); };
+      if (c.length === 8) return switchUser(me, c);   // a website code: probably someone else's
+      if (c.length !== 6 && c.length !== 7) return msg('Type the whole class code from your teacher.');
+      if (info && info.code === c) {   // second press: send the request (the teacher approves it)
+        busy(b, true, 'Sending…');
+        return S.db.rpc('join_class', { code: c }).then(function (r) { busy(b, false, 'Check code ▶'); try { sessionStorage.removeItem(PEND); } catch (e) {}
+          if (r.error) return msg(S.nice(r.error));
+          inp.value = ''; info = null; app.querySelector('#jdone').innerHTML = '';
+          msg('📨 Request sent to ' + (r.data || 'the class') + '. Your teacher approves it; you will see the class on your dashboard when they do.', true); });
+      }
+      busy(b, true, 'Checking…');
+      S.db.rpc('class_code_info', { code: c }).then(function (r) { busy(b, false, 'Check code ▶');
+        if (r.error) return msg(S.nice(r.error)); var d = r.data || {}; if (!d.ok) return msg(d.message || 'That code is not recognised.');
+        info = d; info.code = c; msg('');
+        app.querySelector('#jdone').innerHTML = '<div class="jn-who" style="display:block"><b>' + E(d['class']) + '</b><br>Teacher: ' + E(d.teacher || '—') + (d.school ? ' · ' + E(d.school) : '') + '<br>Subject: ' + E(d.course || '—') + ' · ' + E(d.section || '') +
+          (d.authorised ? '' : '<br><small>' + (d.requested ? 'This subject is waiting for the admin to authorise it for your account.' : 'This subject is not in your account yet: the admin will be asked to add it.') + '</small>') + '</div>';
+        b.textContent = 'Send joining request ▶'; });
+    };
     f.onsubmit = function (e) { e.preventDefault(); go(); };
     if (pre) go();
   }

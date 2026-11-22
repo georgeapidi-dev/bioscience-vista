@@ -79,20 +79,30 @@
     S.db.from('ui_prefs').upsert({ user_id: PUID, prefs: PREFS, updated_at: new Date().toISOString() }).then(function () {}, function () {});
   };
   /* the admin works in three separate places: running the site, the main-site courses, and their own classes */
-  S.AREAS = [['/admin/', '🛠 Admin', 'Approvals, members, payments, settings'], ['/staff/', '🌐 Main site', 'Main-site courses, lessons, quizzes and their classes'], ['/teach/', '🏫 My classes', 'Classes you teach, like any teacher']];
+  S.AREAS = [['/admin/approvals/', '✅ APPROVAL CENTRE', 'Registrations, subjects, memberships, security'], ['/admin/', '🛠 Admin', 'Members, payments, settings'], ['/staff/', '🌐 Main site', 'Main-site courses, lessons, quizzes and their classes'], ['/teach/', '🏫 My classes', 'Classes you teach, like any teacher']];
   S.areaBar = function (el) {
     var here = location.pathname; if (!S.AREAS.some(function (a) { return here.indexOf(a[0]) === 0; }) || document.getElementById('areabar')) return;
     var bar = document.createElement('nav'); bar.id = 'areabar'; bar.setAttribute('aria-label', 'Admin areas');
     bar.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px';
-    bar.innerHTML = S.AREAS.map(function (a) { var on = here.indexOf(a[0]) === 0;
+    var best = S.AREAS.map(function (a) { return a[0]; }).filter(function (k) { return here.indexOf(k) === 0; }).sort(function (x, y) { return y.length - x.length; })[0];
+    bar.innerHTML = S.AREAS.map(function (a) { var on = a[0] === best;
       return '<a href="' + a[0] + '" title="' + S.E(a[2]) + '" style="flex:1;min-width:150px;text-align:center;padding:10px 14px;border-radius:12px;font-weight:700;text-decoration:none;border:1px solid var(--line,#dde3ea);' +
         (on ? 'background:linear-gradient(120deg,#7c3aed,#2563eb);color:#fff;border-color:transparent' : 'background:var(--card,#fff);color:inherit') + '"' + (on ? ' aria-current="page"' : '') + '>' + a[1] + '</a>'; }).join('');
     el.parentNode.insertBefore(bar, el);
   };
   S.pendingBox = function (me) {
+    var a0 = me.access || {}, stt = a0.status;
+    if (stt && stt !== 'approved') {   // the account itself waits for the admin (migration 078)
+      var t = { pending: ['Waiting for approval', 'The BioscienceVista admin checks every new account. You will get an email when yours is approved.' + (a0.verified ? '' : ' Please verify your email address first.')],
+                info_requested: ['The admin needs more information', S.E(a0.info_request || '') + ' Answer it on your Account page.'],
+                suspended: ['Your account is paused', 'Learning materials are closed. Contact BioscienceVista if you think this is a mistake.'],
+                rejected: ['Your registration was not approved', 'Contact BioscienceVista if you think this is a mistake.'] }[stt] || ['Not open yet', ''];
+      return '<section class="panel tint"><p class="label">My account</p><h2>' + t[0] + '</h2><p>' + t[1] + '</p><div class="cta"><a class="btn main sm" href="/account/">My account</a></div>' +
+        '<p class="small muted">Signed in as ' + S.E(me.user.email) + ' · <a href="#" onclick="BVS.signOut();return false">Log out</a></p></section>';
+    }
     var a = me.access || {}, waiting = (a.classes || []).filter(function (c) { return c.status === 'pending'; });
     var need = [];
-    if (!me.classes || !me.classes.length) need.push(waiting.length ? 'your teacher to approve you for <b>' + waiting.map(function (c) { return S.E(c.name); }).join(', ') + '</b>' : 'your class: <a href="/join/">type the joining code your teacher gave you</a>');
+    if (!me.classes || !me.classes.length) need.push(waiting.length ? 'your teacher to approve you for <b>' + waiting.map(function (c) { return S.E(c.name); }).join(', ') + '</b>' : (a.learner_kind === 'independent' ? 'an authorised subject: see <a href="/account/">My account</a>' : 'your class: <a href="/join/">type the class code your teacher gave you</a>'));
     if (!a.premium) need.push('<a href="/premium/">premium access</a>');
     return '<section class="panel tint"><p class="label">Almost there</p><h2>Not open yet</h2><p>Lessons, quizzes and simulations open when your account has ' + (need.length ? 'these: ' + need.join(' and ') : 'an approved class and premium access') + '.</p>' +
       '<div class="cta"><a class="btn main sm" href="/dashboard/">My dashboard</a>' + (a.premium ? '' : '<a class="btn sm" href="/premium/">Get premium</a>') + '</div>' +
@@ -105,6 +115,24 @@
     var dev = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'phone' : /iPad|Tablet/i.test(navigator.userAgent) ? 'tablet' : 'computer';
     var ref = document.referrer && document.referrer.indexOf(location.origin) !== 0 ? document.referrer.split('?')[0] : null;
     S.db.rpc('log_visit', { page: location.pathname, ref: ref, dev: dev, vid: vid || null }).then(function () {}, function () {});
+  };
+  /* A strip at the top of the student and teacher dashboards: authorised pathway, section and subjects, membership and expiry,
+     class requests, email verification, and links to My account and (teachers) class codes and join requests (migration 078). */
+  S.acctStrip = function (me, el) {
+    if (!me || me.view || me.preview || !el || document.getElementById('acct-strip')) return;
+    var a = me.access || {}, cs = (a.courses || []).filter(function (c) { return c.status === 'approved'; }), wait = (a.courses || []).filter(function (c) { return c.status === 'requested'; });
+    var pend = (a.classes || []).filter(function (c) { return c.status === 'pending' && !c.self; });
+    var PW = { cambridge: 'Cambridge International', ib: 'International Baccalaureate' }, SEC = { ks3: 'KS3', igcse: 'IGCSE', alevel: 'A Level', myp: 'MYP', ibdp: 'IBDP' };
+    var pws = {}; cs.forEach(function (c) { pws[PW[c.pathway] + ' · ' + SEC[c.section]] = 1; });
+    var prem = a.free ? 'Premium' : a.premium ? 'Premium until ' + new Date(a.until).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : (a.until && new Date(a.until) < new Date() ? 'Free (Premium ended ' + new Date(a.until).toLocaleDateString() + ')' : 'Free');
+    var d = document.createElement('section'); d.id = 'acct-strip';
+    d.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 14px;margin:0 0 12px;border-radius:14px;background:linear-gradient(90deg,#eef2ff,#fdf2f8);border:1px solid #e0e7ff;font-size:.9rem';
+    d.innerHTML = '<b>' + (Object.keys(pws).map(S.E).join(' · ') || 'No authorised subject yet') + '</b>' +
+      (cs.length ? '<span>📚 ' + cs.map(function (c) { return S.E(c.name); }).join(', ') + '</span>' : '') + (wait.length ? '<span>⏳ ' + wait.length + ' subject' + (wait.length > 1 ? 's' : '') + ' waiting for the admin</span>' : '') +
+      (pend.length ? '<span>📨 Waiting for your teacher: ' + pend.map(function (c) { return S.E(c.name); }).join(', ') + '</span>' : '') +
+      '<span>⭐ ' + S.E(prem) + '</span>' + (a.verified === false ? '<span style="color:#b45309;font-weight:700">✉️ Please verify your email</span>' : '') +
+      '<span style="margin-left:auto;display:flex;gap:6px">' + (me.school ? '<a class="btn sm" href="/teach/classes/">Class codes and requests</a>' : (a.learner_kind === 'independent' ? '' : '<a class="btn sm" href="/join/">Join a class</a>')) + '<a class="btn sm" href="/account/">👤 My account</a></span>';
+    el.parentNode.insertBefore(d, el);
   };
   S.signOut = function () { S.db.auth.signOut().then(function () { location.href = '/'; }); };
   S.err = function (r) { if (r && r.error) { throw new Error(r.error.message || 'Something went wrong.'); } return r ? r.data : null; };
