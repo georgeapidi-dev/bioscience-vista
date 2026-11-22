@@ -64,7 +64,8 @@
       function items(t) {
         return (L[t.id] || []).map(lessonCard).join('') +
           (SIM[t.id] || []).map(function (s) { return '<a class="lcard" href="' + E(s.url) + '"' + (s.is_internal ? '' : ' target="_blank" rel="noopener"') + '><span class="ic">🔬</span><span><b>' + E(s.title) + '</b><span class="small muted">Virtual lab</span></span><span class="go">Open</span>' + (me.admin ? S.del('simulation', s.id, s.title) : '') + '</a>'; }).join('') +
-          (R[t.id] || []).map(function (r) { return '<a class="lcard" href="' + E(r.url) + '" target="_blank" rel="noopener"><span class="ic">' + (r.kind === 'video' ? '🎬' : '📄') + '</span><span><b>' + E(r.title) + '</b><span class="small muted">' + E(r.kind === 'video' ? 'Videos' : 'Notes') + '</span></span><span class="go">Open ↗</span>' + (me.admin ? S.del('resource', r.id, r.title) : '') + '</a>'; }).join('');
+          (R[t.id] || []).map(function (r) { var lk = r.kind === 'link' && /^\/[a-z0-9-]+\/$/.test(r.url || '');   // a lesson that also teaches this subtopic (22 Nov 2026)
+            return '<a class="lcard" href="' + E(r.url) + '"' + (lk ? '' : ' target="_blank" rel="noopener"') + '><span class="ic">' + (r.kind === 'video' ? '🎬' : lk ? '🧪' : '📄') + '</span><span><b>' + E(r.title) + '</b><span class="small muted">' + E(r.kind === 'video' ? 'Videos' : lk ? 'Interactive lesson covering this subtopic' : 'Notes') + '</span></span><span class="go">' + (lk ? 'Open →' : 'Open ↗') + '</span>' + (me.admin ? S.del('resource', r.id, r.title) : '') + '</a>'; }).join('');
       }
       function match(t) { if (!q) return true; var txt = (t.name + ' ' + (t.code || '') + ' ' + (L[t.id] || []).map(function (l) { return l.title; }).join(' ')).toLowerCase(); return txt.indexOf(q) >= 0 || (KIDS[t.id] || []).some(match); }
       /* In a teacher's class you see the lessons your teacher added. The rest of the course can be asked for here; your teacher decides.
