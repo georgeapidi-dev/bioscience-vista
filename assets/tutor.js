@@ -299,7 +299,7 @@
     var tq = app.querySelector('#hq');
     Promise.all([
       S.db.from('lesson_notes').select('lesson,step,notes').limit(2000).then(function (r) { NOTES = index(r.data || []); }),
-      S.db.from('lessons').select('external_id,title,url').limit(2000).then(function (r) { (r.data || []).forEach(function (l) { LESSONS[l.external_id] = l; }); }, function () {}),
+      S.all(function () { return S.db.from('lessons').select('external_id,title,url').order('id'); }).then(function (r) { (r.data || []).forEach(function (l) { LESSONS[l.external_id] = l; }); }, function () {}),
       S.db.from('help_questions').select('question,answer').eq('public_faq', true).eq('status', 'answered').order('answered_at', { ascending: false }).limit(30).then(function (r) { FAQ = r.data || []; drawFaq(); }, function () {}),
       loadMine()
     ]).then(function () { st.textContent = NOTES && NOTES.length ? '' : 'Notes could not be loaded. You can still send your question to your teacher.'; }, function () { st.textContent = ''; });

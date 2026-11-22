@@ -45,8 +45,8 @@
     Promise.all([
       quizRows(true).then(function (r) { return r.error ? quizRows(false) : r; }),
       S.db.from('quiz_attempts').select('id,quiz_id,status,score,max_score,submitted_at,released').eq('student_id', ME.user.id),
-      EXAM ? Promise.resolve({ data: [] }) : S.db.from('lessons').select('id,title,url,topic_id,sort_order,published').order('sort_order').then(function (r) { return r; }, function () { return { data: [] }; }),
-      EXAM ? Promise.resolve({ data: [] }) : S.db.from('topics').select('id,parent_id').then(function (r) { return r; }, function () { return { data: [] }; }),
+      EXAM ? Promise.resolve({ data: [] }) : S.all(function () { return S.db.from('lessons').select('id,title,url,topic_id,sort_order,published').order('sort_order').order('id'); }).then(function (r) { return r; }, function () { return { data: [] }; }),
+      EXAM ? Promise.resolve({ data: [] }) : S.all(function () { return S.db.from('topics').select('id,parent_id').order('id'); }).then(function (r) { return r; }, function () { return { data: [] }; }),
       ME.staff ? Promise.resolve({ data: [] }) : S.db.from('material_requests').select('quiz_id,class_id,status').eq('student_id', ME.user.id).not('quiz_id', 'is', null).then(function (r) { return r.error ? { data: [] } : r; }, function () { return { data: [] }; })
     ]).then(function (x) {
       if (x[0].error) return fail(x[0]);

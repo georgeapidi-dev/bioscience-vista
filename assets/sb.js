@@ -108,6 +108,15 @@
   };
   S.signOut = function () { S.db.auth.signOut().then(function () { location.href = '/'; }); };
   S.err = function (r) { if (r && r.error) { throw new Error(r.error.message || 'Something went wrong.'); } return r ? r.data : null; };
+  /* every row of a query, 1000 at a time: the API returns at most 1000 rows per request (there are over 1300 lessons, 22 Nov 2026) */
+  S.all = function (build, from, acc) {
+    from = from || 0; acc = acc || [];
+    return build().range(from, from + 999).then(function (r) {
+      if (r.error) return acc.length ? { data: acc } : r;
+      var rows = r.data || []; acc = acc.concat(rows);
+      return rows.length === 1000 ? S.all(build, from + 1000, acc) : { data: acc };
+    });
+  };
   S.nice = function (e) { var m = (e && (e.message || e.error_description || e)) || 'Something went wrong.'; return String(m).replace(/^.*?ERROR:\s*/, ''); };
   S.updateNav = function (me) {
     var a = document.querySelector('.cta-nav'); if (!a || !me) return;

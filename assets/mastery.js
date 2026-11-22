@@ -85,7 +85,7 @@
     app.innerHTML = hero('My Science Intelligence', 'Loading your marked work…');
     var q = function (p) { return p.then(function (r) { return r.error ? { data: [] } : r; }, function () { return { data: [] }; }); };
     Promise.all([q(S.db.from('item_results').select('topic,topic_id,skill,got,max,at,misconceptions,title,q_label,objective').eq('student_id', me.user.id).gte('at', new Date(Date.now() - 365 * DAY).toISOString()).order('at', { ascending: false }).limit(5000)),
-      q(S.db.rpc('practice_topics')), q(S.db.from('lessons').select('id,topic_id,title,url,published').eq('published', true)),
+      q(S.db.rpc('practice_topics')), q(S.all(function () { return S.db.from('lessons').select('id,topic_id,title,url,published').eq('published', true).order('id'); })),
       q(S.db.from('sim_attempts').select('sim,sim_title,score,max_score,trials,teacher_comment,submitted_at,updated_at').eq('student_id', me.user.id).order('updated_at', { ascending: false }).limit(30)),
       q(S.db.from('research_projects').select('kind,title,stage,status,updated_at').eq('student_id', me.user.id)),
       q(S.db.from('pp_projects').select('title,stage,status,updated_at').eq('student_id', me.user.id)),

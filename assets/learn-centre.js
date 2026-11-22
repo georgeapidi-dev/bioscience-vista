@@ -5,12 +5,22 @@
   S.guard(app).then(function (me) { return mode === 'sims' ? sims(me) : centre(me); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
+  /* every row of a table, 1000 at a time (the API caps one request at 1000 rows) */
+  function allRows(build, from, acc) {
+    from = from || 0; acc = acc || [];
+    return build().range(from, from + 999).then(function (r) {
+      if (r.error) return { data: acc.length ? acc : null, error: r.error };
+      var rows = r.data || []; acc = acc.concat(rows);
+      return rows.length === 1000 ? allRows(build, from + 1000, acc) : { data: acc };
+    });
+  }
+
   /* Learning centre: subject → topic → subtopic, following each syllabus; interactive lessons sit in their subtopic */
   function centre(me) {
     return Promise.all([
       S.db.from('subjects').select('id,slug,name,colour,sort_order').order('sort_order'),
-      S.db.from('topics').select('id,subject_id,parent_id,name,code,programme,summary,sort_order,published').order('sort_order'),
-      S.db.from('lessons').select('id,topic_id,title,summary,url,minutes,max_marks,sort_order,published,external_id').order('sort_order'),
+      allRows(function () { return S.db.from('topics').select('id,subject_id,parent_id,name,code,programme,summary,sort_order,published').order('sort_order').order('id'); }),
+      allRows(function () { return S.db.from('lessons').select('id,topic_id,title,summary,url,minutes,max_marks,sort_order,published,external_id').order('sort_order').order('id'); }),   // over 1000 lessons: the API returns at most 1000 rows per request (22 Nov 2026)
       S.db.from('resources').select('id,topic_id,title,kind,url,download_url,sort_order,published').order('sort_order'),
       S.db.from('learning_progress').select('lesson_id,status,percent,last_step,updated_at').eq('student_id', me.user.id),
       S.db.from('quizzes').select('id,title,instructions,due_at').eq('category', 'lesson').in('published', (me.roles || []).some(function (r) { return r === 'admin' || r === 'teacher'; }) ? [true] : [true, false]).order('created_at', { ascending: false }),
