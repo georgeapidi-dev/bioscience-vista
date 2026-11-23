@@ -594,6 +594,7 @@
       '<div class="db-setlist">' + groups(setRows, 'Your teacher has not set any work right now. 🎉 Check your own to-do list below.') + '</div></section>';
     h += '<section class="db-sec" id="db-fb" style="--c:#e11d48" hidden></section>';
     h += '<div id="bv-news"></div><div id="remind"></div>';
+    h += '<section class="db-sec" id="db-cal" style="--c:#0d9488"></section>';
     h += '<section class="db-sec" id="db-todo" style="--c:#059669"><h3>✅ My to-do list</h3><p class="small muted">Lessons you have started and other question sets open for your class.</p><div class="db-mylist">' + groups(myRows, 'Nothing else to do right now. Well done! 🎉') + '</div></section>';
     var resOf = function (r) { return SUBJ ? (r.quiz_id ? SUBJ.quiz(r.quiz_id, r.title) : SUBJ.lesson(r.lesson_id, r.title)) : ''; };
     var resHtml = function (part) { return part.map(function (r) { var pc = S.pct(+r.score, +r.max_score);
@@ -619,6 +620,16 @@
       '</details></div></div></div>';
     var lx = document.getElementById('lx'); if (lx && app.contains(lx)) app.parentNode.insertBefore(lx, app);   // keep the learner panel safe while the dashboard redraws
     app.innerHTML = h; boardWatch(me); news(me);
+    (function () {   /* 📅 Calendar of work set and question sets with due dates (23 Nov 2026) */
+      var host = app.querySelector('#db-cal'); if (!host) return;
+      var items = (tasks || []).filter(function (t) { return t.due_at; }).map(function (t) { return { d: t.due_at, t: t.title, k: t.kind, st: t.state, href: t.url || '#db-set', c: t.state === 'done' ? '#16a34a' : new Date(t.due_at) < new Date() ? '#dc2626' : '#4f46e5' }; });
+      var setRef = {}; (tasks || []).forEach(function (t) { if (t.ref) setRef[t.ref] = 1; });
+      (quizzes || []).forEach(function (q) { if (q.due_at && !setRef[q.id]) { var done = (att || []).some(function (a) { return a.quiz_id === q.id && a.status !== 'in_progress'; }); items.push({ d: q.due_at, t: q.title, k: 'quiz', st: done ? 'done' : 'todo', href: '/quizzes/#' + q.id, c: done ? '#16a34a' : '#ca8a04' }); } });
+      if (!items.length) { host.remove(); return; }
+      (window.BVCAL ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/calendar.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () {
+        BVCAL.month(host, { title: '📅 My calendar', items: items, empty: 'Nothing due this month.', note: 'Work your teachers set, on the day it is due. Crossed out = done; red = overdue.' });
+      }, function () { host.remove(); });
+    })();
     var slot = app.querySelector('#lx-slot'); if (lx && slot) slot.parentNode.replaceChild(lx, slot);
     feedbackBox(me, res, prog); liveLoop(me, res, prog, quizzes, att, tasks);
     custom(me, J); pinPrompt(me);

@@ -49,10 +49,10 @@
   }
   function taskCell(t) { var s = shortTask(t);
     return '<td class="task-c" title="' + E(t) + '">' + (s.code ? '<span class="tk-code">' + E(s.code) + '</span> ' : '') + E(s.name) + (s.kind ? ' <span class="tk-kind">' + E(s.kind) + '</span>' : '') + '</td>'; }
-  var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['questions', '❓ Student questions'], ['labs', '🔬 Lab work'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['gradebook', '📒 Gradebook'], ['grading', '🎯 Grade boundaries'], ['bin', '🗑 Bin'], ['content', 'Site data'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
+  var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['questions', '❓ Student questions'], ['labs', '🔬 Lab work'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['gradebook', '📒 Gradebook'], ['grading', '🎯 Grade boundaries'], ['units', '🗺 Unit planner'], ['bin', '🗑 Bin'], ['content', 'Site data'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
   var ADMIN_TABS = ['bookings', 'roles', 'activity', 'content'];   // Content (topics, link lists): admin only since 16 Nov 2026; teachers add lessons from the main site instead
   // the sections in four colourful groups (16 Nov 2026, admin: too many buttons): Students' work, Build and set, Classes and people, Site
-  var TGROUPS = [['📥 Students\' work', '#ea580c', ['overview', 'marking', 'gradebook', 'work', 'questions', 'labs', 'approvals']], ['🛠️ Build and set', '#2563eb', ['quizzes', 'lessons', 'grading']],
+  var TGROUPS = [['📥 Students\' work', '#ea580c', ['overview', 'marking', 'gradebook', 'work', 'questions', 'labs', 'approvals']], ['🛠️ Build and set', '#2563eb', ['quizzes', 'lessons', 'units', 'grading']],
     ['👥 Classes and people', '#059669', ['classes', 'students', 'roles', 'bookings']], ['⚙️ Site', '#7c3aed', ['activity', 'content', 'bin']]];
   function tabGroups(tab) {
     var name = {}; TABS.forEach(function (t) { name[t[0]] = t[1]; });
@@ -101,7 +101,7 @@
     '.cc-ops{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.cc-ops .btn{background:rgba(255,255,255,.95);border-radius:999px;padding:3px 10px;font-size:.8rem}.cc-main{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.cc-main a{background:rgba(255,255,255,.95);color:var(--k)!important;border-radius:999px;padding:4px 12px;font-size:.85rem;text-decoration:none}.cc-more summary{cursor:pointer;font-size:.82rem;opacity:.9;margin-top:4px}.cc-more span{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.85rem;margin-top:4px}',
     '.ccard2 b{font-size:1.1rem}.ccard2 a{color:#fff;font-weight:700}.ccard2 .small{opacity:.95}.ccard2:hover{transform:translateY(-2px)}'
   ].join('\n'); document.head.appendChild(st); })();
-  var TABHUE = { overview: '#7c3aed', work: '#2563eb', questions: '#db2777', labs: '#0891b2', approvals: '#ea580c', classes: '#059669', students: '#4f46e5', quizzes: '#ca8a04', lessons: '#0d9488', marking: '#dc2626', gradebook: '#4f46e5', grading: '#7c3aed', bin: '#64748b', content: '#9333ea' };
+  var TABHUE = { overview: '#7c3aed', work: '#2563eb', questions: '#db2777', labs: '#0891b2', approvals: '#ea580c', classes: '#059669', students: '#4f46e5', quizzes: '#ca8a04', lessons: '#0d9488', marking: '#dc2626', gradebook: '#4f46e5', grading: '#7c3aed', units: '#0d9488', bin: '#64748b', content: '#9333ea' };
 
   S.guard(app, TEACH ? { school: true, allowPending: true } : { staff: true }).then(function (me) { ME = me; if (TEACH) S.acctStrip(me, app); return TEACH ? courseRequests() : null; }).then(function () { if (TEACH && !teachGate(ME)) throw 'gate'; return Promise.all([refs(), loadScript('/assets/quiz-import.js?v=' + (window.BV_VER || '5'))]); }).then(firstClasses).then(function () { window.addEventListener('hashchange', route); route(); })
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
@@ -177,10 +177,16 @@
     app.classList.add('teach-ui');
     app.querySelectorAll('nav.tabs a').forEach(function (a) { var k = TABHUE[a.getAttribute('href').slice(1)]; if (k) a.style.setProperty('--k', k); });
     var pane = app.querySelector('#pane');
-    ({ inbox: inboxTab, projects: projectsTab, planner: plannerTab, overview: TEACH ? teachOverview : overview, work: lessonWork, questions: helpDesk, labs: labWork, approvals: TEACH ? teachApprovals : approvals, activity: activity, lessons: lessons, classes: TEACH ? teachClasses : classes, students: students, quizzes: quizzes, marking: marking, gradebook: gradebookTab, grading: gradeBounds, bin: binTab, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
+    ({ inbox: inboxTab, projects: projectsTab, planner: plannerTab, overview: TEACH ? teachOverview : overview, work: lessonWork, questions: helpDesk, labs: labWork, approvals: TEACH ? teachApprovals : approvals, activity: activity, lessons: lessons, classes: TEACH ? teachClasses : classes, students: students, quizzes: quizzes, marking: marking, gradebook: gradebookTab, grading: gradeBounds, units: unitsTab, bin: binTab, content: content, roles: roles, bookings: bookings }[tab] || overview)(pane, h.slice(1));
   }
 
   /* ---------- 📒 Gradebook (23 Nov 2026): every mark per class, MYP criteria A–D and grades 1–7, CSV for ManageBac (assets/gradebook.js) ---------- */
+  function unitsTab(p) {   /* MYP unit planner (23 Nov 2026, roadmap phase 2; table unit_plans, migration 080) */
+    p.innerHTML = '<p class="muted">Loading the unit planner…</p>';
+    (window.BVUP ? Promise.resolve() : loadScript('/assets/unitplan.js?v=' + (window.BV_VER || '5'))).then(function () {
+      BVUP.render(p, { S: S, ME: ME, classes: CLASSES, isMyp: function (c) { return BV.subj.isMyp(c); } });
+    }).catch(function (e) { p.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
+  }
   function gradebookTab(p) {
     p.innerHTML = '<p class="muted">Loading the gradebook…</p>';
     (window.BVGB ? Promise.resolve() : loadScript('/assets/gradebook.js?v=' + (window.BV_VER || '5'))).then(function () {
@@ -556,11 +562,11 @@
   function classPage(p, cid, sub) {
     var c = CLASSES.filter(function (x) { return x.id === cid; })[0];
     if (!c) { p.innerHTML = '<p class="emptybox">This class was not found, or it is not one of your classes. <a href="#classes">All classes</a></p>'; return; }
-    sub = ['overview', 'lessons', 'todo', 'analysis', 'register', 'activity', 'news', 'status', 'quizzes', 'pins', 'grades'].indexOf(sub) >= 0 ? sub : 'overview';
+    sub = ['overview', 'lessons', 'todo', 'analysis', 'register', 'activity', 'news', 'status', 'quizzes', 'pins', 'grades', 'cal', 'units'].indexOf(sub) >= 0 ? sub : 'overview';
     var state = { filter: 'all', open: {}, lesson: null, live: true };
     try { state.lesson = sessionStorage.getItem('bv-cl-' + cid) || null; } catch (e) {}
     /* Class workspace (Command Centre phase 4, 21 Nov 2026): eight tabs; Students holds live status, register and roster */
-    var TABS8 = [['overview', '🏠', 'Overview', ['overview']], ['status', '👥', 'Students', ['status', 'register', 'pins']], ['todo', '📌', 'Set work', ['todo']], ['lessons', '🧪', 'Lessons', ['lessons']], ['quizzes', '📝', 'Assessments', ['quizzes']], ['activity', '📥', 'Student work', ['activity']], ['grades', '📒', 'Gradebook', ['grades']], ['analysis', '📊', 'Insights', ['analysis']], ['news', '📣', 'Messages', ['news']]];
+    var TABS8 = [['overview', '🏠', 'Overview', ['overview']], ['status', '👥', 'Students', ['status', 'register', 'pins']], ['todo', '📌', 'Set work', ['todo']], ['lessons', '🧪', 'Lessons', ['lessons']], ['quizzes', '📝', 'Assessments', ['quizzes']], ['activity', '📥', 'Student work', ['activity']], ['grades', '📒', 'Gradebook', ['grades']], ['cal', '📅', 'Calendar', ['cal']], ['units', '🗺', 'Units', ['units']], ['analysis', '📊', 'Insights', ['analysis']], ['news', '📣', 'Messages', ['news']]];
     var enc = encodeURIComponent(c.name);
     p.innerHTML = '<style>.cw-band{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:linear-gradient(120deg,#0f1f3d,#134e4a);color:#fff;border-radius:16px;padding:14px 16px;margin:0 0 10px;border-left:6px solid var(--k)}' +
       '.cw-band h2{margin:0;color:#fff;font-size:1.35rem}.cw-band .lab{font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:#99f6e4;font-weight:800}.cw-acts{display:flex;flex-wrap:wrap;gap:6px}.cw-acts a{display:inline-flex;gap:5px;align-items:center;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;text-decoration:none;font-weight:700;font-size:.84rem}.cw-acts a:hover{background:rgba(255,255,255,.22)}.cw-acts a.pri{background:#0d9488;border-color:#0d9488}' +
@@ -576,12 +582,12 @@
       p.querySelectorAll('[data-cnav] a').forEach(function (a) { var k = CH[a.getAttribute('href').split('/')[2]]; if (k) a.style.setProperty('--k', k); }); }
     function load() {
       if (busy) return; busy = true;
-      (sub === 'overview' ? overviewBoard : sub === 'grades' ? gradesBoard : sub === 'status' ? statusBoard : sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'news' ? newsBoard : sub === 'register' ? registerBoard : sub === 'pins' ? pinsBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
+      (sub === 'overview' ? overviewBoard : sub === 'grades' ? gradesBoard : sub === 'cal' ? calBoard : sub === 'units' ? unitsBoard : sub === 'status' ? statusBoard : sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'news' ? newsBoard : sub === 'register' ? registerBoard : sub === 'pins' ? pinsBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
         var miss = /class_(quiz|lesson)_board|class_todo|assign_work|class_analysis|announcements|schema cache|does not exist/i.test((e && (e.message || e.details)) || String(e));
         body.innerHTML = miss ? '<p class="emptybox">This part of the class page needs a database update (' + (sub === 'todo' ? 'migration 015' : sub === 'analysis' ? 'migration 016' : sub === 'news' ? 'migration 044' : 'migration 011') + ') before it can show results. Run it once in the Supabase SQL editor, then reload this page.</p>' : '<p class="msg">' + E(S.nice(e)) + '</p>'; });
     }
     state.reload = load;
-    var EVERY = sub === 'status' ? 10000 : sub === 'overview' || sub === 'grades' ? 60000 : 15000;
+    var EVERY = sub === 'status' ? 10000 : sub === 'overview' || sub === 'grades' || sub === 'cal' || sub === 'units' ? 60000 : 15000;
     p.querySelector('#lv').onchange = function () { state.live = this.checked; clearInterval(LIVE); if (state.live) { LIVE = setInterval(load, EVERY); load(); } };
     clearInterval(LIVE); LIVE = setInterval(load, EVERY); load();
   }
@@ -590,6 +596,28 @@
     if (state.gbDone) return Promise.resolve(); state.gbDone = 1;
     return (window.BVGB ? Promise.resolve() : loadScript('/assets/gradebook.js?v=' + (window.BV_VER || '5'))).then(function () {
       BVGB.render(body, { S: S, ME: ME, classes: [c].concat(CLASSES.filter(function (x) { return x.id !== c.id; })), only: c.id, fixed: true, isMyp: function (k) { return BV.subj.isMyp(k); } });
+    });
+  }
+  function unitsBoard(body, c, state) {   /* the unit planner for this class only, drawn once */
+    if (state.upDone) return Promise.resolve(); state.upDone = 1;
+    return (window.BVUP ? Promise.resolve() : loadScript('/assets/unitplan.js?v=' + (window.BV_VER || '5'))).then(function () {
+      BVUP.render(body, { S: S, ME: ME, classes: [c], only: c.id, fixed: true, isMyp: function (k) { return BV.subj.isMyp(k); } });
+    });
+  }
+  /* Class Calendar tab (23 Nov 2026): work set and question sets for this class by due date, with how many have finished */
+  function calBoard(body, c, state) {
+    if (state.calDone) return Promise.resolve(); state.calDone = 1;
+    return Promise.all([
+      S.db.from('assignments').select('id,title,kind,ref,due_at').eq('class_id', c.id).not('due_at', 'is', null).order('due_at'),
+      S.db.rpc('class_todo', { cls: c.id }).then(function (r) { return r.data || []; }, function () { return []; }),
+      S.db.from('quiz_classes').select('quiz_id, quizzes(id,title,due_at)').eq('class_id', c.id),
+      window.BVCAL ? Promise.resolve() : loadScript('/assets/calendar.js?v=' + (window.BV_VER || '5'))
+    ]).then(function (x) {
+      var A = x[0].data || [], st = {}, refs = {}; x[1].forEach(function (t) { var o = st[t.assignment_id] = st[t.assignment_id] || { d: 0, n: 0 }; o.n++; if (t.state === 'done') o.d++; });
+      var items = A.map(function (a) { refs[a.ref] = 1; var o = st[a.id] || { d: 0, n: 0 }; return { d: a.due_at, t: deskName(a.title), k: a.kind, href: '#classes/' + c.id + '/todo', sub: o.n ? o.d + '/' + o.n + ' done' : '', c: o.n && o.d === o.n ? '#16a34a' : new Date(a.due_at) < new Date() ? '#dc2626' : '#4f46e5' }; });
+      (x[2].data || []).forEach(function (r) { var q = r.quizzes; if (q && q.due_at && !refs[q.id]) items.push({ d: q.due_at, t: q.title, k: 'quiz', href: '#classes/' + c.id + '/quizzes', c: '#ca8a04' }); });
+      body.innerHTML = '<section class="panel" id="clcal"></section>';
+      BVCAL.month(body.querySelector('#clcal'), { title: '📅 ' + c.name, items: items, empty: 'Nothing due this month.', note: 'Students and parents see the same dates on their own calendars. <a href="#classes/' + c.id + '/todo/new">📌 Set work with a due date</a>.' });
     });
   }
   /* Class Overview tab: the class at a glance from real records (students, activity, marking, deadlines, recent results, who may need support) */
@@ -2222,7 +2250,7 @@
   var NAVG = [
     ['Overview', [['overview', '🏠', 'Home', '#overview']]],
     ['My classrooms', [['classes', '🏫', 'All classes', '#classes'], ['students', '👥', 'Students & results', '#students'], ['approvals', '🙋', 'Join requests', '#approvals', 'join']]],
-    ['Teaching & planning', [['planner', '📅', 'Weekly planner', '#planner'], ['lessons', '🧪', 'Lesson builder', '#lessons'], ['x-learn', '📚', 'Lesson library', '/learn/'], ['x-sims', '🔬', 'Virtual labs', '/simulations/']]],
+    ['Teaching & planning', [['planner', '📅', 'Weekly planner', '#planner'], ['units', '🗺', 'Unit planner', '#units'], ['lessons', '🧪', 'Lesson builder', '#lessons'], ['x-learn', '📚', 'Lesson library', '/learn/'], ['x-sims', '🔬', 'Virtual labs', '/simulations/']]],
     ['Assessment centre', [['quizzes', '📝', 'Quizzes & exams', '#quizzes'], ['marking', '✅', 'Marking', '#marking', 'mark'], ['gradebook', '📒', 'Gradebook', '#gradebook'], ['grading', '📏', 'Grade boundaries', '#grading']]],
     ['Student learning', [['work', '📘', 'Lesson work', '#work'], ['questions', '❓', 'Student questions', '#questions', 'ask'], ['x-mastery', '🔥', 'Mastery & support', '/mastery/']]],
     ['Laboratory', [['labs', '🧫', 'Lab work', '#labs', 'lab']]],
@@ -2231,7 +2259,7 @@
     ['Live teaching', [['x-live', '🎥', 'Live classroom', '/live/'], ['x-board', '🖊', 'Whiteboard', '/board/'], ['x-check', '⚡', 'Live Check', '/check/']]],
     ['Site', [['bin', '🗑', 'Bin', '#bin']]]
   ];
-  var TITLES = { inbox: 'Inbox', projects: 'Project progress', planner: 'Weekly planner', overview: 'Home', classes: 'My classrooms', students: 'Students & results', approvals: 'Join requests', lessons: 'Lesson builder', quizzes: 'Quizzes & exams', marking: 'Marking centre', gradebook: 'Gradebook', grading: 'Grade boundaries', work: 'Lesson work', questions: 'Student questions', labs: 'Lab work', bin: 'Bin' };
+  var TITLES = { inbox: 'Inbox', projects: 'Project progress', planner: 'Weekly planner', overview: 'Home', classes: 'My classrooms', students: 'Students & results', approvals: 'Join requests', lessons: 'Lesson builder', quizzes: 'Quizzes & exams', marking: 'Marking centre', gradebook: 'Gradebook', grading: 'Grade boundaries', units: 'Unit planner', work: 'Lesson work', questions: 'Student questions', labs: 'Lab work', bin: 'Bin' };
   (function () { if (document.getElementById('cc-css')) return; var st = document.createElement('style'); st.id = 'cc-css'; st.textContent = [
     'main.wrap.cc-wide{max-width:1320px}.cc{display:grid;grid-template-columns:212px minmax(0,1fr);gap:18px;align-items:start}.cc.min{grid-template-columns:58px minmax(0,1fr)}.cc-body{min-width:0}.cc-body img,.cc-body table{max-width:100%}',
     '.cc-side{position:sticky;top:76px;max-height:calc(100vh - 90px);overflow:auto;background:#0f1f3d;color:#cbd5e1;border-radius:18px;padding:12px 10px;scrollbar-width:thin}',

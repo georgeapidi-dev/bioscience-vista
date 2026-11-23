@@ -44,16 +44,30 @@
       '<p class="small"><button class="btn sm" type="button" data-unlink="' + E(k.id) + '">Remove this link</button></p></section>';
   }
 
+  /* Calendar of work set for each linked child, with due dates and whether it is done (migration 080, child_calendar) */
+  function calendar(host, kids) {
+    var nm = {}; kids.forEach(function (k) { nm[k.id] = (k.full_name || '').split(' ')[0]; });
+    var go = function () { return window.BVCAL ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/calendar.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); }); };
+    S.db.rpc('child_calendar').then(function (r) {
+      if (r.error) { host.remove(); return; }
+      return go().then(function () {
+        BVCAL.month(host, { title: '📅 Calendar', empty: 'No work is due this month.', note: 'Work set by teachers, on the day it is due. Crossed out = done.',
+          items: (r.data || []).map(function (a) { return { d: a.due_at, t: a.title, k: a.kind, st: a.state, sub: kids.length > 1 ? nm[a.student_id] : '', c: a.state === 'done' ? '#16a34a' : new Date(a.due_at) < new Date() ? '#dc2626' : '#4f46e5' }; }) });
+      });
+    }, function () { host.remove(); });
+  }
+
   function draw(kids, results, prog, ids) {
     var body = ids.length ? kids.map(function (k) { return child(k, results, prog); }).join('')
       : '<section class="panel tint"><h2>No child linked yet</h2><p>Enter the parent code your school gave you, below. Then you can see your child\'s marks and feedback here.</p></section>';
     app.innerHTML = '<section class="hero"><p class="label">Parent view</p><h1>My child\'s progress</h1><p class="muted">Read-only. You see the marks, lesson progress and teacher feedback for each child linked to your account. You cannot change anything here.</p></section>' +
-      '<div class="grp">' + body + '</div>' +
+      (ids.length ? '<section class="panel" id="pcal"></section>' : '') + '<div class="grp">' + body + '</div>' +
       '<section class="panel"><h2>Add another child</h2><p class="small muted">Ask the school for your child\'s parent code.</p>' +
       '<form id="lk" class="row2"><label class="f">Parent code<input id="lc" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase" required></label><button class="btn main sm" type="submit">Link child</button></form><p class="msg" id="lm" role="alert"></p></section>' +
       '<p class="small muted">Signed in as ' + E(ME.user.email) + ' · <a href="#" id="lo">Log out</a></p>';
 
     app.querySelector('#lo').onclick = function (e) { e.preventDefault(); S.signOut(); };
+    var pc = app.querySelector('#pcal'); if (pc) calendar(pc, kids);
     app.querySelector('#lk').onsubmit = function (e) {
       e.preventDefault(); var msg = app.querySelector('#lm'); msg.className = 'msg';
       S.db.rpc('link_child', { pcode: app.querySelector('#lc').value.trim() }).then(function (r) {
