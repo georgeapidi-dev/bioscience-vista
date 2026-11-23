@@ -562,11 +562,11 @@
   function classPage(p, cid, sub) {
     var c = CLASSES.filter(function (x) { return x.id === cid; })[0];
     if (!c) { p.innerHTML = '<p class="emptybox">This class was not found, or it is not one of your classes. <a href="#classes">All classes</a></p>'; return; }
-    sub = ['overview', 'lessons', 'todo', 'analysis', 'register', 'activity', 'news', 'status', 'quizzes', 'pins', 'grades', 'cal', 'units', 'pf'].indexOf(sub) >= 0 ? sub : 'overview';
+    sub = ['overview', 'lessons', 'todo', 'analysis', 'register', 'activity', 'news', 'status', 'quizzes', 'pins', 'grades', 'cal', 'units', 'pf', 'svc'].indexOf(sub) >= 0 ? sub : 'overview';
     var state = { filter: 'all', open: {}, lesson: null, live: true };
     try { state.lesson = sessionStorage.getItem('bv-cl-' + cid) || null; } catch (e) {}
     /* Class workspace (Command Centre phase 4, 21 Nov 2026): eight tabs; Students holds live status, register and roster */
-    var TABS8 = [['overview', '🏠', 'Overview', ['overview']], ['status', '👥', 'Students', ['status', 'register', 'pins']], ['todo', '📌', 'Set work', ['todo']], ['lessons', '🧪', 'Lessons', ['lessons']], ['quizzes', '📝', 'Assessments', ['quizzes']], ['activity', '📥', 'Student work', ['activity']], ['grades', '📒', 'Gradebook', ['grades']], ['cal', '📅', 'Calendar', ['cal']], ['units', '🗺', 'Units', ['units']], ['pf', '🗂', 'Portfolios', ['pf']], ['analysis', '📊', 'Insights', ['analysis']], ['news', '📣', 'Messages', ['news']]];
+    var TABS8 = [['overview', '🏠', 'Overview', ['overview']], ['status', '👥', 'Students', ['status', 'register', 'pins']], ['todo', '📌', 'Set work', ['todo']], ['lessons', '🧪', 'Lessons', ['lessons']], ['quizzes', '📝', 'Assessments', ['quizzes']], ['activity', '📥', 'Student work', ['activity']], ['grades', '📒', 'Gradebook', ['grades']], ['cal', '📅', 'Calendar', ['cal']], ['units', '🗺', 'Units', ['units']], ['pf', '🗂', 'Portfolios', ['pf']], ['svc', '🤝', 'CAS / Service', ['svc']], ['analysis', '📊', 'Insights', ['analysis']], ['news', '📣', 'Messages', ['news']]];
     var enc = encodeURIComponent(c.name);
     p.innerHTML = '<style>.cw-band{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:linear-gradient(120deg,#0f1f3d,#134e4a);color:#fff;border-radius:16px;padding:14px 16px;margin:0 0 10px;border-left:6px solid var(--k)}' +
       '.cw-band h2{margin:0;color:#fff;font-size:1.35rem}.cw-band .lab{font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:#99f6e4;font-weight:800}.cw-acts{display:flex;flex-wrap:wrap;gap:6px}.cw-acts a{display:inline-flex;gap:5px;align-items:center;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;text-decoration:none;font-weight:700;font-size:.84rem}.cw-acts a:hover{background:rgba(255,255,255,.22)}.cw-acts a.pri{background:#0d9488;border-color:#0d9488}' +
@@ -582,12 +582,12 @@
       p.querySelectorAll('[data-cnav] a').forEach(function (a) { var k = CH[a.getAttribute('href').split('/')[2]]; if (k) a.style.setProperty('--k', k); }); }
     function load() {
       if (busy) return; busy = true;
-      (sub === 'overview' ? overviewBoard : sub === 'grades' ? gradesBoard : sub === 'cal' ? calBoard : sub === 'units' ? unitsBoard : sub === 'pf' ? pfBoard : sub === 'status' ? statusBoard : sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'news' ? newsBoard : sub === 'register' ? registerBoard : sub === 'pins' ? pinsBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
+      (sub === 'overview' ? overviewBoard : sub === 'grades' ? gradesBoard : sub === 'cal' ? calBoard : sub === 'units' ? unitsBoard : sub === 'pf' ? pfBoard : sub === 'svc' ? svcBoard : sub === 'status' ? statusBoard : sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'news' ? newsBoard : sub === 'register' ? registerBoard : sub === 'pins' ? pinsBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
         var miss = /class_(quiz|lesson)_board|class_todo|assign_work|class_analysis|announcements|schema cache|does not exist/i.test((e && (e.message || e.details)) || String(e));
         body.innerHTML = miss ? '<p class="emptybox">This part of the class page needs a database update (' + (sub === 'todo' ? 'migration 015' : sub === 'analysis' ? 'migration 016' : sub === 'news' ? 'migration 044' : 'migration 011') + ') before it can show results. Run it once in the Supabase SQL editor, then reload this page.</p>' : '<p class="msg">' + E(S.nice(e)) + '</p>'; });
     }
     state.reload = load;
-    var EVERY = sub === 'status' ? 10000 : sub === 'overview' || sub === 'grades' || sub === 'cal' || sub === 'units' || sub === 'pf' ? 60000 : 15000;
+    var EVERY = sub === 'status' ? 10000 : sub === 'overview' || sub === 'grades' || sub === 'cal' || sub === 'units' || sub === 'pf' || sub === 'svc' ? 60000 : 15000;
     p.querySelector('#lv').onchange = function () { state.live = this.checked; clearInterval(LIVE); if (state.live) { LIVE = setInterval(load, EVERY); load(); } };
     clearInterval(LIVE); LIVE = setInterval(load, EVERY); load();
   }
@@ -604,6 +604,14 @@
       var kids = x[0], names = {}; kids.forEach(function (k) { names[k.id] = k.full_name; });
       body.innerHTML = '<section class="panel" id="clpf"></section>';
       BVPF.view(body.querySelector('#clpf'), S, { ids: kids.map(function (k) { return k.id; }), names: names, teacher: true });
+    });
+  }
+  function svcBoard(body, c, state) {   /* CAS (DP) and Service as Action (MYP) for this class: comment and approve (migration 086) */
+    if (state.svDone) return Promise.resolve(); state.svDone = 1;
+    return Promise.all([roster(c.id), window.BVSVC ? Promise.resolve() : loadScript('/assets/service.js?v=' + (window.BV_VER || '5'))]).then(function (x) {
+      var kids = x[0], names = {}; kids.forEach(function (k) { names[k.id] = k.full_name; });
+      body.innerHTML = '<section class="panel" id="clsv"></section>';
+      BVSVC.view(body.querySelector('#clsv'), S, { ids: kids.map(function (k) { return k.id; }), names: names, teacher: true });
     });
   }
   function unitsBoard(body, c, state) {   /* the unit planner for this class only, drawn once */
@@ -3029,7 +3037,7 @@
         '<label class="chk" style="margin:0"><input type="checkbox" id="popen"' + (c.active ? ' checked' : '') + '> Open: the code works</label></p>' +
         '<p class="small muted" id="pmsg" role="status">Change the code if it was shared outside the class. Everyone already in the class stays in; they use the new code to sign in from now on.</p></section>' +
         '<section class="panel" id="jcodes"><h3 style="margin-top:0">🎟 Joining codes</h3><p class="small muted">One code per student, used once. A student signs in first (with the website code BioscienceVista gave them), then types the joining code and is in this class straight away. Type one name per line to make a code for each; leave the names empty and choose a number for unnamed codes.</p>' +
-        '<div class="grp"><label class="f">Names (one per line)<textarea id="jcn" rows="4" placeholder="Amani Otieno&#10;Brian Kip"></textarea></label><div class="row2" style="gap:8px;flex-wrap:wrap;justify-content:flex-start"><label class="f" style="margin:0">or how many unnamed<input id="jcq" type="number" min="1" max="200" style="width:90px"></label><button type="button" class="btn main sm" id="jcm">＋ Make joining codes</button><button type="button" class="btn sm" id="jcp">🖨 Print unused codes</button></div></div><div id="jcl"><p class="small muted">Loading codes…</p></div></section>' +
+        '<div class="grp"><label class="f">Names (one per line)<textarea id="jcn" rows="4" placeholder="Amani Otieno&#10;Brian Kip"></textarea></label><div class="row2" style="gap:8px;flex-wrap:wrap;justify-content:flex-start"><label class="f" style="margin:0">or how many unnamed<input id="jcq" type="number" min="1" max="200" style="width:90px"></label><button type="button" class="btn main sm" id="jcm">＋ Make joining codes</button><button type="button" class="btn sm" id="jcp">🖨 Print unused codes</button><label class="btn sm" style="cursor:pointer" title="Export the class list from ManageBac as CSV (Students list or Class members), then choose it here">📥 Import ManageBac list (CSV)<input id="jcmb" type="file" accept=".csv,.tsv,.txt,text/csv" hidden></label></div><p class="small muted" id="jcmm" role="status" style="margin:4px 0 0"></p></div><div id="jcl"><p class="small muted">Loading codes…</p></div></section>' +
         '<section class="panel"><h3 style="margin-top:0">🔑 Sign-in PINs <span class="small muted">' + withPin + ' of ' + kids.length + ' students have a PIN</span></h3>' +
         '<p class="small muted">A student without a PIN cannot sign in with the class code yet. Set one for them here and tell them in person, or they choose their own on their dashboard the next time they sign in with email. A PIN is 4 numbers; after 5 wrong tries the student waits 15 minutes, or you reset it.</p>' +
         (kids.length ? '<style>.pn-row{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:8px 0;border-bottom:1px solid #e2e8f0}.pn-row>div:first-child{flex:1 1 180px;min-width:0;font-weight:700;overflow-wrap:anywhere}.pn-row>div:nth-child(2){flex:0 0 auto}.pn-row>div:last-child{display:flex;gap:6px;align-items:center;flex:0 1 auto}</style><div>' + kids.map(function (k) { var r = P[k.id] || {};
@@ -3070,6 +3078,21 @@
         b.disabled = true;
         S.db.rpc('make_class_codes', { cid: c.id, names: names }).then(function (r) { b.disabled = false; if (!ok(r, (r.data || []).length + ' joining code' + ((r.data || []).length === 1 ? '' : 's') + ' made')) return;
           body.querySelector('#jcn').value = ''; body.querySelector('#jcq').value = ''; drawCodes(); }); };
+      /* ManageBac class list (Phase 5, 23 Nov 2026): a CSV export → the names box, leaving out students already in the class or with an unused code.
+         The teacher checks the names, then presses "Make joining codes". Nothing is saved until then. */
+      body.querySelector('#jcmb').onchange = function () { var f = this.files && this.files[0], inp = this, m = body.querySelector('#jcmm'); if (!f) return;
+        f.text().then(function (txt) { inp.value = '';
+          var got = mbNames(txt); if (got.error) { m.className = 'msg'; m.textContent = got.error; return; }
+          var key = function (n) { return String(n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z]+/g, ' ').trim().split(' ').sort().join(' '); };
+          var have = {}; kids.forEach(function (k) { have[key(k.full_name)] = 'in the class'; }); JC.forEach(function (x) { if (!x.used_by && x.full_name) have[key(x.full_name)] = 'already has a code'; });
+          var box = body.querySelector('#jcn'), typed = box.value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean); typed.forEach(function (n) { have[key(n)] = have[key(n)] || 'already in the box'; });
+          var add = [], skip = []; got.names.forEach(function (n) { var k = key(n); if (have[k]) skip.push(n + ' (' + have[k] + ')'); else { have[k] = 'twice in the file'; add.push(n); } });
+          box.value = typed.concat(add).join('\n'); box.rows = Math.min(14, Math.max(4, typed.length + add.length));
+          m.className = add.length ? 'msg ok' : 'msg';
+          m.innerHTML = '📥 ' + E(f.name) + ': ' + got.names.length + ' student' + (got.names.length === 1 ? '' : 's') + ' found. <b>' + add.length + '</b> added to the names box' + (add.length ? ': check them, then press <b>＋ Make joining codes</b>.' : '.') +
+            (skip.length ? '<details style="margin-top:4px"><summary>' + skip.length + ' left out</summary><p class="small">' + skip.map(E).join('<br>') + '</p></details>' : '');
+          if (add.length) box.focus();
+        }, function () { m.className = 'msg'; m.textContent = 'That file could not be read.'; }); };
       body.querySelector('#jcp').onclick = function () {
         var un = JC.filter(function (x) { return !x.used_by; }); if (!un.length) { toast('No unused codes to print.', true); return; }
         var w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to print the codes.', true); return; }
@@ -3085,6 +3108,31 @@
           tr.children[1].innerHTML = '<span class="pill ok">✓ set</span> <span class="small muted">now</span>';
           inp.value = ''; toast('PIN saved. Tell ' + tr.children[0].textContent + ' their PIN (' + pin + ') in person.'); }); }; });
     });
+  }
+  /* ManageBac CSV → student names. Works with ManageBac's Students list and Class members exports (First Name, Last Name,
+     Preferred Name, Name, Student Name, Full Name), any order, comma, semicolon or tab separated; rows of teachers and parents are skipped. */
+  function mbNames(txt) {
+    txt = String(txt || '').replace(/^\ufeff/, ''); var first = txt.split(/\r?\n/)[0] || '';
+    var d = (first.match(/\t/g) || []).length > (first.match(/,/g) || []).length ? '\t' : (first.match(/;/g) || []).length > (first.match(/,/g) || []).length ? ';' : ',';
+    var rows = [], row = [], f = '', q = false;
+    for (var i = 0; i < txt.length; i++) { var ch = txt[i];
+      if (q) { if (ch === '"') { if (txt[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += ch; }
+      else if (ch === '"') q = true; else if (ch === d) { row.push(f); f = ''; } else if (ch === '\n' || ch === '\r') { if (ch === '\r' && txt[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; } else f += ch; }
+    if (f || row.length) { row.push(f); rows.push(row); }
+    rows = rows.filter(function (r) { return r.some(function (c) { return c.trim(); }); });
+    if (rows.length < 2) return { error: 'No students found in that file. Export the class list from ManageBac as CSV and try again.' };
+    var H = rows[0].map(function (h) { return h.trim().toLowerCase().replace(/[^a-z]+/g, ' ').trim(); }), col = function () { for (var j = 0; j < arguments.length; j++) { var k = H.indexOf(arguments[j]); if (k >= 0) return k; } return -1; };
+    var fn = col('first name', 'given name', 'firstname', 'first'), ln = col('last name', 'family name', 'surname', 'lastname', 'last'), pn = col('preferred name', 'nickname'),
+      nm = col('student name', 'full name', 'name', 'student'), role = col('role', 'type', 'user type', 'account type');
+    if (fn < 0 && nm < 0) return { error: 'This file has no name columns. ManageBac exports have "First Name" and "Last Name" (or "Name"): export the class list again as CSV.' };
+    var out = [];
+    rows.slice(1).forEach(function (r) { var g = function (k) { return k >= 0 ? String(r[k] || '').trim() : ''; };
+      if (role >= 0 && g(role) && !/student/i.test(g(role))) return;
+      var n = fn >= 0 ? ((g(pn) || g(fn)) + ' ' + g(ln)).trim() : g(nm);
+      if (fn < 0 && /,/.test(n)) n = n.split(',').reverse().map(function (x) { return x.trim(); }).join(' ');   // "Otieno, Amani" → "Amani Otieno"
+      n = n.replace(/\s+/g, ' '); if (n && n.length <= 80) out.push(n); });
+    if (!out.length) return { error: 'No student names found in that file.' };
+    return { names: out };
   }
   function registerBoard(body, c, state) {
     state.live = false; clearInterval(LIVE);
