@@ -17,9 +17,20 @@
   var tries = 0, t = setInterval(function () {
     var S = window.BVS; if (++tries > 80) clearInterval(t); if (!S || !S.db || !S.me) return; clearInterval(t);
     S.me().then(function (me) { if (!me || me.parent) return; var staff = me.staff || me.school || (me.roles || []).indexOf('teacher') >= 0;
-      if (root.dataset.mode === 'teach') { if (staff) teacher(S, me); } else if (!staff) { if (/^\/dashboard\/?$/.test(location.pathname)) gate(S, me); else student(S, me); } }, function () {});
+      if (root.dataset.mode === 'teach') { if (staff) whenSeen(function () { teacher(S, me); }); } else if (!staff) { if (/^\/dashboard\/?$/.test(location.pathname)) gate(S, me); else student(S, me); } }, function () {});
   }, 200);
 
+  /* Class insights on the teacher home page load when they come into view (23 Nov 2026): Home opens without waiting for them */
+  function whenSeen(go) {
+    var done = false, run = function () { if (!done) { done = true; go(); } };
+    if (!('IntersectionObserver' in window)) return run();
+    var w = setInterval(function () {   // the home page moves this panel into place once it has drawn
+      if (!root.closest('.cc-body') || root.style.display === 'none') return;   // waits until Home shows it (not on other tabs, or hidden by the teacher)
+      clearInterval(w);
+      root.hidden = false; if (!root.innerHTML.trim()) root.innerHTML = '<p class="muted" style="padding:12px 0">Class insights…</p>';
+      var io = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) { io.disconnect(); run(); } }, { rootMargin: '300px 0px' }); io.observe(root);
+    }, 250);
+  }
   function gate(S, me) {   /* one click opens "My learning journey" on the dashboard (23 Nov 2026), so the dashboard itself loads fast */
     if (!root.closest('#db-wrap')) { var n = 0, w = setInterval(function () { if (root.closest('#db-wrap')) { clearInterval(w); gate(S, me); } else if (++n > 300) clearInterval(w); }, 200); return; }   // wait until the dashboard has placed it, so it never shows first
     root.hidden = false; root.innerHTML = '<button type="button" class="db-open" aria-expanded="false"><span>🚀 My learning journey: goals, mastery and achievements</span><b>Open ▸</b></button>';
