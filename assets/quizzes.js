@@ -351,6 +351,10 @@
       var warned = false;
       function confirmInline(miss) { if (warned) return true; warned = true; var m = app.querySelector('#m'); m.className = 'msg'; m.textContent = miss + ' question' + (miss > 1 ? 's are' : ' is') + ' not answered. Press Submit again to hand in anyway.'; return false; }
       f.onsubmit = function (e) { e.preventDefault(); submit(false); };
+      /* Exam room (23 Nov 2026): question navigator, flags, one question per screen, highlighter and a review screen (site_assets/exam-room.js) */
+      (window.BVER ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/exam-room.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () {
+        if (!sent) BVER.attach(f, { attempt: attempt, exam: EXAM || q.category === 'exam', answered: function () { return Object.keys(collect()); }, submit: function () { submit(false); } });
+      }, function () {});
       // The timer starts by itself. Examinations are handed in at zero; exam-style sets only warn, and the extra time is recorded (site_assets/tasktimer.js).
       var tm = app.querySelector('#tm');
       if (window.BVTimer) {
