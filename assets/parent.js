@@ -61,13 +61,14 @@
     var body = ids.length ? kids.map(function (k) { return child(k, results, prog); }).join('')
       : '<section class="panel tint"><h2>No child linked yet</h2><p>Enter the parent code your school gave you, below. Then you can see your child\'s marks and feedback here.</p></section>';
     app.innerHTML = '<section class="hero"><p class="label">Parent view</p><h1>My child\'s progress</h1><p class="muted">Read-only. You see the marks, lesson progress and teacher feedback for each child linked to your account. You cannot change anything here.</p></section>' +
-      (ids.length ? '<section class="panel" id="prep"></section><section class="panel" id="pcal"></section>' : '') + '<div class="grp">' + body + '</div>' +
+      (ids.length ? '<section class="panel" id="ppf"></section><section class="panel" id="prep"></section><section class="panel" id="pcal"></section>' : '') + '<div class="grp">' + body + '</div>' +
       '<section class="panel"><h2>Add another child</h2><p class="small muted">Ask the school for your child\'s parent code.</p>' +
       '<form id="lk" class="row2"><label class="f">Parent code<input id="lc" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase" required></label><button class="btn main sm" type="submit">Link child</button></form><p class="msg" id="lm" role="alert"></p></section>' +
       '<p class="small muted">Signed in as ' + E(ME.user.email) + ' · <a href="#" id="lo">Log out</a></p>';
 
     app.querySelector('#lo').onclick = function (e) { e.preventDefault(); S.signOut(); };
     var pc = app.querySelector('#pcal'); if (pc) calendar(pc, kids);
+    var pp = app.querySelector('#ppf'); if (pp) { var pn = {}; kids.forEach(function (k) { pn[k.id] = k.full_name; }); (window.BVPF ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/portfolio.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () { BVPF.view(pp, S, { ids: ids, names: pn }); }, function () { pp.remove(); }); }   /* 🗂 shared portfolio items (migration 085) */
     var pr = app.querySelector('#prep'); if (pr) (window.BVREP ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/reports.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () { BVREP.mine(pr, S); }, function () { pr.remove(); });   /* 📄 published term reports (migration 084) */
     app.querySelector('#lk').onsubmit = function (e) {
       e.preventDefault(); var msg = app.querySelector('#lm'); msg.className = 'msg';

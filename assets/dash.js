@@ -594,7 +594,7 @@
       '<div class="db-setlist">' + groups(setRows, 'Your teacher has not set any work right now. 🎉 Check your own to-do list below.') + '</div></section>';
     h += '<section class="db-sec" id="db-fb" style="--c:#e11d48" hidden></section>';
     h += '<div id="bv-news"></div><div id="remind"></div>';
-    h += '<section class="db-sec" id="db-cal" style="--c:#0d9488"></section><section class="db-sec" id="db-rep" style="--c:#7c3aed"></section>';
+    h += '<section class="db-sec" id="db-cal" style="--c:#0d9488"></section><section class="db-sec" id="db-rep" style="--c:#7c3aed"></section><section class="db-sec" id="db-pf" style="--c:#7c3aed"></section>';
     h += '<section class="db-sec" id="db-todo" style="--c:#059669"><h3>✅ My to-do list</h3><p class="small muted">Lessons you have started and other question sets open for your class.</p><div class="db-mylist">' + groups(myRows, 'Nothing else to do right now. Well done! 🎉') + '</div></section>';
     var resOf = function (r) { return SUBJ ? (r.quiz_id ? SUBJ.quiz(r.quiz_id, r.title) : SUBJ.lesson(r.lesson_id, r.title)) : ''; };
     var resHtml = function (part) { return part.map(function (r) { var pc = S.pct(+r.score, +r.max_score);
@@ -620,6 +620,7 @@
       '</details></div></div></div>';
     var lx = document.getElementById('lx'); if (lx && app.contains(lx)) app.parentNode.insertBefore(lx, app);   // keep the learner panel safe while the dashboard redraws
     app.innerHTML = h; boardWatch(me); news(me);
+    (function () { var ph = app.querySelector('#db-pf'); if (!ph) return; if (me.view || me.preview) { ph.remove(); return; } (window.BVPF ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/portfolio.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () { BVPF.student(ph, S, me); }, function () { ph.remove(); }); })();   /* 🗂 portfolio (migration 085) */
     (function () { var rh = app.querySelector('#db-rep'); if (!rh) return; if (me.view || me.preview) { rh.remove(); return; } (window.BVREP ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/reports.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () { BVREP.mine(rh, S); }, function () { rh.remove(); }); })();   /* 📄 published term reports (migration 084) */
     (function () {   /* 📅 Calendar of work set and question sets with due dates (23 Nov 2026) */
       var host = app.querySelector('#db-cal'); if (!host) return;

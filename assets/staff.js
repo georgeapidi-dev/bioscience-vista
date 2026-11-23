@@ -562,11 +562,11 @@
   function classPage(p, cid, sub) {
     var c = CLASSES.filter(function (x) { return x.id === cid; })[0];
     if (!c) { p.innerHTML = '<p class="emptybox">This class was not found, or it is not one of your classes. <a href="#classes">All classes</a></p>'; return; }
-    sub = ['overview', 'lessons', 'todo', 'analysis', 'register', 'activity', 'news', 'status', 'quizzes', 'pins', 'grades', 'cal', 'units'].indexOf(sub) >= 0 ? sub : 'overview';
+    sub = ['overview', 'lessons', 'todo', 'analysis', 'register', 'activity', 'news', 'status', 'quizzes', 'pins', 'grades', 'cal', 'units', 'pf'].indexOf(sub) >= 0 ? sub : 'overview';
     var state = { filter: 'all', open: {}, lesson: null, live: true };
     try { state.lesson = sessionStorage.getItem('bv-cl-' + cid) || null; } catch (e) {}
     /* Class workspace (Command Centre phase 4, 21 Nov 2026): eight tabs; Students holds live status, register and roster */
-    var TABS8 = [['overview', '🏠', 'Overview', ['overview']], ['status', '👥', 'Students', ['status', 'register', 'pins']], ['todo', '📌', 'Set work', ['todo']], ['lessons', '🧪', 'Lessons', ['lessons']], ['quizzes', '📝', 'Assessments', ['quizzes']], ['activity', '📥', 'Student work', ['activity']], ['grades', '📒', 'Gradebook', ['grades']], ['cal', '📅', 'Calendar', ['cal']], ['units', '🗺', 'Units', ['units']], ['analysis', '📊', 'Insights', ['analysis']], ['news', '📣', 'Messages', ['news']]];
+    var TABS8 = [['overview', '🏠', 'Overview', ['overview']], ['status', '👥', 'Students', ['status', 'register', 'pins']], ['todo', '📌', 'Set work', ['todo']], ['lessons', '🧪', 'Lessons', ['lessons']], ['quizzes', '📝', 'Assessments', ['quizzes']], ['activity', '📥', 'Student work', ['activity']], ['grades', '📒', 'Gradebook', ['grades']], ['cal', '📅', 'Calendar', ['cal']], ['units', '🗺', 'Units', ['units']], ['pf', '🗂', 'Portfolios', ['pf']], ['analysis', '📊', 'Insights', ['analysis']], ['news', '📣', 'Messages', ['news']]];
     var enc = encodeURIComponent(c.name);
     p.innerHTML = '<style>.cw-band{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:linear-gradient(120deg,#0f1f3d,#134e4a);color:#fff;border-radius:16px;padding:14px 16px;margin:0 0 10px;border-left:6px solid var(--k)}' +
       '.cw-band h2{margin:0;color:#fff;font-size:1.35rem}.cw-band .lab{font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:#99f6e4;font-weight:800}.cw-acts{display:flex;flex-wrap:wrap;gap:6px}.cw-acts a{display:inline-flex;gap:5px;align-items:center;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;text-decoration:none;font-weight:700;font-size:.84rem}.cw-acts a:hover{background:rgba(255,255,255,.22)}.cw-acts a.pri{background:#0d9488;border-color:#0d9488}' +
@@ -582,12 +582,12 @@
       p.querySelectorAll('[data-cnav] a').forEach(function (a) { var k = CH[a.getAttribute('href').split('/')[2]]; if (k) a.style.setProperty('--k', k); }); }
     function load() {
       if (busy) return; busy = true;
-      (sub === 'overview' ? overviewBoard : sub === 'grades' ? gradesBoard : sub === 'cal' ? calBoard : sub === 'units' ? unitsBoard : sub === 'status' ? statusBoard : sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'news' ? newsBoard : sub === 'register' ? registerBoard : sub === 'pins' ? pinsBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
+      (sub === 'overview' ? overviewBoard : sub === 'grades' ? gradesBoard : sub === 'cal' ? calBoard : sub === 'units' ? unitsBoard : sub === 'pf' ? pfBoard : sub === 'status' ? statusBoard : sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'news' ? newsBoard : sub === 'register' ? registerBoard : sub === 'pins' ? pinsBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
         var miss = /class_(quiz|lesson)_board|class_todo|assign_work|class_analysis|announcements|schema cache|does not exist/i.test((e && (e.message || e.details)) || String(e));
         body.innerHTML = miss ? '<p class="emptybox">This part of the class page needs a database update (' + (sub === 'todo' ? 'migration 015' : sub === 'analysis' ? 'migration 016' : sub === 'news' ? 'migration 044' : 'migration 011') + ') before it can show results. Run it once in the Supabase SQL editor, then reload this page.</p>' : '<p class="msg">' + E(S.nice(e)) + '</p>'; });
     }
     state.reload = load;
-    var EVERY = sub === 'status' ? 10000 : sub === 'overview' || sub === 'grades' || sub === 'cal' || sub === 'units' ? 60000 : 15000;
+    var EVERY = sub === 'status' ? 10000 : sub === 'overview' || sub === 'grades' || sub === 'cal' || sub === 'units' || sub === 'pf' ? 60000 : 15000;
     p.querySelector('#lv').onchange = function () { state.live = this.checked; clearInterval(LIVE); if (state.live) { LIVE = setInterval(load, EVERY); load(); } };
     clearInterval(LIVE); LIVE = setInterval(load, EVERY); load();
   }
@@ -596,6 +596,14 @@
     if (state.gbDone) return Promise.resolve(); state.gbDone = 1;
     return (window.BVGB ? Promise.resolve() : loadScript('/assets/gradebook.js?v=' + (window.BV_VER || '5'))).then(function () {
       BVGB.render(body, { S: S, ME: ME, classes: [c].concat(CLASSES.filter(function (x) { return x.id !== c.id; })), only: c.id, fixed: true, isMyp: function (k) { return BV.subj.isMyp(k); } });
+    });
+  }
+  function pfBoard(body, c, state) {   /* student portfolios for this class, with teacher comments (migration 085) */
+    if (state.pfDone) return Promise.resolve(); state.pfDone = 1;
+    return Promise.all([roster(c.id), window.BVPF ? Promise.resolve() : loadScript('/assets/portfolio.js?v=' + (window.BV_VER || '5'))]).then(function (x) {
+      var kids = x[0], names = {}; kids.forEach(function (k) { names[k.id] = k.full_name; });
+      body.innerHTML = '<section class="panel" id="clpf"></section>';
+      BVPF.view(body.querySelector('#clpf'), S, { ids: kids.map(function (k) { return k.id; }), names: names, teacher: true });
     });
   }
   function unitsBoard(body, c, state) {   /* the unit planner for this class only, drawn once */
