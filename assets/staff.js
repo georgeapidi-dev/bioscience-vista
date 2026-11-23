@@ -116,10 +116,13 @@
     return true;
   }
   function loadScript(src) { return new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = src; x.onload = ok; x.onerror = function () { bad(new Error('Could not load ' + src)); }; document.head.appendChild(x); }); }
-  var ARCHIVED = [];
+  var ARCHIVED = [], TOPICS_P = null, TOPICS_OK = false;
   function refs() {
-    return Promise.all([S.all(function () { return S.db.from('topics').select('id,name,code,programme,parent_id,sort_order, subjects(name,sort_order)').order('sort_order').order('id'); }), S.db.from('classes').select('*').order('name'), S.quizSubjectCol()])
-      .then(function (x) { TOPICS = x[0].data || []; QSUBJ = x[2] === true;
+    /* the 1,085 topics are only needed by other tabs: they load in the background so Home opens first (23 Nov 2026) */
+    if (!TOPICS_P) TOPICS_P = S.all(function () { return S.db.from('topics').select('id,name,code,programme,parent_id,sort_order, subjects(name,sort_order)').order('sort_order').order('id'); })
+      .then(function (r) { TOPICS = (r && r.data) || []; TOPICS_OK = true; }, function () { TOPICS_OK = true; });
+    return Promise.all([null, S.db.from('classes').select('*').order('name'), S.quizSubjectCol()])
+      .then(function (x) { QSUBJ = x[2] === true;
         var all = (x[1].data || []).filter(function (c) { return TEACH ? c.owner_kind !== 'main' && c.teacher_id === OWNER() : c.owner_kind === 'main' && (ME.admin || c.teacher_id === ME.user.id); });   /* main site (/staff/) and My classes (/teach/) are kept apart */
         all = all.filter(function (c) { return !c.deleted_at; });   // removed classes are in the 🗑 Bin (migration 042)
         CLASSES = all.filter(function (c) { return !c.archived_at; }); ARCHIVED = all.filter(function (c) { return c.archived_at; });
@@ -156,6 +159,7 @@
   function route() {
     clearInterval(LIVE);
     var h = location.hash.slice(1).split('/'), tab = h[0] || 'overview';
+    if (!TOPICS_OK && TOPICS_P && (tab !== 'overview' || !TEACH)) { var pn0 = app.querySelector('#pane'); if (pn0) pn0.innerHTML = '<p class="muted">Loading…</p>'; else if (!app.children.length) app.innerHTML = '<p class="muted">Loading…</p>'; TOPICS_P.then(route); return; }
     if (ADMIN_TABS.indexOf(tab) >= 0 && (!ME.admin || TEACH)) tab = 'overview';
     if (TEACH) { teachShell(tab); AUTO_NEW = h[3] === 'new'; AUTO_DUE = /^\d{4}-\d\d-\d\d$/.test(h[4] || '') ? h[4] : null; } else {
     var head = '<div class="row2 cband" style="--k:' + (TEACH ? '#059669' : '#2563eb') + '"><div><p class="label">' + (TEACH ? 'My classes' + (ME.profile.school_name ? ' · ' + E(ME.profile.school_name) : '') : 'Main site · courses and their classes') + '</p><h2>' + (TEACH && ME.admin && AS ? 'Classroom of ' + E(TNAME[AS] || 'this teacher') : E(ME.profile.full_name || ME.user.email)) + (ME.admin ? ' <span class="pill">Admin</span>' : '') + '</h2></div><div class="cta">' + '<a class="btn sm" href="/board/">🖊 Whiteboard</a><a class="btn sm" href="/live/">🎥 Live Classroom</a><a class="btn sm" href="/research/#/teacher">🔬 Research Hub</a>' + (TEACH ? '<a class="btn sm" href="/messages/">Messages</a>' + (ME.admin ? '' : '<a class="btn sm" href="/premium/">Premium</a>') : ME.admin ? '<a class="btn main sm" href="/admin/">Admin: join requests, members, payments</a>' : '') + '<button class="btn sm" type="button" id="so">Log out</button></div></div>' +
@@ -2326,7 +2330,42 @@
     '@media (max-width:1180px) and (min-width:901px){.cc{grid-template-columns:58px minmax(0,1fr)}.cc-side .lbl,.cc-side h6,.cc-side a i,.cc-foot,.cc-tog{display:none}.cc-side a{justify-content:center}.cc-tbl .hm2{display:none}}',
     '@media (max-width:900px){.cc,.cc.min{grid-template-columns:minmax(0,1fr)}.cc-side{position:static;max-height:none;padding:8px}.cc-tog{display:none}.cc-mob{display:block;width:100%;background:transparent;border:0;color:#fff;font:inherit;font-weight:800;text-align:left;padding:4px 6px;cursor:pointer}',
     '.cc-side:not(.open) h6,.cc-side:not(.open) a,.cc-side:not(.open) .cc-foot{display:none}.cc.min .cc-side .lbl,.cc.min .cc-side h6,.cc.min .cc-foot{display:revert}.cc.min .cc-side a{justify-content:flex-start}.cc-side.open a{display:flex}',
-    '.cc-tbl .hm,.cc-tbl .hm2{display:none}.cc-hello{padding:14px 16px}.cc-hello h2{font-size:1.25rem}.cc-top h1{font-size:1.3rem}.cc-qa a,.cc-qa button{padding:7px 10px;font-size:.84rem}}'
+    '.cc-tbl .hm,.cc-tbl .hm2{display:none}.cc-hello{padding:14px 16px}.cc-hello h2{font-size:1.25rem}.cc-top h1{font-size:1.3rem}.cc-qa a,.cc-qa button{padding:7px 10px;font-size:.84rem}}',
+    /* ===== Modern Command Centre (23 Nov 2026 redesign): calmer surfaces, one accent, cards instead of tables ===== */
+    '.cc{--ink:#0f1f3d;--mut:#64748b;--line:#e8ebf3;--acc:#0d9488;--acc2:#4f46e5;--card:#fff;--sh:0 1px 2px rgba(15,31,61,.05),0 10px 30px rgba(15,31,61,.06);gap:22px}',
+    '.cc-side{background:linear-gradient(180deg,#0b1730,#0f2a46 60%,#0f3a4a);border-radius:22px;padding:14px 10px;box-shadow:0 18px 40px rgba(11,23,48,.25)}',
+    '.cc-side h6{color:#5eead4;opacity:.8}.cc-side a{border-radius:12px;padding:8px 10px;color:#dbe4f0;transition:background .15s,transform .15s}.cc-side a:hover{background:rgba(255,255,255,.07);transform:translateX(2px)}',
+    '.cc-side a.on{background:linear-gradient(90deg,#14b8a6,#0ea5e9);color:#fff;box-shadow:0 6px 16px rgba(14,165,233,.35)}',
+    '.cc-top h1{font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-size:1.9rem;letter-spacing:-.02em}.cc-top .sub{font-weight:600}',
+    '.cc-hello{overflow:hidden;border-radius:24px;padding:26px 28px;background:radial-gradient(circle at 85% -20%,rgba(56,189,248,.45),transparent 45%),radial-gradient(circle at 0% 120%,rgba(20,184,166,.5),transparent 50%),linear-gradient(120deg,#0b1730,#1e1b4b 55%,#134e4a);box-shadow:0 20px 45px rgba(30,27,75,.28)}',
+    '.cc-hello h2{font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-size:1.8rem;letter-spacing:-.02em}.cc-hello p{color:#c7f9ee;font-size:1rem;max-width:760px}',
+    '.cc-qa{gap:10px}.cc-qa a,.cc-qa button{border-radius:999px;border:1px solid var(--line);background:#fff;box-shadow:0 1px 2px rgba(15,31,61,.06);padding:9px 15px;transition:transform .15s,box-shadow .15s}',
+    '.cc-qa a:hover,.cc-qa button:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,31,61,.1);border-color:#99f6e4;color:var(--ink)}',
+    '.cc-qa .pri{background:linear-gradient(90deg,#0d9488,#0ea5e9);border:0;color:#fff;box-shadow:0 8px 20px rgba(13,148,136,.3)}',
+    '.cc-stats{gap:12px}.cc-stats a{position:relative;border:1px solid var(--line);border-radius:18px;padding:14px 16px 12px;box-shadow:var(--sh);overflow:hidden;transition:transform .15s}',
+    '.cc-stats a::before{content:"";position:absolute;left:0;top:0;right:0;height:4px;background:var(--sc,#0d9488)}.cc-stats a:hover{transform:translateY(-2px);border-color:var(--line)}',
+    '.cc-stats a:nth-child(1){--sc:#0d9488}.cc-stats a:nth-child(2){--sc:#4f46e5}.cc-stats a:nth-child(3){--sc:#dc2626}.cc-stats a:nth-child(4){--sc:#db2777}.cc-stats a:nth-child(5){--sc:#d97706}.cc-stats a:nth-child(6){--sc:#16a34a}.cc-stats a:nth-child(7){--sc:#7c3aed}',
+    '.cc-stats a b{font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-size:1.8rem;letter-spacing:-.02em}',
+    '.cc-desk{gap:14px}.cc-col{border:1px solid var(--line);border-top:0;border-radius:20px;padding:14px 14px 10px;box-shadow:var(--sh);position:relative;overflow:hidden}',
+    '.cc-col::before{content:"";position:absolute;left:0;top:0;right:0;height:5px;background:var(--c)}.cc-col h4{font-size:.95rem}.cc-col h4>span:last-child{background:color-mix(in srgb,var(--c) 14%,#fff);color:var(--c);border-radius:999px;padding:0 9px;font-weight:800}',
+    '.cc-it{padding:9px 0}.cc-it .ok{border-radius:999px;width:26px;height:26px;padding:0}',
+    '.cc-h3 h3{font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-size:1.25rem;letter-spacing:-.01em}',
+    '.cc-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:14px}',
+    '.cc-card{position:relative;background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px 16px 14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:7px;transition:transform .15s,box-shadow .15s;opacity:1!important;transform:none}',
+    '.cc-card::before{content:"";position:absolute;inset:0 0 auto 0;height:6px;border-radius:20px 20px 0 0;background:linear-gradient(90deg,var(--k),color-mix(in srgb,var(--k) 55%,#38bdf8))}',
+    '.cc-card:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(15,31,61,.12)}.cc-card.dim{opacity:.7!important}',
+    '.cc-card-h{display:flex;align-items:flex-start;gap:6px}.cc-card .nm{flex:1;font-family:"Space Grotesk",Inter,system-ui,sans-serif;font-weight:700;font-size:1.08rem;color:var(--ink);text-decoration:none;line-height:1.25}.cc-card .nm:hover{color:var(--k)}',
+    '.cc-card-p{font-size:.78rem;font-weight:700;color:var(--k);text-transform:uppercase;letter-spacing:.05em}',
+    '.cc-card-n{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.88rem;color:var(--mut)}.cc-card-n b{color:var(--ink);font-size:1.05rem}',
+    '.cc-badge{display:inline-block;padding:2px 9px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:.76rem;font-weight:800;text-decoration:none}.cc-badge.warn{background:#fee2e2;color:#b91c1c}',
+    '.cc-meter{height:8px;border-radius:99px;background:#eef1f6;overflow:hidden}.cc-meter i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--k),color-mix(in srgb,var(--k) 50%,#22d3ee))}',
+    '.cc-card-s,.cc-card-d{font-size:.8rem;color:var(--mut)}.cc-card-d{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.cc-card-a{display:flex;gap:6px;align-items:center;margin-top:auto;padding-top:6px}.cc-card-a .btn{border-radius:999px}.cc-card-a .cc-menu{margin-left:auto}',
+    '[data-sec="results"] table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--sh)}[data-sec="results"] th{background:#f8fafc;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b}',
+    '[data-sec="results"] td,[data-sec="results"] th{padding:9px 12px;border-bottom:1px solid #f1f5f9}[data-sec="results"] tr:last-child td{border-bottom:0}',
+    '.cc-as{border-radius:16px}.cc-cust{border-radius:18px;box-shadow:var(--sh)}',
+    '@media (max-width:900px){.cc-hello{padding:18px}.cc-hello h2{font-size:1.35rem}.cc-stats a b{font-size:1.4rem}}',
+    '@media (prefers-reduced-motion:reduce){.cc-card,.cc-stats a,.cc-qa a,.cc-side a{transition:none}.cc-card:hover,.cc-stats a:hover{transform:none}}'
   ].join('\n'); document.head.appendChild(st); })();
 
   function deskName(t) { var x = shortTask(t); return (x.code ? x.code + ' ' : '') + x.name + (x.kind ? ' (' + x.kind + ')' : ''); }
@@ -2349,7 +2388,7 @@
     var asBar = ME.admin ? '<div class="cc-as' + (AS ? '' : ' mine') + '" id="asbar">' + (AS ? '<span>👁 <b>Admin view:</b> you are in <b>' + E(TNAME[AS] || 'another teacher') + '</b>\'s classroom. Changes you make are made in their classes.</span>' : '<span>👁 You are in <b>your own</b> classroom.</span>') +
       '<label style="display:flex;gap:6px;align-items:center;margin:0">Open the classroom of<select id="aspick"><option value="">Me (my own classes)</option>' + TEACHERS.map(function (t) { return '<option value="' + t.id + '"' + (t.id === AS ? ' selected' : '') + '>' + E(TNAME[t.id] || 'Teacher') + ' (' + t.n + ' active' + (t.a ? ', ' + t.a + ' archived' : '') + ')</option>'; }).join('') + '</select></label></div>' : '';
     var mainEl = document.getElementById('main'); if (mainEl) mainEl.classList.add('cc-wide');
-    app.innerHTML = '<div class="cc' + (ccMin() ? ' min' : '') + (ccPrefs().compact ? ' compact' : '') + '"><aside class="cc-side" aria-label="Teacher sections"><button type="button" class="cc-mob" id="ccmob" aria-expanded="false">☰ Teacher menu · ' + E(TITLES[tab] || 'Home') + '</button><button type="button" class="cc-tog" id="cctog" title="Collapse or expand the menu">' + (ccMin() ? '»' : '« Collapse') + '</button>' + nav +
+    app.innerHTML = '<div class="cc' + (ccMin() ? ' min' : '') + (ccPrefs().compact ? ' compact' : '') + '" data-noreveal><aside class="cc-side" aria-label="Teacher sections"><button type="button" class="cc-mob" id="ccmob" aria-expanded="false">☰ Teacher menu · ' + E(TITLES[tab] || 'Home') + '</button><button type="button" class="cc-tog" id="cctog" title="Collapse or expand the menu">' + (ccMin() ? '»' : '« Collapse') + '</button>' + nav +
       '<div class="cc-foot"><label>🎒 Student preview<select id="vas"><option value="">Choose a class…</option>' + CLASSES.map(function (c) { return '<option value="' + c.id + '">' + E(c.name) + '</option>'; }).join('') + '</select></label>' +
       '<p style="margin:8px 0 0"><a href="#" id="so" style="padding:4px 0;color:#94a3b8">Log out</a></p></div></aside>' +
       '<div class="cc-body">' + asBar + '<div class="cc-top"><div><span class="sub">' + E(ME.profile.school_name || 'My classroom') + ' · ' + E(first) + '</span><h1>' + E(TITLES[tab] || 'Home') + '</h1></div></div><div id="pane"><p class="muted">Loading…</p></div></div></div>';
@@ -2364,8 +2403,13 @@
   }
 
   /* real counts shared by the menu badges and the home page (kept for a minute) */
+  var CC_FLIGHT = null;
   function ccCounts(force) {
+    if (CC_FLIGHT) return CC_FLIGHT;   // the menu badges and Home ask at the same moment: one set of requests
     if (CC_COUNTS && !force && Date.now() - CC_AT < 60000) return Promise.resolve(CC_COUNTS);
+    CC_FLIGHT = ccFetch(); CC_FLIGHT.then(function () { CC_FLIGHT = null; }, function () { CC_FLIGHT = null; }); return CC_FLIGHT;
+  }
+  function ccFetch() {
     var ids = CLASSES.map(function (c) { return c.id; }), q = function (p) { return p.then(function (r) { return r; }, function () { return { data: null }; }); };
     return Promise.all([
       ids.length ? q(S.db.from('enrolments').select('class_id,student_id,status').in('class_id', ids)) : { data: [] },
@@ -2381,6 +2425,27 @@
       var msg = x[4].data || [];
       CC_COUNTS = { en: en, att: att, askL: ask, labL: lab, msgL: msg, msg: msg.length, mark: att.length, join: en.filter(function (e) { return e.status === 'pending'; }).length, ask: ask.length, lab: lab.length, inbox: ask.length + msg.length + lab.length }; CC_AT = Date.now();
       return CC_COUNTS;
+    });
+  }
+  /* the home page's numbers: per set work done/all, students who may need support, active this week, latest results.
+     One request (teacher_home, migration 089); before the migration, the old separate reads. */
+  function homeData(ids, all, stud, wk, q) {
+    var empty = { st: {}, support: [], doneWeek: 0, active: {}, results: [] };
+    if (!ids.length) return Promise.resolve(empty);
+    return S.db.rpc('teacher_home', { cls: ids }).then(function (r) {
+      if (r.error || !r.data) throw r.error || new Error('no data');
+      var d = r.data, st = {}, active = {}; (d.todo || []).forEach(function (t) { st[t.a] = { done: t.done, all: t.all }; }); (d.active || []).forEach(function (s) { active[s] = 1; });
+      return { st: st, support: d.support || [], doneWeek: d.done_week || 0, active: active, results: d.results || [] };
+    }).catch(function () {
+      return Promise.all([Promise.all(ids.map(function (c) { return q(S.db.rpc('class_todo', { cls: c })); })),
+        all.length ? q(S.db.from('learning_progress').select('student_id,status,updated_at').in('student_id', all).gte('updated_at', wk).limit(5000)) : { data: [] },
+        all.length ? q(S.db.from('student_results').select('student_id,title,score,max_score,recorded_at').in('student_id', all).order('recorded_at', { ascending: false }).limit(12)) : { data: [] },
+        q(S.db.from('item_results').select('class_id,student_id,got,max').in('class_id', ids).limit(20000))]).then(function (x) {
+        var st = {}; (x[0] || []).forEach(function (r) { ((r && r.data) || []).forEach(function (t) { var o = st[t.assignment_id] = st[t.assignment_id] || { done: 0, all: 0 }; o.all++; if (t.state === 'done') o.done++; }); });
+        var LP = x[1].data || [], active = {}; LP.forEach(function (l) { active[l.student_id] = 1; });
+        var per = {}; (x[3].data || []).forEach(function (r) { if (!(r.max > 0) || (stud[r.class_id] || []).indexOf(r.student_id) < 0) return; var o = per[r.student_id] = per[r.student_id] || { g: 0, m: 0 }; o.g += +r.got || 0; o.m += +r.max; });
+        return { st: st, active: active, results: x[2].data || [], doneWeek: LP.filter(function (l) { return l.status === 'completed'; }).length, support: Object.keys(per).filter(function (k) { return per[k].m >= 10 && per[k].g / per[k].m < 0.5; }) };
+      });
     });
   }
   function ccDone() { try { return JSON.parse(localStorage.getItem('bv-pd-' + ME.user.id) || '{}'); } catch (e) { return {}; } }
@@ -2498,26 +2563,19 @@
       var all = []; Object.keys(stud).forEach(function (k) { stud[k].forEach(function (s) { if (all.indexOf(s) < 0) all.push(s); }); });
       return Promise.all([
         ids.length ? q(S.db.from('assignments').select('id,class_id,title,kind,ref,due_at,created_at,everyone').in('class_id', ids).order('due_at', { ascending: true }).limit(400)) : { data: [] },
-        Promise.all(ids.map(function (c) { return q(S.db.rpc('class_todo', { cls: c })); })),
-        all.length ? q(S.db.from('learning_progress').select('student_id,status,updated_at').in('student_id', all).gte('updated_at', wk).limit(5000)) : { data: [] },
-        all.length ? q(S.db.from('student_results').select('student_id,title,score,max_score,recorded_at').in('student_id', all).order('recorded_at', { ascending: false }).limit(3000)) : { data: [] },
+        homeData(ids, all, stud, wk, q),   // one request since migration 089 (was one per class + 25,000 rows)
+        null, null,
         ids.length ? q(S.db.from('research_projects').select('id,class_id,student_id,kind,status,title,updated_at').in('class_id', ids).in('status', ['proposal_submitted', 'final_submitted'])) : { data: [] },
         q(S.db.from('pp_projects').select('id,status,title,updated_at').eq('supervisor_id', OWNER()).in('status', ['proposal_submitted', 'final_submitted'])),
         ids.length ? q(S.db.from('showcase_posts').select('id,class_id,title,updated_at').in('class_id', ids).eq('status', 'submitted')) : { data: [] },
-        all.length ? q(S.db.from('profiles').select('id,full_name').in('id', all)) : { data: [] },
-        ids.length ? q(S.db.from('item_results').select('class_id,student_id,got,max').in('class_id', ids).limit(20000)) : { data: [] }
+        all.length ? q(S.db.from('profiles').select('id,full_name').in('id', all)) : { data: [] }
       ]).then(function (x) {
-        var A = x[0].data || [], TD = {}; (x[1] || []).forEach(function (r, i) { TD[ids[i]] = (r && r.data) || []; });
-        var LP = x[2].data || [], RS = x[3].data || [], RP = x[4].data || [], PP = x[5].data || [], SC = x[6].data || [], NM = {}; (x[7].data || []).forEach(function (r) { NM[r.id] = r.full_name; });
+        var A = x[0].data || [], H = x[1];
+        var RS = H.results, RP = x[4].data || [], PP = x[5].data || [], SC = x[6].data || [], NM = {}; (x[7].data || []).forEach(function (r) { NM[r.id] = r.full_name; });
         var cname = {}; CLASSES.forEach(function (c) { cname[c.id] = c.name; });
-        // per assignment: how many of the students it is for have finished
-        var st = {}; ids.forEach(function (c) { (TD[c] || []).forEach(function (r) { var o = st[r.assignment_id] = st[r.assignment_id] || { done: 0, all: 0 }; o.all++; if (r.state === 'done') o.done++; }); });
+        var st = H.st, support = H.support, doneWeek = H.doneWeek, active = H.active;
         var overdue = A.filter(function (a) { var o = st[a.id]; return a.due_at && new Date(a.due_at) < now && new Date(a.due_at) > now - 21 * 864e5 && o && o.done < o.all; });
         var upcoming = A.filter(function (a) { return a.due_at && new Date(a.due_at) >= now && new Date(a.due_at) < now + 7 * 864e5; });
-        // students who may need support: below 50 % across 10 or more recorded marks (the same rule as Class insights)
-        var per = {}; (x[8].data || []).forEach(function (r) { if (!(r.max > 0) || (stud[r.class_id] || []).indexOf(r.student_id) < 0) return; var o = per[r.student_id] = per[r.student_id] || { g: 0, m: 0 }; o.g += +r.got || 0; o.m += +r.max; });   // same rule and records as Class insights: marked answers (item results)
-        var support = Object.keys(per).filter(function (s) { return per[s].m >= 10 && per[s].g / per[s].m < 0.5; });
-        var doneWeek = LP.filter(function (l) { return l.status === 'completed'; }).length, active = {}; LP.forEach(function (l) { active[l.student_id] = 1; });
         var D = ccDone(), items = { u: [], n: [], t: [], f: [] };
         var add = function (col, key, sig, html) { if (D[key] === sig) return; items[col].push('<div class="cc-it"><div>' + html + '</div><button type="button" class="ok" data-done="' + E(key) + '" data-sig="' + E(sig) + '" title="Mark as done">✓</button></div>'); };
         if (N.mark) add('u', 'mark', String(N.mark), '<a href="#marking">' + N.mark + ' answer' + (N.mark === 1 ? '' : 's') + ' to mark</a><small>Written answers and results waiting to be released</small>');
@@ -2551,12 +2609,17 @@
           '<div data-sec="desk"><div class="cc-h3" id="cc-desk"><h3>Your Priority Desk</h3><span class="small muted">' + (nUrg ? nUrg + ' urgent' : 'Nothing urgent') + ' · tick ✓ to clear an item; it comes back if something changes</span></div>' +
           '<div class="cc-desk">' + col('u', '🔴 Urgent', '#dc2626', 'Nothing urgent.') + col('n', '📅 Upcoming', '#d97706', 'No deadlines in the next 7 days.') + col('t', '🧪 Teaching', '#0d9488', 'Every class has work set.') + col('f', '💬 Follow-up', '#4f46e5', 'No follow-ups.') + '</div></div>' +
           '<div data-sec="classes"><div class="cc-h3"><h3>My classes</h3><a class="small" href="#classes">Manage classes →</a></div>' +
-          (rows.length ? '<div><table class="cc-tbl"><tr><th>Class</th><th class="n">Students</th><th class="n hm">Active (7 days)</th><th class="n">To mark</th><th class="hm hm2">Next deadline</th><th></th></tr>' + rows.map(function (c) {
+          (rows.length ? '<div class="cc-cards">' + rows.map(function (c) {   /* class cards (23 Nov 2026 redesign) */
             var ss = stud[c.id] || [], act = ss.filter(function (s) { return active[s]; }).length, mk = N.att.filter(function (a) { return ss.indexOf(a.student_id) >= 0; }).length, wait = N.en.filter(function (e) { return e.class_id === c.id && e.status === 'pending'; }).length;
-            return '<tr' + (ss.length ? '' : ' class="dim"') + '><td><button type="button" class="cc-star' + (FV.indexOf(c.id) >= 0 ? ' on' : '') + '" data-fav="' + c.id + '" title="Favourite: show first" aria-label="Favourite ' + E(c.name) + '">★</button><a class="nm" style="--k:' + hue(c.id) + '" href="#classes/' + c.id + '">' + E(c.name) + '</a>' + (wait ? ' <a class="small" href="#approvals">🙋 ' + wait + ' waiting</a>' : '') + '</td><td class="n">' + ss.length + '</td><td class="n hm">' + (ss.length ? act : '–') + '</td><td class="n">' + (mk ? '<a href="#marking"><b>' + mk + '</b></a>' : '0') + '</td><td class="hm hm2">' + nextDue(c.id) + '</td>' +
-              '<td style="white-space:nowrap;text-align:right"><a class="btn sm" href="#classes/' + c.id + '/todo/new" title="Assign work">📌<span class="hm"> Assign</span></a> <span class="cc-menu"><button type="button" class="btn sm" data-mnu aria-label="More actions for ' + E(c.name) + '">⋯</button><div hidden style="left:auto;right:0">' +
-              '<a href="#classes/' + c.id + '">Open classroom</a><a href="#classes/' + c.id + '/status">🟢 Live work status</a><a href="#classes/' + c.id + '/add">➕ Add lessons</a><a href="#classes/' + c.id + '/grades">📒 Gradebook</a><a href="#classes/' + c.id + '/analysis">📊 Analytics</a><a href="#classes/' + c.id + '/news">📣 Announcement</a><a href="#classes/' + c.id + '/register">🗒 Register</a><a href="/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a>' +
-              '<button type="button" data-trc="' + c.id + '">🔀 Transfer students</button><button type="button" data-delc="' + c.id + '" data-n="' + ss.length + '" style="color:#b91c1c">🗑 Delete class</button></div></span></td></tr>'; }).join('') + '</table></div><div id="ccact" style="scroll-margin-top:180px"></div>' :
+            var pc = ss.length ? Math.round(100 * act / ss.length) : 0, prog = [c.programme, c.level].filter(Boolean).join(' · ');
+            return '<article class="cc-card' + (ss.length ? '' : ' dim') + '" style="--k:' + hue(c.id) + '"><div class="cc-card-h"><a class="nm" href="#classes/' + c.id + '">' + E(c.name) + '</a><button type="button" class="cc-star' + (FV.indexOf(c.id) >= 0 ? ' on' : '') + '" data-fav="' + c.id + '" title="Favourite: show first" aria-label="Favourite ' + E(c.name) + '">★</button></div>' +
+              (prog ? '<div class="cc-card-p">' + E(prog) + '</div>' : '') +
+              '<div class="cc-card-n"><span><b>' + ss.length + '</b> students</span>' + (mk ? '<a class="cc-badge warn" href="#marking">' + mk + ' to mark</a>' : '') + (wait ? '<a class="cc-badge" href="#approvals">🙋 ' + wait + ' waiting</a>' : '') + '</div>' +
+              '<div class="cc-meter" title="' + act + ' of ' + ss.length + ' students active in the last 7 days"><i style="width:' + pc + '%"></i></div><div class="cc-card-s">' + (ss.length ? act + ' active this week · ' + pc + '%' : 'No students yet') + '</div>' +
+              '<div class="cc-card-d">📅 ' + nextDue(c.id) + '</div>' +
+              '<div class="cc-card-a"><a class="btn sm main" href="#classes/' + c.id + '">Open</a><a class="btn sm" href="#classes/' + c.id + '/todo/new" title="Assign work">📌 Assign</a><span class="cc-menu"><button type="button" class="btn sm" data-mnu aria-label="More actions for ' + E(c.name) + '">⋯</button><div hidden style="left:auto;right:0">' +
+              '<a href="#classes/' + c.id + '/status">🟢 Live work status</a><a href="#classes/' + c.id + '/add">➕ Add lessons</a><a href="#classes/' + c.id + '/grades">📒 Gradebook</a><a href="#classes/' + c.id + '/analysis">📊 Analytics</a><a href="#classes/' + c.id + '/news">📣 Announcement</a><a href="#classes/' + c.id + '/register">🗒 Register</a><a href="/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a>' +
+              '<button type="button" data-trc="' + c.id + '">🔀 Transfer students</button><button type="button" data-delc="' + c.id + '" data-n="' + ss.length + '" style="color:#b91c1c">🗑 Delete class</button></div></span></div></article>'; }).join('') + '</div><div id="ccact" style="scroll-margin-top:180px"></div>' :
             '<p class="panel tint">Start by <a href="#classes">creating a class</a>: choose the course you teach and its BioscienceVista lessons and quizzes are added for you.</p>') +
           '</div><div id="cc-ins"></div>' +
           '<div data-sec="results"><div class="cc-h3"><h3>Latest results</h3><a class="small" href="#gradebook">📒 Gradebook →</a></div>' + resultsTable(RS, NM, function (sid) { for (var k in stud) if (stud[k].indexOf(sid) >= 0) return k; return ''; }, 8) +
