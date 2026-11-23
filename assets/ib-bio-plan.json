@@ -43,7 +43,7 @@
 "n": 1,
 "path": "a11-lesson1",
 "id": "DP1-A1.1-L1",
-"title": "Water: Polarity, Hydrogen Bonding, Cohesion and Adhesion",
+"title": "A1.1.1–A1.1.4 Water: Polarity, Hydrogen Bonding, Cohesion and Adhesion",
 "level": "SL",
 "range": "A1.1.1 – A1.1.4",
 "understandings": [
@@ -60,7 +60,7 @@
 "n": 2,
 "path": "a11-lesson2",
 "id": "DP1-A1.1-L2",
-"title": "Water: Solvent Properties",
+"title": "A1.1.5–A1.1.6 Water: Solvent Properties",
 "level": "SL",
 "range": "A1.1.5 – A1.1.6",
 "understandings": [
@@ -75,7 +75,7 @@
 "n": 3,
 "path": "a11-lesson3",
 "id": "DP1-A1.1-L3",
-"title": "AHL: Water Beyond Earth",
+"title": "A1.1.7–A1.1.8 AHL: Water Beyond Earth",
 "level": "HL",
 "range": "A1.1.7 – A1.1.8",
 "understandings": [
@@ -113,7 +113,7 @@
 "n": 1,
 "path": "a12-lesson1",
 "id": "DP1-A12-L1",
-"title": "DNA as the genetic material",
+"title": "A1.2.1–A1.2.4 DNA as the genetic material",
 "level": "SL",
 "range": "A1.2.1 – A1.2.4",
 "understandings": [
@@ -130,7 +130,7 @@
 "n": 2,
 "path": "a12-lesson2",
 "id": "DP1-A12-L2",
-"title": "RNA as a polymer",
+"title": "A1.2.5–A1.2.8 RNA as a polymer",
 "level": "SL",
 "range": "A1.2.5 – A1.2.8",
 "understandings": [
@@ -147,7 +147,7 @@
 "n": 3,
 "path": "a12-lesson3",
 "id": "DP1-A12-L3",
-"title": "DNA sequence diversity and the genetic code",
+"title": "A1.2.9–A1.2.10 DNA sequence diversity and the genetic code",
 "level": "SL",
 "range": "A1.2.9 – A1.2.10",
 "understandings": [
@@ -162,7 +162,7 @@
 "n": 4,
 "path": "a12-lesson4",
 "id": "DP1-A12-L4",
-"title": "Directionality, base chemistry and DNA packaging (HL)",
+"title": "A1.2.11–A1.2.13 Directionality, base chemistry and DNA packaging (HL)",
 "level": "HL",
 "range": "A1.2.11 – A1.2.13",
 "understandings": [
@@ -180,7 +180,7 @@
 "n": 5,
 "path": "a12-lesson5",
 "id": "DP1-A12-L5",
-"title": "Experimental evidence (HL)",
+"title": "A1.2.14–A1.2.15 Experimental evidence (HL)",
 "level": "HL",
 "range": "A1.2.14 – A1.2.15",
 "understandings": [
@@ -212,7 +212,7 @@
 "n": 1,
 "path": "a21-lesson1",
 "id": "DP1-A2.1-L1",
-"title": "Early Earth and what counts as alive (HL)",
+"title": "A2.1.1–A2.1.3 Early Earth and what counts as alive (HL)",
 "level": "HL",
 "range": "A2.1.1 – A2.1.3",
 "understandings": [
@@ -228,7 +228,7 @@
 "n": 2,
 "path": "a21-lesson2",
 "id": "DP1-A2.1-L2",
-"title": "Miller–Urey, protocells and the RNA world (HL)",
+"title": "A2.1.4–A2.1.6 Miller–Urey, protocells and the RNA world (HL)",
 "level": "HL",
 "range": "A2.1.4 – A2.1.6",
 "understandings": [
@@ -244,7 +244,7 @@
 "n": 3,
 "path": "a21-lesson3",
 "id": "DP-A21-L3",
-"title": "LUCA: evidence, dating and hydrothermal vents (HL)",
+"title": "A2.1.7–A2.1.9 LUCA: evidence, dating and hydrothermal vents (HL)",
 "level": "HL",
 "range": "A2.1.7 – A2.1.9",
 "understandings": [
@@ -293,7 +293,7 @@
 "n": 1,
 "path": "a22-lesson1",
 "id": "DP1-A22-L1",
-"title": "Cell theory and microscopy",
+"title": "A2.2.1–A2.2.3 Cell theory and microscopy",
 "level": "SL",
 "range": "A2.2.1 – A2.2.3",
 "understandings": [
@@ -311,7 +311,7 @@
 "n": 2,
 "path": "a22-lesson2",
 "id": "DP1-A22-L2",
-"title": "Common cell structures and prokaryotic cells",
+"title": "A2.2.4–A2.2.5 Common cell structures and prokaryotic cells",
 "level": "SL",
 "range": "A2.2.4 – A2.2.5",
 "understandings": [
@@ -326,7 +326,7 @@
 "n": 3,
 "path": "a22-lesson3",
 "id": "DP1-A22-L3",
-"title": "Eukaryotic cells and the processes of life",
+"title": "A2.2.6–A2.2.7 Eukaryotic cells and the processes of life",
 "level": "SL",
 "range": "A2.2.6 – A2.2.7",
 "understandings": [
@@ -341,7 +341,7 @@
 "n": 4,
 "path": "a22-lesson4",
 "id": "DP1-A22-L4",
-"title": "Cell diversity, atypical cells and micrographs",
+"title": "A2.2.8–A2.2.11 Cell diversity, atypical cells and micrographs",
 "level": "SL",
 "range": "A2.2.8 – A2.2.11",
 "understandings": [
@@ -361,7 +361,7 @@
 "n": 5,
 "path": "a22-lesson5",
 "id": "DP1-A22-L5",
-"title": "Endosymbiosis, differentiation and multicellularity (HL)",
+"title": "A2.2.12–A2.2.14 Endosymbiosis, differentiation and multicellularity (HL)",
 "level": "HL",
 "range": "A2.2.12 – A2.2.14",
 "understandings": [
@@ -394,7 +394,7 @@
 "n": 1,
 "path": "a23-lesson1",
 "id": "DP1-A23-L1",
-"title": "Structural features common to viruses",
+"title": "A2.3.1 Structural features common to viruses",
 "level": "HL",
 "range": "A2.3.1",
 "understandings": [
@@ -408,7 +408,7 @@
 "n": 2,
 "path": "a23-lesson2",
 "id": "DP1-A23-L2",
-"title": "Diversity of viral structure and genetic material",
+"title": "A2.3.2 Diversity of viral structure and genetic material",
 "level": "HL",
 "range": "A2.3.2",
 "understandings": [
@@ -422,7 +422,7 @@
 "n": 3,
 "path": "a23-lesson3",
 "id": "DP1-A23-L3",
-"title": "The lytic cycle of bacteriophage lambda",
+"title": "A2.3.3 The lytic cycle of bacteriophage lambda",
 "level": "HL",
 "range": "A2.3.3",
 "understandings": [
@@ -436,7 +436,7 @@
 "n": 4,
 "path": "a23-lesson4",
 "id": "DP1-A23-L4",
-"title": "The lysogenic cycle",
+"title": "A2.3.4 The lysogenic cycle",
 "level": "HL",
 "range": "A2.3.4",
 "understandings": [
@@ -450,7 +450,7 @@
 "n": 5,
 "path": "a23-lesson5",
 "id": "DP1-A23-L5",
-"title": "Origins of viruses and convergent evolution",
+"title": "A2.3.5 Origins of viruses and convergent evolution",
 "level": "HL",
 "range": "A2.3.5",
 "understandings": [
@@ -464,7 +464,7 @@
 "n": 6,
 "path": "a23-lesson6",
 "id": "DP1-A23-L6",
-"title": "Rapid evolution in viruses",
+"title": "A2.3.6 Rapid evolution in viruses",
 "level": "HL",
 "range": "A2.3.6",
 "understandings": [
@@ -478,7 +478,7 @@
 "n": 7,
 "path": "a23-lesson7",
 "id": "DP1-A23-L7",
-"title": "Consolidation and exam practice",
+"title": "A2.3.1–A2.3.6 Consolidation and exam practice",
 "level": "HL",
 "range": "review",
 "understandings": [],
@@ -523,7 +523,7 @@
 "n": 1,
 "path": "a31-lesson1",
 "id": "DP-A31-L1",
-"title": "Variation, species and the binomial system",
+"title": "A3.1.1–A3.1.3 Variation, species and the binomial system",
 "level": "SL",
 "range": "A3.1.1 – A3.1.3",
 "understandings": [
@@ -539,7 +539,7 @@
 "n": 2,
 "path": "a31-lesson2",
 "id": "DP-A31-L2",
-"title": "The biological species concept and the problem",
+"title": "A3.1.4–A3.1.5 The biological species concept and the problem",
 "level": "SL",
 "range": "A3.1.4 – A3.1.5",
 "understandings": [
@@ -554,7 +554,7 @@
 "n": 3,
 "path": "a31-lesson3",
 "id": "DP-A31-L3",
-"title": "Chromosome numbers, karyotypes and human chromosome 2",
+"title": "A3.1.6–A3.1.7 Chromosome numbers, karyotypes and human chromosome 2",
 "level": "SL",
 "range": "A3.1.6 – A3.1.7",
 "understandings": [
@@ -571,7 +571,7 @@
 "n": 4,
 "path": "a31-lesson4",
 "id": "DP-A31-L4",
-"title": "Genomes: unity, diversity, size and sequencing",
+"title": "A3.1.8–A3.1.11 Genomes: unity, diversity, size and sequencing",
 "level": "SL",
 "range": "A3.1.8 – A3.1.11",
 "understandings": [
@@ -590,7 +590,7 @@
 "n": 5,
 "path": "a31-lesson5",
 "id": "DP-A31-L5",
-"title": "Species in practice (HL)",
+"title": "A3.1.12–A3.1.15 Species in practice (HL)",
 "level": "HL",
 "range": "A3.1.12 – A3.1.15",
 "understandings": [
@@ -626,7 +626,7 @@
 "n": 1,
 "path": "a32-lesson1",
 "id": "DP-A32-L1",
-"title": "Why classify and the trouble with ranks (HL)",
+"title": "A3.2.1–A3.2.4 Why classify and the trouble with ranks (HL)",
 "level": "HL",
 "range": "A3.2.1 – A3.2.4",
 "understandings": [
@@ -643,7 +643,7 @@
 "n": 2,
 "path": "a32-lesson2",
 "id": "DP-A32-L2",
-"title": "Molecular clocks, building cladograms and reading them (HL)",
+"title": "A3.2.5–A3.2.7 Molecular clocks, building cladograms and reading them (HL)",
 "level": "HL",
 "range": "A3.2.5 – A3.2.7",
 "understandings": [
@@ -659,7 +659,7 @@
 "n": 3,
 "path": "a32-lesson3",
 "id": "DP-A32-L3",
-"title": "Testing classifications with cladistics (HL)",
+"title": "A3.2.8–A3.2.9 Testing classifications with cladistics (HL)",
 "level": "HL",
 "range": "A3.2.8 – A3.2.9",
 "understandings": [
@@ -691,7 +691,7 @@
 "n": 1,
 "path": "a41-lesson1",
 "id": "DP-A41-L1",
-"title": "Evolution and evidence",
+"title": "A4.1.1–A4.1.3 Evolution and evidence",
 "level": "SL",
 "range": "A4.1.1 – A4.1.3",
 "understandings": [
@@ -707,7 +707,7 @@
 "n": 2,
 "path": "a41-lesson2",
 "id": "DP-A41-L2",
-"title": "Homologous and analogous structures, and speciation",
+"title": "A4.1.4–A4.1.7 Homologous and analogous structures, and speciation",
 "level": "SL",
 "range": "A4.1.4 – A4.1.7",
 "understandings": [
@@ -724,7 +724,7 @@
 "n": 3,
 "path": "a41-lesson3",
 "id": "DP-A41-L3",
-"title": "Sympatric and allopatric speciation (HL)",
+"title": "A4.1.8–A4.1.11 Sympatric and allopatric speciation (HL)",
 "level": "HL",
 "range": "A4.1.8 – A4.1.11",
 "understandings": [
@@ -758,7 +758,7 @@
 "n": 1,
 "path": "a42-lesson1",
 "id": "DP-A42-L1",
-"title": "Biodiversity, its history, extinctions and ecosystem loss",
+"title": "A4.2.1–A4.2.4 Biodiversity, its history, extinctions and ecosystem loss",
 "level": "SL",
 "range": "A4.2.1 – A4.2.4",
 "understandings": [
@@ -775,7 +775,7 @@
 "n": 2,
 "path": "a42-lesson2",
 "id": "DP-A42-L2",
-"title": "The biodiversity crisis, its causes and conservation",
+"title": "A4.2.5–A4.2.8 The biodiversity crisis, its causes and conservation",
 "level": "SL",
 "range": "A4.2.5 – A4.2.8",
 "understandings": [
@@ -809,7 +809,7 @@
 "n": 1,
 "path": "b11-lesson1",
 "id": "DP1-B1.1-L1",
-"title": "Carbon, condensation and hydrolysis",
+"title": "B1.1.1–B1.1.3 Carbon, condensation and hydrolysis",
 "level": "SL",
 "range": "B1.1.1 – B1.1.3",
 "understandings": [
@@ -825,7 +825,7 @@
 "n": 2,
 "path": "b11-lesson2",
 "id": "DP1-B1.1-L2",
-"title": "Monosaccharides, polysaccharides and glycoproteins",
+"title": "B1.1.4–B1.1.7 Monosaccharides, polysaccharides and glycoproteins",
 "level": "SL",
 "range": "B1.1.4 – B1.1.7",
 "understandings": [
@@ -842,7 +842,7 @@
 "n": 3,
 "path": "b11-lesson3",
 "id": "DP-B11-L3",
-"title": "Lipids, triglycerides and fatty acids",
+"title": "B1.1.8–B1.1.10 Lipids, triglycerides and fatty acids",
 "level": "SL",
 "range": "B1.1.8 – B1.1.10",
 "understandings": [
@@ -858,7 +858,7 @@
 "n": 4,
 "path": "b11-lesson4",
 "id": "DP-B11-L4",
-"title": "Adipose tissue, phospholipid bilayers and steroids",
+"title": "B1.1.11–B1.1.13 Adipose tissue, phospholipid bilayers and steroids",
 "level": "SL",
 "range": "B1.1.11 – B1.1.13",
 "understandings": [
@@ -891,7 +891,7 @@
 "n": 1,
 "path": "b12-lesson1",
 "id": "DP1-B1.2-L1",
-"title": "Amino acids, peptide bonds and dietary requirements",
+"title": "B1.2.1–B1.2.3 Amino acids, peptide bonds and dietary requirements",
 "level": "SL",
 "range": "B1.2.1 – B1.2.3",
 "understandings": [
@@ -907,7 +907,7 @@
 "n": 2,
 "path": "b12-lesson2",
 "id": "DP-B12-L2",
-"title": "The infinite variety of polypeptides",
+"title": "B1.2.4–B1.2.5 The infinite variety of polypeptides",
 "level": "SL",
 "range": "B1.2.4 – B1.2.5",
 "understandings": [
@@ -922,7 +922,7 @@
 "n": 3,
 "path": "b12-lesson3",
 "id": "DP1-B1.2-L2",
-"title": "R Groups and the Levels of Structure",
+"title": "B1.2.6–B1.2.9 R Groups and the Levels of Structure",
 "level": "HL",
 "range": "B1.2.6 – B1.2.9",
 "understandings": [
@@ -939,7 +939,7 @@
 "n": 4,
 "path": "b12-lesson4",
 "id": "DP1-B1.2-L3",
-"title": "Arrangement, Quaternary Structure, Collagen and Insulin",
+"title": "B1.2.10–B1.2.12 Arrangement, Quaternary Structure, Collagen and Insulin",
 "level": "HL",
 "range": "B1.2.10 – B1.2.12",
 "understandings": [
@@ -972,7 +972,7 @@
 "n": 1,
 "path": "b21-lesson1",
 "id": "DP1-B21-L1",
-"title": "Lipid bilayers, simple diffusion and membrane proteins",
+"title": "B2.1.1–B2.1.4 Lipid bilayers, simple diffusion and membrane proteins",
 "level": "SL",
 "range": "B2.1.1 – B2.1.4",
 "understandings": [
@@ -989,7 +989,7 @@
 "n": 2,
 "path": "b21-lesson2",
 "id": "DP1-B21-L2",
-"title": "Osmosis, aquaporins, channels and pumps",
+"title": "B2.1.5–B2.1.8 Osmosis, aquaporins, channels and pumps",
 "level": "SL",
 "range": "B2.1.5 – B2.1.8",
 "understandings": [
@@ -1006,7 +1006,7 @@
 "n": 3,
 "path": "b21-lesson3",
 "id": "DP-B21-L3",
-"title": "Glycoproteins, glycolipids and the fluid mosaic model",
+"title": "B2.1.9–B2.1.10 Glycoproteins, glycolipids and the fluid mosaic model",
 "level": "SL",
 "range": "B2.1.9 – B2.1.10",
 "understandings": [
@@ -1021,7 +1021,7 @@
 "n": 4,
 "path": "b21-lesson4",
 "id": "DP-B21-L4",
-"title": "Membrane fluidity, cholesterol and vesicles (HL)",
+"title": "B2.1.11–B2.1.13 Membrane fluidity, cholesterol and vesicles (HL)",
 "level": "HL",
 "range": "B2.1.11 – B2.1.13",
 "understandings": [
@@ -1037,7 +1037,7 @@
 "n": 5,
 "path": "b21-lesson5",
 "id": "DP-B21-L5",
-"title": "Gated channels and the sodium–potassium pump (HL)",
+"title": "B2.1.14–B2.1.17 Gated channels and the sodium–potassium pump (HL)",
 "level": "HL",
 "range": "B2.1.14 – B2.1.17",
 "understandings": [
@@ -1071,7 +1071,7 @@
 "n": 1,
 "path": "b22-lesson1",
 "id": "DP1-B22-L1",
-"title": "Organelles and the advantages of compartmentalization",
+"title": "B2.2.1–B2.2.3 Organelles and the advantages of compartmentalization",
 "level": "SL",
 "range": "B2.2.1 – B2.2.3",
 "understandings": [
@@ -1087,7 +1087,7 @@
 "n": 2,
 "path": "b22-lesson2",
 "id": "DP1-B22-L2",
-"title": "Mitochondria, chloroplasts and the nucleus (HL)",
+"title": "B2.2.4–B2.2.6 Mitochondria, chloroplasts and the nucleus (HL)",
 "level": "HL",
 "range": "B2.2.4 – B2.2.6",
 "understandings": [
@@ -1103,7 +1103,7 @@
 "n": 3,
 "path": "b22-lesson3",
 "id": "DP1-B22-L3",
-"title": "Ribosomes, rough ER, Golgi apparatus and vesicles (HL)",
+"title": "B2.2.7–B2.2.9 Ribosomes, rough ER, Golgi apparatus and vesicles (HL)",
 "level": "HL",
 "range": "B2.2.7 – B2.2.9",
 "understandings": [
@@ -1136,7 +1136,7 @@
 "n": 1,
 "path": "b23-lesson1",
 "id": "DP1-B23-L1",
-"title": "Differentiation, stem cells and stem cell niches",
+"title": "B2.3.1–B2.3.3 Differentiation, stem cells and stem cell niches",
 "level": "SL",
 "range": "B2.3.1 – B2.3.3",
 "understandings": [
@@ -1152,7 +1152,7 @@
 "n": 2,
 "path": "b23-lesson2",
 "id": "DP1-B23-L2",
-"title": "Types of stem cell",
+"title": "B2.3.4–B2.3.6 Types of stem cell",
 "level": "SL",
 "range": "B2.3.4 – B2.3.6",
 "understandings": [
@@ -1168,7 +1168,7 @@
 "n": 3,
 "path": "b23-lesson3",
 "id": "DP-B23-L3",
-"title": "Specialized cells (HL)",
+"title": "B2.3.7–B2.3.10 Specialized cells (HL)",
 "level": "HL",
 "range": "B2.3.7 – B2.3.10",
 "understandings": [
@@ -1213,7 +1213,7 @@
 "n": 1,
 "path": "b31-lesson1",
 "id": "DP1-B31-L1",
-"title": "Gas exchange surfaces and the mammalian lung",
+"title": "B3.1.1–B3.1.4 Gas exchange surfaces and the mammalian lung",
 "level": "SL",
 "range": "B3.1.1 – B3.1.4",
 "understandings": [
@@ -1230,7 +1230,7 @@
 "n": 2,
 "path": "b31-lesson2",
 "id": "DP1-B31-L2",
-"title": "Ventilation and measuring lung volumes",
+"title": "B3.1.5–B3.1.6 Ventilation and measuring lung volumes",
 "level": "SL",
 "range": "B3.1.5 – B3.1.6",
 "understandings": [
@@ -1247,7 +1247,7 @@
 "n": 3,
 "path": "b31-lesson3",
 "id": "DP1-B31-L3",
-"title": "Gas exchange in leaves",
+"title": "B3.1.7–B3.1.10 Gas exchange in leaves",
 "level": "SL",
 "range": "B3.1.7 – B3.1.10",
 "understandings": [
@@ -1266,7 +1266,7 @@
 "n": 4,
 "path": "b31-lesson4",
 "id": "DP-B31-L4",
-"title": "Haemoglobin, oxygen dissociation curves and the Bohr shift (HL)",
+"title": "B3.1.11–B3.1.13 Haemoglobin, oxygen dissociation curves and the Bohr shift (HL)",
 "level": "HL",
 "range": "B3.1.11 – B3.1.13",
 "understandings": [
@@ -1330,7 +1330,7 @@
 "n": 1,
 "path": "b32-lesson1",
 "id": "DP1-B32-L1",
-"title": "Capillaries, arteries and veins",
+"title": "B3.2.1–B3.2.3 Capillaries, arteries and veins",
 "level": "SL",
 "range": "B3.2.1 – B3.2.3",
 "understandings": [
@@ -1348,7 +1348,7 @@
 "n": 2,
 "path": "b32-lesson2",
 "id": "DP1-B32-L2",
-"title": "Pulse rate, veins and coronary heart disease",
+"title": "B3.2.4–B3.2.6 Pulse rate, veins and coronary heart disease",
 "level": "SL",
 "range": "B3.2.4 – B3.2.6",
 "understandings": [
@@ -1367,7 +1367,7 @@
 "n": 3,
 "path": "b32-lesson3",
 "id": "DP1-B32-L3",
-"title": "Water transport in plants",
+"title": "B3.2.7–B3.2.10 Water transport in plants",
 "level": "SL",
 "range": "B3.2.7 – B3.2.10",
 "understandings": [
@@ -1387,7 +1387,7 @@
 "n": 4,
 "path": "b32-lesson4",
 "id": "DP1-B32-L4",
-"title": "Tissue fluid, lymph and single versus double circulation (HL)",
+"title": "B3.2.11–B3.2.14 Tissue fluid, lymph and single versus double circulation (HL)",
 "level": "HL",
 "range": "B3.2.11 – B3.2.14",
 "understandings": [
@@ -1404,7 +1404,7 @@
 "n": 5,
 "path": "b32-lesson5",
 "id": "DP-B32-L5",
-"title": "The heart and the cardiac cycle (HL)",
+"title": "B3.2.15–B3.2.18 The heart and the cardiac cycle (HL)",
 "level": "HL",
 "range": "B3.2.15 – B3.2.18",
 "understandings": [
@@ -1446,7 +1446,7 @@
 "n": 1,
 "path": "b33-lesson1",
 "id": "DP1-B33-L1",
-"title": "Movement and the sliding filament model (HL)",
+"title": "B3.3.1–B3.3.4 Movement and the sliding filament model (HL)",
 "level": "HL",
 "range": "B3.3.1 – B3.3.4",
 "understandings": [
@@ -1463,7 +1463,7 @@
 "n": 2,
 "path": "b33-lesson2",
 "id": "DP1-B33-L2",
-"title": "Skeletons, synovial joints and range of motion (HL)",
+"title": "B3.3.5–B3.3.7 Skeletons, synovial joints and range of motion (HL)",
 "level": "HL",
 "range": "B3.3.5 – B3.3.7",
 "understandings": [
@@ -1481,7 +1481,7 @@
 "n": 3,
 "path": "b33-lesson3",
 "id": "DP-B33-L3",
-"title": "Intercostal muscles, reasons for locomotion and swimming mammals (HL)",
+"title": "B3.3.8–B3.3.10 Intercostal muscles, reasons for locomotion and swimming mammals (HL)",
 "level": "HL",
 "range": "B3.3.8 – B3.3.10",
 "understandings": [
@@ -1520,7 +1520,7 @@
 "n": 1,
 "path": "b41-lesson1",
 "id": "DP-B41-L1",
-"title": "Habitats, adaptations, abiotic variables and tolerance",
+"title": "B4.1.1–B4.1.4 Habitats, adaptations, abiotic variables and tolerance",
 "level": "SL",
 "range": "B4.1.1 – B4.1.4",
 "understandings": [
@@ -1539,7 +1539,7 @@
 "n": 2,
 "path": "b41-lesson2",
 "id": "DP-B41-L2",
-"title": "Coral reefs, biomes and adaptations to deserts and rainforests",
+"title": "B4.1.5–B4.1.8 Coral reefs, biomes and adaptations to deserts and rainforests",
 "level": "SL",
 "range": "B4.1.5 – B4.1.8",
 "understandings": [
@@ -1579,7 +1579,7 @@
 "n": 1,
 "path": "b42-lesson1",
 "id": "DP-B42-L1",
-"title": "Niches, oxygen tolerance, photosynthesis and holozoic nutrition",
+"title": "B4.2.1–B4.2.4 Niches, oxygen tolerance, photosynthesis and holozoic nutrition",
 "level": "SL",
 "range": "B4.2.1 – B4.2.4",
 "understandings": [
@@ -1596,7 +1596,7 @@
 "n": 2,
 "path": "b42-lesson2",
 "id": "DP-B42-L2",
-"title": "Mixotrophs, saprotrophs, archaea and hominid teeth",
+"title": "B4.2.5–B4.2.8 Mixotrophs, saprotrophs, archaea and hominid teeth",
 "level": "SL",
 "range": "B4.2.5 – B4.2.8",
 "understandings": [
@@ -1615,7 +1615,7 @@
 "n": 3,
 "path": "b42-lesson3",
 "id": "DP-B42-L3",
-"title": "Herbivory, predation and harvesting light",
+"title": "B4.2.9–B4.2.11 Herbivory, predation and harvesting light",
 "level": "SL",
 "range": "B4.2.9 – B4.2.11",
 "understandings": [
@@ -1631,7 +1631,7 @@
 "n": 4,
 "path": "b42-lesson4",
 "id": "DP-B42-L4",
-"title": "Fundamental and realized niches, and competitive exclusion",
+"title": "B4.2.12–B4.2.13 Fundamental and realized niches, and competitive exclusion",
 "level": "SL",
 "range": "B4.2.12 – B4.2.13",
 "understandings": [
@@ -1677,7 +1677,7 @@
 {
 "path": "catalase-lab",
 "id": "DP1-C1.1-L3",
-"title": "Factors Affecting Enzyme Activity: Catalase Lab"
+"title": "C1.1.8–C1.1.9 Factors Affecting Enzyme Activity: Catalase Lab"
 }
 ],
 "lessons": [
@@ -1685,7 +1685,7 @@
 "n": 1,
 "path": "c11-lesson1",
 "id": "DP1-C1.1-L1",
-"title": "Enzymes as Catalysts & Metabolism",
+"title": "C1.1.1–C1.1.4 Enzymes as Catalysts & Metabolism",
 "level": "SL",
 "range": "C1.1.1 – C1.1.4",
 "understandings": [
@@ -1702,7 +1702,7 @@
 "n": 2,
 "path": "c11-lesson2",
 "id": "DP1-C1.1-L2",
-"title": "How Enzymes Work",
+"title": "C1.1.5–C1.1.7, C1.1.10 How Enzymes Work",
 "level": "SL",
 "range": "C1.1.5 – C1.1.7, C1.1.10",
 "understandings": [
@@ -1721,7 +1721,7 @@
 "n": 3,
 "path": "c11-lesson3",
 "id": "DP-C11-L3",
-"title": "Effects of temperature",
+"title": "C1.1.8–C1.1.9 Effects of temperature",
 "level": "SL",
 "range": "C1.1.8 – C1.1.9",
 "understandings": [
@@ -1739,7 +1739,7 @@
 "n": 4,
 "path": "c11-lesson4",
 "id": "DP1-C1.1-L4",
-"title": "Metabolism in Action",
+"title": "C1.1.11–C1.1.13 Metabolism in Action",
 "level": "HL",
 "range": "C1.1.11 – C1.1.13",
 "understandings": [
@@ -1755,7 +1755,7 @@
 "n": 5,
 "path": "c11-lesson5",
 "id": "DP1-C1.1-L5",
-"title": "Controlling Enzymes",
+"title": "C1.1.14–C1.1.17 Controlling Enzymes",
 "level": "HL",
 "range": "C1.1.14 – C1.1.17",
 "understandings": [
@@ -1795,7 +1795,7 @@
 "n": 1,
 "path": "c12-lesson1",
 "id": "DP1-C12-L1",
-"title": "ATP: the energy currency of cells",
+"title": "C1.2.1–C1.2.3 ATP: the energy currency of cells",
 "level": "SL",
 "range": "C1.2.1 – C1.2.3",
 "understandings": [
@@ -1811,7 +1811,7 @@
 "n": 2,
 "path": "c12-lesson2",
 "id": "DP1-C12-L2",
-"title": "Aerobic and anaerobic respiration and the rate",
+"title": "C1.2.4–C1.2.6 Aerobic and anaerobic respiration and the rate",
 "level": "SL",
 "range": "C1.2.4 – C1.2.6",
 "understandings": [
@@ -1829,7 +1829,7 @@
 "n": 3,
 "path": "c12-lesson3",
 "id": "DP1-C12-L3",
-"title": "NAD, glycolysis and anaerobic pathways (HL)",
+"title": "C1.2.7–C1.2.10 NAD, glycolysis and anaerobic pathways (HL)",
 "level": "HL",
 "range": "C1.2.7 – C1.2.10",
 "understandings": [
@@ -1846,7 +1846,7 @@
 "n": 4,
 "path": "c12-lesson4",
 "id": "DP-C12-L4",
-"title": "The link reaction (HL)",
+"title": "C1.2.11–C1.2.13 The link reaction (HL)",
 "level": "HL",
 "range": "C1.2.11 – C1.2.13",
 "understandings": [
@@ -1862,7 +1862,7 @@
 "n": 5,
 "path": "c12-lesson5",
 "id": "DP-C12-L5",
-"title": "Electron transport, chemiosmosis, oxygen and respiratory substrates (HL)",
+"title": "C1.2.14–C1.2.17 Electron transport, chemiosmosis, oxygen and respiratory substrates (HL)",
 "level": "HL",
 "range": "C1.2.14 – C1.2.17",
 "understandings": [
@@ -1912,7 +1912,7 @@
 "n": 1,
 "path": "c13-lesson1",
 "id": "DP1-C13-L1",
-"title": "Energy transformation, the equation and photosynthetic pigments",
+"title": "C1.3.1–C1.3.4 Energy transformation, the equation and photosynthetic pigments",
 "level": "SL",
 "range": "C1.3.1 – C1.3.4",
 "understandings": [
@@ -1931,7 +1931,7 @@
 "n": 2,
 "path": "c13-lesson2",
 "id": "DP1-C13-L2",
-"title": "Absorption and action spectra",
+"title": "C1.3.5–C1.3.8 Absorption and action spectra",
 "level": "SL",
 "range": "C1.3.5 – C1.3.8",
 "understandings": [
@@ -1951,7 +1951,7 @@
 "n": 3,
 "path": "c13-lesson3",
 "id": "DP1-C13-L3",
-"title": "Photosystems, photolysis and chemiosmosis in thylakoids (HL)",
+"title": "C1.3.9–C1.3.12 Photosystems, photolysis and chemiosmosis in thylakoids (HL)",
 "level": "HL",
 "range": "C1.3.9 – C1.3.12",
 "understandings": [
@@ -1968,7 +1968,7 @@
 "n": 4,
 "path": "c13-lesson4",
 "id": "DP1-C13-L4",
-"title": "NADP reduction, the thylakoid and carbon fixation by Rubisco (HL)",
+"title": "C1.3.13–C1.3.15 NADP reduction, the thylakoid and carbon fixation by Rubisco (HL)",
 "level": "HL",
 "range": "C1.3.13 – C1.3.15",
 "understandings": [
@@ -1984,7 +1984,7 @@
 "n": 5,
 "path": "c13-lesson5",
 "id": "DP-C13-L5",
-"title": "Triose phosphate and regenerating RuBP (HL)",
+"title": "C1.3.16–C1.3.19 Triose phosphate and regenerating RuBP (HL)",
 "level": "HL",
 "range": "C1.3.16 – C1.3.19",
 "understandings": [
@@ -2018,7 +2018,7 @@
 "n": 1,
 "path": "c21-lesson1",
 "id": "DP1-C21-L1",
-"title": "Receptors, quorum sensing and kinds of signalling chemicals (HL)",
+"title": "C2.1.1–C2.1.4 Receptors, quorum sensing and kinds of signalling chemicals (HL)",
 "level": "HL",
 "range": "C2.1.1 – C2.1.4",
 "understandings": [
@@ -2035,7 +2035,7 @@
 "n": 2,
 "path": "c21-lesson2",
 "id": "DP1-C21-L2",
-"title": "Local and distant signals (HL)",
+"title": "C2.1.5–C2.1.8 Local and distant signals (HL)",
 "level": "HL",
 "range": "C2.1.5 – C2.1.8",
 "understandings": [
@@ -2052,7 +2052,7 @@
 "n": 3,
 "path": "c21-lesson3",
 "id": "DP-C21-L3",
-"title": "G protein-coupled receptors, adrenaline and insulin receptors (HL)",
+"title": "C2.1.9–C2.1.11 G protein-coupled receptors, adrenaline and insulin receptors (HL)",
 "level": "HL",
 "range": "C2.1.9 – C2.1.11",
 "understandings": [
@@ -2068,7 +2068,7 @@
 "n": 4,
 "path": "c21-lesson4",
 "id": "DP-C21-L4",
-"title": "Intracellular receptors, sex hormones and feedback (HL)",
+"title": "C2.1.12–C2.1.14 Intracellular receptors, sex hormones and feedback (HL)",
 "level": "HL",
 "range": "C2.1.12 – C2.1.14",
 "understandings": [
@@ -2112,7 +2112,7 @@
 "n": 1,
 "path": "c22-lesson1",
 "id": "DP1-C22-L1",
-"title": "Neurons, resting potentials, impulses and their speed",
+"title": "C2.2.1–C2.2.4 Neurons, resting potentials, impulses and their speed",
 "level": "SL",
 "range": "C2.2.1 – C2.2.4",
 "understandings": [
@@ -2131,7 +2131,7 @@
 "n": 2,
 "path": "c22-lesson2",
 "id": "DP1-C22-L2",
-"title": "Synapses, neurotransmitter release and excitatory postsynaptic potentials",
+"title": "C2.2.5–C2.2.7 Synapses, neurotransmitter release and excitatory postsynaptic potentials",
 "level": "SL",
 "range": "C2.2.5 – C2.2.7",
 "understandings": [
@@ -2147,7 +2147,7 @@
 "n": 3,
 "path": "c22-lesson3",
 "id": "DP1-C22-L3",
-"title": "Action potentials (HL)",
+"title": "C2.2.8–C2.2.11 Action potentials (HL)",
 "level": "HL",
 "range": "C2.2.8 – C2.2.11",
 "understandings": [
@@ -2166,7 +2166,7 @@
 "n": 4,
 "path": "c22-lesson4",
 "id": "DP-C22-L4",
-"title": "Exogenous chemicals, inhibitory synapses and summation (HL)",
+"title": "C2.2.12–C2.2.14 Exogenous chemicals, inhibitory synapses and summation (HL)",
 "level": "HL",
 "range": "C2.2.12 – C2.2.14",
 "understandings": [
@@ -2182,7 +2182,7 @@
 "n": 5,
 "path": "c22-lesson5",
 "id": "DP-C22-L5",
-"title": "Pain and consciousness (HL)",
+"title": "C2.2.15–C2.2.16 Pain and consciousness (HL)",
 "level": "HL",
 "range": "C2.2.15 – C2.2.16",
 "understandings": [
@@ -2220,7 +2220,7 @@
 "n": 1,
 "path": "c31-lesson1",
 "id": "DP1-C31-L1",
-"title": "System integration and the nervous",
+"title": "C3.1.1–C3.1.3 System integration and the nervous",
 "level": "SL",
 "range": "C3.1.1 – C3.1.3",
 "understandings": [
@@ -2236,7 +2236,7 @@
 "n": 2,
 "path": "c31-lesson2",
 "id": "DP1-C31-L2",
-"title": "The brain and spinal cord as integrating",
+"title": "C3.1.4–C3.1.5 The brain and spinal cord as integrating",
 "level": "SL",
 "range": "C3.1.4 – C3.1.5",
 "understandings": [
@@ -2251,7 +2251,7 @@
 "n": 3,
 "path": "c31-lesson3",
 "id": "DP1-C31-L3",
-"title": "Sensory and motor neurons and nerves",
+"title": "C3.1.6–C3.1.8 Sensory and motor neurons and nerves",
 "level": "SL",
 "range": "C3.1.6 – C3.1.8",
 "understandings": [
@@ -2267,7 +2267,7 @@
 "n": 4,
 "path": "c31-lesson4",
 "id": "DP-C31-L4",
-"title": "Pain reflex arcs and the cerebellum",
+"title": "C3.1.9–C3.1.10 Pain reflex arcs and the cerebellum",
 "level": "SL",
 "range": "C3.1.9 – C3.1.10",
 "understandings": [
@@ -2282,7 +2282,7 @@
 "n": 5,
 "path": "c31-lesson5",
 "id": "DP-C31-L5",
-"title": "Hormonal control",
+"title": "C3.1.11–C3.1.13 Hormonal control",
 "level": "SL",
 "range": "C3.1.11 – C3.1.13",
 "understandings": [
@@ -2298,7 +2298,7 @@
 "n": 6,
 "path": "c31-lesson6",
 "id": "DP-C31-L6",
-"title": "Feedback control of heart rate",
+"title": "C3.1.14–C3.1.16 Feedback control of heart rate",
 "level": "SL",
 "range": "C3.1.14 – C3.1.16",
 "understandings": [
@@ -2314,7 +2314,7 @@
 "n": 7,
 "path": "c31-lesson7",
 "id": "DP-C31-L7",
-"title": "Tropisms, phototropism, phytohormones and auxin transport (HL)",
+"title": "C3.1.17–C3.1.20 Tropisms, phototropism, phytohormones and auxin transport (HL)",
 "level": "HL",
 "range": "C3.1.17 – C3.1.20",
 "understandings": [
@@ -2333,7 +2333,7 @@
 "n": 8,
 "path": "c31-lesson8",
 "id": "DP-C31-L8",
-"title": "Auxin and cell growth (HL)",
+"title": "C3.1.21–C3.1.23 Auxin and cell growth (HL)",
 "level": "HL",
 "range": "C3.1.21 – C3.1.23",
 "understandings": [
@@ -2372,7 +2372,7 @@
 "n": 1,
 "path": "c32-lesson1",
 "id": "DP-C32-L1",
-"title": "Pathogens and primary defences",
+"title": "C3.2.1–C3.2.4 Pathogens and primary defences",
 "level": "SL",
 "range": "C3.2.1 – C3.2.4",
 "understandings": [
@@ -2389,7 +2389,7 @@
 "n": 2,
 "path": "c32-lesson2",
 "id": "DP-C32-L2",
-"title": "Phagocytes, lymphocytes, antigens and B-cell activation",
+"title": "C3.2.5–C3.2.8 Phagocytes, lymphocytes, antigens and B-cell activation",
 "level": "SL",
 "range": "C3.2.5 – C3.2.8",
 "understandings": [
@@ -2406,7 +2406,7 @@
 "n": 3,
 "path": "c32-lesson3",
 "id": "DP-C32-L3",
-"title": "Clonal selection, immunological memory, HIV and AIDS",
+"title": "C3.2.9–C3.2.12 Clonal selection, immunological memory, HIV and AIDS",
 "level": "SL",
 "range": "C3.2.9 – C3.2.12",
 "understandings": [
@@ -2423,7 +2423,7 @@
 "n": 4,
 "path": "c32-lesson4",
 "id": "DP-C32-L4",
-"title": "Antibiotics, antibiotic resistance and zoonoses",
+"title": "C3.2.13–C3.2.15 Antibiotics, antibiotic resistance and zoonoses",
 "level": "SL",
 "range": "C3.2.13 – C3.2.15",
 "understandings": [
@@ -2439,7 +2439,7 @@
 "n": 5,
 "path": "c32-lesson5",
 "id": "DP-C32-L5",
-"title": "Vaccines, herd immunity and evaluating COVID-19 data",
+"title": "C3.2.16–C3.2.18 Vaccines, herd immunity and evaluating COVID-19 data",
 "level": "SL",
 "range": "C3.2.16 – C3.2.18",
 "understandings": [
@@ -2500,7 +2500,7 @@
 "n": 1,
 "path": "c41-lesson1",
 "id": "DP-C41-L1",
-"title": "Populations and estimating population size",
+"title": "C4.1.1–C4.1.4 Populations and estimating population size",
 "level": "SL",
 "range": "C4.1.1 – C4.1.4",
 "understandings": [
@@ -2520,7 +2520,7 @@
 "n": 2,
 "path": "c41-lesson2",
 "id": "DP-C41-L2",
-"title": "Carrying capacity, density-dependent control and population growth",
+"title": "C4.1.5–C4.1.8 Carrying capacity, density-dependent control and population growth",
 "level": "SL",
 "range": "C4.1.5 – C4.1.8",
 "understandings": [
@@ -2540,7 +2540,7 @@
 "n": 3,
 "path": "c41-lesson3",
 "id": "DP-C41-L3",
-"title": "Intraspecific relationships, communities and interspecific relationships",
+"title": "C4.1.9–C4.1.12 Intraspecific relationships, communities and interspecific relationships",
 "level": "SL",
 "range": "C4.1.9 – C4.1.12",
 "understandings": [
@@ -2557,7 +2557,7 @@
 "n": 4,
 "path": "c41-lesson4",
 "id": "DP-C41-L4",
-"title": "Invasive species and testing for interspecific competition",
+"title": "C4.1.13–C4.1.15 Invasive species and testing for interspecific competition",
 "level": "SL",
 "range": "C4.1.13 – C4.1.15",
 "understandings": [
@@ -2575,7 +2575,7 @@
 "n": 5,
 "path": "c41-lesson5",
 "id": "DP-C41-L5",
-"title": "Predator–prey cycles, top-down and bottom-up control",
+"title": "C4.1.16–C4.1.18 Predator–prey cycles, top-down and bottom-up control",
 "level": "SL",
 "range": "C4.1.16 – C4.1.18",
 "understandings": [
@@ -2614,7 +2614,7 @@
 "n": 1,
 "path": "c42-lesson1",
 "id": "DP-C42-L1",
-"title": "Ecosystems as open systems",
+"title": "C4.2.1–C4.2.4 Ecosystems as open systems",
 "level": "SL",
 "range": "C4.2.1 – C4.2.4",
 "understandings": [
@@ -2631,7 +2631,7 @@
 "n": 2,
 "path": "c42-lesson2",
 "id": "DP-C42-L2",
-"title": "Decomposers and autotrophs",
+"title": "C4.2.5–C4.2.7 Decomposers and autotrophs",
 "level": "SL",
 "range": "C4.2.5 – C4.2.7",
 "understandings": [
@@ -2647,7 +2647,7 @@
 "n": 3,
 "path": "c42-lesson3",
 "id": "DP-C42-L3",
-"title": "Heterotrophs and the release of energy",
+"title": "C4.2.8–C4.2.9 Heterotrophs and the release of energy",
 "level": "SL",
 "range": "C4.2.8 – C4.2.9",
 "understandings": [
@@ -2662,7 +2662,7 @@
 "n": 4,
 "path": "c42-lesson4",
 "id": "DP-C42-L4",
-"title": "Trophic levels and energy pyramids",
+"title": "C4.2.10–C4.2.11 Trophic levels and energy pyramids",
 "level": "SL",
 "range": "C4.2.10 – C4.2.11",
 "understandings": [
@@ -2679,7 +2679,7 @@
 "n": 5,
 "path": "c42-lesson5",
 "id": "DP-C42-L5",
-"title": "Energy losses and the limits",
+"title": "C4.2.12–C4.2.14 Energy losses and the limits",
 "level": "SL",
 "range": "C4.2.12 – C4.2.14",
 "understandings": [
@@ -2695,7 +2695,7 @@
 "n": 6,
 "path": "c42-lesson6",
 "id": "DP-C42-L6",
-"title": "Primary and secondary production",
+"title": "C4.2.15–C4.2.18 Primary and secondary production",
 "level": "SL",
 "range": "C4.2.15 – C4.2.18",
 "understandings": [
@@ -2712,7 +2712,7 @@
 "n": 7,
 "path": "c42-lesson7",
 "id": "DP-C42-L7",
-"title": "Combustion, the Keeling Curve and recycling of elements",
+"title": "C4.2.19–C4.2.22 Combustion, the Keeling Curve and recycling of elements",
 "level": "SL",
 "range": "C4.2.19 – C4.2.22",
 "understandings": [
@@ -2746,7 +2746,7 @@
 "n": 1,
 "path": "d11-lesson1",
 "id": "DP1-D11-L1",
-"title": "Semi-conservative replication, helicase and DNA polymerase",
+"title": "D1.1.1–D1.1.3 Semi-conservative replication, helicase and DNA polymerase",
 "level": "SL",
 "range": "D1.1.1 – D1.1.3",
 "understandings": [
@@ -2762,7 +2762,7 @@
 "n": 2,
 "path": "d11-lesson2",
 "id": "DP1-D11-L2",
-"title": "PCR, gel electrophoresis and their applications",
+"title": "D1.1.4–D1.1.5 PCR, gel electrophoresis and their applications",
 "level": "SL",
 "range": "D1.1.4 – D1.1.5",
 "understandings": [
@@ -2777,7 +2777,7 @@
 "n": 3,
 "path": "d11-lesson3",
 "id": "DP-D11-L3",
-"title": "Directionality, leading and lagging strands (HL)",
+"title": "D1.1.6–D1.1.9 Directionality, leading and lagging strands (HL)",
 "level": "HL",
 "range": "D1.1.6 – D1.1.9",
 "understandings": [
@@ -2811,7 +2811,7 @@
 "n": 1,
 "path": "d12-lesson1",
 "id": "DP1-D12-L1",
-"title": "Transcription: making RNA from a DNA template",
+"title": "D1.2.1–D1.2.4 Transcription: making RNA from a DNA template",
 "level": "SL",
 "range": "D1.2.1 – D1.2.4",
 "understandings": [
@@ -2828,7 +2828,7 @@
 "n": 2,
 "path": "d12-lesson2",
 "id": "DP1-D12-L2",
-"title": "Translation, tRNA and the genetic code",
+"title": "D1.2.5–D1.2.8 Translation, tRNA and the genetic code",
 "level": "SL",
 "range": "D1.2.5 – D1.2.8",
 "understandings": [
@@ -2845,7 +2845,7 @@
 "n": 3,
 "path": "d12-lesson3",
 "id": "DP1-D12-L3",
-"title": "Reading the code table",
+"title": "D1.2.9–D1.2.11 Reading the code table",
 "level": "SL",
 "range": "D1.2.9 – D1.2.11",
 "understandings": [
@@ -2861,7 +2861,7 @@
 "n": 4,
 "path": "d12-lesson4",
 "id": "DP-D12-L4",
-"title": "Directionality, promoters, non-coding DNA and mRNA processing (HL)",
+"title": "D1.2.12–D1.2.15 Directionality, promoters, non-coding DNA and mRNA processing (HL)",
 "level": "HL",
 "range": "D1.2.12 – D1.2.15",
 "understandings": [
@@ -2878,7 +2878,7 @@
 "n": 5,
 "path": "d12-lesson5",
 "id": "DP-D12-L5",
-"title": "Alternative splicing and initiation of translation (HL)",
+"title": "D1.2.16–D1.2.19 Alternative splicing and initiation of translation (HL)",
 "level": "HL",
 "range": "D1.2.16 – D1.2.19",
 "understandings": [
@@ -2912,7 +2912,7 @@
 "n": 1,
 "path": "d13-lesson1",
 "id": "DP1-D13-L1",
-"title": "Types of gene mutation and their consequences",
+"title": "D1.3.1–D1.3.3 Types of gene mutation and their consequences",
 "level": "SL",
 "range": "D1.3.1 – D1.3.3",
 "understandings": [
@@ -2928,7 +2928,7 @@
 "n": 2,
 "path": "d13-lesson2",
 "id": "DP1-D13-L2",
-"title": "Causes and randomness",
+"title": "D1.3.4–D1.3.7 Causes and randomness",
 "level": "SL",
 "range": "D1.3.4 – D1.3.7",
 "understandings": [
@@ -2945,7 +2945,7 @@
 "n": 3,
 "path": "d13-lesson3",
 "id": "DP-D13-L3",
-"title": "Gene knockout, CRISPR–Cas9 and conserved sequences (HL)",
+"title": "D1.3.8–D1.3.10 Gene knockout, CRISPR–Cas9 and conserved sequences (HL)",
 "level": "HL",
 "range": "D1.3.8 – D1.3.10",
 "understandings": [
@@ -2989,7 +2989,7 @@
 "n": 1,
 "path": "d21-lesson1",
 "id": "DP-D21-L1",
-"title": "Cell division",
+"title": "D2.1.1–D2.1.4 Cell division",
 "level": "SL",
 "range": "D2.1.1 – D2.1.4",
 "understandings": [
@@ -3006,7 +3006,7 @@
 "n": 2,
 "path": "d21-lesson2",
 "id": "DP-D21-L2",
-"title": "Replication, chromosome condensation and the phases of mitosis",
+"title": "D2.1.5–D2.1.8 Replication, chromosome condensation and the phases of mitosis",
 "level": "SL",
 "range": "D2.1.5 – D2.1.8",
 "understandings": [
@@ -3025,7 +3025,7 @@
 "n": 3,
 "path": "d21-lesson3",
 "id": "DP-D21-L3",
-"title": "Meiosis, non-disjunction and genetic variation",
+"title": "D2.1.9–D2.1.11 Meiosis, non-disjunction and genetic variation",
 "level": "SL",
 "range": "D2.1.9 – D2.1.11",
 "understandings": [
@@ -3041,7 +3041,7 @@
 "n": 4,
 "path": "d21-lesson4",
 "id": "DP-D21-L4",
-"title": "Cell proliferation and the cell cycle (HL)",
+"title": "D2.1.12–D2.1.14 Cell proliferation and the cell cycle (HL)",
 "level": "HL",
 "range": "D2.1.12 – D2.1.14",
 "understandings": [
@@ -3057,7 +3057,7 @@
 "n": 5,
 "path": "d21-lesson5",
 "id": "DP-D21-L5",
-"title": "Cyclins, cancer genes and tumours (HL)",
+"title": "D2.1.15–D2.1.17 Cyclins, cancer genes and tumours (HL)",
 "level": "HL",
 "range": "D2.1.15 – D2.1.17",
 "understandings": [
@@ -3092,7 +3092,7 @@
 "n": 1,
 "path": "d22-lesson1",
 "id": "DP1-D22-L1",
-"title": "Gene expression, transcription control and mRNA degradation (HL)",
+"title": "D2.2.1–D2.2.3 Gene expression, transcription control and mRNA degradation (HL)",
 "level": "HL",
 "range": "D2.2.1 – D2.2.3",
 "understandings": [
@@ -3108,7 +3108,7 @@
 "n": 2,
 "path": "d22-lesson2",
 "id": "DP1-D22-L2",
-"title": "Epigenesis, the transcriptome and proteome (HL)",
+"title": "D2.2.4–D2.2.7 Epigenesis, the transcriptome and proteome (HL)",
 "level": "HL",
 "range": "D2.2.4 – D2.2.7",
 "understandings": [
@@ -3125,7 +3125,7 @@
 "n": 3,
 "path": "d22-lesson3",
 "id": "DP-D22-L3",
-"title": "Environment and gene expression (HL)",
+"title": "D2.2.8–D2.2.11 Environment and gene expression (HL)",
 "level": "HL",
 "range": "D2.2.8 – D2.2.11",
 "understandings": [
@@ -3165,7 +3165,7 @@
 "n": 1,
 "path": "d23-lesson1",
 "id": "DP1-D23-L1",
-"title": "Solvation, tonicity and osmosis in tissues",
+"title": "D2.3.1–D2.3.4 Solvation, tonicity and osmosis in tissues",
 "level": "SL",
 "range": "D2.3.1 – D2.3.4",
 "understandings": [
@@ -3184,7 +3184,7 @@
 "n": 2,
 "path": "d23-lesson2",
 "id": "DP1-D23-L2",
-"title": "Cells with and without walls",
+"title": "D2.3.5–D2.3.7 Cells with and without walls",
 "level": "SL",
 "range": "D2.3.5 – D2.3.7",
 "understandings": [
@@ -3200,7 +3200,7 @@
 "n": 3,
 "path": "d23-lesson3",
 "id": "DP-D23-L3",
-"title": "Water potential, solute and pressure potential (HL)",
+"title": "D2.3.8–D2.3.11 Water potential, solute and pressure potential (HL)",
 "level": "HL",
 "range": "D2.3.8 – D2.3.11",
 "understandings": [
@@ -3234,7 +3234,7 @@
 "n": 1,
 "path": "d31-lesson1",
 "id": "DP-D31-L1",
-"title": "Sexual and asexual reproduction",
+"title": "D3.1.1–D3.1.4 Sexual and asexual reproduction",
 "level": "SL",
 "range": "D3.1.1 – D3.1.4",
 "understandings": [
@@ -3251,7 +3251,7 @@
 "n": 2,
 "path": "d31-lesson2",
 "id": "DP-D31-L2",
-"title": "The menstrual cycle, fertilisation and IVF",
+"title": "D3.1.5–D3.1.7 The menstrual cycle, fertilisation and IVF",
 "level": "SL",
 "range": "D3.1.5 – D3.1.7",
 "understandings": [
@@ -3267,7 +3267,7 @@
 "n": 3,
 "path": "d31-lesson3",
 "id": "DP-D31-L3",
-"title": "Sexual reproduction and insect-pollinated flowers",
+"title": "D3.1.8–D3.1.9 Sexual reproduction and insect-pollinated flowers",
 "level": "SL",
 "range": "D3.1.8 – D3.1.9",
 "understandings": [
@@ -3282,7 +3282,7 @@
 "n": 4,
 "path": "d31-lesson4",
 "id": "DP-D31-L4",
-"title": "Cross-pollination, self-incompatibility, dispersal and germination",
+"title": "D3.1.10–D3.1.12 Cross-pollination, self-incompatibility, dispersal and germination",
 "level": "SL",
 "range": "D3.1.10 – D3.1.12",
 "understandings": [
@@ -3298,7 +3298,7 @@
 "n": 5,
 "path": "d31-lesson5",
 "id": "DP-D31-L5",
-"title": "Puberty, gametogenesis, preventing polyspermy and implantation (HL)",
+"title": "D3.1.13–D3.1.16 Puberty, gametogenesis, preventing polyspermy and implantation (HL)",
 "level": "HL",
 "range": "D3.1.13 – D3.1.16",
 "understandings": [
@@ -3315,7 +3315,7 @@
 "n": 6,
 "path": "d31-lesson6",
 "id": "DP-D31-L6",
-"title": "HCG, the placenta, pregnancy, childbirth and HRT (HL)",
+"title": "D3.1.17–D3.1.20 HCG, the placenta, pregnancy, childbirth and HRT (HL)",
 "level": "HL",
 "range": "D3.1.17 – D3.1.20",
 "understandings": [
@@ -3365,7 +3365,7 @@
 "n": 1,
 "path": "d32-lesson1",
 "id": "DP-D32-L1",
-"title": "Gametes, genetic crosses and genotype",
+"title": "D3.2.1–D3.2.3 Gametes, genetic crosses and genotype",
 "level": "SL",
 "range": "D3.2.1 – D3.2.3",
 "understandings": [
@@ -3381,7 +3381,7 @@
 "n": 2,
 "path": "d32-lesson2",
 "id": "DP-D32-L2",
-"title": "Phenotype, dominance and the environment",
+"title": "D3.2.4–D3.2.5 Phenotype, dominance and the environment",
 "level": "SL",
 "range": "D3.2.4 – D3.2.5",
 "understandings": [
@@ -3396,7 +3396,7 @@
 "n": 3,
 "path": "d32-lesson3",
 "id": "DP-D32-L3",
-"title": "Phenotypic plasticity, PKU and multiple alleles",
+"title": "D3.2.6–D3.2.8 Phenotypic plasticity, PKU and multiple alleles",
 "level": "SL",
 "range": "D3.2.6 – D3.2.8",
 "understandings": [
@@ -3412,7 +3412,7 @@
 "n": 4,
 "path": "d32-lesson4",
 "id": "DP-D32-L4",
-"title": "ABO blood groups, codominance and incomplete dominance",
+"title": "D3.2.9–D3.2.10 ABO blood groups, codominance and incomplete dominance",
 "level": "SL",
 "range": "D3.2.9 – D3.2.10",
 "understandings": [
@@ -3427,7 +3427,7 @@
 "n": 5,
 "path": "d32-lesson5",
 "id": "DP-D32-L5",
-"title": "Sex determination, sex linkage and pedigree charts",
+"title": "D3.2.11–D3.2.13 Sex determination, sex linkage and pedigree charts",
 "level": "SL",
 "range": "D3.2.11 – D3.2.13",
 "understandings": [
@@ -3443,7 +3443,7 @@
 "n": 6,
 "path": "d32-lesson6",
 "id": "DP-D32-L6",
-"title": "Continuous variation and box-and-whisker plots",
+"title": "D3.2.14–D3.2.15 Continuous variation and box-and-whisker plots",
 "level": "SL",
 "range": "D3.2.14 – D3.2.15",
 "understandings": [
@@ -3461,7 +3461,7 @@
 "n": 7,
 "path": "d32-lesson7",
 "id": "DP-D32-L7",
-"title": "Independent assortment, dihybrid crosses and gene loci (HL)",
+"title": "D3.2.16–D3.2.18 Independent assortment, dihybrid crosses and gene loci (HL)",
 "level": "HL",
 "range": "D3.2.16 – D3.2.18",
 "understandings": [
@@ -3479,7 +3479,7 @@
 "n": 8,
 "path": "d32-lesson8",
 "id": "DP-D32-L8",
-"title": "Linkage, recombinants and the chi-squared test (HL)",
+"title": "D3.2.19–D3.2.21 Linkage, recombinants and the chi-squared test (HL)",
 "level": "HL",
 "range": "D3.2.19 – D3.2.21",
 "understandings": [
@@ -3512,7 +3512,7 @@
 "n": 1,
 "path": "d33-lesson1",
 "id": "DP-D33-L1",
-"title": "Homeostasis, negative feedback, blood glucose and diabetes",
+"title": "D3.3.1–D3.3.4 Homeostasis, negative feedback, blood glucose and diabetes",
 "level": "SL",
 "range": "D3.3.1 – D3.3.4",
 "understandings": [
@@ -3529,7 +3529,7 @@
 "n": 2,
 "path": "d33-lesson2",
 "id": "DP-D33-L2",
-"title": "Thermoregulation",
+"title": "D3.3.5–D3.3.6 Thermoregulation",
 "level": "SL",
 "range": "D3.3.5 – D3.3.6",
 "understandings": [
@@ -3544,7 +3544,7 @@
 "n": 3,
 "path": "d33-lesson3",
 "id": "DP-D33-L3",
-"title": "The kidney (HL)",
+"title": "D3.3.7–D3.3.9 The kidney (HL)",
 "level": "HL",
 "range": "D3.3.7 – D3.3.9",
 "understandings": [
@@ -3560,7 +3560,7 @@
 "n": 4,
 "path": "d33-lesson4",
 "id": "DP-D33-L4",
-"title": "ADH, the collecting duct and changing blood supply (HL)",
+"title": "D3.3.10–D3.3.11 ADH, the collecting duct and changing blood supply (HL)",
 "level": "HL",
 "range": "D3.3.10 – D3.3.11",
 "understandings": [
@@ -3603,7 +3603,7 @@
 "n": 1,
 "path": "d41-lesson1",
 "id": "DP-D41-L1",
-"title": "Natural selection, variation, overproduction and selection pressures",
+"title": "D4.1.1–D4.1.4 Natural selection, variation, overproduction and selection pressures",
 "level": "SL",
 "range": "D4.1.1 – D4.1.4",
 "understandings": [
@@ -3620,7 +3620,7 @@
 "n": 2,
 "path": "d41-lesson2",
 "id": "DP-D41-L2",
-"title": "Fitness, heritability, sexual selection and Endler’s guppies",
+"title": "D4.1.5–D4.1.8 Fitness, heritability, sexual selection and Endler’s guppies",
 "level": "SL",
 "range": "D4.1.5 – D4.1.8",
 "understandings": [
@@ -3639,7 +3639,7 @@
 "n": 3,
 "path": "d41-lesson3",
 "id": "DP-D41-L3",
-"title": "Gene pools, allele frequencies and patterns of selection (HL)",
+"title": "D4.1.9–D4.1.12 Gene pools, allele frequencies and patterns of selection (HL)",
 "level": "HL",
 "range": "D4.1.9 – D4.1.12",
 "understandings": [
@@ -3658,7 +3658,7 @@
 "n": 4,
 "path": "d41-lesson4",
 "id": "DP-D41-L4",
-"title": "Hardy–Weinberg equilibrium and artificial selection (HL)",
+"title": "D4.1.13–D4.1.15 Hardy–Weinberg equilibrium and artificial selection (HL)",
 "level": "HL",
 "range": "D4.1.13 – D4.1.15",
 "understandings": [
@@ -3697,7 +3697,7 @@
 "n": 1,
 "path": "d42-lesson1",
 "id": "DP-D42-L1",
-"title": "Ecosystem stability and its requirements",
+"title": "D4.2.1–D4.2.4 Ecosystem stability and its requirements",
 "level": "SL",
 "range": "D4.2.1 – D4.2.4",
 "understandings": [
@@ -3716,7 +3716,7 @@
 "n": 2,
 "path": "d42-lesson2",
 "id": "DP-D42-L2",
-"title": "Keystone species, sustainable harvesting and sustainable agriculture",
+"title": "D4.2.5–D4.2.7 Keystone species, sustainable harvesting and sustainable agriculture",
 "level": "SL",
 "range": "D4.2.5 – D4.2.7",
 "understandings": [
@@ -3732,7 +3732,7 @@
 "n": 3,
 "path": "d42-lesson3",
 "id": "DP-D42-L3",
-"title": "Eutrophication, biomagnification, plastics and rewilding",
+"title": "D4.2.8–D4.2.11 Eutrophication, biomagnification, plastics and rewilding",
 "level": "SL",
 "range": "D4.2.8 – D4.2.11",
 "understandings": [
@@ -3749,7 +3749,7 @@
 "n": 4,
 "path": "d42-lesson4",
 "id": "DP-D42-L4",
-"title": "Ecological succession and climax communities (HL)",
+"title": "D4.2.12–D4.2.15 Ecological succession and climax communities (HL)",
 "level": "HL",
 "range": "D4.2.12 – D4.2.15",
 "understandings": [
@@ -3783,7 +3783,7 @@
 "n": 1,
 "path": "d43-lesson1",
 "id": "DP-D43-L1",
-"title": "Causes of climate change",
+"title": "D4.3.1–D4.3.4 Causes of climate change",
 "level": "SL",
 "range": "D4.3.1 – D4.3.4",
 "understandings": [
@@ -3800,7 +3800,7 @@
 "n": 2,
 "path": "d43-lesson2",
 "id": "DP-D43-L2",
-"title": "Ocean upwelling and range shifts",
+"title": "D4.3.5–D4.3.8 Ocean upwelling and range shifts",
 "level": "SL",
 "range": "D4.3.5 – D4.3.8",
 "understandings": [
@@ -3817,7 +3817,7 @@
 "n": 3,
 "path": "d43-lesson3",
 "id": "DP-D43-L3",
-"title": "Phenology and mismatched timing (HL)",
+"title": "D4.3.9–D4.3.12 Phenology and mismatched timing (HL)",
 "level": "HL",
 "range": "D4.3.9 – D4.3.12",
 "understandings": [
