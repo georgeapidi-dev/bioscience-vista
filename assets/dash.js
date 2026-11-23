@@ -204,8 +204,7 @@
   }
   // a review of BioscienceVista, shown on the home page once the admin approves it
   function reviewBox(me) {
-    var sec = document.createElement('section'); sec.className = 'panel db-sec'; sec.id = 'review'; sec.style.setProperty('--c', '#f59e0b');
-    var at = app.querySelector('#anbox'); if (!at) return; at.after(sec);
+    var sec = app.querySelector('#review'); if (!sec) return;
     S.db.from('reviews').select('rating,body,status').eq('user_id', me.user.id).maybeSingle().then(function (r) {
       var mine = r.data;
       sec.innerHTML = '<h3>⭐ Review BioscienceVista</h3>' + (mine ? '<p class="small">Your review is <b>' + E(mine.status === 'approved' ? 'published' : mine.status === 'hidden' ? 'not shown' : 'waiting for approval') + '</b>. You can change it below.</p>' : '<p class="small muted">Tell other students and teachers what helps you most. Reviews appear on the home page after a check.</p>') +
@@ -221,7 +220,7 @@
   // Revise next: the student's weakest topics from their own marked answers, each with a lesson, a simulation and a quiz that fit
   function reviseNext(me, prog) {
     var box = app.querySelector('#revise'); if (!box) return;
-    S.db.from('item_results').select('topic_id,topic,skill,got,max,state').eq('student_id', me.user.id).limit(3000).then(function (r) {
+    items(me).then(function (r) {
       var T = {}; (r.data || []).forEach(function (x) { if (x.got == null || !x.max || !x.topic) return;
         var t = T[x.topic] || (T[x.topic] = { name: x.topic, id: x.topic_id, got: 0, max: 0, n: 0, skills: {} }); t.got += +x.got; t.max += +x.max; t.n++; if (x.topic_id) t.id = x.topic_id;
         var k = x.skill || 'other', sk = t.skills[k] || (t.skills[k] = { got: 0, max: 0 }); sk.got += +x.got; sk.max += +x.max; });
@@ -272,6 +271,26 @@
   }
   var ICON = { lesson: '🧪', quiz: '📝', resource: '📄', sim: '🔬', link: '🔗', task: '✏️' };
   // Work the teacher set: open items first (overdue, then by due date), then done.
+
+  /* One-click panels (23 Nov 2026): heavy parts of the dashboard load only when the student opens them, with one click on the
+     panel bar or on its button in the jump bar. A panel opened once stays open (and reloads itself) when the dashboard redraws. */
+  var OPENED = {}, ITEMS = null;
+  function items(me) { if (!ITEMS) ITEMS = S.db.from('item_results').select('topic_id,topic,skill,got,max,state').eq('student_id', me.user.id).limit(3000).then(function (r) { if (r.error) ITEMS = null; return r; }); return ITEMS; }
+  function lazy(sec, run) {
+    if (!sec) return; var id = sec.id, t = sec.getAttribute('data-lz') || '';
+    if (sec.getAttribute('data-keep')) sec.dataset.keep = '1';
+    var go = function () { OPENED[id] = 1; sec.innerHTML = '<h3>' + t + '</h3><p class="small muted">Loading…</p>'; run(); };
+    if (OPENED[id]) return go();
+    sec.classList.add('db-lz');
+    sec.innerHTML = '<button type="button" class="db-open" aria-expanded="false"><span>' + t + '</span><b>Open ▸</b></button>';
+    sec.querySelector('.db-open').onclick = function () { sec.classList.remove('db-lz'); go(); };
+  }
+  function openIn(el) { var b = el && el.querySelector(':scope > .db-open'); if (b) b.click(); }
+  function openFromHash() { var h = (location.hash || '').slice(1); if (h && /^[\w-]+$/.test(h)) openIn(document.getElementById(h)); }
+  if (!window.__bvLzHook) { window.__bvLzHook = true;
+    document.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null; if (!a) return; var id = a.getAttribute('href').slice(1); if (id && /^[\w-]+$/.test(id)) openIn(document.getElementById(id)); }, true);
+    window.addEventListener('hashchange', openFromHash);
+    var cs = document.createElement('style'); cs.textContent = '.db-sec.db-lz{padding:0;overflow:hidden}.db-open{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px;border:0;background:none;cursor:pointer;font:inherit;text-align:left;color:color-mix(in srgb,var(--c,#4f46e5) 85%,#0f172a)}.db-open span{font-weight:800;font-size:1.15rem}.db-open b{flex:none;padding:6px 14px;border-radius:999px;background:var(--c,#4f46e5);color:#fff;font-size:.86rem}.db-open:hover b,.db-open:focus-visible b{filter:brightness(1.12)}.db-open:focus-visible{outline:3px solid var(--c,#4f46e5);outline-offset:-3px;border-radius:16px}#lx>.db-open{border-radius:18px;background:linear-gradient(120deg,#0d9488,#0284c7);color:#fff;margin:14px 0}#lx>.db-open b{background:#fff;color:#0f766e}'; document.head.appendChild(cs); }
   function todoHtml(items) {
     if (!items.length) return '';
     var now = new Date(), open = items.filter(function (t) { return t.state !== 'done'; }), done = items.filter(function (t) { return t.state === 'done'; });
@@ -460,7 +479,7 @@
         if (app.querySelector('textarea:focus, input:focus, select:focus')) return;   // never redraw under a student who is typing
         var added = T.filter(function (t) { return !tasks.some(function (o) { return o.id === t.id; }); });
         var fbNew = R.some(function (r) { return r.teacher_feedback && String(r.updated_at || r.recorded_at) > fbAt; });
-        draw(me, R, prog, quizzes, att, T);
+        ITEMS = null; draw(me, R, prog, quizzes, att, T);
         if (BV.toast) BV.toast(added.length ? '🆕 New work from your teacher: ' + added[0].title + (added.length > 1 ? ' and ' + (added.length - 1) + ' more' : '') : fbNew ? '💬 Your teacher left feedback' : 'Your work list was updated');
       }, function () {});
     }, 60000);
@@ -490,7 +509,7 @@
     };
     draw2();
     // the topic with most to gain, or "ready for a challenge", from the student's own marked answers (same rule as Revise next: 2+ answers, 3+ marks)
-    S.db.from('item_results').select('topic,topic_id,got,max').eq('student_id', me.user.id).limit(3000).then(function (r) {
+    items(me).then(function (r) {
       var T = {}; (r.data || []).forEach(function (x) { if (x.got == null || !x.max || !x.topic) return; var t = T[x.topic] || (T[x.topic] = { n: 0, g: 0, m: 0, id: x.topic_id }); t.n++; t.g += +x.got; t.m += +x.max; });
       var all = Object.keys(T).map(function (k) { var t = T[k]; t.k = k; t.pct = Math.round(100 * t.g / t.m); return t; }).filter(function (t) { return t.n >= 2 && t.m >= 3; });
       if (!all.length) return;
@@ -594,7 +613,7 @@
       '<div class="db-setlist">' + groups(setRows, 'Your teacher has not set any work right now. 🎉 Check your own to-do list below.') + '</div></section>';
     h += '<section class="db-sec" id="db-fb" style="--c:#e11d48" hidden></section>';
     h += '<div id="bv-news"></div><div id="remind"></div>';
-    h += '<section class="db-sec" id="db-cal" style="--c:#0d9488"></section><section class="db-sec" id="db-rep" style="--c:#7c3aed"></section><section class="db-sec" id="db-pf" style="--c:#7c3aed"></section>';
+    h += '<section class="db-sec" id="db-cal" style="--c:#0d9488" data-lz="📅 My calendar"></section><section class="db-sec" id="db-rep" style="--c:#7c3aed" data-lz="📄 My term reports" data-keep="1"></section><section class="db-sec" id="db-pf" style="--c:#7c3aed" data-lz="🗂 My portfolio"></section>';
     h += '<section class="db-sec" id="db-todo" style="--c:#059669"><h3>✅ My to-do list</h3><p class="small muted">Lessons you have started and other question sets open for your class.</p><div class="db-mylist">' + groups(myRows, 'Nothing else to do right now. Well done! 🎉') + '</div></section>';
     var resOf = function (r) { return SUBJ ? (r.quiz_id ? SUBJ.quiz(r.quiz_id, r.title) : SUBJ.lesson(r.lesson_id, r.title)) : ''; };
     var resHtml = function (part) { return part.map(function (r) { var pc = S.pct(+r.score, +r.max_score);
@@ -605,9 +624,9 @@
     h += '<section class="db-sec grp" id="db-res" style="--c:#9333ea"><h3>📊 My results and feedback</h3>' + (res.length ? BV.subj.split(recent, resOf, resHtml) +
         (older.length ? '<details><summary style="cursor:pointer;font-weight:700;color:#7e22ce">Show ' + older.length + ' older result' + (older.length === 1 ? '' : 's') + '</summary>' + BV.subj.split(older, resOf, resHtml) + '</details>' : '') :
       '<p class="emptybox">No results yet. Results appear here when you finish lessons and quizzes.</p>') + '</section>';
-    h += '<div class="db-two"><section class="panel db-sec" id="revise" style="--c:#db2777"><h3>🎯 Revise next</h3><p class="small muted">Looking at your results…</p></section>' +
-      '<section class="panel db-sec" id="plan" style="--c:#0284c7"><h3>🧭 My learning plan</h3><p class="small muted">Loading…</p></section></div>';
-    h += '<div class="db-two"><section class="panel db-sec" id="mylessons" style="--c:#2563eb"><h3>📘 My interactive lessons</h3><p class="small muted">Loading…</p></section>' +
+    h += '<div class="db-two"><section class="panel db-sec" id="revise" style="--c:#db2777" data-lz="🎯 Revise next"></section>' +
+      '<section class="panel db-sec" id="plan" style="--c:#0284c7" data-lz="🧭 My learning plan"></section></div>';
+    h += '<div class="db-two"><section class="panel db-sec" id="mylessons" style="--c:#2563eb" data-lz="📘 My interactive lessons"></section>' +
       '<section class="panel db-sec" id="db-prog" style="--c:#0891b2"><h3>📈 My progress</h3>' + (prog.length ? prog.slice(0, 8).map(function (p) { return '<div class="grp" style="gap:4px"><div class="row2"><span class="small">' + stag('lesson', p.lesson_id, p.lessons && p.lessons.title) + E(p.lessons ? p.lessons.title : '') + '</span><span class="small muted">' + p.percent + '%</span></div><div class="bar"><i style="width:' + p.percent + '%"></i></div></div>'; }).join('') : '<p class="muted">Open a lesson from the <a href="/learn/">Learning centre</a> to start.</p>') + '</section></div>';
     h += '<div id="lx-slot"></div>';
     h += '<section class="db-sec" id="db-tools" style="--c:#ea580c"><h3>🧰 Tools and places</h3><div class="dq"><div style="background:linear-gradient(135deg,#2563eb,#0ea5e9)"><h4>Learn</h4><a href="/learn/">📘 Learning centre</a><a href="/simulations/">🔬 Virtual labs</a><a href="/lab-results/">📋 My lab results</a><a href="/tutor/">🤖 AI tutor</a><a href="/games/">🎮 Games</a></div>' +
@@ -615,22 +634,22 @@
       '<div style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)"><h4>Live with my teacher</h4><a href="/live/">🎥 Live lessons</a><a href="/check/" title="Answer the question your teacher sends during a lesson">⚡ Live Check</a><a href="/board/">🖊 Whiteboard</a><a href="/messages/">💬 Messages</a></div>' +
       '<div style="background:linear-gradient(135deg,#059669,#0d9488)"><h4>Projects</h4><a href="/research/" title="IB Biology IA: research question, data, statistics, graphs and feedback">🔬 Research Hub (IA)</a><a href="/personal-project/">🧭 Personal Project</a><a href="/innovation/">💡 Innovation Studio</a><a href="/showcase/">🌟 Science Showcase</a><a href="/biodata/">📊 BioData Lab</a></div></div></section>';
     h += '<div id="mycl"></div>';
-    h += '<section class="panel db-sec" id="anbox" style="--c:#7c3aed"><h3>📈 My learning profile</h3><p class="muted small">Loading…</p></section>';
+    h += '<section class="panel db-sec" id="anbox" style="--c:#7c3aed" data-lz="📈 My learning profile"></section><section class="panel db-sec" id="review" style="--c:#f59e0b" data-lz="⭐ Review BioscienceVista"></section>';
     h += '<details class="panel db-sec" style="--c:#64748b"><summary><b>⚙ My profile</b></summary><form id="pf" class="grp" style="margin-top:10px"><label class="f">Full name<input id="pn" value="' + E(me.profile.full_name) + '"></label><button class="btn sm" type="submit">Save</button><p class="msg" id="pm"></p></form>' +
       '</details></div></div></div>';
     var lx = document.getElementById('lx'); if (lx && app.contains(lx)) app.parentNode.insertBefore(lx, app);   // keep the learner panel safe while the dashboard redraws
     app.innerHTML = h; boardWatch(me); news(me);
-    (function () { var ph = app.querySelector('#db-pf'); if (!ph) return; if (me.view || me.preview) { ph.remove(); return; } (window.BVPF ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/portfolio.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () { BVPF.student(ph, S, me); }, function () { ph.remove(); }); })();   /* 🗂 portfolio (migration 085) */
-    (function () { var rh = app.querySelector('#db-rep'); if (!rh) return; if (me.view || me.preview) { rh.remove(); return; } (window.BVREP ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/reports.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () { BVREP.mine(rh, S); }, function () { rh.remove(); }); })();   /* 📄 published term reports (migration 084) */
+    (function () { var ph = app.querySelector('#db-pf'); if (!ph) return; if (me.view || me.preview) { ph.remove(); return; } lazy(ph, function () { (window.BVPF ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/portfolio.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () { BVPF.student(ph, S, me); }, function () { ph.remove(); }); }); })();   /* 🗂 portfolio (migration 085) */
+    (function () { var rh = app.querySelector('#db-rep'); if (!rh) return; if (me.view || me.preview) { rh.remove(); return; } lazy(rh, function () { (window.BVREP ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/reports.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () { BVREP.mine(rh, S); }, function () { rh.remove(); }); }); })();   /* 📄 published term reports (migration 084) */
     (function () {   /* 📅 Calendar of work set and question sets with due dates (23 Nov 2026) */
       var host = app.querySelector('#db-cal'); if (!host) return;
       var items = (tasks || []).filter(function (t) { return t.due_at; }).map(function (t) { return { d: t.due_at, t: t.title, k: t.kind, st: t.state, href: t.url || '#db-set', c: t.state === 'done' ? '#16a34a' : new Date(t.due_at) < new Date() ? '#dc2626' : '#4f46e5' }; });
       var setRef = {}; (tasks || []).forEach(function (t) { if (t.ref) setRef[t.ref] = 1; });
       (quizzes || []).forEach(function (q) { if (q.due_at && !setRef[q.id]) { var done = (att || []).some(function (a) { return a.quiz_id === q.id && a.status !== 'in_progress'; }); items.push({ d: q.due_at, t: q.title, k: 'quiz', st: done ? 'done' : 'todo', href: '/quizzes/#' + q.id, c: done ? '#16a34a' : '#ca8a04' }); } });
       if (!items.length) { host.remove(); return; }
-      (window.BVCAL ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/calendar.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () {
+      lazy(host, function () { (window.BVCAL ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/calendar.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () {
         BVCAL.month(host, { title: '📅 My calendar', items: items, empty: 'Nothing due this month.', note: 'Work your teachers set, on the day it is due. Crossed out = done; red = overdue.' });
-      }, function () { host.remove(); });
+      }, function () { host.remove(); }); });
     })();
     var slot = app.querySelector('#lx-slot'); if (lx && slot) slot.parentNode.replaceChild(lx, slot);
     feedbackBox(me, res, prog); liveLoop(me, res, prog, quizzes, att, tasks);
@@ -646,16 +665,18 @@
     if ('IntersectionObserver' in window) { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (!e.isIntersecting) return; jl.forEach(function (a) { a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); }); }); }, { rootMargin: '-200px 0px -55% 0px' });
       jl.forEach(function (a) { var t = document.getElementById(a.getAttribute('href').slice(1)); if (t) io.observe(t); }); }
     app.querySelector('#so').onclick = S.signOut;
-    myProfile(me);
+    lazy(app.querySelector('#anbox'), function () { myProfile(me); });
     app.querySelectorAll('[data-done]').forEach(function (b) { b.onclick = function () {
       b.disabled = true; S.db.from('assignment_done').insert({ assignment_id: b.getAttribute('data-done'), student_id: me.user.id }).then(function (r) {
         if (r.error) { b.disabled = false; alert(S.nice(r.error)); return; }
         tasks.forEach(function (t) { if (t.id === b.getAttribute('data-done')) t.state = 'done'; }); draw(me, res, prog, quizzes, att, tasks); }); }; });
     classesPanel(me, app.querySelector('#mycl'));
     if (!me.view) reminders(app.querySelector('#remind'));
-    learningPlan(me, prog);
-    reviseNext(me, prog);
-    myLessons(me); reviewBox(me);
+    lazy(app.querySelector('#plan'), function () { learningPlan(me, prog); });
+    lazy(app.querySelector('#revise'), function () { reviseNext(me, prog); });
+    lazy(app.querySelector('#mylessons'), function () { myLessons(me); });
+    lazy(app.querySelector('#review'), function () { reviewBox(me); });
+    openFromHash();
     app.querySelector('#pf').onsubmit = function (e) { e.preventDefault(); var m = app.querySelector('#pm');
       S.db.from('profiles').update({ full_name: app.querySelector('#pn').value.trim() }).eq('id', me.user.id).then(function (r) { m.className = r.error ? 'msg' : 'msg ok'; m.textContent = r.error ? S.nice(r.error) : 'Saved.'; }); };
   }

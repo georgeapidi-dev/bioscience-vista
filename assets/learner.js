@@ -17,9 +17,14 @@
   var tries = 0, t = setInterval(function () {
     var S = window.BVS; if (++tries > 80) clearInterval(t); if (!S || !S.db || !S.me) return; clearInterval(t);
     S.me().then(function (me) { if (!me || me.parent) return; var staff = me.staff || me.school || (me.roles || []).indexOf('teacher') >= 0;
-      if (root.dataset.mode === 'teach') { if (staff) teacher(S, me); } else if (!staff) student(S, me); }, function () {});
+      if (root.dataset.mode === 'teach') { if (staff) teacher(S, me); } else if (!staff) { if (/^\/dashboard\/?$/.test(location.pathname)) gate(S, me); else student(S, me); } }, function () {});
   }, 200);
 
+  function gate(S, me) {   /* one click opens "My learning journey" on the dashboard (23 Nov 2026), so the dashboard itself loads fast */
+    if (!root.closest('#db-wrap')) { var n = 0, w = setInterval(function () { if (root.closest('#db-wrap')) { clearInterval(w); gate(S, me); } else if (++n > 300) clearInterval(w); }, 200); return; }   // wait until the dashboard has placed it, so it never shows first
+    root.hidden = false; root.innerHTML = '<button type="button" class="db-open" aria-expanded="false"><span>🚀 My learning journey: goals, mastery and achievements</span><b>Open ▸</b></button>';
+    root.querySelector('.db-open').onclick = function () { root.innerHTML = '<p class="muted">Loading…</p>'; student(S, me); };
+  }
   /* =================== student =================== */
   function student(S, me) {
     var uid = me.user.id, name = ((me.profile && me.profile.full_name) || '').split(' ')[0];

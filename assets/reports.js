@@ -25,7 +25,7 @@
   };
   R.mine = function (host, S) {
     S.db.from('term_reports').select('id,term,data,comment,updated_at,student_id').eq('published', true).order('updated_at', { ascending: false }).limit(60).then(function (r) {
-      var rows = r.data || []; if (r.error || !rows.length) { host.remove(); return; }
+      var rows = r.data || []; if (r.error || !rows.length) { if (host.dataset.keep) host.innerHTML = '<h3>📄 My term reports</h3><p class="small muted">No term reports have been published for you yet.</p>'; else host.remove(); return; }
       S.db.rpc('report_heads', { ids: rows.map(function (x) { return x.id; }) }).then(function (h) {
         var hd = {}; ((h && h.data) || []).forEach(function (x) { hd[x.report_id] = x; });
         host.innerHTML = '<h3>📄 Term reports</h3><div class="tablewrap"><table class="marks"><tr><th>Term</th><th>Student</th><th>Class</th><th>Grade</th><th></th></tr>' + rows.map(function (x, i) { var e = hd[x.id] || {}, d = x.data || {};

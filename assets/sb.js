@@ -8,8 +8,13 @@
     el.innerHTML = '<section class="panel tint"><h2>Accounts are being switched on</h2><p>Student accounts are not connected yet. In the meantime use <a href="/progress/">My learning</a> with your personal code.</p></section>';
   };
   /* who is signed in: {user, profile, roles[], staff, admin, cls} */
+  var ME = null;   // one account lookup shared by every script that asks while the page opens (23 Nov 2026): saves repeat requests
   S.me = function () {
     if (!S.on) return Promise.resolve(null);
+    if (ME && Date.now() - ME.t < 8000) return ME.p;
+    var p = meNow(); ME = { t: Date.now(), p: p }; p.then(null, function () { ME = null; }); return p;
+  };
+  function meNow() {
     return S.db.auth.getSession().then(function (r) {
       var u = r.data.session && r.data.session.user; if (!u) return null;
       return Promise.all([
@@ -28,7 +33,8 @@
         return S.db.from('classes').select('id,name,programme').eq('id', p.class_id).maybeSingle().then(function (c) { me.cls = c.data; return me; });
       });
     });
-  };
+  }
+
   /* page guard: redirects to login when signed out; staff:true requires teacher/admin */
   S.guard = function (el, opts) {
     opts = opts || {};
