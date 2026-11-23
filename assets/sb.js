@@ -130,7 +130,7 @@
     var pend = (a.classes || []).filter(function (c) { return c.status === 'pending' && !c.self; });
     var PW = { cambridge: 'Cambridge International', ib: 'International Baccalaureate' }, SEC = { ks3: 'KS3', igcse: 'IGCSE', alevel: 'A Level', myp: 'MYP', ibdp: 'IBDP' };
     var pws = {}; cs.forEach(function (c) { pws[PW[c.pathway] + ' · ' + SEC[c.section]] = 1; });
-    var prem = a.free ? 'Premium' : a.premium ? 'Premium until ' + new Date(a.until).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : (a.until && new Date(a.until) < new Date() ? 'Free (Premium ended ' + new Date(a.until).toLocaleDateString() + ')' : 'Free');
+    var prem = a.free ? 'Premium' : a.premium && !(a.until && new Date(a.until) > new Date()) ? 'Premium · school licence' : a.premium ? 'Premium until ' + new Date(a.until).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : (a.until && new Date(a.until) < new Date() ? 'Free (Premium ended ' + new Date(a.until).toLocaleDateString() + ')' : 'Free');
     var d = document.createElement('section'); d.id = 'acct-strip';
     d.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 14px;margin:0 0 12px;border-radius:14px;background:linear-gradient(90deg,#eef2ff,#fdf2f8);border:1px solid #e0e7ff;font-size:.9rem';
     d.innerHTML = '<b>' + (Object.keys(pws).map(S.E).join(' · ') || 'No authorised subject yet') + '</b>' +
@@ -139,6 +139,9 @@
       '<span>⭐ ' + S.E(prem) + '</span>' + (a.verified === false ? '<span style="color:#b45309;font-weight:700">✉️ Please verify your email</span>' : '') +
       '<span style="margin-left:auto;display:flex;gap:6px">' + (me.school ? '<a class="btn sm" href="/teach/classes/">Class codes and requests</a>' : (a.learner_kind === 'independent' ? '' : '<a class="btn sm" href="/join/">Join a class</a>')) + '<a class="btn sm" href="/account/">👤 My account</a></span>';
     el.parentNode.insertBefore(d, el);
+    if (me.school || me.admin || (me.roles || []).indexOf('teacher') >= 0) S.db.rpc('my_schools').then(function (r) {   // school coordinators (migration 087)
+      var L = (r && r.data) || []; if (!L.length || me.admin) return; var box = d.querySelector('span[style*="margin-left:auto"]'), x = document.createElement('a');
+      x.className = 'btn sm'; x.href = '/school/'; x.textContent = '🏫 ' + (L.length === 1 ? L[0].name : 'My schools'); box.insertBefore(x, box.firstChild); }, function () {});
   };
   S.signOut = function () { S.db.auth.signOut().then(function () { location.href = '/'; }); };
   S.err = function (r) { if (r && r.error) { throw new Error(r.error.message || 'Something went wrong.'); } return r ? r.data : null; };
