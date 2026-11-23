@@ -1,0 +1,148 @@
+/* BioscienceVista gradebook (23 Nov 2026). Teacher dashboard → Gradebook.
+   One grid per class: every task (interactive lessons, exam-style question sets, exams) for every student, from the marks already saved
+   (student_results). For MYP (Grade 6–10) classes, each student's level 0–8 in criteria A–D comes from every marked answer
+   (item_results), using the criteria each lesson step and question assesses (/assets/criteria.json, questions.criterion), turned into levels
+   with the teacher's own MYP boundaries; the four levels give the MYP grade 1–7 with the IB's published boundaries.
+   IB Diploma classes get a 1–7 grade from the teacher's HL or SL boundaries. Everything can be downloaded as a CSV for ManageBac.
+   Read only: nothing here changes a mark. */
+(function () {
+  var GB = window.BVGB = {};
+  var MYP_GRADE = [[1, 5, 1], [6, 9, 2], [10, 14, 3], [15, 18, 4], [19, 23, 5], [24, 27, 6], [28, 32, 7]];   // IB MYP grade boundaries (sum of four criteria, 0–32)
+  var CRIT = null, CN = { A: 'Knowing and understanding', B: 'Inquiring and designing', C: 'Processing and evaluating', D: 'Reflecting on the impacts of science' };
+  var CN_MATHS = { A: 'Knowing and understanding', B: 'Investigating patterns', C: 'Communicating', D: 'Applying mathematics in real-life contexts' };
+  function E(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function pct(g, m) { return m > 0 ? Math.round(g / m * 1000) / 10 : null; }
+  function levelOf(p, b) { if (p == null) return null; var n = 0; b.forEach(function (x) { if (p >= x) n++; }); return n; }   // MYP 0–8 from the teacher's boundaries
+  function dpGrade(p, b) { if (p == null) return null; var n = 1; b.forEach(function (x) { if (p >= x) n++; }); return n; }   // IB 1–7
+  function mypGrade(sum) { for (var i = 0; i < MYP_GRADE.length; i++) if (sum >= MYP_GRADE[i][0] && sum <= MYP_GRADE[i][1]) return MYP_GRADE[i][2]; return sum > 32 ? 7 : null; }
+  function shortTitle(t) { t = String(t || ''); var m = t.match(/: (.+)$/); return (m ? m[1] : t).replace(/\s*·\s*Criteri.*$/, '').replace(/ exam-style questions$/i, ''); }
+  function csv(rows, name) { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + rows.map(function (r) { return r.map(function (c) { return '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"'; }).join(','); }).join('\r\n')], { type: 'text/csv' })); a.download = name; a.click(); }
+  function inChunks(ids, n, f) { var out = [], ps = []; for (var i = 0; i < ids.length; i += n) ps.push(f(ids.slice(i, i + n))); return Promise.all(ps).then(function (rs) { rs.forEach(function (r) { if (r && r.data) out = out.concat(r.data); }); return out; }); }
+  function crits() { return CRIT ? Promise.resolve(CRIT) : fetch('/assets/criteria.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }).then(function (j) { CRIT = j || {}; return CRIT; }); }
+
+  /* ctx: { S, ME, classes, isMyp(class), toast(msg) } */
+  GB.render = function (p, ctx) {
+    var S = ctx.S, db = S.db, classes = ctx.classes || [];
+    var cid = ''; try { cid = sessionStorage.getItem('bv-gb-class') || ''; } catch (e) {}
+    if (!classes.some(function (c) { return c.id === cid; })) cid = classes.length ? classes[0].id : '';
+    var from = ''; try { from = sessionStorage.getItem('bv-gb-from') || ''; } catch (e) {}
+    var view = 'tasks', ALL = false;
+    if (!classes.length) { p.innerHTML = '<p class="emptybox">Create a class first; its gradebook appears here.</p>'; return; }
+    var css = '<style>.gb-wrap{overflow:auto;max-height:70vh;border:1px solid #e2e8f0;border-radius:14px}.gb{border-collapse:separate;border-spacing:0;font-size:.86rem;min-width:100%}' +
+      '.gb th,.gb td{padding:6px 8px;border-bottom:1px solid #eef2f7;border-right:1px solid #f1f5f9;white-space:nowrap;text-align:center}.gb thead th{position:sticky;top:0;background:#f8fafc;z-index:2;vertical-align:bottom}' +
+      '.gb th.tk{writing-mode:vertical-rl;transform:rotate(180deg);max-height:180px;white-space:normal;font-weight:600;font-size:.78rem;min-width:34px}.gb td.nm,.gb th.nm{position:sticky;left:0;background:#fff;text-align:left;z-index:1;font-weight:700}.gb thead th.nm{z-index:3;background:#f8fafc}' +
+      '.gb .c{border-radius:8px;padding:2px 6px;display:inline-block;min-width:2.6em;font-weight:700}.gb .g7,.gb .l8,.gb .l7{background:#dcfce7;color:#166534}.gb .g6,.gb .g5,.gb .l6,.gb .l5{background:#e0f2fe;color:#075985}.gb .g4,.gb .l4,.gb .l3{background:#fef9c3;color:#854d0e}.gb .g3,.gb .g2,.gb .g1,.gb .l2,.gb .l1,.gb .l0{background:#fee2e2;color:#991b1b}' +
+      '.gb .fin{font-size:1rem}.gb-key{display:flex;flex-wrap:wrap;gap:8px;font-size:.82rem;margin:8px 0}.gb-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.gb-tabs button{border-radius:999px;border:2px solid #4f46e5;background:#eef2ff;color:#4f46e5;font-weight:800;padding:6px 14px;cursor:pointer}.gb-tabs button[aria-pressed=true]{background:#4f46e5;color:#fff}</style>';
+    p.innerHTML = css + '<section class="panel tint"><h3 style="margin-top:0">📒 Gradebook</h3><p class="small">Every mark your students have earned in this class, in one grid. MYP classes also get each student\'s <b>level 0–8 in criteria A–D</b> and their <b>MYP grade 1–7</b> (IB boundaries); IB Diploma classes get a <b>grade 1–7</b> from your <a href="#grading">grade boundaries</a>. Download any view as a CSV to enter in ManageBac.</p>' +
+      '<div class="row2" style="align-items:end;flex-wrap:wrap;gap:10px"><label class="f" style="margin:0;min-width:220px">Class<select id="gbc">' + classes.map(function (c) { return '<option value="' + c.id + '"' + (c.id === cid ? ' selected' : '') + '>' + E(c.name) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f" style="margin:0">From (term start)<input type="date" id="gbf" value="' + E(from) + '"></label><label class="small" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="gba"> Include work not set for this class</label>' +
+      '<button type="button" class="btn sm" id="gbcsv">⬇ Download CSV for ManageBac</button></div></section><div id="gbtabs" class="gb-tabs"></div><div id="gbbody"><p class="muted">Loading the gradebook…</p></div>';
+    var body = p.querySelector('#gbbody'), DATA = null;
+    p.querySelector('#gbc').onchange = function () { cid = this.value; try { sessionStorage.setItem('bv-gb-class', cid); } catch (e) {} load(); };
+    p.querySelector('#gbf').onchange = function () { from = this.value; try { sessionStorage.setItem('bv-gb-from', from); } catch (e) {} load(); };
+    p.querySelector('#gba').onchange = function () { ALL = this.checked; load(); };
+    p.querySelector('#gbcsv').onclick = function () { if (DATA) DATA.csv(); };
+    load();
+
+    function load() {
+      body.innerHTML = '<p class="muted">Loading the gradebook…</p>'; DATA = null;
+      var cls = classes.filter(function (c) { return c.id === cid; })[0] || {}, myp = ctx.isMyp(cls), maths = /math/i.test([cls.subject, cls.course, cls.name].join(' '));
+      var level = /\bHL\b/i.test([cls.level, cls.name, cls.course].join(' ')) ? 'HL' : 'SL';
+      Promise.all([
+        db.from('enrolments').select('student_id,status').eq('class_id', cid),
+        db.from('profiles').select('id').eq('class_id', cid),
+        db.from('grade_boundaries').select('scale,bounds').eq('teacher_id', cls.teacher_id || ctx.ME.user.id),
+        db.from('class_materials').select('path').eq('class_id', cid),
+        db.from('quiz_classes').select('quiz_id').eq('class_id', cid),
+        crits()
+      ]).then(function (x) {
+        var sids = {}; (x[0].data || []).forEach(function (r) { if (!r.status || /approv|active|accept/i.test(r.status)) sids[r.student_id] = 1; }); (x[1].data || []).forEach(function (r) { sids[r.id] = 1; });
+        delete sids[ctx.ME.user.id]; var ids = Object.keys(sids);
+        var B = { HL: [14, 26, 38, 49, 60, 72], SL: [14, 26, 38, 49, 60, 72], MYP: [1, 13, 26, 38, 51, 63, 76, 88] }; if (window.BVT && BVT.DEFAULT_BOUNDS) B = JSON.parse(JSON.stringify(BVT.DEFAULT_BOUNDS));
+        (x[2].data || []).forEach(function (r) { if (Array.isArray(r.bounds) && B[r.scale] && r.bounds.length === B[r.scale].length) B[r.scale] = r.bounds.map(Number); });
+        var paths = (x[3].data || []).map(function (r) { return r.path; }), quizSet = {}; (x[4].data || []).forEach(function (r) { quizSet[r.quiz_id] = 1; });
+        if (!ids.length) { body.innerHTML = '<p class="emptybox">No students in this class yet.</p>'; return; }
+        return Promise.all([
+          db.from('profiles').select('id,full_name,email,student_number').in('id', ids),
+          inChunks(ids, 60, function (ch) { var q = db.from('student_results').select('student_id,lesson_id,quiz_id,title,score,max_score,best_score,recorded_at').in('student_id', ch).limit(20000); if (from) q = q.gte('recorded_at', from); return q; }),
+          myp ? inChunks(ids, 60, function (ch) { var q = db.from('item_results').select('student_id,kind,ref,q_ref,got,max,at,class_id').in('student_id', ch).limit(50000); if (from) q = q.gte('at', from); return q; }) : Promise.resolve([]),
+          paths.length ? inChunks(paths, 150, function (ch) { return db.from('materials').select('path,lesson_id').in('path', ch); }) : Promise.resolve([])
+        ]).then(function (y) {
+          var exts = (y[3] || []).map(function (m) { return m.lesson_id; }).filter(Boolean);
+          return (exts.length ? inChunks(exts, 150, function (ch) { return db.from('lessons').select('id,external_id').in('external_id', ch); }) : Promise.resolve([])).then(function (ls) {
+            var lessonSet = {}; ls.forEach(function (l) { lessonSet[l.id] = 1; });
+            var qrefs = {}; (y[2] || []).forEach(function (it) { if (it.kind !== 'lesson' && /^[0-9a-f-]{36}$/i.test(it.q_ref || '')) qrefs[it.q_ref] = 1; });
+            var qids = Object.keys(qrefs);
+            return (qids.length ? inChunks(qids, 150, function (ch) { return db.from('questions').select('id,criterion,section').in('id', ch); }) : Promise.resolve([])).then(function (qs) {
+              var qcrit = {}; qs.forEach(function (q) { var m = (q.criterion || '') || ((q.section || '').match(/Criteri\w*\s+([ABCD])/) || [])[1] || ''; if (m) qcrit[q.id] = m; });
+              build(cls, myp, maths, level, B, y[0].data || [], y[1], y[2], lessonSet, quizSet, qcrit);
+            });
+          });
+        });
+      }).catch(function (e) { body.innerHTML = '<p class="msg">The gradebook could not load (' + E(e && e.message || e) + ').</p>'; });
+    }
+
+    function build(cls, myp, maths, level, B, people, results, items, lessonSet, quizSet, qcrit) {
+      var name = {}; people.forEach(function (p) { name[p.id] = p; });
+      var studs = people.slice().sort(function (a, b) { return (a.full_name || '').localeCompare(b.full_name || ''); });
+      // tasks: one column per lesson or question set, in the order they were first done
+      var tasks = {}, cell = {};
+      results.forEach(function (r) {
+        var k = r.quiz_id ? 'q:' + r.quiz_id : r.lesson_id ? 'l:' + r.lesson_id : 't:' + r.title; if (!name[r.student_id]) return;
+        var set = r.quiz_id ? quizSet[r.quiz_id] : r.lesson_id ? lessonSet[r.lesson_id] : false;
+        if (!ALL && !set) return;
+        var t = tasks[k] || (tasks[k] = { k: k, title: shortTitle(r.title), kind: r.quiz_id ? 'Q' : 'L', first: r.recorded_at, max: Number(r.max_score) || 0 }); if (r.recorded_at < t.first) t.first = r.recorded_at;
+        var sc = r.best_score != null ? Number(r.best_score) : Number(r.score), key = r.student_id + '|' + k, old = cell[key];
+        if (!old || sc / (Number(r.max_score) || 1) > old.s / (old.m || 1)) cell[key] = { s: sc, m: Number(r.max_score) || 0 };
+      });
+      var cols = Object.keys(tasks).map(function (k) { return tasks[k]; }).sort(function (a, b) { return a.first < b.first ? -1 : 1; });
+      // MYP criteria from every marked answer
+      var CR = {}; if (myp) items.forEach(function (it) {
+        if (!name[it.student_id] || (it.class_id && it.class_id !== cid)) return;
+        var letters = '';
+        if (it.kind === 'lesson') { var m = CRIT[it.ref] || {}, st = (String(it.q_ref || '').match(/^(?:q|step)(\d+)/) || [])[1]; letters = (st && m[st]) || m['*'] || ''; }
+        else letters = qcrit[it.q_ref] || '';
+        letters.split('').forEach(function (L) { var o = (CR[it.student_id] = CR[it.student_id] || {}); o[L] = o[L] || { g: 0, m: 0, n: 0 }; o[L].g += Number(it.got) || 0; o[L].m += Number(it.max) || 0; o[L].n++; });
+      });
+      function overall(sid) { var g = 0, m = 0; cols.forEach(function (t) { var c = cell[sid + '|' + t.k]; if (c) { g += c.s; m += c.m; } }); return pct(g, m); }
+      function critRow(sid) { var o = CR[sid] || {}, lv = {}, sum = 0, all = true; 'ABCD'.split('').forEach(function (L) { var c = o[L]; lv[L] = c && c.m ? levelOf(pct(c.g, c.m), B.MYP) : null; if (lv[L] == null) all = false; else sum += lv[L]; }); return { lv: lv, sum: sum, all: all, grade: all ? mypGrade(sum) : null }; }
+      var CNAMES = maths ? CN_MATHS : CN;
+      var tabs = [['tasks', '📋 Tasks']].concat(myp ? [['crit', '🎯 MYP criteria and grade']] : [['grade', '🎓 IB grade (' + level + ')']]);
+      if (!tabs.some(function (t) { return t[0] === view; })) view = 'tasks';
+      var tb = p.querySelector('#gbtabs'); tb.innerHTML = tabs.map(function (t) { return '<button type="button" data-v="' + t[0] + '" aria-pressed="' + (t[0] === view) + '">' + t[1] + '</button>'; }).join('');
+      tb.querySelectorAll('button').forEach(function (b) { b.onclick = function () { view = b.getAttribute('data-v'); build(cls, myp, maths, level, B, people, results, items, lessonSet, quizSet, qcrit); }; });
+
+      if (view === 'tasks') {
+        body.innerHTML = cols.length ? '<p class="small muted">' + studs.length + ' students · ' + cols.length + ' tasks' + (from ? ' since ' + E(from) : '') + '. Each cell is the student\'s best percentage. L = interactive lesson, Q = question set or exam. Blank = not done yet.</p>' +
+          '<div class="gb-wrap"><table class="gb"><thead><tr><th class="nm">Student</th>' + cols.map(function (t) { return '<th class="tk" title="' + E(t.title) + '">' + t.kind + ' · ' + E(t.title.slice(0, 48)) + '</th>'; }).join('') + '<th>Overall</th>' + (myp ? '' : '<th>Grade</th>') + '</tr></thead><tbody>' +
+          studs.map(function (s) { var o = overall(s.id), g = myp ? null : dpGrade(o, B[level]);
+            return '<tr><td class="nm">' + E(s.full_name || s.email) + '</td>' + cols.map(function (t) { var c = cell[s.id + '|' + t.k], v = c ? pct(c.s, c.m) : null;
+              return '<td>' + (v == null ? '' : '<span class="c ' + (myp ? 'l' + levelOf(v, B.MYP) : 'g' + dpGrade(v, B[level])) + '" title="' + E(c.s + ' / ' + c.m) + '">' + Math.round(v) + '</span>') + '</td>'; }).join('') +
+              '<td><b>' + (o == null ? '–' : Math.round(o) + '%') + '</b></td>' + (myp ? '' : '<td>' + (g ? '<span class="c fin g' + g + '">' + g + '</span>' : '–') + '</td>') + '</tr>'; }).join('') + '</tbody></table></div>'
+          : '<p class="emptybox">No marked work yet' + (from ? ' since ' + E(from) : '') + (ALL ? '' : ' for tasks set to this class. Tick "Include work not set for this class" to see everything these students have done') + '.</p>';
+      } else if (view === 'crit') {
+        body.innerHTML = '<p class="small">Each level 0–8 comes from every marked answer that assesses the criterion' + (from ? ' since ' + E(from) : ' this year') + ', using your <a href="#grading">MYP boundaries</a>. The four levels add up to 32 and give the <b>MYP grade 1–7</b> with the IB\'s boundaries (1–5 → 1, 6–9 → 2, 10–14 → 3, 15–18 → 4, 19–23 → 5, 24–27 → 6, 28–32 → 7). ' +
+          'A grade appears only when all four criteria have evidence. These are suggested levels: use your professional judgement for the final best-fit level.</p>' +
+          '<div class="gb-wrap"><table class="gb"><thead><tr><th class="nm">Student</th>' + 'ABCD'.split('').map(function (L) { return '<th title="' + E(CNAMES[L]) + '">' + L + '<br><span class="small muted" style="font-weight:400">' + E(CNAMES[L].split(' ')[0]) + '</span></th>'; }).join('') + '<th>Total /32</th><th>MYP grade</th><th class="small">Evidence (answers A·B·C·D)</th></tr></thead><tbody>' +
+          studs.map(function (s) { var r = critRow(s.id), o = CR[s.id] || {};
+            return '<tr><td class="nm">' + E(s.full_name || s.email) + '</td>' + 'ABCD'.split('').map(function (L) { var v = r.lv[L]; return '<td>' + (v == null ? '<span class="muted" title="No marked answers for this criterion yet">–</span>' : '<span class="c l' + v + '">' + v + '</span>') + '</td>'; }).join('') +
+              '<td><b>' + (r.all ? r.sum : '–') + '</b></td><td>' + (r.grade ? '<span class="c fin g' + r.grade + '">' + r.grade + '</span>' : '<span class="small muted">needs ' + 'ABCD'.split('').filter(function (L) { return r.lv[L] == null; }).join(', ') + '</span>') + '</td>' +
+              '<td class="small muted">' + 'ABCD'.split('').map(function (L) { return o[L] ? o[L].n : 0; }).join(' · ') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+      } else {
+        body.innerHTML = '<p class="small">Overall percentage across every task' + (from ? ' since ' + E(from) : '') + ', turned into an IB grade with your <a href="#grading">' + level + ' boundaries</a> (' + B[level].map(function (b, i) { return (i + 2) + ' from ' + b + '%'; }).join(', ') + ').</p>' +
+          '<div class="gb-wrap"><table class="gb"><thead><tr><th class="nm">Student</th><th>Tasks done</th><th>Overall %</th><th>IB grade</th></tr></thead><tbody>' +
+          studs.map(function (s) { var o = overall(s.id), g = dpGrade(o, B[level]), n = cols.filter(function (t) { return cell[s.id + '|' + t.k]; }).length;
+            return '<tr><td class="nm">' + E(s.full_name || s.email) + '</td><td>' + n + ' / ' + cols.length + '</td><td><b>' + (o == null ? '–' : Math.round(o) + '%') + '</b></td><td>' + (g && o != null ? '<span class="c fin g' + g + '">' + g + '</span>' : '–') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+      }
+
+      DATA = { csv: function () {
+        var head = ['Student', 'Email', 'Student number'], rows;
+        if (view === 'crit') { head = head.concat(['Criterion A', 'Criterion B', 'Criterion C', 'Criterion D', 'Total /32', 'MYP grade 1-7']);
+          rows = studs.map(function (s) { var r = critRow(s.id); return [s.full_name, s.email, s.student_number].concat('ABCD'.split('').map(function (L) { return r.lv[L] == null ? '' : r.lv[L]; })).concat([r.all ? r.sum : '', r.grade || '']); }); }
+        else if (view === 'grade') { head = head.concat(['Overall %', 'IB grade 1-7 (' + level + ')']); rows = studs.map(function (s) { var o = overall(s.id); return [s.full_name, s.email, s.student_number, o == null ? '' : Math.round(o), o == null ? '' : dpGrade(o, B[level])]; }); }
+        else { head = head.concat(cols.map(function (t) { return t.title + ' (%)'; })).concat(['Overall %']); rows = studs.map(function (s) { var o = overall(s.id); return [s.full_name, s.email, s.student_number].concat(cols.map(function (t) { var c = cell[s.id + '|' + t.k]; return c ? Math.round(pct(c.s, c.m)) : ''; })).concat([o == null ? '' : Math.round(o)]); }); }
+        csv([head].concat(rows), (cls.name || 'class').replace(/[^\w-]+/g, '_') + '_' + view + '_gradebook.csv');
+      } };
+    }
+  };
+})();
