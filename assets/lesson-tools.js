@@ -12,7 +12,7 @@
   function MODELS(n) {   // model answers for a step, in the template's own style
     if (TEMPLATE) return window.__bvOrigModels(n);
     var md = DATA[n]; if (!md || !md.length) return '';
-    return '<details class="model bv-model" open><summary><b>Model answers: check your work and correct it in your book</b></summary><ul>' +
+    return '<details class="model bv-model" open><summary><b>Model answers: check your work against them</b></summary><ul>' +
       md.map(function (x) { return '<li><b>' + E2(x[0]) + '</b> ' + E2(x[1]) + '</li>'; }).join('') + '</ul></details>';
   }
   if (TEMPLATE) window.__bvOrigModels = window.modelsHtml;

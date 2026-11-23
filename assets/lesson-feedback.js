@@ -90,10 +90,10 @@
     if (d.got >= d.max && !d.why.length) return '';
     if (d.kind === 'text') {
       var md = model(n, d.q);
-      if (!d.need.length) return d.why.length ? 'Rewrite ' + d.q + ' in your book without the mistaken idea above.' : '';
-      return 'Rewrite ' + d.q + ' in your book and add the missing idea' + (d.need.length > 1 ? 's' : '') + ': ' + d.need.join('; ') + '. Link each idea to the next with “so” or “because”.' + (md ? ' Tick off the [1] mark points in the model answer as you go.' : '');
+      if (!d.need.length) return d.why.length ? 'Rewrite ' + d.q + ' in its answer box without the mistaken idea above.' : '';
+      return 'Rewrite ' + d.q + ' in its answer box and add the missing idea' + (d.need.length > 1 ? 's' : '') + ': ' + d.need.join('; ') + '. Link each idea to the next with “so” or “because”.' + (md ? ' Tick off the [1] mark points in the model answer as you go.' : '');
     }
-    return 'Correct ' + d.q + ' in your book and write one sentence saying why the right answer is right.';
+    return 'Look again at ' + d.q + ' and say to yourself in one sentence why the right answer is right.';
   }
 
   var CSS = '.lfb{margin-top:10px;display:grid;gap:8px}.lfb .lq{border:1px solid #e2e8f0;border-left:4px solid #94a3b8;border-radius:10px;padding:8px 12px;background:#fff}' +
@@ -176,7 +176,7 @@
         return;
       }
       if (data.source !== 'ai') { note.textContent = 'Detailed feedback is not available right now.' + ' Use the instant feedback above.'; return; }
-      note.textContent = 'Done. Improve your answers in your book using these points.';
+      note.textContent = 'Done. Improve your answers in the lesson using these points.';
       aiBlocks(n, detail(n), data.items || [], wrap, new Date().toISOString(), 'ai');
     }, function () { btn.disabled = false; note.textContent = 'Detailed feedback is not available right now. Use the instant feedback and the model answers.'; });
   }
@@ -184,7 +184,7 @@
   // Whole-lesson feedback: built from every marked step so far, updated after each save.
   var BANDS = [[0.85, 'Excellent', '#15803d', 'You have a secure understanding of this lesson. Try the Challenge step and help a classmate.'],
     [0.65, 'Secure', '#2563eb', 'Good understanding. Fix the questions listed below to reach the top band.'],
-    [0.4, 'Developing', '#b45309', 'You have some of the key ideas. Redo the questions listed below in your book, using the notes and model answers.'],
+    [0.4, 'Developing', '#b45309', 'You have some of the key ideas. Redo the questions listed below in the lesson, using the notes and model answers.'],
     [0, 'Beginning', '#b91c1c', 'This lesson needs another look. Work through the notes and model answers for each step, then ask your teacher for help.']];
   function summary() {
     var mk = window.marks || {}, steps = Object.keys(mk).map(Number).sort(function (a, b) { return a - b; });
@@ -220,7 +220,7 @@
       (redo.length ? li('✗', 'Improve: ' + redo.slice(0, 6).map(function (r) { return r.q + ' (' + r.got + '/' + r.max + ')'; }).join(', ') + '.') : '') +
       misc.slice(0, 2).map(function (w) { return li('💡', w); }).join('') +
       (skill ? li('↗', skill) : '') +
-      (weakStep.length ? li('📚', 'Study next: ' + weakStep.map(function (n) { return '“' + stepName(n) + '”'; }).join(', ') + '. Re-read the notes, then redo those questions in your book.') :
+      (weakStep.length ? li('📚', 'Study next: ' + weakStep.map(function (n) { return '“' + stepName(n) + '”'; }).join(', ') + '. Re-read the notes, then redo those questions in the lesson.') :
         redo.length ? li('📚', 'Study next: correct ' + redo[0].q + ' using the model answer in “' + stepName(redo[0].n) + '”.') : li('📚', 'Study next: move on to the next lesson.')) +
       (steps.length < all ? li('→', 'Keep going: ' + (all - steps.length) + ' marked step' + (all - steps.length > 1 ? 's' : '') + ' still to do.') : '') + '</ul>';
     host.innerHTML = h;

@@ -449,6 +449,30 @@
 
   /* ---- lesson pages ---- */
   if (!document.querySelector('section.step, [data-save]') || document.getElementById('qf')) return;
+  /* "In your book" (23 Nov 2026): lessons built by hand get the same box as generated ones. Books hold notes, a summary and a
+     simple diagram; answers are typed and saved in the lesson. */
+  (function book() {
+    if (document.getElementById('bv-book') || !document.querySelector('section.step')) return;
+    document.querySelectorAll('h3').forEach(function (h) { if (/^\s*In your book, then here\s*$/i.test(h.textContent)) h.textContent = 'Your answers'; });
+    var h1 = document.querySelector('h1'), title = h1 ? h1.textContent.trim() : document.title.split('·')[0].trim(), objs = 0, terms = '';
+    var oh = [].slice.call(document.querySelectorAll('h2, h3, b, strong')).filter(function (x) { return /by the end of this lesson|learning objectives|lesson objectives|^\s*objectives/i.test(x.textContent); })[0];
+    if (oh) { var ul = oh.parentNode.querySelector('ul, ol'); if (ul) objs = ul.children.length; }
+    var kt = [].slice.call(document.querySelectorAll('div, p')).filter(function (x) { return /^\s*Key terms/i.test(x.textContent) && x.textContent.length < 600; }).pop();
+    if (kt) terms = kt.textContent.replace(/^\s*Key terms[^:]*:\s*/i, '').split(/\s*[·,;]\s*/).slice(0, 8).join(', ');
+    var w = document.querySelector('details.worked summary'), f = document.querySelector('figure figcaption');
+    var dia = w ? 'A flow chart of “' + w.textContent.replace(/^.*?:\s*/, '') + '”: one box for each step, joined by arrows.'
+      : f ? 'A simple labelled sketch: ' + f.textContent.replace(/^Figure \d+\s*·\s*/, '').replace(/\.$/, '') + '. Pencil, 4–6 labels, no shading.'
+      : 'A simple flow chart or spider diagram linking the key ideas of the lesson.';
+    var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    var box = document.createElement('section'); box.className = 'card'; box.id = 'bv-book';
+    box.style.cssText = 'border-left:8px solid #0d9488;background:#f0fdfa;color:#1f2937';
+    box.innerHTML = '<h3 style="margin:0 0 6px">📓 In your book</h3><p class="small" style="margin:0 0 8px">Your book is for notes, not answers. Type your answers in the lesson: they are saved and marked here. Write only this, neatly, on a new page:</p><ol style="margin:0;padding-left:1.3em">' +
+      '<li><b>Date and title:</b> ' + esc(title) + '</li><li><b>Lesson objectives:</b> copy ' + (objs ? 'the ' + objs + ' objectives' : 'the objectives') + ' at the top of the lesson.</li>' +
+      (terms ? '<li><b>Key terms:</b> ' + esc(terms) + ', each with a one-line meaning.</li>' : '') +
+      '<li><b>Short notes:</b> 3–5 bullet points in your own words from the lesson notes.</li><li><b>Summary:</b> two or three sentences on the big idea of the lesson.</li><li><b>Diagram:</b> ' + esc(dia) + '</li></ol>';
+    var anchor = oh && oh.closest('.card, section, div'), first = document.querySelector('section.step');
+    if (anchor && anchor !== document.body && !anchor.closest('section.step')) anchor.parentNode.insertBefore(box, anchor.nextSibling); else first.parentNode.insertBefore(box, first);
+  })();
   function qText(ta) { var q = ta.closest('.q, .question, li, fieldset'), l = q && q.querySelector('.ql, legend, label, p'); return l ? l.textContent : (q ? q.textContent.slice(0, 400) : ''); }
   function scan() {
     document.querySelectorAll('textarea[data-save]').forEach(function (ta) { if (!ta.closest('.bv-rep, .bv-tans') && !ta.disabled) T.attachTools(ta, qText(ta), ta.getAttribute('data-save')); });

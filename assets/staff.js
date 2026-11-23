@@ -34,6 +34,19 @@
     if (late) kind.push('late');
     return { code: code, name: name, kind: kind.join(' · ') };
   }
+  /* Latest results (23 Nov 2026): student, class (opens its gradebook), task, mark with a coloured percentage, when. */
+  function pctChip(sc, mx) { var v = +mx > 0 && sc != null ? Math.round(100 * sc / mx) : null; if (v == null) return '<span class="muted">–</span>';
+    var c = v >= 70 ? ['#dcfce7', '#166534'] : v >= 50 ? ['#e0f2fe', '#075985'] : v >= 35 ? ['#fef9c3', '#854d0e'] : ['#fee2e2', '#991b1b'];
+    return '<span style="display:inline-block;min-width:3.2em;text-align:center;border-radius:8px;padding:1px 6px;font-weight:800;background:' + c[0] + ';color:' + c[1] + '">' + v + '%</span>'; }
+  function resultsTable(RS, NM, clsOf, n) {
+    var cn = {}; CLASSES.forEach(function (c) { cn[c.id] = c.name; });
+    var rows = RS.filter(function (r) { return r.score != null && +r.max_score > 0; }).slice(0, n);
+    if (!rows.length) return '<p class="small muted">No results yet.</p>';
+    return '<div class="tablewrap"><table class="cc-tbl marks"><tr><th>Student</th><th class="hm">Class</th><th>Task</th><th class="n">Mark</th><th class="hm">When</th></tr>' + rows.map(function (r) {
+      var c = clsOf(r.student_id);
+      return '<tr><td>' + E(NM[r.student_id] || '–') + '</td><td class="hm small">' + (c ? '<a href="#classes/' + c + '/grades" title="Open this class\'s gradebook">' + E(cn[c] || 'Class') + '</a>' : '–') + '</td>' + taskCell(r.title) +
+        '<td class="n" style="white-space:nowrap"><span class="small muted">' + E(r.score) + '/' + E(r.max_score) + '</span> ' + pctChip(+r.score, +r.max_score) + '</td><td class="hm small muted">' + E(ago(r.recorded_at)) + '</td></tr>'; }).join('') + '</table></div>';
+  }
   function taskCell(t) { var s = shortTask(t);
     return '<td class="task-c" title="' + E(t) + '">' + (s.code ? '<span class="tk-code">' + E(s.code) + '</span> ' : '') + E(s.name) + (s.kind ? ' <span class="tk-kind">' + E(s.kind) + '</span>' : '') + '</td>'; }
   var TABS = [['overview', 'Overview'], ['work', 'Lesson work'], ['questions', '❓ Student questions'], ['labs', '🔬 Lab work'], ['approvals', 'Approvals'], ['classes', 'Classes'], ['students', 'Students & results'], ['quizzes', 'Quizzes & exams'], ['lessons', 'Lesson builder'], ['marking', 'Marking'], ['gradebook', '📒 Gradebook'], ['grading', '🎯 Grade boundaries'], ['bin', '🗑 Bin'], ['content', 'Site data'], ['bookings', 'Bookings'], ['roles', 'People & roles'], ['activity', 'Activity']];
@@ -201,6 +214,29 @@
     });
   }
 
+  /* Boundaries for each class (migration 079): every course has its own scale (MYP, IB HL/SL, IGCSE, A Level), and each class can have its own. */
+  function classBounds(p) {
+    var host = document.createElement('div'); p.insertBefore(host, p.children[1] || null);
+    host.innerHTML = '<section class="panel"><h3 style="margin-top:0">🏫 Boundaries for each class</h3><p class="small muted">Loading your classes…</p></section>';
+    (window.BVGB ? Promise.resolve() : loadScript('/assets/gradebook.js?v=' + (window.BV_VER || '5'))).then(function () {
+      var ids = CLASSES.map(function (c) { return c.id; });
+      return (ids.length ? S.db.from('class_grade_boundaries').select('class_id,scale,bounds').in('class_id', ids) : Promise.resolve({ data: [] })).then(function (r) {
+        var own = {}; (r.data || []).forEach(function (x) { own[x.class_id] = x; });
+        var isM = function (k) { return BV.subj.isMyp(k); };
+        var sec = host.firstChild;
+        sec.innerHTML = '<h3 style="margin-top:0">🏫 Boundaries for each class</h3><p class="small">Each class uses the grading of its course: MYP levels, IB grades (HL or SL), IGCSE grades A*–G or A Level grades A*–E. Open a class to change its boundaries. They are used in that class\'s gradebook and in the grades its students see.' +
+          (r.error ? ' <b>Class boundaries need database update 079 before they can be saved.</b>' : '') + '</p>' +
+          (CLASSES.length ? CLASSES.map(function (c) { var sc = BVGB.scaleOf(c, isM), S2 = BVGB.SCALES[sc];
+            return '<details class="panel" style="margin:6px 0"><summary style="cursor:pointer"><b>' + E(c.name) + '</b> <span class="small muted">· ' + E(S2 ? S2.name : 'percentage only') + (own[c.id] ? ' · own boundaries' : ' · default') + '</span></summary><div data-cb="' + c.id + '" style="margin-top:8px"></div></details>'; }).join('') : '<p class="emptybox">No classes yet.</p>');
+        sec.querySelectorAll('[data-cb]').forEach(function (el) {
+          var c = CLASSES.filter(function (x) { return x.id === el.getAttribute('data-cb'); })[0], sc = BVGB.scaleOf(c, isM), o = own[c.id];
+          if (o && BVGB.SCALES[o.scale]) sc = o.scale;
+          BVGB.editor(el, c, { S: S, ME: ME }, sc, o ? o.bounds.map(Number) : null, null, CLASSES.filter(function (x) { return x.id !== c.id && BVGB.scaleOf(x, isM) === sc; }));
+        });
+      });
+    }).catch(function (e) { host.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
+  }
+
   /* ---------- grade boundaries: each teacher sets the % needed for each IB grade (HL, SL) and MYP level (migration 041) ---------- */
   function gradeBounds(p) {
     var D = BVT.DEFAULT_BOUNDS, KIND = [['HL', 'IB Diploma · Higher Level (HL)', 'Grade', 2], ['SL', 'IB Diploma · Standard Level (SL)', 'Grade', 2], ['MYP', 'MYP (Grades 6–10)', 'Level', 1]];
@@ -219,6 +255,7 @@
             + b.map(function (v, i) { return '<td><input type="number" min="0" max="100" step="0.5" value="' + E(v) + '" data-i="' + i + '" style="width:5.2em" aria-label="' + k[2] + ' ' + (i + k[3]) + ' minimum percentage"> %</td>'; }).join('') + '</tr></table></div>'
             + '<p class="small" data-try></p><div class="acts"><button type="button" class="btn main sm" data-save>Save ' + k[0] + ' boundaries</button> <button type="button" class="btn sm" data-reset>Back to defaults</button> <span class="small" data-msg></span></div></section>';
         }).join('');
+      classBounds(p);
       p.querySelectorAll('section[data-scale]').forEach(function (sec) {
         var sc = sec.getAttribute('data-scale'), msg = sec.querySelector('[data-msg]'), ins = [].slice.call(sec.querySelectorAll('input[data-i]'));
         function vals() { return ins.map(function (x) { return +x.value; }); }
@@ -419,7 +456,7 @@
         (x[5] && x[5].count ? '<p class="panel tint"><b>' + x[5].count + ' new lesson booking' + (x[5].count > 1 ? 's' : '') + '.</b> <a class="btn main sm" href="#bookings">Reply to bookings</a></p>' : '') +
         (nPend ? '<p class="panel tint"><b>' + nPend + ' new account' + (nPend > 1 ? 's are' : ' is') + ' waiting for approval.</b> <a class="btn main sm" href="' + (ME.admin ? '/admin/#approvals' : '#approvals') + '">Review and approve</a></p>' : '') +
         (!CLASSES.length ? '<p class="panel tint">Start by <a href="#classes">creating a class</a>. Each class gets a join code that students type when they register.</p>' : '') +
-        '<section class="panel"><h3>Latest results</h3>' + ((x[2].data || []).length ? '<div class="tablewrap"><table class="marks"><tr><th>Student</th><th>Task</th><th>Score</th><th>When</th></tr>' + x[2].data.map(function (r) { return '<tr><td>' + E(names[r.student_id] || '–') + '</td>' + taskCell(r.title) + '<td>' + (r.score == null ? '–' : E(r.score) + '/' + E(r.max_score)) + '</td><td class="small">' + E(S.when(r.recorded_at)) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="muted">No results yet.</p>') +
+        '<section class="panel"><div class="row2"><h3 style="margin:0">Latest results</h3><a class="small" href="#gradebook">📒 Gradebook →</a></div>' + resultsTable(x[2].data || [], names, function (sid) { var r = st.filter(function (s) { return s.student_id === sid; })[0]; return r ? r.class_id : ''; }, 12) +
         '<p class="small muted">' + (x[3].count || 0) + ' published quizzes · <a href="/teacher/">Classic teacher console (Google Sheets)</a></p></section>';
     });
   }
@@ -519,11 +556,11 @@
   function classPage(p, cid, sub) {
     var c = CLASSES.filter(function (x) { return x.id === cid; })[0];
     if (!c) { p.innerHTML = '<p class="emptybox">This class was not found, or it is not one of your classes. <a href="#classes">All classes</a></p>'; return; }
-    sub = ['overview', 'lessons', 'todo', 'analysis', 'register', 'activity', 'news', 'status', 'quizzes', 'pins'].indexOf(sub) >= 0 ? sub : 'overview';
+    sub = ['overview', 'lessons', 'todo', 'analysis', 'register', 'activity', 'news', 'status', 'quizzes', 'pins', 'grades'].indexOf(sub) >= 0 ? sub : 'overview';
     var state = { filter: 'all', open: {}, lesson: null, live: true };
     try { state.lesson = sessionStorage.getItem('bv-cl-' + cid) || null; } catch (e) {}
     /* Class workspace (Command Centre phase 4, 21 Nov 2026): eight tabs; Students holds live status, register and roster */
-    var TABS8 = [['overview', '🏠', 'Overview', ['overview']], ['status', '👥', 'Students', ['status', 'register', 'pins']], ['todo', '📌', 'Set work', ['todo']], ['lessons', '🧪', 'Lessons', ['lessons']], ['quizzes', '📝', 'Assessments', ['quizzes']], ['activity', '📥', 'Student work', ['activity']], ['analysis', '📊', 'Insights', ['analysis']], ['news', '📣', 'Messages', ['news']]];
+    var TABS8 = [['overview', '🏠', 'Overview', ['overview']], ['status', '👥', 'Students', ['status', 'register', 'pins']], ['todo', '📌', 'Set work', ['todo']], ['lessons', '🧪', 'Lessons', ['lessons']], ['quizzes', '📝', 'Assessments', ['quizzes']], ['activity', '📥', 'Student work', ['activity']], ['grades', '📒', 'Gradebook', ['grades']], ['analysis', '📊', 'Insights', ['analysis']], ['news', '📣', 'Messages', ['news']]];
     var enc = encodeURIComponent(c.name);
     p.innerHTML = '<style>.cw-band{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:linear-gradient(120deg,#0f1f3d,#134e4a);color:#fff;border-radius:16px;padding:14px 16px;margin:0 0 10px;border-left:6px solid var(--k)}' +
       '.cw-band h2{margin:0;color:#fff;font-size:1.35rem}.cw-band .lab{font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:#99f6e4;font-weight:800}.cw-acts{display:flex;flex-wrap:wrap;gap:6px}.cw-acts a{display:inline-flex;gap:5px;align-items:center;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;text-decoration:none;font-weight:700;font-size:.84rem}.cw-acts a:hover{background:rgba(255,255,255,.22)}.cw-acts a.pri{background:#0d9488;border-color:#0d9488}' +
@@ -539,14 +576,21 @@
       p.querySelectorAll('[data-cnav] a').forEach(function (a) { var k = CH[a.getAttribute('href').split('/')[2]]; if (k) a.style.setProperty('--k', k); }); }
     function load() {
       if (busy) return; busy = true;
-      (sub === 'overview' ? overviewBoard : sub === 'status' ? statusBoard : sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'news' ? newsBoard : sub === 'register' ? registerBoard : sub === 'pins' ? pinsBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
+      (sub === 'overview' ? overviewBoard : sub === 'grades' ? gradesBoard : sub === 'status' ? statusBoard : sub === 'lessons' ? lessonBoard : sub === 'todo' ? todoBoard : sub === 'analysis' ? analysisBoard : sub === 'news' ? newsBoard : sub === 'register' ? registerBoard : sub === 'pins' ? pinsBoard : sub === 'activity' ? activityBoard : quizBoard)(body, c, state).then(function () { busy = false; var st = p.querySelector('#stamp'); if (st) st.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }, function (e) { busy = false;
         var miss = /class_(quiz|lesson)_board|class_todo|assign_work|class_analysis|announcements|schema cache|does not exist/i.test((e && (e.message || e.details)) || String(e));
         body.innerHTML = miss ? '<p class="emptybox">This part of the class page needs a database update (' + (sub === 'todo' ? 'migration 015' : sub === 'analysis' ? 'migration 016' : sub === 'news' ? 'migration 044' : 'migration 011') + ') before it can show results. Run it once in the Supabase SQL editor, then reload this page.</p>' : '<p class="msg">' + E(S.nice(e)) + '</p>'; });
     }
     state.reload = load;
-    var EVERY = sub === 'status' ? 10000 : sub === 'overview' ? 60000 : 15000;
+    var EVERY = sub === 'status' ? 10000 : sub === 'overview' || sub === 'grades' ? 60000 : 15000;
     p.querySelector('#lv').onchange = function () { state.live = this.checked; clearInterval(LIVE); if (state.live) { LIVE = setInterval(load, EVERY); load(); } };
     clearInterval(LIVE); LIVE = setInterval(load, EVERY); load();
+  }
+  /* Class Gradebook tab (23 Nov 2026): this class's students and tasks, its own grade boundaries. Drawn once (no auto-refresh). */
+  function gradesBoard(body, c, state) {
+    if (state.gbDone) return Promise.resolve(); state.gbDone = 1;
+    return (window.BVGB ? Promise.resolve() : loadScript('/assets/gradebook.js?v=' + (window.BV_VER || '5'))).then(function () {
+      BVGB.render(body, { S: S, ME: ME, classes: [c].concat(CLASSES.filter(function (x) { return x.id !== c.id; })), only: c.id, fixed: true, isMyp: function (k) { return BV.subj.isMyp(k); } });
+    });
   }
   /* Class Overview tab: the class at a glance from real records (students, activity, marking, deadlines, recent results, who may need support) */
   function overviewBoard(body, c, state) {
@@ -697,7 +741,7 @@
         '<label class="f" id="aiw" style="min-width:280px;flex:1">Which <span class="small muted" id="aif"></span><input id="aq" type="search" placeholder="Search…" style="margin-bottom:6px"><select id="ai"></select></label><label class="f" id="auw" hidden style="flex:1">Link<input id="au" type="url" placeholder="https://"></label><label class="f" id="arw" hidden style="flex:1;min-width:260px">Stage <span class="small muted">· students see it in the Research Hub too; it ticks off when they finish the stage</span><select id="ars">' + RSTAGES.map(function (g) { return '<optgroup label="' + g[0] + '">' + g[2].map(function (x) { return '<option value="' + g[1] + ':' + x[0] + '">' + E(x[1]) + '</option>'; }).join('') + '</optgroup>'; }).join('') + '</select></label></div>' +
         '<div id="aiv" hidden><label class="f">The challenge brief <span class="small muted">· the problem students solve; it appears in the Innovation Studio for this class</span><textarea id="aib" rows="3" maxlength="4000" placeholder="e.g. Design a low-cost way to keep vaccines cool without electricity."></textarea></label><label class="f">Context (optional)<input id="aic" maxlength="200" placeholder="e.g. SDG 3 Good health"></label></div>' +
         '<div class="row2" style="flex-wrap:wrap;justify-content:flex-start"><label class="f" style="flex:1;min-width:240px">Title<input id="at" maxlength="160"></label><label class="f">Due<input id="ad" type="datetime-local"></label></div>' +
-        '<label class="f">Instructions for students (optional)<textarea id="ain" rows="2" placeholder="e.g. Finish steps 1–3 and correct your answers in your book."></textarea></label>' +
+        '<label class="f">Instructions for students (optional)<textarea id="ain" rows="2" placeholder="e.g. Finish steps 1–3, then write the notes, summary and diagram in your book."></textarea></label>' +
         '<fieldset style="border:1px solid var(--line);border-radius:10px;padding:8px 12px"><legend class="small"><b>Who</b></legend>' +
         '<label class="chk"><input type="radio" name="aw" value="all"' + (pre.length ? '' : ' checked') + '> The whole class (' + kids.length + ')</label> <label class="chk"><input type="radio" name="aw" value="some"' + (pre.length ? ' checked' : '') + '> Chosen students</label>' +
         (CLASSES.filter(function (o) { return o.id !== c.id; }).length ? '<div id="amc" style="margin:6px 0 0"><span class="small"><b>Also set the same work for</b> (whole class each):</span> ' + CLASSES.filter(function (o) { return o.id !== c.id; }).map(function (o) { return '<label class="chk" style="margin-right:10px"><input type="checkbox" data-amc="' + o.id + '"> ' + E(o.name) + '</label>'; }).join('') + '</div>' : '') +
@@ -2450,11 +2494,12 @@
             var ss = stud[c.id] || [], act = ss.filter(function (s) { return active[s]; }).length, mk = N.att.filter(function (a) { return ss.indexOf(a.student_id) >= 0; }).length, wait = N.en.filter(function (e) { return e.class_id === c.id && e.status === 'pending'; }).length;
             return '<tr' + (ss.length ? '' : ' class="dim"') + '><td><button type="button" class="cc-star' + (FV.indexOf(c.id) >= 0 ? ' on' : '') + '" data-fav="' + c.id + '" title="Favourite: show first" aria-label="Favourite ' + E(c.name) + '">★</button><a class="nm" style="--k:' + hue(c.id) + '" href="#classes/' + c.id + '">' + E(c.name) + '</a>' + (wait ? ' <a class="small" href="#approvals">🙋 ' + wait + ' waiting</a>' : '') + '</td><td class="n">' + ss.length + '</td><td class="n hm">' + (ss.length ? act : '–') + '</td><td class="n">' + (mk ? '<a href="#marking"><b>' + mk + '</b></a>' : '0') + '</td><td class="hm hm2">' + nextDue(c.id) + '</td>' +
               '<td style="white-space:nowrap;text-align:right"><a class="btn sm" href="#classes/' + c.id + '/todo/new" title="Assign work">📌<span class="hm"> Assign</span></a> <span class="cc-menu"><button type="button" class="btn sm" data-mnu aria-label="More actions for ' + E(c.name) + '">⋯</button><div hidden style="left:auto;right:0">' +
-              '<a href="#classes/' + c.id + '">Open classroom</a><a href="#classes/' + c.id + '/status">🟢 Live work status</a><a href="#classes/' + c.id + '/add">➕ Add lessons</a><a href="#classes/' + c.id + '/analysis">📊 Analytics</a><a href="#classes/' + c.id + '/news">📣 Announcement</a><a href="#classes/' + c.id + '/register">🗒 Register</a><a href="/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a>' +
+              '<a href="#classes/' + c.id + '">Open classroom</a><a href="#classes/' + c.id + '/status">🟢 Live work status</a><a href="#classes/' + c.id + '/add">➕ Add lessons</a><a href="#classes/' + c.id + '/grades">📒 Gradebook</a><a href="#classes/' + c.id + '/analysis">📊 Analytics</a><a href="#classes/' + c.id + '/news">📣 Announcement</a><a href="#classes/' + c.id + '/register">🗒 Register</a><a href="/board/?class=' + c.id + '&n=' + encodeURIComponent(c.name) + '">🖊 Whiteboard</a>' +
               '<button type="button" data-trc="' + c.id + '">🔀 Transfer students</button><button type="button" data-delc="' + c.id + '" data-n="' + ss.length + '" style="color:#b91c1c">🗑 Delete class</button></div></span></td></tr>'; }).join('') + '</table></div><div id="ccact" style="scroll-margin-top:180px"></div>' :
             '<p class="panel tint">Start by <a href="#classes">creating a class</a>: choose the course you teach and its BioscienceVista lessons and quizzes are added for you.</p>') +
           '</div><div id="cc-ins"></div>' +
-          '<div data-sec="results"><div class="cc-h3"><h3>Latest results</h3><a class="small" href="#students">All results →</a></div>' + (RS.length ? '<div class="tablewrap"><table class="cc-tbl marks"><tr><th>Student</th><th>Task</th><th>Score</th><th class="hm">When</th></tr>' + RS.slice(0, 8).map(function (r) { return '<tr><td>' + E(NM[r.student_id] || '–') + '</td>' + taskCell(r.title) + '<td>' + E(r.score) + '/' + E(r.max_score) + '</td><td class="hm small muted">' + ago(r.recorded_at) + '</td></tr>'; }).join('') + '</table></div>' : '<p class="small muted">No results yet.</p>') + '</div>' +
+          '<div data-sec="results"><div class="cc-h3"><h3>Latest results</h3><a class="small" href="#gradebook">📒 Gradebook →</a></div>' + resultsTable(RS, NM, function (sid) { for (var k in stud) if (stud[k].indexOf(sid) >= 0) return k; return ''; }, 8) +
+          '</div>' +
           (ME.admin ? '' : '<section class="panel" id="rvbox" style="margin-top:18px"></section>');
         (function () { var P = ccPrefs();   // personalisation
           p.querySelectorAll('[data-sec]').forEach(function (el) { if (P.hide.indexOf(el.getAttribute('data-sec')) >= 0) el.style.display = 'none'; });
