@@ -387,6 +387,8 @@
             '<p class="small"><b>Your answer:</b> ' + (given == null || given === '' ? '<i>no answer</i>' : T.isPic(given) ? '<br><img class="hw" alt="Your drawing" src="' + E(given) + '" style="max-width:100%;border:1px solid var(--line);border-radius:8px">' : x.kind === 'short' ? (T.answerHtml ? T.answerHtml(given) : E(given)) : window.BVQT && BVQT.has(x.kind) ? E(BVQT.pretty(x.kind, x.options, given)) : 'ABCDEFGH'.charAt(given) + '. ' + E((x.options || [])[given])) + '</p>' +
             (fb[x.question_id] && T.feedback ? T.feedback(fb[x.question_id]) :   // structured feedback (rules, AI or teacher)
               (d.explanation ? '<p class="small fb ai">' + E(d.explanation) + '</p>' : '') + (d.comment ? '<div class="fb tch"><h4>Teacher comment</h4>' + E(d.comment) + '</div>' : '')) + '</article>'; }).join(''));
+      if (!hide) { var cmh = document.createElement('div'); var first = app.querySelector('section.panel'); if (first) first.parentNode.insertBefore(cmh, first.nextSibling);   /* MYP criterion levels from the teacher (migration 081) */
+        (window.BVCM ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/criteria-mark.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () { BVCM.studentView(cmh, { db: S.db, attemptId: a.id, maths: /math/i.test(q.title || '') }); }, function () {}); }
       window.scrollTo(0, 0);
     });
   }

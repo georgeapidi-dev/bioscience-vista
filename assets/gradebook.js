@@ -79,7 +79,7 @@
     if (!classes.some(function (c) { return c.id === cid; })) cid = classes.length ? classes[0].id : '';
     if (ctx.only) cid = ctx.only;
     var from = ''; try { from = sessionStorage.getItem('bv-gb-from') || ''; } catch (e) {}
-    var view = 'tasks', ALL = false;
+    var view = 'tasks', ALL = false, TL = {};
     if (!classes.length) { p.innerHTML = '<p class="emptybox">Create a class first; its gradebook appears here.</p>'; return; }
     var css = '<style>.gb-wrap{overflow:auto;max-height:70vh;border:1px solid #e2e8f0;border-radius:14px}.gb{border-collapse:separate;border-spacing:0;font-size:.86rem;min-width:100%}' +
       '.gb th,.gb td{padding:6px 8px;border-bottom:1px solid #eef2f7;border-right:1px solid #f1f5f9;white-space:nowrap;text-align:center}.gb thead th{position:sticky;top:0;background:#f8fafc;z-index:2;vertical-align:bottom}' +
@@ -127,8 +127,10 @@
           db.from('profiles').select('id,full_name,email,student_number').in('id', ids),
           inChunks(ids, 60, function (ch) { var q = db.from('student_results').select('student_id,lesson_id,quiz_id,title,score,max_score,best_score,recorded_at').in('student_id', ch).limit(20000); if (from) q = q.gte('recorded_at', from); return q; }),
           myp ? inChunks(ids, 60, function (ch) { var q = db.from('item_results').select('student_id,kind,ref,q_ref,got,max,at,class_id').in('student_id', ch).limit(50000); if (from) q = q.gte('at', from); return q; }) : Promise.resolve([]),
-          paths.length ? inChunks(paths, 150, function (ch) { return db.from('materials').select('path,lesson_id').in('path', ch); }) : Promise.resolve([])
+          paths.length ? inChunks(paths, 150, function (ch) { return db.from('materials').select('path,lesson_id').in('path', ch); }) : Promise.resolve([]),
+          myp ? inChunks(ids, 60, function (ch) { var q = db.from('quiz_attempts').select('student_id,submitted_at,attempt_criteria(criterion,level)').in('student_id', ch).neq('status', 'in_progress').limit(5000); if (from) q = q.gte('submitted_at', from); return q.then(function (r) { return r; }, function () { return {}; }); }) : Promise.resolve([])
         ]).then(function (y) {
+          TL = {}; (y[4] || []).forEach(function (a) { (a.attempt_criteria || []).forEach(function (c) { var o = TL[a.student_id] = TL[a.student_id] || {}; (o[c.criterion] = o[c.criterion] || []).push(+c.level); }); });   // teacher-set best-fit levels (migration 081)
           var exts = (y[3] || []).map(function (m) { return m.lesson_id; }).filter(Boolean);
           return (exts.length ? inChunks(exts, 150, function (ch) { return db.from('lessons').select('id,external_id').in('external_id', ch); }) : Promise.resolve([])).then(function (ls) {
             var lessonSet = {}; ls.forEach(function (l) { lessonSet[l.id] = 1; });
@@ -166,7 +168,12 @@
         letters.split('').forEach(function (L) { var o = (CR[it.student_id] = CR[it.student_id] || {}); o[L] = o[L] || { g: 0, m: 0, n: 0 }; o[L].g += Number(it.got) || 0; o[L].m += Number(it.max) || 0; o[L].n++; });
       });
       function overall(sid) { var g = 0, m = 0; cols.forEach(function (t) { var c = cell[sid + '|' + t.k]; if (c) { g += c.s; m += c.m; } }); return pct(g, m); }
-      function critRow(sid) { var o = CR[sid] || {}, lv = {}, sum = 0, all = true; 'ABCD'.split('').forEach(function (L) { var c = o[L]; lv[L] = c && c.m ? levelOf(pct(c.g, c.m), B.MYP) : null; if (lv[L] == null) all = false; else sum += lv[L]; }); return { lv: lv, sum: sum, all: all, grade: all ? mypGrade(sum) : null }; }
+      function critRow(sid) { var o = CR[sid] || {}, t = TL[sid] || {}, lv = {}, tch = {}, sum = 0, all = true;
+        'ABCD'.split('').forEach(function (L) { var c = o[L];
+          if (t[L] && t[L].length) { lv[L] = Math.round(t[L].reduce(function (a, b) { return a + b; }, 0) / t[L].length); tch[L] = t[L].length; }   // the teacher's own judgements come first
+          else lv[L] = c && c.m ? levelOf(pct(c.g, c.m), B.MYP) : null;
+          if (lv[L] == null) all = false; else sum += lv[L]; });
+        return { lv: lv, tch: tch, sum: sum, all: all, grade: all ? mypGrade(sum) : null }; }
       var CNAMES = maths ? CN_MATHS : CN;
       var scale = B.scale || (myp ? 'MYP' : level), SS = SC[scale];
       function gOf(v) { return scale === 'MYP' || !SS ? null : GB.grade(v, scale, B[scale]); }
@@ -185,10 +192,10 @@
           : '<p class="emptybox">No marked work yet' + (from ? ' since ' + E(from) : '') + (ALL ? '' : ' for tasks set to this class. Tick "Include work not set for this class" to see everything these students have done') + '.</p>';
       } else if (view === 'crit') {
         body.innerHTML = '<p class="small">Each level 0–8 comes from every marked answer that assesses the criterion' + (from ? ' since ' + E(from) : ' this year') + ', using your <a href="#grading">MYP boundaries</a>. The four levels add up to 32 and give the <b>MYP grade 1–7</b> with the IB\'s boundaries (1–5 → 1, 6–9 → 2, 10–14 → 3, 15–18 → 4, 19–23 → 5, 24–27 → 6, 28–32 → 7). ' +
-          'A grade appears only when all four criteria have evidence. These are suggested levels: use your professional judgement for the final best-fit level.</p>' +
+          '✎ = your own best-fit level from marking a test against the criteria (used instead of the level from marks). A grade appears only when all four criteria have evidence. These are suggested levels: use your professional judgement for the final best-fit level.</p>' +
           '<div class="gb-wrap"><table class="gb"><thead><tr><th class="nm">Student</th>' + 'ABCD'.split('').map(function (L) { return '<th title="' + E(CNAMES[L]) + '">' + L + '<br><span class="small muted" style="font-weight:400">' + E(CNAMES[L].split(' ')[0]) + '</span></th>'; }).join('') + '<th>Total /32</th><th>MYP grade</th><th class="small">Evidence (answers A·B·C·D)</th></tr></thead><tbody>' +
           studs.map(function (s) { var r = critRow(s.id), o = CR[s.id] || {};
-            return '<tr><td class="nm">' + E(s.full_name || s.email) + '</td>' + 'ABCD'.split('').map(function (L) { var v = r.lv[L]; return '<td>' + (v == null ? '<span class="muted" title="No marked answers for this criterion yet">–</span>' : '<span class="c l' + v + '">' + v + '</span>') + '</td>'; }).join('') +
+            return '<tr><td class="nm">' + E(s.full_name || s.email) + '</td>' + 'ABCD'.split('').map(function (L) { var v = r.lv[L]; return '<td>' + (v == null ? '<span class="muted" title="No marked answers for this criterion yet">–</span>' : '<span class="c l' + v + '"' + (r.tch[L] ? ' title="Your best-fit level, from ' + r.tch[L] + ' marked test' + (r.tch[L] > 1 ? 's' : '') + '"' : ' title="Worked out from marks"') + '>' + v + (r.tch[L] ? '✎' : '') + '</span>') + '</td>'; }).join('') +
               '<td><b>' + (r.all ? r.sum : '–') + '</b></td><td>' + (r.grade ? '<span class="c fin g' + r.grade + '">' + r.grade + '</span>' : '<span class="small muted">needs ' + 'ABCD'.split('').filter(function (L) { return r.lv[L] == null; }).join(', ') + '</span>') + '</td>' +
               '<td class="small muted">' + 'ABCD'.split('').map(function (L) { return o[L] ? o[L].n : 0; }).join(' · ') + '</td></tr>'; }).join('') + '</tbody></table></div>';
       } else {
