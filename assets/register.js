@@ -1,4 +1,4 @@
-/* Registration wizard · BioscienceVista · by George Apidi (22 Nov 2026, migration 078)
+/* Registration wizard · BioscienceVista · by BioscienceVista (22 Nov 2026, migration 078)
    Student, Teacher and Independent learner: details → pathway → section → subjects → review → (students) class code.
    Every account waits for the admin. The subjects chosen here are requests; the admin authorises them.
    A class code makes a join request that the class teacher approves. One verified email per person. */

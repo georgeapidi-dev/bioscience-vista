@@ -1,4 +1,4 @@
-/* Parents · BioscienceVista · by George Apidi (21 Nov 2026, migration 073)
+/* Parents · BioscienceVista · by BioscienceVista (21 Nov 2026, migration 073)
    A parent types their child's 8-character website code and sees a read-only summary: classes, work set and done, results,
    teacher feedback, topic progress and labs. No account, no sign-in, nothing can be changed. The code stops working when it expires. */
 (function () {

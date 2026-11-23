@@ -1,4 +1,4 @@
-/* Word bank (George Apidi, 23 Nov 2026): every key term is a button; click it to see what it means.
+/* Word bank (BioscienceVista, 23 Nov 2026): every key term is a button; click it to see what it means.
    Definitions are in the page (<script id="bv-defs">): written definitions, or the sentence in this lesson that explains the word. */
 (function () {
   var DEFS = null;   // read on first click: on protected pages the lesson (and its definitions) appears only after sign-in

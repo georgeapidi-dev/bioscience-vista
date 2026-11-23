@@ -1,4 +1,4 @@
-/* IB Biology teaching plan · BioscienceVista · by George Apidi (22 Nov 2026)
+/* IB Biology teaching plan · BioscienceVista · by BioscienceVista (22 Nov 2026)
    Every topic split into lessons that fit the IB guide's recommended hours (SL 110 h, HL 180 h).
    Students: their pathway (SL or HL, from their class), topics in syllabus order, each lesson's duration,
    completed and remaining hours, topic-quiz scores, topics to revise, and SL and HL progress kept apart.

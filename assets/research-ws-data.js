@@ -1,4 +1,4 @@
-/* BioscienceVista · VISTA Research Hub · worksheet content (teacher-created by George Apidi). Loaded before research-ws.js.
+/* BioscienceVista · VISTA Research Hub · worksheet content (teacher-created by BioscienceVista). Loaded before research-ws.js.
    Guided IA worksheets collect data with the site's simulators; exemplar data below came from the same simulator models.
    EE worksheets: one per subject. Practice worksheets: statistics, graphs, evaluation, EE questions and sources. */
 (function () {
