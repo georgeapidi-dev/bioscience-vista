@@ -110,6 +110,8 @@
           return '<section class="grp qc-grp"><h3 class="qc-cls">🏫 ' + E(groups[g].name) + '</h3>' +
             (BV.subj.isMyp(groups[g].cls) ? BV.subj.split(gq, subjOf, lists) : lists(gq)) + '</section>'; }).join('');
       if (!ME.staff) extras(qs, at, now);
+      if (!ME.staff && !EXAM) { var prh = document.createElement('section'); prh.className = 'panel'; prh.id = 'peer'; app.insertBefore(prh, app.firstChild ? app.firstChild.nextSibling : null);   /* 🤝 peer reviews (migration 082) */
+        (window.BVPEER ? Promise.resolve() : new Promise(function (ok, bad) { var x = document.createElement('script'); x.src = '/assets/peer.js?v=' + (window.BV_VER || '5'); x.onload = ok; x.onerror = bad; document.head.appendChild(x); })).then(function () { BVPEER.studentBox(prh, S); }, function () { prh.remove(); }); }
       app.querySelectorAll('[data-reqq]').forEach(function (b) { b.onclick = function () { b.disabled = true;
         S.db.rpc('request_quiz', { qid: b.getAttribute('data-reqq'), cid: b.getAttribute('data-cls') }).then(function (r) { if (r.error) { b.disabled = false; alert(S.nice(r.error)); return; } list(); }); }; });
       function goCls(v) { var u = new URL(location.href); if (v) u.searchParams.set('class', v); else u.searchParams.delete('class'); history.replaceState(null, '', u); list(); }
