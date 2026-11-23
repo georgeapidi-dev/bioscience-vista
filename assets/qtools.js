@@ -470,7 +470,9 @@
       '<li><b>Date and title:</b> ' + esc(title) + '</li><li><b>Lesson objectives:</b> copy ' + (objs ? 'the ' + objs + ' objectives' : 'the objectives') + ' at the top of the lesson.</li>' +
       (terms ? '<li><b>Key terms:</b> ' + esc(terms) + ', each with a one-line meaning.</li>' : '') +
       '<li><b>Short notes:</b> 3–5 bullet points in your own words from the lesson notes.</li><li><b>Summary:</b> two or three sentences on the big idea of the lesson.</li><li><b>Diagram:</b> ' + esc(dia) + '</li></ol>';
-    var anchor = oh && oh.closest('.card, section, div'), first = document.querySelector('section.step');
+    /* straight after the student's name (sign-in) box; otherwise after the objectives, otherwise before step 1 */
+    var nm = document.getElementById('sname') || document.querySelector('input[autocomplete="name"], input[name="name"], #studentName, #name');
+    var anchor = (nm && nm.closest('.card, section')) || (oh && oh.closest('.card, section, div')), first = document.querySelector('section.step');
     if (anchor && anchor !== document.body && !anchor.closest('section.step')) anchor.parentNode.insertBefore(box, anchor.nextSibling); else first.parentNode.insertBefore(box, first);
   })();
   function qText(ta) { var q = ta.closest('.q, .question, li, fieldset'), l = q && q.querySelector('.ql, legend, label, p'); return l ? l.textContent : (q ? q.textContent.slice(0, 400) : ''); }
