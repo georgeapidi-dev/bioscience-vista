@@ -2361,6 +2361,8 @@
     '.cc-meter{height:8px;border-radius:99px;background:#eef1f6;overflow:hidden}.cc-meter i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--k),color-mix(in srgb,var(--k) 50%,#22d3ee))}',
     '.cc-card-s,.cc-card-d{font-size:.8rem;color:var(--mut)}.cc-card-d{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '.cc-card-a{display:flex;gap:6px;align-items:center;margin-top:auto;padding-top:6px}.cc-card-a .btn{border-radius:999px}.cc-card-a .cc-menu{margin-left:auto}',
+    '#cc-ins table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--sh)}#cc-ins th{background:#f8fafc;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b}#cc-ins td,#cc-ins th{padding:9px 12px;border-bottom:1px solid #f1f5f9}',
+    '.cc-top:has(+ #pane .cc-hello) h1{display:none}.cc-top:has(+ #pane .cc-hello){margin-bottom:8px}',
     '[data-sec="results"] table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--sh)}[data-sec="results"] th{background:#f8fafc;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b}',
     '[data-sec="results"] td,[data-sec="results"] th{padding:9px 12px;border-bottom:1px solid #f1f5f9}[data-sec="results"] tr:last-child td{border-bottom:0}',
     '.cc-as{border-radius:16px}.cc-cust{border-radius:18px;box-shadow:var(--sh)}',
@@ -2611,7 +2613,7 @@
           '<div data-sec="classes"><div class="cc-h3"><h3>My classes</h3><a class="small" href="#classes">Manage classes →</a></div>' +
           (rows.length ? '<div class="cc-cards">' + rows.map(function (c) {   /* class cards (23 Nov 2026 redesign) */
             var ss = stud[c.id] || [], act = ss.filter(function (s) { return active[s]; }).length, mk = N.att.filter(function (a) { return ss.indexOf(a.student_id) >= 0; }).length, wait = N.en.filter(function (e) { return e.class_id === c.id && e.status === 'pending'; }).length;
-            var pc = ss.length ? Math.round(100 * act / ss.length) : 0, prog = [c.programme, c.level].filter(Boolean).join(' · ');
+            var pc = ss.length ? Math.round(100 * act / ss.length) : 0, prog = [c.programme, c.level].filter(function (v, i, a) { return v && a.indexOf(v) === i && !(i && String(a[0] || '').toLowerCase().indexOf(String(v).toLowerCase()) >= 0); }).join(' · ');
             return '<article class="cc-card' + (ss.length ? '' : ' dim') + '" style="--k:' + hue(c.id) + '"><div class="cc-card-h"><a class="nm" href="#classes/' + c.id + '">' + E(c.name) + '</a><button type="button" class="cc-star' + (FV.indexOf(c.id) >= 0 ? ' on' : '') + '" data-fav="' + c.id + '" title="Favourite: show first" aria-label="Favourite ' + E(c.name) + '">★</button></div>' +
               (prog ? '<div class="cc-card-p">' + E(prog) + '</div>' : '') +
               '<div class="cc-card-n"><span><b>' + ss.length + '</b> students</span>' + (mk ? '<a class="cc-badge warn" href="#marking">' + mk + ' to mark</a>' : '') + (wait ? '<a class="cc-badge" href="#approvals">🙋 ' + wait + ' waiting</a>' : '') + '</div>' +
