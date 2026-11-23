@@ -1,6 +1,17 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>My dashboard · BioscienceVista</title><meta name="robots" content="noindex">
+<title>My dashboard · BioscienceVista</title>
+<meta name="description" content="My dashboard — an interactive lesson with questions, activities and feedback on BioscienceVista.">
+<link rel="canonical" href="https://biosciencevista.com/progress/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BioscienceVista">
+<meta property="og:title" content="My dashboard">
+<meta property="og:description" content="My dashboard — an interactive lesson with questions, activities and feedback on BioscienceVista.">
+<meta property="og:url" content="https://biosciencevista.com/progress/">
+<meta property="og:image" content="https://biosciencevista.com/assets/share/generic.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="BioscienceVista — Science you can explore">
+<meta name="twitter:card" content="summary_large_image"><meta name="robots" content="noindex">
 <style>
 :root{--bg:#f6f8f6;--card:#fff;--ink:#1f2a24;--muted:#5d6b62;--green:#1b6b3a;--line:#d5e0d8}
 @media (prefers-color-scheme:dark){:root{--bg:#111714;--card:#1a221d;--ink:#e6efe9;--muted:#9fb0a5;--green:#5fbf83;--line:#2f3d34}}
@@ -16,7 +27,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "5NTsJSlsFJy50/to", "ct": "pjZB0QtLtAdKPOrA3bYziSFrP29BbxL8GOG476Zp6HNRUXR54DH4AbcI1nqdGydQkYNOPJTVz56ZqK56kdP0a0BlA4iGfdhAhFqnXlapktop/cSezd/ot8LPOjQC71yj4aeq48JYjOb4ceqezTubN4RJ5/G9ZkkO96pCLHSW90leqqkKsPFc732qSKSquMv0KO2zpBk1v0oRlsOigxmJ7hG+q5dMRLh9NE7nkPmx2HGnTugKedwNOgDDmwGjgeB94F6Z3vpCqPvvh6EH5lK13v7yuRqSqb2rh7PhTiEJCISuCiS+A4P12HOjud4tDH1PwrxBZMhEH5nDIBMMpeym7B+nP6d55VQ75nci1EY1O1AD/KCOPON7DvjBWEPgHHEiymso1LRStvtcf4r29kgFXn1hM7ceZ8Xh5GgpHVEheq3Dg5JOs2xQ+Un1/rrRPG6Fp/N372ynkoTLeK6KIEg8nxbDbcENTlsqrWAA4VtIwil34DfVICeXNvU8JAllkbMWse1h0kJaxTrJiFBBeONerzt4Y+NQsdg8l9fA8CTBDJcqdgH3XDJyz/t4FEaLi8KI9vFEFkv2YZjQz6v31N7vuQ=="};
+var P = {"v": "1d5badf4", "iv": "KPDx09NhFWOZdAiV", "ct": "ammeJiTyJzfgRXHZGrH1hJVeNtzIr8TpZqSfVm01i2nR+q+8HWdLJK4tE0J/iN58IR2wNY4U0ONWNEwO0DPgYh31p5UppShz/RS6NfVqfgc5nUBol/R3J/7aJrZ1eD/6W6Ql6mlYVUcZBy04B23aEicREOz9dsUc+8ydVX9Txfw6MKrony7DbBZb7nygy2O2UeAfC8AQ80+moych3DdBwYOsrDlBbxApWHrb8WDzDOKWH5s1O81iLFrnvbmJf6QLE9mr0B25q6cq+AjZaQKv2ZBhWX0LIhDU0nBRif8FjIEmK+5h4ULf7DPig/9Ine3UMnpwvCnpXjumD54b7IJplkhMQr2lZZWWse5ntveDjxOp66bcdCV/eMMZNh7wMzJE8NJmV6gQ1qPD0hzV0VgPPa8QcMBsT3U/1MbI6d7N76py54PRaS8eq7tSgh1k1UiHrH//bUZkK4ejLUTvZPVa/62XUy3YPLpChP3qtZNPkuRyzTxeSsYCCPz7XGGNEnlQJqfHp0RuSud353xH51nW3Q8I90qYplFEsUZDSvt9ucOQ+Zoxra5T+8SIgzgiAk/51AzwLPqVondrYgcYJPRsgA=="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
