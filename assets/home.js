@@ -19,38 +19,70 @@
     var pHf = function (p) { return Math.exp(-Math.pow((p - 7) / 1.6, 2)); };
     var Tf = function (t) { var q = Math.pow(2, (t - 37) / 10); return t <= 40 ? q : q * Math.exp(-Math.pow((t - 40) / 6, 2)); };
     var rate = function () { return 100 * pHf(+pH.value) * Tf(+T.value) / Tf(40) * 1; };
-    var W = 640, H = 360, parts = [], prods = [], enz = [];
-    function size() { var r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1; cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0); }
-    for (var i = 0; i < 5; i++) enz.push({ x: 90 + i * 115, y: 190 + (i % 2 ? -50 : 50), a: 0 });
-    for (var j = 0; j < 34; j++) parts.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * 1.6, vy: (Math.random() - .5) * 1.6 });
+    /* colourful version (23 Nov 2026): a cell-like background, enzymes in five colours with shading, glowing substrate,
+       product pairs that sparkle away, a ring at each reaction, and a filled graph. The canvas keeps the shape of its box. */
+    var W = 640, H = 360, parts = [], prods = [], rings = [], enz = [], blobs = [];
+    var HUES = [[34, 197, 94], [139, 92, 246], [6, 182, 212], [244, 63, 94], [59, 130, 246]];
+    function place() {
+      var SP = [[.27, .42], [.73, .4], [.2, .6], [.8, .6], [.5, .53]];   // clear of the graph (top) and the rate box (bottom centre)
+      enz = SP.map(function (q, i) { return { x: W * q[0], y: H * q[1], a: i, c: HUES[i] }; });
+      blobs = []; for (var b = 0; b < 7; b++) blobs.push({ x: Math.random() * W, y: Math.random() * H, rx: 30 + Math.random() * 50, ry: 20 + Math.random() * 35, h: [190, 260, 320, 150, 40][b % 5] });
+    }
+    function size() { var r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1; if (!r.width) return; W = r.height / r.width > .8 ? 420 : 640; H = Math.round(W * r.height / r.width); cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0); place(); }
+    place();
+    for (var j = 0; j < 36; j++) parts.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * 1.6, vy: (Math.random() - .5) * 1.6, t: [] });
+    var mix = function (c, g, k) { return [0, 1, 2].map(function (n) { return Math.round(c[n] * k + g * (1 - k)); }); };
+    var rgba = function (c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; };
     function draw() {
-      var r = rate(), shape = pHf(+pH.value) * (+T.value > 45 ? Math.max(0, 1 - (+T.value - 45) / 20) : 1);
-      ctx.clearRect(0, 0, W, H);
-      // enzymes: the active site gap closes as the shape is lost
+      var r = rate(), shape = pHf(+pH.value) * (+T.value > 45 ? Math.max(0, 1 - (+T.value - 45) / 20) : 1), hot = Math.min(1, Math.max(0, (+T.value - 20) / 50));
+      // the cell: cool at low temperature, warmer when hot, with faint organelles
+      var bg = ctx.createRadialGradient(W / 2, H / 2, 10, W / 2, H / 2, Math.max(W, H) * .7);
+      bg.addColorStop(0, 'rgb(' + Math.round(236 + 19 * hot) + ',' + Math.round(253 - 10 * hot) + ',' + Math.round(250 - 20 * hot) + ')');
+      bg.addColorStop(.6, 'rgb(' + Math.round(224 + 20 * hot) + ',' + Math.round(231 - 10 * hot) + ',255)'); bg.addColorStop(1, 'rgb(' + Math.round(250) + ',' + Math.round(220 - 20 * hot) + ',' + Math.round(240 - 10 * hot) + ')');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      blobs.forEach(function (b) { ctx.fillStyle = 'hsla(' + b.h + ',80%,70%,.16)'; ctx.beginPath(); ctx.ellipse(b.x, b.y, b.rx, b.ry, b.x / 90, 0, 7); ctx.fill(); });
+      // enzymes: shaded, coloured; the active site closes and the colour fades as the shape is lost
       enz.forEach(function (e) {
-        var gap = 0.35 + 0.45 * shape;
-        ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.a);
-        ctx.fillStyle = 'rgba(22,163,74,.9)'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 30, gap, Math.PI * 2 - gap); ctx.closePath(); ctx.fill();
+        var gap = 0.35 + 0.45 * shape, c = mix(e.c, 160, .35 + .65 * shape), wob = shape < .5 && !reduce ? Math.sin(Date.now() / 90 + e.a) * (1 - shape) * 3 : 0;
+        ctx.save(); ctx.translate(e.x + wob, e.y); ctx.rotate(e.a);
+        ctx.shadowColor = rgba(c, .45); ctx.shadowBlur = 16;
+        var g = ctx.createRadialGradient(-10, -10, 4, 0, 0, 36); g.addColorStop(0, rgba(mix(c, 255, .55), 1)); g.addColorStop(.7, rgba(c, 1)); g.addColorStop(1, rgba(mix(c, 0, .7), 1));
+        ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 32, gap, Math.PI * 2 - gap); ctx.closePath(); ctx.fill();
+        ctx.shadowBlur = 0; ctx.strokeStyle = rgba(mix(c, 0, .6), .8); ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.ellipse(-12, -14, 8, 4, -.6, 0, 7); ctx.fill();
         ctx.restore();
-        if (!reduce) e.a += 0.003;
+        if (!reduce) e.a += 0.004;
       });
-      // substrate particles move faster when hot; near an enzyme they react with a probability set by the rate
+      // substrate: glowing orange beads, faster (with short trails) when hot
       var speed = 0.6 + (+T.value) / 40;
       parts.forEach(function (p) {
-        if (!reduce) { p.x += p.vx * speed; p.y += p.vy * speed; if (p.x < 0 || p.x > W) p.vx *= -1; if (p.y < 0 || p.y > H) p.vy *= -1; }
-        enz.forEach(function (e) { var dx = p.x - e.x, dy = p.y - e.y; if (dx * dx + dy * dy < 1300 && Math.random() < r / 2500) { prods.push({ x: e.x + 34, y: e.y, l: 60 }); p.x = Math.random() * W; p.y = Math.random() < .5 ? 0 : H; } });
-        ctx.fillStyle = '#F59E0B'; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, 7); ctx.fill();
+        if (!reduce) { p.t.push([p.x, p.y]); if (p.t.length > 2 + Math.round(6 * hot)) p.t.shift(); p.x += p.vx * speed; p.y += p.vy * speed; if (p.x < 0 || p.x > W) p.vx *= -1; if (p.y < 0 || p.y > H) p.vy *= -1; }
+        enz.forEach(function (e) { var dx = p.x - e.x, dy = p.y - e.y; if (dx * dx + dy * dy < 1400 && Math.random() < r / 2500) { prods.push({ x: e.x + 34, y: e.y, l: 70, c: e.c }); rings.push({ x: e.x, y: e.y, l: 24, c: e.c }); p.x = Math.random() * W; p.y = Math.random() < .5 ? 0 : H; p.t = []; } });
+        p.t.forEach(function (q, k) { ctx.fillStyle = 'rgba(251,146,60,' + (k / p.t.length) * .25 + ')'; ctx.beginPath(); ctx.arc(q[0], q[1], 4, 0, 7); ctx.fill(); });
+        var g = ctx.createRadialGradient(p.x - 2, p.y - 2, 1, p.x, p.y, 8); g.addColorStop(0, '#fff7c2'); g.addColorStop(.45, '#fbbf24'); g.addColorStop(1, '#ea580c');
+        ctx.shadowColor = 'rgba(251,146,60,.7)'; ctx.shadowBlur = 10; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
       });
-      prods = prods.filter(function (q) { q.l--; if (!reduce) { q.x += 1.2; q.y -= .4; } ctx.fillStyle = 'rgba(2,132,199,' + (q.l / 60) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 7); ctx.arc(q.x + 7, q.y, 4, 0, 7); ctx.fill(); return q.l > 0; });
-      // mini graph: rate against pH, with the current point
-      var gx = 18, gy = H - 18, gw = 170, gh = 70;
-      ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fillRect(gx - 8, gy - gh - 22, gw + 16, gh + 30);
+      // a ring of the enzyme's colour at each reaction
+      rings = rings.filter(function (o) { o.l--; ctx.strokeStyle = rgba(o.c, o.l / 24); ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(o.x, o.y, 34 + (24 - o.l) * 1.6, 0, 7); ctx.stroke(); return o.l > 0; });
+      // product: pairs of blue beads drifting away, with a sparkle
+      prods = prods.filter(function (q) {
+        q.l--; if (!reduce) { q.x += 1.3; q.y -= .5; } var a = q.l / 70;
+        ctx.fillStyle = 'rgba(14,165,233,' + a + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, 5, 0, 7); ctx.fill();
+        ctx.fillStyle = 'rgba(99,102,241,' + a + ')'; ctx.beginPath(); ctx.arc(q.x + 9, q.y + 2, 5, 0, 7); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,' + a + ')'; ctx.beginPath(); ctx.arc(q.x - 1.5, q.y - 1.5, 1.6, 0, 7); ctx.arc(q.x + 7.5, q.y + .5, 1.6, 0, 7); ctx.fill();
+        return q.l > 0; });
+      // mini graph, top centre so a round frame does not cut it: rate against pH, filled, with the current point
+      var gw = 170, gh = 58, gx = W / 2 - gw / 2, gy = H * .1 + gh + 20;
+      ctx.fillStyle = 'rgba(255,255,255,.82)'; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(gx - 10, gy - gh - 22, gw + 20, gh + 32, 10); else ctx.rect(gx - 10, gy - gh - 22, gw + 20, gh + 32); ctx.fill();
+      var top = function (k) { var ph = 1 + k * 13 / 60; return gy - gh * pHf(ph) * Tf(+T.value) / Tf(40); };
+      var fg = ctx.createLinearGradient(gx, 0, gx + gw, 0); fg.addColorStop(0, 'rgba(236,72,153,.35)'); fg.addColorStop(.5, 'rgba(139,92,246,.35)'); fg.addColorStop(1, 'rgba(6,182,212,.35)');
+      ctx.fillStyle = fg; ctx.beginPath(); ctx.moveTo(gx, gy); for (var k = 0; k <= 60; k++) ctx.lineTo(gx + k * gw / 60, top(k)); ctx.lineTo(gx + gw, gy); ctx.closePath(); ctx.fill();
+      var lg = ctx.createLinearGradient(gx, 0, gx + gw, 0); lg.addColorStop(0, '#ec4899'); lg.addColorStop(.5, '#8b5cf6'); lg.addColorStop(1, '#06b6d4');
+      ctx.strokeStyle = lg; ctx.lineWidth = 2.5; ctx.beginPath(); for (k = 0; k <= 60; k++) { if (k) ctx.lineTo(gx + k * gw / 60, top(k)); else ctx.moveTo(gx, top(0)); } ctx.stroke();
       ctx.strokeStyle = '#94A3B8'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(gx, gy - gh); ctx.lineTo(gx, gy); ctx.lineTo(gx + gw, gy); ctx.stroke();
-      ctx.strokeStyle = '#7C3AED'; ctx.lineWidth = 2.5; ctx.beginPath();
-      for (var k = 0; k <= 60; k++) { var ph = 1 + k * 13 / 60, y = gy - gh * pHf(ph) * Tf(+T.value) / Tf(40); if (k) ctx.lineTo(gx + k * gw / 60, y); else ctx.moveTo(gx, y); }
-      ctx.stroke();
-      var cx = gx + (+pH.value - 1) / 13 * gw, cy = gy - gh * r / 100; ctx.fillStyle = '#DB2777'; ctx.beginPath(); ctx.arc(cx, cy, 5, 0, 7); ctx.fill();
-      ctx.fillStyle = '#334155'; ctx.font = '11px Inter, sans-serif'; ctx.fillText('rate against pH', gx, gy - gh - 8);
+      var cx = gx + (+pH.value - 1) / 13 * gw, cy = gy - gh * r / 100;
+      ctx.shadowColor = '#db2777'; ctx.shadowBlur = 10; ctx.fillStyle = '#DB2777'; ctx.beginPath(); ctx.arc(cx, cy, 5.5, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.fillStyle = '#334155'; ctx.font = '600 11px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('rate against pH', gx + gw / 2, gy - gh - 8); ctx.textAlign = 'left';
       meter.textContent = Math.round(r) + ' %';
       if (!reduce) requestAnimationFrame(draw);
     }
