@@ -1,11 +1,1 @@
-/* BioscienceVista · reviews on the home page: only reviews from real students, parents and teachers that the admin has published. */
-document.addEventListener('DOMContentLoaded', function () {
-  var box = document.getElementById('reviews'), S = window.BVS; if (!box || !S || !S.db) return;
-  S.db.from('reviews').select('who,display_name,school,rating,body,created_at').eq('status', 'approved').order('created_at', { ascending: false }).limit(12).then(function (r) {
-    var rows = r.data || [], E = S.E;
-    if (!rows.length) { box.querySelector('.rv-list').innerHTML = '<p class="muted">Be one of the first to review BioscienceVista: open <a href="/dashboard/">your dashboard</a> after a lesson and press ⭐ Review BioscienceVista.</p>'; return; }
-    box.querySelector('.rv-list').innerHTML = rows.map(function (v) {
-      return '<figure class="rv"><div class="rv-st" aria-label="' + v.rating + ' out of 5 stars">' + '★'.repeat(v.rating) + '<span>' + '★'.repeat(5 - v.rating) + '</span></div><blockquote>' + E(v.body) + '</blockquote><figcaption><b>' + E(v.display_name) + '</b> · ' + E(v.who) + (v.school ? ', ' + E(v.school) : '') + '</figcaption></figure>';
-    }).join('');
-  });
-});
+document.addEventListener("DOMContentLoaded",function(){var r=document.getElementById("reviews"),t=window.BVS;!r||!t||!t.db||t.db.from("reviews").select("who,display_name,school,rating,body,created_at").eq("status","approved").order("created_at",{ascending:!1}).limit(12).then(function(n){var o=n.data||[],a=t.E;if(!o.length){r.querySelector(".rv-list").innerHTML='<p class="muted">Be one of the first to review BioscienceVista: open <a href="/dashboard/">your dashboard</a> after a lesson and press ⭐ Review BioscienceVista.</p>';return}r.querySelector(".rv-list").innerHTML=o.map(function(e){return'<figure class="rv"><div class="rv-st" aria-label="'+e.rating+' out of 5 stars">'+"★".repeat(e.rating)+"<span>"+"★".repeat(5-e.rating)+"</span></div><blockquote>"+a(e.body)+"</blockquote><figcaption><b>"+a(e.display_name)+"</b> · "+a(e.who)+(e.school?", "+a(e.school):"")+"</figcaption></figure>"}).join("")})});
