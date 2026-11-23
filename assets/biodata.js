@@ -1,4 +1,4 @@
-/* BioData Lab · BioscienceVista · by BioscienceVista (phase 8)
+/* BioData Lab · BioscienceVista · by George Apidi (phase 8)
    Explore real, published biological datasets: read the source, look at the data, graph it and run the right statistical test.
    Every dataset is a real, citable dataset (files in /assets/biodata/, exported unchanged from the sources named below).
    Statistics come from the VISTA Research Hub library (research-stats.js, checked against SciPy). Nothing here is invented. */

@@ -1,4 +1,4 @@
-/* Science Showcase · BioscienceVista · by BioscienceVista (phase 9, community; migration 066)
+/* Science Showcase · BioscienceVista · by George Apidi (phase 9, community; migration 066)
    Students publish an investigation, diagram, explanation, model or poster to their CLASS gallery. Nothing is public:
    classmates see a post only after a teacher approves it. Classmates cheer and comment; teachers approve, feature,
    return with a note, hide comments or remove a post. Files: pictures and PDFs in the private bucket showcase-files. */

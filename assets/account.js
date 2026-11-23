@@ -1,4 +1,4 @@
-/* My account · BioscienceVista · by BioscienceVista (22 Nov 2026, migration 078)
+/* My account · BioscienceVista · by George Apidi (22 Nov 2026, migration 078)
    Status of the registration, email verification, profile, authorised subjects, Free/Premium membership, classes,
    devices and sessions, two-step sign-in, password, and the account policy. */
 (function () {

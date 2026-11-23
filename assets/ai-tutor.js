@@ -1,4 +1,4 @@
-/* AI Science Tutor · BioscienceVista · by BioscienceVista (phase 4)
+/* AI Science Tutor · BioscienceVista · by George Apidi (phase 4)
    A chat with seven learning modes. Answers come from the ai-tutor server function (keys stay on the server, daily free limit).
    It teaches and questions; it never does assessed work. The Help Desk (teacher's notes, send to teacher) stays below on the page. */
 (function () {

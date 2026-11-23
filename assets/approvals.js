@@ -1,4 +1,4 @@
-/* Approval Centre · BioscienceVista admin · by BioscienceVista (22 Nov 2026, migration 078)
+/* Approval Centre · BioscienceVista admin · by George Apidi (22 Nov 2026, migration 078)
    Every registration in one place: groups, search and filters (name, school, country, role, pathway, section, subject, date,
    status, membership), account decisions with history, authorised subjects, Free/Premium (1, 3, 6, 12 months or custom dates),
    extra access, devices and sessions, security flags, and the access level of every course, topic, lesson and examination. */

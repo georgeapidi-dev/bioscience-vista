@@ -1,4 +1,4 @@
-/* Research Poster Creator · BioscienceVista · by BioscienceVista
+/* Research Poster Creator · BioscienceVista · by George Apidi
    Build a printable scientific poster (A0, A1 or A3) from an IA, EE or personal project, or from scratch.
    Works without an account (kept in this browser); signed-in students can import from their projects and save the poster to them.
    Printing uses the browser's "Save as PDF" at the exact paper size. */

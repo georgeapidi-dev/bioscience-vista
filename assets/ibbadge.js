@@ -1,4 +1,4 @@
-/* IB lesson header (Biology, Chemistry, Physics, ESS, Maths AA/AI): topic code, lesson n of N, duration, SL/HL and teaching hours · by BioscienceVista (22 Nov 2026)
+/* IB lesson header (Biology, Chemistry, Physics, ESS, Maths AA/AI): topic code, lesson n of N, duration, SL/HL and teaching hours · by George Apidi (22 Nov 2026)
    Data from window.BV_IBL (written by build_site.py from data/ib_bio_plan.json). */
 (function () {
   var d = window.BV_IBL; if (!d) return;

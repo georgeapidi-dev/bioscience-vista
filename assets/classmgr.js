@@ -1,4 +1,4 @@
-/* My classes: codes, join requests and members · BioscienceVista · by BioscienceVista (22 Nov 2026, migration 078)
+/* My classes: codes, join requests and members · BioscienceVista · by George Apidi (22 Nov 2026, migration 078)
    Teachers create classes only in the subjects the admin authorised. Each class has a code that can be renewed, revoked or
    given an end date. A student who types the code sends a request; the teacher approves or rejects it here. */
 (function () {
