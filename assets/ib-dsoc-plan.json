@@ -601,7 +601,58 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-33-lesson1",
+"id": "DSOC-33-L1",
+"title": "Types of computers: mainframes, servers, personal computers, tablets, smart and mobile devices, and wearables",
+"level": "SL",
+"range": "3.3A",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-33-lesson2",
+"id": "DSOC-33-L2",
+"title": "Inside the computer: motherboard, CPU, memory, storage, graphics and sound, power supply, input and output devices, and sensors",
+"level": "SL",
+"range": "3.3B",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-33-lesson3",
+"id": "DSOC-33-L3",
+"title": "Interfaces and software: graphical and haptic interfaces, operating systems, applications and malicious software",
+"level": "SL",
+"range": "3.3B",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "dsoc-33-lesson4",
+"id": "DSOC-33-L4",
+"title": "Computer coding: languages, rules and uses",
+"level": "SL",
+"range": "3.3C",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "dsoc-33-lesson5",
+"id": "DSOC-33-L5",
+"title": "The evolution of computing: generations, Moore's law and emerging computing such as quantum computing",
+"level": "SL",
+"range": "3.3D",
+"minutes": 80,
+"hour": "Hours 6–7"
+}
+]
 },
 {
 "code": "3.4",
@@ -617,7 +668,58 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-34-lesson1",
+"id": "DSOC-34-L1",
+"title": "Types and components of networks: wired, wireless and cloud; PAN, LAN, MAN and WAN; client-server and peer-to-peer; routers, switches and modems",
+"level": "SL",
+"range": "3.4A, 3.4B",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-34-lesson2",
+"id": "DSOC-34-L2",
+"title": "How networks work: standards and protocols, addresses and domain names, capacity, the backbone, and security",
+"level": "SL",
+"range": "3.4C",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-34-lesson3",
+"id": "DSOC-34-L3",
+"title": "Network providers and services, and the world wide web: ISPs, messaging, VoIP, hosting, URLs, HTTP, browsers and the W3C",
+"level": "SL",
+"range": "3.4D, 3.4E",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "dsoc-34-lesson4",
+"id": "DSOC-34-L4",
+"title": "Evolution of the internet and the web: early innovators, social media platforms, and the internet of things",
+"level": "SL",
+"range": "3.4F",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "dsoc-34-lesson5",
+"id": "DSOC-34-L5",
+"title": "Internet dilemmas: privacy and surveillance, identity theft, cybercrime, hacking, social engineering, denial of service, the dark web and trolling",
+"level": "SL",
+"range": "3.4G",
+"minutes": 80,
+"hour": "Hours 6–7"
+}
+]
 },
 {
 "code": "3.5",
