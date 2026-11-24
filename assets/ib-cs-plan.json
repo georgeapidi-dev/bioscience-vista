@@ -1109,7 +1109,78 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-b23-lesson1",
+"id": "CS-B23-L1",
+"title": "Sequence: the order of instructions and its effect on what a program does",
+"level": "SL",
+"range": "B2.3.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-b23-lesson2",
+"id": "CS-B23-L2",
+"title": "Avoiding errors: infinite loops, deadlock and incorrect output",
+"level": "SL",
+"range": "B2.3.1",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-b23-lesson3",
+"id": "CS-B23-L3",
+"title": "Selection: if, else, elif / else if, and relational operators",
+"level": "SL",
+"range": "B2.3.2",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "cs-b23-lesson4",
+"id": "CS-B23-L4",
+"title": "Boolean operators AND, OR, NOT in conditions, and controlling program flow with them",
+"level": "SL",
+"range": "B2.3.2",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "cs-b23-lesson5",
+"id": "CS-B23-L5",
+"title": "Counted loops: for loops, ranges, steps and accumulators",
+"level": "SL",
+"range": "B2.3.3",
+"minutes": 85,
+"hour": "Hours 6–8"
+},
+{
+"n": 6,
+"path": "cs-b23-lesson6",
+"id": "CS-B23-L6",
+"title": "Conditional loops: while and do-while, validation loops, sentinels and choosing the right loop",
+"level": "SL",
+"range": "B2.3.3",
+"minutes": 85,
+"hour": "Hours 8–9"
+},
+{
+"n": 7,
+"path": "cs-b23-lesson7",
+"id": "CS-B23-L7",
+"title": "Functions and modularization: parameters, return values, scope and well-structured reusable code",
+"level": "SL",
+"range": "B2.3.4",
+"minutes": 85,
+"hour": "Hours 9–10"
+}
+]
 },
 {
 "code": "B2.4",
@@ -1125,7 +1196,78 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-b24-lesson1",
+"id": "CS-B24-L1",
+"title": "Efficiency and Big O notation: time and space complexity and scalability",
+"level": "SL",
+"range": "B2.4.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-b24-lesson2",
+"id": "CS-B24-L2",
+"title": "Linear search: construction, tracing and efficiency",
+"level": "SL",
+"range": "B2.4.2",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-b24-lesson3",
+"id": "CS-B24-L3",
+"title": "Binary search: construction, tracing, efficiency, and choosing between linear and binary search",
+"level": "SL",
+"range": "B2.4.2",
+"minutes": 90,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "cs-b24-lesson4",
+"id": "CS-B24-L4",
+"title": "Bubble sort: construction, tracing, the swapped flag, and time and space complexity",
+"level": "SL",
+"range": "B2.4.3",
+"minutes": 90,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "cs-b24-lesson5",
+"id": "CS-B24-L5",
+"title": "Selection sort: construction, tracing, complexity, and comparing it with bubble sort",
+"level": "SL",
+"range": "B2.4.3",
+"minutes": 90,
+"hour": "Hours 7–8"
+},
+{
+"n": 6,
+"path": "cs-b24-lesson6",
+"id": "CS-B24-L6",
+"title": "Recursion: base case, recursive case, the call stack, advantages and limitations, and quicksort",
+"level": "HL",
+"range": "B2.4.4",
+"minutes": 60,
+"hour": "Hours 8–9"
+},
+{
+"n": 7,
+"path": "cs-b24-lesson7",
+"id": "CS-B24-L7",
+"title": "Constructing and tracing simple, non-branching recursive algorithms in Python and Java",
+"level": "HL",
+"range": "B2.4.5",
+"minutes": 60,
+"hour": "Hours 9–10"
+}
+]
 },
 {
 "code": "B2.5",
@@ -1141,7 +1283,28 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-b25-lesson1",
+"id": "CS-B25-L1",
+"title": "Text files: opening in read, write and append modes, and reading files line by line",
+"level": "SL",
+"range": "B2.5.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-b25-lesson2",
+"id": "CS-B25-L2",
+"title": "Writing, appending and closing text files, and building complete file-processing programs",
+"level": "SL",
+"range": "B2.5.1",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
 },
 {
 "code": "B3.1",
