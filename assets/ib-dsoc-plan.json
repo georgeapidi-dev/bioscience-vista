@@ -1,0 +1,512 @@
+{
+"subject": "IB Diploma Digital Society",
+"name": "IB Digital Society",
+"key": "dsoc",
+"url": "/ib-digital-society-plan/",
+"classes": {
+"SL": "dsoc-sl",
+"HL": "dsoc-hl"
+},
+"class_names": {
+"SL": "IB Digital Society SL",
+"HL": "IB Digital Society HL"
+},
+"theme_prefix": "",
+"about": "IB Diploma Digital Society teaching-hour plan. Hours from the IB guide; lesson durations share each topic's hours. Built by lessongen/ib_plan.py.",
+"source": "IB Digital society guide: recommended teaching hours (introduction 10–15 h; concepts, content and contexts 105–110 h; inquiry project 30 h; HL extension 90 h; SL 150 h, HL 240 h). Topic hours here: introduction 12 h, each concept 4 h, each content topic 7 h, each context 4.5 h, each HL extension topic 30 h..",
+"themes": {
+"1": "Introduction",
+"2": "Concepts",
+"3": "Content",
+"4": "Contexts",
+"5": "HL extension: challenges and interventions"
+},
+"totals": {
+"SL": 120.5,
+"HL": 210.5
+},
+"differences": [],
+"topics": [
+{
+"code": "1.1",
+"name": "What is digital society?",
+"theme": "1",
+"hl_only": false,
+"sl_hours": 12.0,
+"ahl_hours": 0.0,
+"hl_hours": 12.0,
+"understandings": {
+"SL": 7,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-11-lesson1",
+"id": "DSOC-11-L1",
+"title": "Naming our age: information age, network society, fourth industrial revolution, and why \"digital society\" is a contested term",
+"level": "SL",
+"range": "1.1A",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-11-lesson2",
+"id": "DSOC-11-L2",
+"title": "Uneven access: the digital divides between and within countries",
+"level": "SL",
+"range": "1.1B",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-11-lesson3",
+"id": "DSOC-11-L3",
+"title": "Milestones I: from room-sized computers to the integrated circuit, the microprocessor and the personal computer",
+"level": "SL",
+"range": "1.1C",
+"minutes": 90,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "dsoc-11-lesson4",
+"id": "DSOC-11-L4",
+"title": "Milestones II: the internet, online social networks, mobile and cloud computing",
+"level": "SL",
+"range": "1.1C",
+"minutes": 90,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "dsoc-11-lesson5",
+"id": "DSOC-11-L5",
+"title": "Binary digits: how bits and bytes represent text, images and sound",
+"level": "SL",
+"range": "1.1D",
+"minutes": 90,
+"hour": "Hours 7–8"
+},
+{
+"n": 6,
+"path": "dsoc-11-lesson6",
+"id": "DSOC-11-L6",
+"title": "Analogue and digital: continuous signals, discrete values and what changes when we convert",
+"level": "SL",
+"range": "1.1E",
+"minutes": 90,
+"hour": "Hours 8–9"
+},
+{
+"n": 7,
+"path": "dsoc-11-lesson7",
+"id": "DSOC-11-L7",
+"title": "Digitization: turning analogue records into digital data, digital archives and digital preservation",
+"level": "SL",
+"range": "1.1F",
+"minutes": 90,
+"hour": "Hours 10–11"
+},
+{
+"n": 8,
+"path": "dsoc-11-lesson8",
+"id": "DSOC-11-L8",
+"title": "Digitalization: how digital systems change the structure and operation of organizations, and the disruption that follows",
+"level": "SL",
+"range": "1.1G",
+"minutes": 90,
+"hour": "Hours 11–12"
+}
+]
+},
+{
+"code": "2.1",
+"name": "Change",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "2.2",
+"name": "Expression",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "2.3",
+"name": "Identity",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "2.4",
+"name": "Power",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "2.5",
+"name": "Space",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "2.6",
+"name": "Systems",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "2.7",
+"name": "Values and ethics",
+"theme": "2",
+"hl_only": false,
+"sl_hours": 4.0,
+"ahl_hours": 0.0,
+"hl_hours": 4.0,
+"understandings": {
+"SL": 5,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "3.1",
+"name": "Data",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 7.0,
+"ahl_hours": 0.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 9,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "3.2",
+"name": "Algorithms",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 7.0,
+"ahl_hours": 0.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 5,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "3.3",
+"name": "Computers",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 7.0,
+"ahl_hours": 0.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "3.4",
+"name": "Networks and the internet",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 7.0,
+"ahl_hours": 0.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 7,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "3.5",
+"name": "Media",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 7.0,
+"ahl_hours": 0.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "3.6",
+"name": "Artificial intelligence",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 7.0,
+"ahl_hours": 0.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 5,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "3.7",
+"name": "Robots and autonomous technologies",
+"theme": "3",
+"hl_only": false,
+"sl_hours": 7.0,
+"ahl_hours": 0.0,
+"hl_hours": 7.0,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "4.1",
+"name": "Cultural",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 4.5,
+"ahl_hours": 0.0,
+"hl_hours": 4.5,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "4.2",
+"name": "Economic",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 4.5,
+"ahl_hours": 0.0,
+"hl_hours": 4.5,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "4.3",
+"name": "Environmental",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 4.5,
+"ahl_hours": 0.0,
+"hl_hours": 4.5,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "4.4",
+"name": "Health",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 4.5,
+"ahl_hours": 0.0,
+"hl_hours": 4.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "4.5",
+"name": "Human knowledge",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 4.5,
+"ahl_hours": 0.0,
+"hl_hours": 4.5,
+"understandings": {
+"SL": 2,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "4.6",
+"name": "Political",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 4.5,
+"ahl_hours": 0.0,
+"hl_hours": 4.5,
+"understandings": {
+"SL": 4,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "4.7",
+"name": "Social",
+"theme": "4",
+"hl_only": false,
+"sl_hours": 4.5,
+"ahl_hours": 0.0,
+"hl_hours": 4.5,
+"understandings": {
+"SL": 3,
+"HL": 0
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "5.1",
+"name": "Global well-being",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 30.0,
+"hl_hours": 30.0,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "5.2",
+"name": "Governance and human rights",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 30.0,
+"hl_hours": 30.0,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+},
+{
+"code": "5.3",
+"name": "Sustainable development",
+"theme": "5",
+"hl_only": true,
+"sl_hours": 0.0,
+"ahl_hours": 30.0,
+"hl_hours": 30.0,
+"understandings": {
+"SL": 0,
+"HL": 3
+},
+"skills": [],
+"practicals": [],
+"lessons": []
+}
+]
+}
