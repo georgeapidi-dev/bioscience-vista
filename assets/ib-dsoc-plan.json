@@ -1124,7 +1124,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-45-lesson1",
+"id": "DSOC-45-L1",
+"title": "Learning and education I: the design and delivery of formal education in schools and through remote learning",
+"level": "SL",
+"range": "4.5A",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-45-lesson2",
+"id": "DSOC-45-L2",
+"title": "Learning and education II: non-formal and post-formal education, skills training, competency development, self-directed learning and digital pedagogies",
+"level": "SL",
+"range": "4.5A",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-45-lesson3",
+"id": "DSOC-45-L3",
+"title": "Science and technology innovation: approaches to scientific and technology research and development",
+"level": "SL",
+"range": "4.5B",
+"minutes": 90,
+"hour": "Hours 4–5"
+}
+]
 },
 {
 "code": "4.6",
@@ -1140,7 +1171,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-46-lesson1",
+"id": "DSOC-46-L1",
+"title": "Political processes: voting and campaigning, formal and informal participation, lobbying, movements and activism, political advertising and propaganda",
+"level": "SL",
+"range": "4.6A",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-46-lesson2",
+"id": "DSOC-46-L2",
+"title": "Governing bodies, NGOs and non-state actors; conflicts, warfare and terrorism in a digital society",
+"level": "SL",
+"range": "4.6B, 4.6C",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-46-lesson3",
+"id": "DSOC-46-L3",
+"title": "Laws, regulations and policies: crime and lawbreaking, surveillance and monitoring, and public and private policy including professional codes",
+"level": "SL",
+"range": "4.6D",
+"minutes": 90,
+"hour": "Hours 4–5"
+}
+]
 },
 {
 "code": "4.7",
@@ -1156,7 +1218,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-47-lesson1",
+"id": "DSOC-47-L1",
+"title": "Social components of identity: international-mindedness and common humanity; age, gender, race and ethnicity, ability and religion in digital society",
+"level": "SL",
+"range": "4.7A",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-47-lesson2",
+"id": "DSOC-47-L2",
+"title": "Social class: the organisation, role and impacts of social class, and its intersection with employment, education, health and housing in a digital society",
+"level": "SL",
+"range": "4.7B",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-47-lesson3",
+"id": "DSOC-47-L3",
+"title": "Families and relationships: forming and connecting families, friendship and companionship, online relationships and group memberships",
+"level": "SL",
+"range": "4.7C",
+"minutes": 90,
+"hour": "Hours 4–5"
+}
+]
 },
 {
 "code": "5.1",
