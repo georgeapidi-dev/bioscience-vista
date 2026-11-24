@@ -274,7 +274,48 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a21-lesson1",
+"id": "CS-A21-L1",
+"title": "Why we network: LAN, WAN, PAN and VPN, and modern digital infrastructure (the internet, cloud, distributed systems, edge computing and mobile networks)",
+"level": "SL",
+"range": "A2.1.1 – A2.1.2",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-a21-lesson2",
+"id": "CS-A21-L2",
+"title": "Network devices: network interface cards, switches, routers, wireless access points, modems, gateways and hardware firewalls",
+"level": "SL",
+"range": "A2.1.3",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-a21-lesson3",
+"id": "CS-A21-L3",
+"title": "Transport and application protocols: TCP and UDP, HTTP and HTTPS, and DHCP",
+"level": "SL",
+"range": "A2.1.4",
+"minutes": 75,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "cs-a21-lesson4",
+"id": "CS-A21-L4",
+"title": "The TCP/IP model: application, transport, internet and network interface layers, and how they work together",
+"level": "HL",
+"range": "A2.1.5",
+"minutes": 90,
+"hour": "Hours 4–6"
+}
+]
 },
 {
 "code": "A2.2",
@@ -290,7 +331,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a22-lesson1",
+"id": "CS-A22-L1",
+"title": "Star, mesh and hybrid topologies, and the client–server and peer-to-peer models",
+"level": "SL",
+"range": "A2.2.1, A2.2.3",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-a22-lesson2",
+"id": "CS-A22-L2",
+"title": "Network segmentation: segments, subnetting and VLANs for performance and security",
+"level": "SL",
+"range": "A2.2.4",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-a22-lesson3",
+"id": "CS-A22-L3",
+"title": "Servers: DNS, DHCP, file, mail, proxy and web servers, and their scalability, reliability and security",
+"level": "HL",
+"range": "A2.2.2",
+"minutes": 90,
+"hour": "Hours 3–5"
+}
+]
 },
 {
 "code": "A2.3",
@@ -306,7 +378,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a23-lesson1",
+"id": "CS-A23-L1",
+"title": "IP addressing: IPv4 and IPv6, public and private, static and dynamic addresses, and network address translation (NAT)",
+"level": "SL",
+"range": "A2.3.1",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-a23-lesson2",
+"id": "CS-A23-L2",
+"title": "Transmission media (fibre, twisted pair and wireless) and packet switching through switches and routers",
+"level": "SL",
+"range": "A2.3.2 – A2.3.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-a23-lesson3",
+"id": "CS-A23-L3",
+"title": "Static routing and dynamic routing: how each works, and their advantages and disadvantages",
+"level": "HL",
+"range": "A2.3.4",
+"minutes": 90,
+"hour": "Hours 3–5"
+}
+]
 },
 {
 "code": "A2.4",
@@ -322,7 +425,48 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a24-lesson1",
+"id": "CS-A24-L1",
+"title": "Firewalls: filtering traffic with rules, whitelists and blacklists, their strengths and limits, and NAT as extra protection",
+"level": "SL",
+"range": "A2.4.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "cs-a24-lesson2",
+"id": "CS-A24-L2",
+"title": "Encryption: symmetric and asymmetric cryptography, public and private keys, digital certificates and key management",
+"level": "SL",
+"range": "A2.4.4",
+"minutes": 50,
+"hour": "Hours 1–2"
+},
+{
+"n": 3,
+"path": "cs-a24-lesson3",
+"id": "CS-A24-L3",
+"title": "Network vulnerabilities: DDoS, insecure protocols, malware, man-in-the-middle, phishing, SQL injection, XSS, unpatched software, weak authentication and zero-day exploits",
+"level": "HL",
+"range": "A2.4.2",
+"minutes": 85,
+"hour": "Hours 2–4"
+},
+{
+"n": 4,
+"path": "cs-a24-lesson4",
+"id": "CS-A24-L4",
+"title": "Countermeasures: encrypted protocols, MFA, password policies, input validation, CSP, IDS/IPS, DDoS mitigation, email filtering, certificates, VPNs, updates, wireless controls, testing and training",
+"level": "HL",
+"range": "A2.4.3",
+"minutes": 80,
+"hour": "Hours 4–5"
+}
+]
 },
 {
 "code": "A3.1",
