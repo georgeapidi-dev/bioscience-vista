@@ -467,7 +467,58 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-31-lesson1",
+"id": "DSOC-31-L1",
+"title": "Data, information, knowledge and wisdom; types of data and metadata",
+"level": "SL",
+"range": "3.1A, 3.1B",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-31-lesson2",
+"id": "DSOC-31-L2",
+"title": "Uses of data and the data life cycle",
+"level": "SL",
+"range": "3.1C, 3.1D",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-31-lesson3",
+"id": "DSOC-31-L3",
+"title": "Collecting, organising and representing data: primary and secondary data, databases, and visualizations",
+"level": "SL",
+"range": "3.1E, 3.1F",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "dsoc-31-lesson4",
+"id": "DSOC-31-L4",
+"title": "Data security: encryption, data masking, data erasure and blockchain",
+"level": "SL",
+"range": "3.1G",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "dsoc-31-lesson5",
+"id": "DSOC-31-L5",
+"title": "Big data, data analytics and data dilemmas: bias, ownership, privacy and surveillance",
+"level": "SL",
+"range": "3.1H, 3.1I",
+"minutes": 80,
+"hour": "Hours 6–7"
+}
+]
 },
 {
 "code": "3.2",
@@ -483,7 +534,58 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-32-lesson1",
+"id": "DSOC-32-L1",
+"title": "What makes an algorithm: unambiguous, finite, well-defined inputs and outputs, feasible",
+"level": "SL",
+"range": "3.2A",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-32-lesson2",
+"id": "DSOC-32-L2",
+"title": "Inside an algorithm: instructions, variables, conditionals and loops",
+"level": "SL",
+"range": "3.2B",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-32-lesson3",
+"id": "DSOC-32-L3",
+"title": "Representing algorithms: natural language, flow charts, pseudocode and programming languages",
+"level": "SL",
+"range": "3.2C",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "dsoc-32-lesson4",
+"id": "DSOC-32-L4",
+"title": "Uses of algorithms: sorting, searching, filtering, prioritizing, classifying, associating, counting, and creating software and AI",
+"level": "SL",
+"range": "3.2D",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "dsoc-32-lesson5",
+"id": "DSOC-32-L5",
+"title": "Algorithmic dilemmas: bias and fairness, accountability and transparency, black boxes, and the loss of human judgement",
+"level": "SL",
+"range": "3.2E",
+"minutes": 80,
+"hour": "Hours 6–7"
+}
+]
 },
 {
 "code": "3.3",
