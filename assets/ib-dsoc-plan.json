@@ -1265,7 +1265,58 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-51-lesson1",
+"id": "DSOC-51-L1",
+"title": "Challenges and interventions: the HL extended inquiry framework, and local and global inequalities (economic inequality, food insecurity, access to health care)",
+"level": "HL",
+"range": "5.1A",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-51-lesson2",
+"id": "DSOC-51-L2",
+"title": "Changing populations: population growth, ageing and youth populations, and migration and the movement of people",
+"level": "HL",
+"range": "5.1B",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-51-lesson3",
+"id": "DSOC-51-L3",
+"title": "The future of work: automation and employment, meaningful and secure employment, and the collective needs of workers",
+"level": "HL",
+"range": "5.1C",
+"minutes": 90,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "dsoc-51-lesson4",
+"id": "DSOC-51-L4",
+"title": "Global well-being extended inquiry workshop I: investigating a challenge, finding sources and mapping stakeholders",
+"level": "HL",
+"range": "5.1A, 5.1C",
+"minutes": 90,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "dsoc-51-lesson5",
+"id": "DSOC-51-L5",
+"title": "Global well-being extended inquiry workshop II: evaluating unseen interventions and recommending steps for future action",
+"level": "HL",
+"range": "5.1A, 5.1C",
+"minutes": 90,
+"hour": "Hours 7–8"
+}
+]
 },
 {
 "code": "5.2",
@@ -1281,7 +1332,48 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-52-lesson1",
+"id": "DSOC-52-L1",
+"title": "Conflict, peace and security: wars and civil conflicts, and regional, national and global security in a digital society",
+"level": "HL",
+"range": "5.2A",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-52-lesson2",
+"id": "DSOC-52-L2",
+"title": "Participation and representation: political speech and activism, and access and representation in governing bodies and institutions",
+"level": "HL",
+"range": "5.2B",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-52-lesson3",
+"id": "DSOC-52-L3",
+"title": "Diversity and discrimination: gender equality, racial and ethnic discrimination, ability, access and inclusion, and tolerance for religions and cultural differences",
+"level": "HL",
+"range": "5.2C",
+"minutes": 90,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "dsoc-52-lesson4",
+"id": "DSOC-52-L4",
+"title": "Governance and human rights extended inquiry workshop: evaluating the guide's sample interventions and unseen interventions",
+"level": "HL",
+"range": "5.2A, 5.2C",
+"minutes": 90,
+"hour": "Hours 5–6"
+}
+]
 },
 {
 "code": "5.3",
@@ -1297,7 +1389,48 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-53-lesson1",
+"id": "DSOC-53-L1",
+"title": "Climate change and action: global, national, regional and local efforts to address climate change, and the role of digital systems",
+"level": "HL",
+"range": "5.3A",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-53-lesson2",
+"id": "DSOC-53-L2",
+"title": "Responsible use of resources: responsible consumption, production and distribution, and designing for responsible use of shared infrastructures (energy, transport, built spaces)",
+"level": "HL",
+"range": "5.3B",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-53-lesson3",
+"id": "DSOC-53-L3",
+"title": "Managing pollution and waste: monitoring, prevention and reduction of pollution and waste using digital systems",
+"level": "HL",
+"range": "5.3C",
+"minutes": 90,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "dsoc-53-lesson4",
+"id": "DSOC-53-L4",
+"title": "Sustainable development extended inquiry workshop: comparing interventions, the HL inquiry portfolio and recommending future action",
+"level": "HL",
+"range": "5.3A, 5.3C",
+"minutes": 90,
+"hour": "Hours 5–6"
+}
+]
 }
 ]
 }
