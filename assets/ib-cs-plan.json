@@ -482,7 +482,18 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a31-lesson1",
+"id": "CS-A31-L1",
+"title": "Relational databases: tables, primary, foreign and composite keys and relationships, and their benefits and limitations",
+"level": "SL",
+"range": "A3.1.1",
+"minutes": 60,
+"hour": "Hour 1"
+}
+]
 },
 {
 "code": "A3.2",
@@ -498,7 +509,58 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a32-lesson1",
+"id": "CS-A32-L1",
+"title": "Database schemas (conceptual, logical, physical) and choosing data types",
+"level": "SL",
+"range": "A3.2.1, A3.2.3",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-a32-lesson2",
+"id": "CS-A32-L2",
+"title": "Entity relationship diagrams: entities, attributes, relationships, cardinality and modality",
+"level": "SL",
+"range": "A3.2.2",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-a32-lesson3",
+"id": "CS-A32-L3",
+"title": "Constructing tables with primary, foreign, composite and concatenated keys, and keeping data integrity",
+"level": "SL",
+"range": "A3.2.4",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "cs-a32-lesson4",
+"id": "CS-A32-L4",
+"title": "Normal forms: 1NF, 2NF and 3NF, atomicity, functional, partial and transitive dependencies",
+"level": "SL",
+"range": "A3.2.5",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "cs-a32-lesson5",
+"id": "CS-A32-L5",
+"title": "Normalising a real database to 3NF step by step, and when to denormalise for performance",
+"level": "SL",
+"range": "A3.2.6 – A3.2.7",
+"minutes": 80,
+"hour": "Hours 6–7"
+}
+]
 },
 {
 "code": "A3.3",
@@ -514,7 +576,48 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a33-lesson1",
+"id": "CS-A33-L1",
+"title": "SQL: data definition and data manipulation languages, and SELECT queries with filtering, pattern matching and ordering",
+"level": "SL",
+"range": "A3.3.1 – A3.3.2",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-a33-lesson2",
+"id": "CS-A33-L2",
+"title": "Joining two tables, GROUP BY and HAVING, and changing data with INSERT, UPDATE and DELETE (and what that does to indexes)",
+"level": "SL",
+"range": "A3.3.2 – A3.3.3",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-a33-lesson3",
+"id": "CS-A33-L3",
+"title": "Aggregate functions (COUNT, SUM, AVG, MAX, MIN) on grouped data, and virtual and materialised views",
+"level": "HL",
+"range": "A3.3.4 – A3.3.5",
+"minutes": 90,
+"hour": "Hours 4–5"
+},
+{
+"n": 4,
+"path": "cs-a33-lesson4",
+"id": "CS-A33-L4",
+"title": "Transactions and data integrity: ACID (atomicity, consistency, isolation, durability) and BEGIN TRANSACTION, COMMIT and ROLLBACK",
+"level": "HL",
+"range": "A3.3.6",
+"minutes": 90,
+"hour": "Hours 5–6"
+}
+]
 },
 {
 "code": "A3.4",
@@ -530,7 +633,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a34-lesson1",
+"id": "CS-A34-L1",
+"title": "Beyond relational: NoSQL, cloud, spatial and in-memory databases and where each is used",
+"level": "HL",
+"range": "A3.4.1",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-a34-lesson2",
+"id": "CS-A34-L2",
+"title": "Data warehouses for business intelligence, OLAP, and data-mining techniques",
+"level": "HL",
+"range": "A3.4.2 – A3.4.3",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-a34-lesson3",
+"id": "CS-A34-L3",
+"title": "Distributed databases: partitioning, replication, transparency, fault tolerance, concurrency and ACID across sites",
+"level": "HL",
+"range": "A3.4.4",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
 },
 {
 "code": "A4.1",
