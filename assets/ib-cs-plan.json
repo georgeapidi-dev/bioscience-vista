@@ -680,7 +680,28 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a41-lesson1",
+"id": "CS-A41-L1",
+"title": "Types of machine learning (supervised, unsupervised, reinforcement, deep and transfer learning) and their real-world uses",
+"level": "SL",
+"range": "A4.1.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-a41-lesson2",
+"id": "CS-A41-L2",
+"title": "Hardware for machine learning: from laptops to GPUs, TPUs, ASICs, FPGAs, edge devices, cloud platforms and HPC centres",
+"level": "SL",
+"range": "A4.1.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
 },
 {
 "code": "A4.2",
@@ -696,7 +717,28 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a42-lesson1",
+"id": "CS-A42-L1",
+"title": "Data cleaning: outliers, duplicates, incorrect and irrelevant data, formatting, missing values, normalization and standardization",
+"level": "HL",
+"range": "A4.2.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-a42-lesson2",
+"id": "CS-A42-L2",
+"title": "Feature selection (filter, wrapper and embedded methods) and why dimensionality reduction matters",
+"level": "HL",
+"range": "A4.2.2 – A4.2.3",
+"minutes": 90,
+"hour": "Hours 2–3"
+}
+]
 },
 {
 "code": "A4.3",
@@ -712,7 +754,78 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a43-lesson1",
+"id": "CS-A43-L1",
+"title": "Linear regression: predicting continuous outcomes, slope and intercept, and r² as a measure of fit",
+"level": "HL",
+"range": "A4.3.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-a43-lesson2",
+"id": "CS-A43-L2",
+"title": "Classification: K-nearest neighbours and decision trees, with recommendation systems and medical diagnosis",
+"level": "HL",
+"range": "A4.3.2",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-a43-lesson3",
+"id": "CS-A43-L3",
+"title": "Evaluating classifiers: accuracy, precision, recall and F1; hyperparameter tuning; overfitting and underfitting",
+"level": "HL",
+"range": "A4.3.3",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "cs-a43-lesson4",
+"id": "CS-A43-L4",
+"title": "Unsupervised learning: clustering for customer segmentation and association rules for hidden relationships",
+"level": "HL",
+"range": "A4.3.4 – A4.3.5",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "cs-a43-lesson5",
+"id": "CS-A43-L5",
+"title": "Reinforcement learning (agents, states, actions, rewards, policies, exploration v exploitation) and genetic algorithms",
+"level": "HL",
+"range": "A4.3.6 – A4.3.7",
+"minutes": 85,
+"hour": "Hours 6–8"
+},
+{
+"n": 6,
+"path": "cs-a43-lesson6",
+"id": "CS-A43-L6",
+"title": "Artificial neural networks: the perceptron (inputs, weights, bias, activation, output) and multi-layer perceptrons",
+"level": "HL",
+"range": "A4.3.8",
+"minutes": 85,
+"hour": "Hours 8–9"
+},
+{
+"n": 7,
+"path": "cs-a43-lesson7",
+"id": "CS-A43-L7",
+"title": "Convolutional neural networks for images, and choosing and comparing machine learning models",
+"level": "HL",
+"range": "A4.3.9 – A4.3.10",
+"minutes": 85,
+"hour": "Hours 9–10"
+}
+]
 },
 {
 "code": "A4.4",
@@ -728,7 +841,28 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a44-lesson1",
+"id": "CS-A44-L1",
+"title": "Ethics of machine learning: bias in training data, fairness, accountability, transparency, privacy, consent, security, environmental and societal impact, and online communication",
+"level": "SL",
+"range": "A4.4.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-a44-lesson2",
+"id": "CS-A44-L2",
+"title": "Technology in daily life: reassessing ethical guidelines, and the impact of quantum computing, AR, VR and pervasive AI on society, rights, privacy and equity",
+"level": "SL",
+"range": "A4.4.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+}
+]
 },
 {
 "code": "B1.1",
