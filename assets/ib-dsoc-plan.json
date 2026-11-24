@@ -735,7 +735,58 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-35-lesson1",
+"id": "DSOC-35-L1",
+"title": "Types of digital media: text, images, audio, video and web pages; games and e-sports; blogs, podcasts, live streams, memes and wikis; user-generated and synthetic media",
+"level": "SL",
+"range": "3.5A",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-35-lesson2",
+"id": "DSOC-35-L2",
+"title": "Characteristics of digital media: rapid sharing, efficient storage, interactivity, linear and non-linear content, and convergence",
+"level": "SL",
+"range": "3.5B",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-35-lesson3",
+"id": "DSOC-35-L3",
+"title": "Immersive digital media: augmented reality (AR), virtual reality (VR), mixed reality (MR) and extended reality (XR)",
+"level": "SL",
+"range": "3.5C",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "dsoc-35-lesson4",
+"id": "DSOC-35-L4",
+"title": "Media dilemmas I: addiction and wellbeing, the future of journalism, authenticity and deepfakes",
+"level": "SL",
+"range": "3.5D",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "dsoc-35-lesson5",
+"id": "DSOC-35-L5",
+"title": "Media dilemmas II: ownership, copyright and copyleft, Creative Commons, open source and remix culture; obsolescence and preservation; censorship and decency",
+"level": "SL",
+"range": "3.5D",
+"minutes": 80,
+"hour": "Hours 6–7"
+}
+]
 },
 {
 "code": "3.6",
@@ -751,7 +802,58 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-36-lesson1",
+"id": "DSOC-36-L1",
+"title": "Types of AI: strong (general) and weak (narrow) AI, and the Turing test",
+"level": "SL",
+"range": "3.6A",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-36-lesson2",
+"id": "DSOC-36-L2",
+"title": "Machine learning: supervised, unsupervised and reinforcement learning, deep learning, and its uses",
+"level": "SL",
+"range": "3.6B",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-36-lesson3",
+"id": "DSOC-36-L3",
+"title": "Neural networks: how they learn complex, non-linear relationships and generalise to new data",
+"level": "SL",
+"range": "3.6C",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "dsoc-36-lesson4",
+"id": "DSOC-36-L4",
+"title": "The evolution of AI: science fiction and philosophy, cybernetics, AI winters, the singularity and the multiplicity",
+"level": "SL",
+"range": "3.6D",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "dsoc-36-lesson5",
+"id": "DSOC-36-L5",
+"title": "AI dilemmas: fairness and bias, accountability, transparency, uneven laws and governance, and automation",
+"level": "SL",
+"range": "3.6E",
+"minutes": 80,
+"hour": "Hours 6–7"
+}
+]
 },
 {
 "code": "3.7",
