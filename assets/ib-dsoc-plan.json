@@ -326,7 +326,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-25-lesson1",
+"id": "DSOC-25-L1",
+"title": "Space: how people organise, construct and represent space, and the functions different spaces serve",
+"level": "SL",
+"range": "2.5A, 2.5B",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-25-lesson2",
+"id": "DSOC-25-L2",
+"title": "Access, movement and flows: who and what can move through digital and physical space",
+"level": "SL",
+"range": "2.5C",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-25-lesson3",
+"id": "DSOC-25-L3",
+"title": "Scales of space: local, regional, national, global and virtual",
+"level": "SL",
+"range": "2.5D",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
 },
 {
 "code": "2.6",
@@ -342,7 +373,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-26-lesson1",
+"id": "DSOC-26-L1",
+"title": "Systems: structure, order and interacting elements in human, natural and built environments",
+"level": "SL",
+"range": "2.6A, 2.6B",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-26-lesson2",
+"id": "DSOC-26-L2",
+"title": "Change within systems: intended and unintended consequences",
+"level": "SL",
+"range": "2.6C",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-26-lesson3",
+"id": "DSOC-26-L3",
+"title": "Models, maps and visualizations: understanding connections within and between systems",
+"level": "SL",
+"range": "2.6D",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
 },
 {
 "code": "2.7",
@@ -358,7 +420,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-27-lesson1",
+"id": "DSOC-27-L1",
+"title": "Values and ethics: right and wrong, fair and unfair, just and unjust, legal and illegal in digital society",
+"level": "SL",
+"range": "2.7A, 2.7B",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-27-lesson2",
+"id": "DSOC-27-L2",
+"title": "Whose values? Personal, shared, collective and professional ethics, and how they become codes, rules, policies and laws",
+"level": "SL",
+"range": "2.7C, 2.7D",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-27-lesson3",
+"id": "DSOC-27-L3",
+"title": "Values shape technology: how values and ethics influence ideas, objects, practices, systems and spaces",
+"level": "SL",
+"range": "2.7E",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
 },
 {
 "code": "3.1",
