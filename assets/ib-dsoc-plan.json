@@ -936,7 +936,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-41-lesson1",
+"id": "DSOC-41-L1",
+"title": "Arts, entertainment and popular culture: new genres and forms, online galleries and streaming, memes, forums, internet celebrities and influencers",
+"level": "SL",
+"range": "4.1A",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-41-lesson2",
+"id": "DSOC-41-L2",
+"title": "Home, leisure and tourism: smart homes and services, sports, gaming and hobbies, travel, sharing platforms and tourism",
+"level": "SL",
+"range": "4.1B",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-41-lesson3",
+"id": "DSOC-41-L3",
+"title": "Heritage, customs and celebrations, and subcultures: rites of passage, preserving cultural heritage, youth cultures and online communities",
+"level": "SL",
+"range": "4.1C, 4.1D",
+"minutes": 90,
+"hour": "Hours 4–5"
+}
+]
 },
 {
 "code": "4.2",
@@ -952,7 +983,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-42-lesson1",
+"id": "DSOC-42-L1",
+"title": "Business, employment and labour: how digital systems reshape businesses, diversity, working practices, remote work, the gig economy and automation",
+"level": "SL",
+"range": "4.2A, 4.2B",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-42-lesson2",
+"id": "DSOC-42-L2",
+"title": "Goods, services and currencies: e-commerce and online marketplaces, targeted marketing, cryptocurrency, NFTs, cashless societies, micro-transactions and additive manufacturing",
+"level": "SL",
+"range": "4.2C",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-42-lesson3",
+"id": "DSOC-42-L3",
+"title": "Globalisation: borderless selling, global sourcing, offshoring, outsourcing, reshoring, inshoring and insourcing",
+"level": "SL",
+"range": "4.2D",
+"minutes": 90,
+"hour": "Hours 4–5"
+}
+]
 },
 {
 "code": "4.3",
