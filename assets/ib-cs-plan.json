@@ -878,7 +878,48 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-b11-lesson1",
+"id": "CS-B11-L1",
+"title": "Constructing a problem specification: problem statement, constraints, objectives, inputs, outputs and evaluation criteria",
+"level": "SL",
+"range": "B1.1.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-b11-lesson2",
+"id": "CS-B11-L2",
+"title": "The four concepts of computational thinking: decomposition, pattern recognition, abstraction and algorithmic design",
+"level": "SL",
+"range": "B1.1.2",
+"minutes": 75,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-b11-lesson3",
+"id": "CS-B11-L3",
+"title": "Applying computational thinking to solve problems in software development, data analysis, machine learning, database design and network security",
+"level": "SL",
+"range": "B1.1.3",
+"minutes": 75,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "cs-b11-lesson4",
+"id": "CS-B11-L4",
+"title": "Tracing flowcharts: standard symbols, flow of control, tracking variables and determining output",
+"level": "SL",
+"range": "B1.1.4",
+"minutes": 75,
+"hour": "Hours 4–5"
+}
+]
 },
 {
 "code": "B2.1",
@@ -894,7 +935,78 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-b21-lesson1",
+"id": "CS-B21-L1",
+"title": "Variables and data types: Boolean, char, decimal (float/double), integer and string",
+"level": "SL",
+"range": "B2.1.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-b21-lesson2",
+"id": "CS-B21-L2",
+"title": "Global and local variables: scope, lifetime, and tracing programs that use both",
+"level": "SL",
+"range": "B2.1.1",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-b21-lesson3",
+"id": "CS-B21-L3",
+"title": "Strings and substrings: indexing, length, slicing and searching",
+"level": "SL",
+"range": "B2.1.2",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "cs-b21-lesson4",
+"id": "CS-B21-L4",
+"title": "Manipulating strings: concatenating, replacing, altering case, trimming and building new strings",
+"level": "SL",
+"range": "B2.1.2",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "cs-b21-lesson5",
+"id": "CS-B21-L5",
+"title": "Exception handling: points of failure (unexpected input, unavailable resources, logic errors) and try/except/catch/finally",
+"level": "SL",
+"range": "B2.1.3",
+"minutes": 85,
+"hour": "Hours 6–8"
+},
+{
+"n": 6,
+"path": "cs-b21-lesson6",
+"id": "CS-B21-L6",
+"title": "Debugging techniques: trace tables, print statements, breakpoints and step-by-step execution",
+"level": "SL",
+"range": "B2.1.4",
+"minutes": 85,
+"hour": "Hours 8–9"
+},
+{
+"n": 7,
+"path": "cs-b21-lesson7",
+"id": "CS-B21-L7",
+"title": "Robust programs in practice: validating input, handling exceptions and debugging a complete program",
+"level": "SL",
+"range": "B2.1.3 – B2.1.4",
+"minutes": 85,
+"hour": "Hours 9–10"
+}
+]
 },
 {
 "code": "B2.2",
