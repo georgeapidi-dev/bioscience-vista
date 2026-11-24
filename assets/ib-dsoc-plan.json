@@ -1030,7 +1030,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-43-lesson1",
+"id": "DSOC-43-L1",
+"title": "Natural resources and ecosystems: resources used by digital systems, monitoring and protecting ecosystems and biodiversity, and natural events and disasters",
+"level": "SL",
+"range": "4.3A",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-43-lesson2",
+"id": "DSOC-43-L2",
+"title": "Pollution and waste: recycling and waste management, types of pollution, green computing, e-waste and planned obsolescence",
+"level": "SL",
+"range": "4.3B",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-43-lesson3",
+"id": "DSOC-43-L3",
+"title": "Cities, infrastructure and agriculture: smart cities, local and regional infrastructure, transport and wayfinding with GPS and GIS, and digital agriculture",
+"level": "SL",
+"range": "4.3C, 4.3D",
+"minutes": 90,
+"hour": "Hours 4–5"
+}
+]
 },
 {
 "code": "4.4",
@@ -1046,7 +1077,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-44-lesson1",
+"id": "DSOC-44-L1",
+"title": "Medicine and health: digital diagnostics and care, telemedicine, medical research and development, and health records, monitoring and tracking",
+"level": "SL",
+"range": "4.4A",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-44-lesson2",
+"id": "DSOC-44-L2",
+"title": "The human body: human enhancement, bio-hacking, implanted technology, exoskeletons and organ printing; accessibility for differently abled people; ergonomic design",
+"level": "SL",
+"range": "4.4B",
+"minutes": 90,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-44-lesson3",
+"id": "DSOC-44-L3",
+"title": "Mental health: approaches to understanding and ensuring mental health, and the intersections of digital systems with attention, addiction and anxiety",
+"level": "SL",
+"range": "4.4C",
+"minutes": 90,
+"hour": "Hours 4–5"
+}
+]
 },
 {
 "code": "4.5",
