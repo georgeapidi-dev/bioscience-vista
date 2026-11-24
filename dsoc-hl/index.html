@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IB Digital Society HL · Class lessons · BioscienceVista</title>
+<meta name="description" content="IB Digital Society HL · Class lessons — an interactive lesson with questions, activities and feedback on BioscienceVista.">
+<link rel="canonical" href="https://biosciencevista.com/dsoc-hl/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BioscienceVista">
+<meta property="og:title" content="IB Digital Society HL · Class lessons">
+<meta property="og:description" content="IB Digital Society HL · Class lessons — an interactive lesson with questions, activities and feedback on BioscienceVista.">
+<meta property="og:url" content="https://biosciencevista.com/dsoc-hl/">
+<meta property="og:image" content="https://biosciencevista.com/assets/share/generic.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="BioscienceVista — Science you can explore">
+<meta name="twitter:card" content="summary_large_image"><meta name="robots" content="noindex">
+<style>
+:root{--bg:#f6f8f6;--card:#fff;--ink:#1f2a24;--muted:#5d6b62;--green:#1b6b3a;--line:#d5e0d8}
+@media (prefers-color-scheme:dark){:root{--bg:#111714;--card:#1a221d;--ink:#e6efe9;--muted:#9fb0a5;--green:#5fbf83;--line:#2f3d34}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding:16px}
+#box{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;display:none}
+h1{margin:0 0 6px;font-size:1.3rem}p{margin:0 0 14px;color:var(--muted);font-size:.93rem}
+a.btn{display:block;text-align:center;font-weight:600;border-radius:9px;padding:11px;background:var(--green);color:#fff;text-decoration:none;margin-top:8px}
+a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)}
+@media (prefers-color-scheme:dark){a.btn{color:#0d1510}a.btn.alt{color:var(--green)}}
+#wait{color:var(--muted)}
+</style></head><body>
+<div id="wait">Opening…</div><div id="box" role="alert"></div>
+<script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
+<script>
+var P = {"v": "1d5badf4", "p": "/dsoc-hl/", "iv": "suy2tzLPWDw1+2la", "ct": "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"};
+(function () {
+  if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
+  var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
+  function u8(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+  function say(h) { document.getElementById('wait').style.display = 'none'; var b = document.getElementById('box'); b.innerHTML = h; b.style.display = 'block'; }
+  function login() { location.replace('/login/?next=' + encodeURIComponent(here)); }
+  function open(k) {
+    return crypto.subtle.importKey('raw', u8(k), 'AES-GCM', false, ['decrypt'])
+      .then(function (key) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8(P.iv) }, key, u8(P.ct)); })
+      .then(function (pt) { var html = te.decode(pt); document.open(); document.write(html); document.close(); });
+  }
+  if (!window.crypto || !crypto.subtle) { say('<h1>Browser not supported</h1><p>Please use Chrome, Edge, Safari or Firefox.</p>'); return; }
+  var BV = window.BV || {};
+  if (!window.supabase || !BV.sbUrl) { say('<h1>Could not open this page</h1><p>Check your internet connection and reload.</p>'); return; }
+  try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('mas-key-') === 0) localStorage.removeItem(k); }); } catch (e) {}
+  var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } });
+  db.auth.getSession().then(function (r) {
+    var s = r.data && r.data.session, T = (document.title || '').replace(/ · BioscienceVista$/, '').replace(/</g, '&lt;');
+    if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
+      if (x && x.data) return open(x.data);
+      say('<h1>🔒 ' + T + '</h1><p>This material is for members of BioscienceVista. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+    }, function () { login(); });
+    if (!s) return say('<h1>🔒 ' + T + '</h1><p>This material is for members of BioscienceVista. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+    var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
+    try { k = sessionStorage.getItem(C); } catch (e) {}
+    if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });
+    return fetchKey();
+    function fetchKey() {
+      return (P.p ? db.rpc('page_key', { p: P.p }) : db.rpc('site_key')).then(function (x) {
+        if (x.error) throw x.error;
+        if (!x.data) return db.rpc('admin_ok').then(function (ok) { if (ok.data === false) return say('<h1>⏳ Waiting for approval</h1><p>Thank you for signing up. The site admin checks every new account before it can open materials. You will be able to open this page as soon as your account is approved.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>'); notOpen(); }, notOpen);
+        function notOpen() { return say(P.p ? '<h1>This page is not open for your account</h1><p>You can open the subjects the admin authorised for you, within your membership (Free or Premium), and what your teacher shares with your approved class. To see this one, ask for the subject on your Account page or join its class.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'
+          : '<h1>Not open yet</h1><p>You are signed in. Materials open when the admin has approved your account and subjects, and your membership or class allows them.</p><a class="btn" href="/account/">My account</a><a class="btn alt" href="/premium/">Premium access</a>'); }
+        return open(x.data).then(function () { try { sessionStorage.setItem(C, x.data); } catch (e) {} },
+          function () { say('<h1>This page was updated</h1><p>Reload to open the newest version.</p><a class="btn" href="' + here + '">Reload</a>'); });
+      });
+    }
+  }).catch(function () { say('<h1>Could not open this page</h1><p>Please sign in again.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a>'); });
+})();
+</script></body></html>
