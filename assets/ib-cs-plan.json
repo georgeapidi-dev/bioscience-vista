@@ -37,9 +37,9 @@
 "name": "Computer hardware and operation",
 "theme": "A1",
 "hl_only": false,
-"sl_hours": 5.25,
+"sl_hours": 4.75,
 "ahl_hours": 2.25,
-"hl_hours": 7.5,
+"hl_hours": 7.0,
 "understandings": {
 "SL": 7,
 "HL": 2
@@ -54,7 +54,7 @@
 "title": "Inside the CPU: the ALU, the control unit, the registers and the three buses, and single-core, multi-core and co-processors",
 "level": "SL",
 "range": "A1.1.1",
-"minutes": 80,
+"minutes": 75,
 "hour": "Hours 1–2"
 },
 {
@@ -64,7 +64,7 @@
 "title": "Primary memory (registers, cache, RAM and ROM), cache hits and misses, and the fetch–decode–execute cycle",
 "level": "SL",
 "range": "A1.1.4 – A1.1.5",
-"minutes": 80,
+"minutes": 70,
 "hour": "Hours 2–3"
 },
 {
@@ -74,7 +74,7 @@
 "title": "The role of the GPU, and internal and external secondary storage (SSD, HDD, eMMC, optical, flash, memory cards and NAS)",
 "level": "SL",
 "range": "A1.1.2, A1.1.7",
-"minutes": 80,
+"minutes": 70,
 "hour": "Hours 3–4"
 },
 {
@@ -84,8 +84,8 @@
 "title": "Compression (lossy and lossless, run-length encoding and transform coding) and cloud services (SaaS, PaaS and IaaS)",
 "level": "SL",
 "range": "A1.1.8 – A1.1.9",
-"minutes": 75,
-"hour": "Hours 5–6"
+"minutes": 70,
+"hour": "Hours 4–5"
 },
 {
 "n": 5,
@@ -95,7 +95,7 @@
 "level": "HL",
 "range": "A1.1.3",
 "minutes": 70,
-"hour": "Hours 6–7"
+"hour": "Hours 5–6"
 },
 {
 "n": 6,
@@ -105,7 +105,7 @@
 "level": "HL",
 "range": "A1.1.6",
 "minutes": 65,
-"hour": "Hours 7–8"
+"hour": "Hours 6–7"
 }
 ]
 },
@@ -114,32 +114,124 @@
 "name": "Data representation and computer logic",
 "theme": "A1",
 "hl_only": false,
-"sl_hours": 3.0,
+"sl_hours": 3.5,
 "ahl_hours": 0.0,
-"hl_hours": 3.0,
+"hl_hours": 3.5,
 "understandings": {
-"SL": 4,
+"SL": 5,
 "HL": 0
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a12-lesson1",
+"id": "CS-A12-L1",
+"title": "Binary and hexadecimal integers, and converting between binary, hexadecimal and decimal",
+"level": "SL",
+"range": "A1.2.1",
+"minutes": 55,
+"hour": "Hour 1"
+},
+{
+"n": 2,
+"path": "cs-a12-lesson2",
+"id": "CS-A12-L2",
+"title": "How binary stores integers, characters and strings, images, sound and video, and what that means for storage",
+"level": "SL",
+"range": "A1.2.2",
+"minutes": 55,
+"hour": "Hours 1–2"
+},
+{
+"n": 3,
+"path": "cs-a12-lesson3",
+"id": "CS-A12-L3",
+"title": "Logic gates (AND, OR, NOT, NAND, NOR, XOR, XNOR) and their symbols, and combining gates into logic diagrams",
+"level": "SL",
+"range": "A1.2.3, A1.2.5",
+"minutes": 50,
+"hour": "Hours 2–3"
+},
+{
+"n": 4,
+"path": "cs-a12-lesson4",
+"id": "CS-A12-L4",
+"title": "Truth tables, Boolean expressions, Karnaugh maps and Boolean algebra to simplify circuits",
+"level": "SL",
+"range": "A1.2.4 – A1.2.5",
+"minutes": 50,
+"hour": "Hours 3–4"
+}
+]
 },
 {
 "code": "A1.3",
 "name": "Operating systems and control systems",
 "theme": "A1",
 "hl_only": false,
-"sl_hours": 3.0,
+"sl_hours": 2.75,
 "ahl_hours": 3.5,
-"hl_hours": 6.5,
+"hl_hours": 6.25,
 "understandings": {
 "SL": 4,
 "HL": 3
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a13-lesson1",
+"id": "CS-A13-L1",
+"title": "The role of the operating system and its functions: memory, files, devices, scheduling, security, accounting, GUI, virtualization and networking",
+"level": "SL",
+"range": "A1.3.1 – A1.3.2",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-a13-lesson2",
+"id": "CS-A13-L2",
+"title": "Scheduling algorithms (first-come first-served, round robin, priority, multilevel queue), and polling versus interrupts",
+"level": "SL",
+"range": "A1.3.3 – A1.3.4",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-a13-lesson3",
+"id": "CS-A13-L3",
+"title": "Multitasking and resource allocation: context switching, resource contention and deadlock",
+"level": "HL",
+"range": "A1.3.5",
+"minutes": 70,
+"hour": "Hours 3–4"
+},
+{
+"n": 4,
+"path": "cs-a13-lesson4",
+"id": "CS-A13-L4",
+"title": "Control systems: input, process, output and feedback; open and closed loops; controllers, sensors, actuators, transducers and control algorithms",
+"level": "HL",
+"range": "A1.3.6",
+"minutes": 70,
+"hour": "Hours 4–6"
+},
+{
+"n": 5,
+"path": "cs-a13-lesson5",
+"id": "CS-A13-L5",
+"title": "Control systems in the real world: thermostats, lifts, washing machines, traffic signals, irrigation, security systems, automatic doors and autonomous vehicles",
+"level": "HL",
+"range": "A1.3.7",
+"minutes": 70,
+"hour": "Hours 6–7"
+}
+]
 },
 {
 "code": "A1.4",
@@ -155,7 +247,18 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-a14-lesson1",
+"id": "CS-A14-L1",
+"title": "Interpreters, compilers, bytecode and just-in-time compilation: how they work and when to use each",
+"level": "HL",
+"range": "A1.4.1",
+"minutes": 75,
+"hour": "Hours 1–2"
+}
+]
 },
 {
 "code": "A2.1",
