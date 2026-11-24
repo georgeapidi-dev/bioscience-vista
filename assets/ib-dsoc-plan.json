@@ -869,7 +869,58 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-37-lesson1",
+"id": "DSOC-37-L1",
+"title": "Types of robots and autonomous technologies: industrial, service and social robots; the Internet of Things, autonomous vehicles, drones and virtual assistants",
+"level": "SL",
+"range": "3.7A",
+"minutes": 85,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-37-lesson2",
+"id": "DSOC-37-L2",
+"title": "Characteristics of robots and autonomous technologies: sensing, reasoning, moving and acting, and degrees of autonomy",
+"level": "SL",
+"range": "3.7B",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-37-lesson3",
+"id": "DSOC-37-L3",
+"title": "Evolution of robots and autonomous technologies: early automata, robots in science fiction and philosophy, industry, expanding human interaction, machine consciousness and robot rights",
+"level": "SL",
+"range": "3.7C",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "dsoc-37-lesson4",
+"id": "DSOC-37-L4",
+"title": "Robot dilemmas I: anthropomorphism and the uncanny valley, and the complexity of human and environmental interactions",
+"level": "SL",
+"range": "3.7D",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "dsoc-37-lesson5",
+"id": "DSOC-37-L5",
+"title": "Robot dilemmas II: uneven laws and governance, and the displacement of humans in multiple contexts and roles",
+"level": "SL",
+"range": "3.7D",
+"minutes": 80,
+"hour": "Hours 6–7"
+}
+]
 },
 {
 "code": "4.1",
