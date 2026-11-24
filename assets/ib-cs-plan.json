@@ -1022,7 +1022,78 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "cs-b22-lesson1",
+"id": "CS-B22-L1",
+"title": "Static and dynamic data structures: memory allocation, resizing, speed, memory use and flexibility",
+"level": "SL",
+"range": "B2.2.1",
+"minutes": 90,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "cs-b22-lesson2",
+"id": "CS-B22-L2",
+"title": "One-dimensional arrays and lists: creating, indexing, updating and traversing",
+"level": "SL",
+"range": "B2.2.2",
+"minutes": 85,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "cs-b22-lesson3",
+"id": "CS-B22-L3",
+"title": "Two-dimensional arrays and lists: rows, columns, nested loops and grids",
+"level": "SL",
+"range": "B2.2.2",
+"minutes": 85,
+"hour": "Hours 3–5"
+},
+{
+"n": 4,
+"path": "cs-b22-lesson4",
+"id": "CS-B22-L4",
+"title": "Dynamic lists: adding, removing and traversing elements with Python lists and Java ArrayLists",
+"level": "SL",
+"range": "B2.2.2",
+"minutes": 85,
+"hour": "Hours 5–6"
+},
+{
+"n": 5,
+"path": "cs-b22-lesson5",
+"id": "CS-B22-L5",
+"title": "Stacks: last in, first out (LIFO), with push, pop, peek and isEmpty",
+"level": "SL",
+"range": "B2.2.3",
+"minutes": 85,
+"hour": "Hours 6–8"
+},
+{
+"n": 6,
+"path": "cs-b22-lesson6",
+"id": "CS-B22-L6",
+"title": "Queues: first in, first out (FIFO), with enqueue, dequeue, front and isEmpty",
+"level": "SL",
+"range": "B2.2.4",
+"minutes": 85,
+"hour": "Hours 8–9"
+},
+{
+"n": 7,
+"path": "cs-b22-lesson7",
+"id": "CS-B22-L7",
+"title": "Choosing data structures: arrays, lists, stacks and queues for real problems",
+"level": "SL",
+"range": "B2.2.1 – B2.2.4",
+"minutes": 85,
+"hour": "Hours 9–10"
+}
+]
 },
 {
 "code": "B2.3",
