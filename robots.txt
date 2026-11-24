@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /$
 Allow: /catalogue/
+Allow: /cbe/
 Allow: /cambridge/
 Allow: /simulations/$
 Allow: /biology/
