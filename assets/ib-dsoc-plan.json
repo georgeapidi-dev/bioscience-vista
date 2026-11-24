@@ -138,7 +138,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-21-lesson1",
+"id": "DSOC-21-L1",
+"title": "Change: evolution, transformation, adaptation and movement in digital society",
+"level": "SL",
+"range": "2.1A",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-21-lesson2",
+"id": "DSOC-21-L2",
+"title": "Who and what drives change? Evaluating people, ideas, objects and forces, and debating whether change matters",
+"level": "SL",
+"range": "2.1B, 2.1C",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-21-lesson3",
+"id": "DSOC-21-L3",
+"title": "Continuity and discontinuity: what stays the same when digital technologies arrive",
+"level": "SL",
+"range": "2.1D",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
 },
 {
 "code": "2.2",
@@ -154,7 +185,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-22-lesson1",
+"id": "DSOC-22-L1",
+"title": "Expression: representing ideas, emotions and experiences through modes and media",
+"level": "SL",
+"range": "2.2A",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-22-lesson2",
+"id": "DSOC-22-L2",
+"title": "The functions of expression: storytelling, world-building, artistic innovation and political activism",
+"level": "SL",
+"range": "2.2B",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-22-lesson3",
+"id": "DSOC-22-L3",
+"title": "Expression connects and divides: community, free expression and its dilemmas",
+"level": "SL",
+"range": "2.2C",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
 },
 {
 "code": "2.3",
@@ -170,7 +232,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-23-lesson1",
+"id": "DSOC-23-L1",
+"title": "Identity: who we are as people, groups and communities, online and offline",
+"level": "SL",
+"range": "2.3A",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-23-lesson2",
+"id": "DSOC-23-L2",
+"title": "Identity changes: over time, across contexts and through the eyes of others",
+"level": "SL",
+"range": "2.3B",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-23-lesson3",
+"id": "DSOC-23-L3",
+"title": "Intersectional identities: how age, nationality, culture, gender, race, ethnicity and class combine in digital society",
+"level": "SL",
+"range": "2.3C",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
 },
 {
 "code": "2.4",
@@ -186,7 +279,38 @@
 },
 "skills": [],
 "practicals": [],
-"lessons": []
+"lessons": [
+{
+"n": 1,
+"path": "dsoc-24-lesson1",
+"id": "DSOC-24-L1",
+"title": "Power: influence and control in social relations, online and offline",
+"level": "SL",
+"range": "2.4A",
+"minutes": 80,
+"hour": "Hours 1–2"
+},
+{
+"n": 2,
+"path": "dsoc-24-lesson2",
+"id": "DSOC-24-L2",
+"title": "Structural power: how power is built into institutions, organizations, governments and technologies",
+"level": "SL",
+"range": "2.4B",
+"minutes": 80,
+"hour": "Hours 2–3"
+},
+{
+"n": 3,
+"path": "dsoc-24-lesson3",
+"id": "DSOC-24-L3",
+"title": "Unequal power: who gains and who loses in digital society",
+"level": "SL",
+"range": "2.4C",
+"minutes": 80,
+"hour": "Hours 3–4"
+}
+]
 },
 {
 "code": "2.5",
