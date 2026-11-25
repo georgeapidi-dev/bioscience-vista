@@ -29,6 +29,12 @@ Allow: /assets/helpdock.js
 Allow: /assets/guard.js
 Allow: /assets/logo.svg
 Allow: /assets/icon-*.png
+Allow: /favicon.ico
+Allow: /assets/favicon-*.png
+Allow: /assets/vistaed-logo-512.png
+Allow: /assets/apple-touch-icon.png
+Allow: /assets/share/
+Allow: /manifest.webmanifest
 Allow: /assets/fonts/
 Disallow: /
 Sitemap: https://biosciencevista.com/sitemap.xml
