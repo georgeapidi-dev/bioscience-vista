@@ -27,13 +27,14 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "UDhiEaltgacmxAek", "ct": "AuIyG9PyENXHlyib1bST+JEAT17vwWgHY57f6mXI+3NOHbk4VY7km+N3GQgE52wzNdnV41CKvvL519iEvHc7sfhwQNkdkF8W5Et9HHHqIKa+Ikd5q73ulTrO2O2WrWOrWyMD6j6APSo720cpEdqB4OWgF4/K7wIEB4BTQ9OO7yWJ0eXObnL0bqhO4jKWioXrdmw6MYuk+DAN7nQ7sNFQInt5aqYI9K2lxiar+EGI2p6hZZ4IE7MED72k76eJzqHxoBq8tRRuLMTS9e5UIQwjLWkg5V5kKgbdKG8YNRzoFIeBr+WUv0ZNkdGPeiBOi7QDR9/Kafj7hk5OBAqqtsa6IX9RUgQzzgmFRZd4eWAc1nIS9X2/q8V+1UMcygTSXHglDFdMPOV3VkDXwBP8bPl9yMzt9TkFK1PVld1WbiZWKIwVBKHMk62EJpeuQIUiraclyBGvyl4kvstaVH70SZa4sw/BSYUU3IYCjvTIPoGLlu/iOTuC6/YJ9R+FStCegLDmxNaLpFmYGHW/cA/diWRYW6hfLTaEsttVw2w0BB/WK90Db+8xB2o9D8Dr"};
+var P = {"v": "1d5badf4", "iv": "jF6aILLrxV7mQA4j", "ct": "8JPgZiJgE0JbT+CuVNJy/9/35wk8fW2ohrJzU6q4eTIVUQ+HI8/kKzpd4wCiEbiYGQaog63DGuIyLLU4aDgWS1f0knxbGZ7KSZoZyMjaWbEIoacjSCtzZQXpKLCcoo3MEO/vo9lnUX4t49fpXCBWepKFe0DFUujIua7SDiDmaCLICuqrWLlu35lgUBS4M8xgvh0GyR3Jn4rqk886BcRjYIb9lQCOhtWKBftAKAQxhthZPga3BmEcIepAdAOL0NbKGzyn9eHArI7E58kREQ2uYYN+sC18xtDd1hGgensEayU4SJJeaH6GBdnp8gDIPRbytqMbUwPbsYmytmHEzd5IFUZ75JgT5t3nMy4qOb34gMYeeoxpsWRp11gFU1owshNJnugad9G8MUGKRNPbfbnnWh0PpGQdsn/xA5jCpV1Xe3zFAKfRO+MOR0aA4XDPcoXNfAkbAP9UPJdIXm6/RHUOKQSaZnErMBo0jG0LGfL21NP59Uk8jk/r6guvmJT5T2jkwhwLA2rT5uuWhs3Mn16t/N/xWCKyLqTBlQG9BvgCgey2/63pXL5qAqiM"};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
   function u8(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
   function say(h) { document.getElementById('wait').style.display = 'none'; var b = document.getElementById('box'); b.innerHTML = h + (typeof VIS !== 'undefined' && VIS ? '<p style="margin-top:14px;font-size:.9rem">👁 Visitor view. <a href="' + location.pathname + '?visitor=0">Leave visitor view</a></p>' : ''); b.style.display = 'block'; }
   function login() { location.replace('/login/?next=' + encodeURIComponent(here)); }
+  function showPv() { document.open(); document.write(te.decode(u8(P.pv))); document.close(); }   // visitors: the lesson's outline and step 1 (25 Nov 2026)
   function open(k) {
     return crypto.subtle.importKey('raw', u8(k), 'AES-GCM', false, ['decrypt'])
       .then(function (key) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8(P.iv) }, key, u8(P.ct)); })
@@ -49,8 +50,10 @@ var P = {"v": "1d5badf4", "iv": "UDhiEaltgacmxAek", "ct": "AuIyG9PyENXHlyib1bST+
     var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
       if (x && x.data) return open(x.data);
+      if (P.pv) return showPv();
       say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
+    if (!s && P.pv) return showPv();
     if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}

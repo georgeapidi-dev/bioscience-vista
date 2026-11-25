@@ -16,13 +16,14 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "HMVZsnWwhrKyd2pj", "ct": "Z+JBo/xJQypcLrhwGios8akW89uAmkHrjQdGe2IZuD6lSva3YfcbZLHObmcV15+e3wZWBqB24oeT97G/wRCr0aTHGUFHIoNtrUPNMAmYvBAR5mTRR3RS4npwZ4DQCo/KwarGjnTMfHsgjKfGU6joRznhZQL+ShfrGCsUKxmjlaOwZqrn8cXJd+9y1Yz31YfJnoHmSL/oBEjurwHgthaZeDdjmCKdyBxS/oEf5VNiKHDsbjuJibfSrO/C1RY4RcXAPMwUh+IaV9QogSdfRVmjSqiETaSeckhgZDtCTmu24jGbEayReMUkCkw2Ey2r1wziPcZe+0dFmKO8kfr0Cs+ITt00DP9s0yNqn/I3XTmNVTXzihr/mGI3c1V410eJoakV/9juJhr5OXTWXr4AWDOghjMZeOByDsQ3lmaEbcpEc15MSIrCiH1YBs0r6oqYXs09ehwMyvW7CZdm2Y5B9YqCcCsmuFGYLe/NdwS2GI7NiNWFIXKxDyNsMnghPV5Wl7kKFV4/ATGFI6Jmwr3KQAYCixZA7HokKtxbKViGsyyls4mvA4MKOIRpyKEru//Fb2GGKswWLBZbUdxzEy3PHFY87Eil/Nh71cyZVLXEKyCfl1N2CPvViMrwNCyJirIyhvF9kQDowWp5xfTDow9ZXNVp3NxwFYwmbjAWhWxAOijuvIvrOemcMf3bjPAfncgp0HgtW7OhZISI14Ib"};
+var P = {"v": "1d5badf4", "iv": "njp8WKhAKiEHQoR4", "ct": "4bcd/5+m1dTeq3n5MHEuEL7iP2fkbPGs/7aS+FGi/r8GbABV0Gb+hdZJCI5lkLkP6dg2B4DpshU4cl+3PR6xzGTXT9auyGB+OlVhPluN5hfooNX3zseaBNSBiM88zLiRwfLEOKEb0cxJy/IM0ed3UeTmghGoaoxqc6qI+nZ9E+dW83poVToNFd0uuru+2r5G16K4KX+xpOVecmRoKjbKEZXkH1a6un6Ffnt9X+wcUjmJKRb6lavhuUH9x0z7Phh7wwNoB9b2P1VbALUPtc/xw/C2b5zFuwyquCsA+gweVwi87O0XzQa4YWosGfeYIzkngCgHaWn2KH3q7c82YxqJwbNUlDEa8UvK+1PPqbQrCKz53nTEz2KeO0Pj8ltAZjXL7u+KrnACPAIS7aK/RBckMLDJpVhWmWGjRxV4XY7peABi984tY4gdI9ICz7z8T98wPvb5z4yV9JZimacIi5ODdlC+gONYHmTwHO2a9bz2n8NKuvS5mQqUiJLjMz24sWAejV4pGTFD1OLV64mEoaV4iZad4RSSal1hdPYmqevf8pL4YUdQZpeF1rNjAWP0/HbdEIIwF8XCu//HwZ5AvI2Tdf6v0+bEmtYrGhnQurGKvMpEksa4y68eywT7tR/xARggc4B42olVIUT1Rc3lcFa3jpqtwrvtZ6c6V5gYRdxzSRo/7jsghWB92udfLsqL/wo9Ll/Z3xhGi+/k"};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
   function u8(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
   function say(h) { document.getElementById('wait').style.display = 'none'; var b = document.getElementById('box'); b.innerHTML = h + (typeof VIS !== 'undefined' && VIS ? '<p style="margin-top:14px;font-size:.9rem">👁 Visitor view. <a href="' + location.pathname + '?visitor=0">Leave visitor view</a></p>' : ''); b.style.display = 'block'; }
   function login() { location.replace('/login/?next=' + encodeURIComponent(here)); }
+  function showPv() { document.open(); document.write(te.decode(u8(P.pv))); document.close(); }   // visitors: the lesson's outline and step 1 (25 Nov 2026)
   function open(k) {
     return crypto.subtle.importKey('raw', u8(k), 'AES-GCM', false, ['decrypt'])
       .then(function (key) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8(P.iv) }, key, u8(P.ct)); })
@@ -38,8 +39,10 @@ var P = {"v": "1d5badf4", "iv": "HMVZsnWwhrKyd2pj", "ct": "Z+JBo/xJQypcLrhwGios8
     var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
       if (x && x.data) return open(x.data);
+      if (P.pv) return showPv();
       say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
+    if (!s && P.pv) return showPv();
     if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}

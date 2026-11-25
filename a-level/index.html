@@ -27,13 +27,14 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "304QLGEbWWY/7W7i", "ct": "Y1GewNKTrATD/H4tjbFxtZmV61rOZDEHmkoBk9AY+A+2Ex7Wqa1Qew3flapyaVd69gTFdBMLElOMU4F2fzGpleKd+qZp1V39IxMR48LrC8mu+FPoWg/644V1ngQzrEm0dQGmEv8EuNy14BNcVfpHueOGBuy4pbWPm2kc7LLSlLA9ZiWE2HbqTF3TyTbR515C0M0WxM9igKKehTbeLqC9G1n/KiX+EtalnC5KVlaPrdmUW5vlKV4xfQDsMigORren/NJeENiCCPvgwmZnJjQrR0/CRsHpGwEd1QAmviSqkRHl+jSXPqPw5hhN5hllEKazupgBopVDkGLvOVNrcqtNhrnE+AZkbZTmk/009UPMu35DxY3x4fKvf4dGKhZEjqYManhA55m6Lz5OA87StPkidUrWzHHZtDcY4b/bsGY="};
+var P = {"v": "1d5badf4", "iv": "ltIUuIObZh4Wb0y0", "ct": "JEienGtHEcZkpjq3BtOCeNMrn1OTKz5UwzQmy5T5Di9R6qcl3ofULuHQonnGUMFOrJ+r8f7Kcgt7z5ZDq/uRL6aTsUETZ6+Uen3vRqNQDwQf4tV2RWQ/siBCA/Gvp8WlY4glqUwTuiZ6yGhJDM/R8yf4rfMoKGPRVWPEYUJ3YEJ7wywr/sasrOP4Lj8qUiPmXjg/aXZ4g3y7WYkrPmyriJJm0u9qC93qQmtJPnUswed5Kd616FHrQo8AUYKcnTU+aeJp1MRa+GuoYEAOoEhLQua3JyCTWwpd/Pud5gPiog0zwToVxoS38LdnUR1gZMdJLl1YBC25X3OIirlQMDx0+SgSKuAtPDN8dSWxBVAoPO61PBZUCfeEArTpAV+66Vnmuo410KQq8zhta1I3X3sojfZ7h3RYm4W9SSXPn+c="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
   function u8(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
   function say(h) { document.getElementById('wait').style.display = 'none'; var b = document.getElementById('box'); b.innerHTML = h + (typeof VIS !== 'undefined' && VIS ? '<p style="margin-top:14px;font-size:.9rem">👁 Visitor view. <a href="' + location.pathname + '?visitor=0">Leave visitor view</a></p>' : ''); b.style.display = 'block'; }
   function login() { location.replace('/login/?next=' + encodeURIComponent(here)); }
+  function showPv() { document.open(); document.write(te.decode(u8(P.pv))); document.close(); }   // visitors: the lesson's outline and step 1 (25 Nov 2026)
   function open(k) {
     return crypto.subtle.importKey('raw', u8(k), 'AES-GCM', false, ['decrypt'])
       .then(function (key) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8(P.iv) }, key, u8(P.ct)); })
@@ -49,8 +50,10 @@ var P = {"v": "1d5badf4", "iv": "304QLGEbWWY/7W7i", "ct": "Y1GewNKTrATD/H4tjbFxt
     var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
       if (x && x.data) return open(x.data);
+      if (P.pv) return showPv();
       say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
+    if (!s && P.pv) return showPv();
     if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}

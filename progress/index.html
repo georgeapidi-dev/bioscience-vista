@@ -27,13 +27,14 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "0hDinsuWqrxFuo+7", "ct": "pjDBhD7nyZqZh/M6CMihzDUvwH7JMVTt1SwT4jttOv/obTOAUkNfDdHZ/Vf3SpmgcEzS8KYQMFsObntMwTrAJRKLSEAPUnxGklz46k0/ALcOyDTSY6zag3dWxrNF27M0z2BDcnPIl9MAQTSGS3tTijH8l7yACm5qliIDzpflxRHiVdAhvLZQigaf8BWqO2TvepZOXj4gRNy8uh9PTLp45WsQ8bQAx2cHhZTKcM9vVz6VX1dGF2p141t/engXtvlB3d0adkqzS0pamiK82wAKti+zidfyfNiINVe5HX2cxg1Sh6sw4qyuUuEX0wWy+DSHcoP/yVTeX2AoQkENIbv7N9XUwWrdqn2YxrzzyNA4nGxCCXkx9i+frpK2sd+SREfG6etdTB/bGA+GlV1uLlUc5DOQPl9fuFlVD4A79/1A73nFUzVQ8edLzBRRYzdE4WOyzotnn+xqY9AtWl5w4lkBubQqix3O/m8Lv1F2qPOg2Ex6nbDt2pNGAB/QMsB1JNPjFqMMzvwSKJbsutf46e4slenr63ULtlHuy8dwnV5P/8RjknHTn3cl8X32k/1G+ycOBCJ3tGvQ5Ys="};
+var P = {"v": "1d5badf4", "iv": "kjCUJXb/ewF3GNLr", "ct": "QcN/wsjGDuDCftxfhbcmW7HwDzsq60J7VwTVKpd6Fy5VjORTdPhz7lzNiMjz9ayoTPr1YlgAmxDWcqrwi/shnxjBp0twe7/5OboIDpyqOTMY5zpBg2C26DNXaaAiowmiK1/W2DUrZiU7RY6LQ+XrCSIZUz22HZYmvaoye6Et3aI3xKXnhW3W0hVuz1ZalQHDPWl1ZeKvweMeu2gXSayzsQCmmLxi6dI+4pNOWjDyTOvzX4CRa4HlgxOAUJnNsO1zcMfGzES2Qh4YTeSLEWNfertBYd3nHvgEydSsg/+X+su4dx++W+WunEGHyjwJ8G6bnTfomj+JDOvF1gLkRE2AzlMx42tAcZrHU7kSfZX2z/5+0zSivycvc0sR2K3dIRNBgC/xoqp9juN42Q0oXTqaFJz8NJy+trfNVcM4fNUZ1ZVWcA/1zi+nWv7e2Xw6JdEhUQLPC3p87rUQGiHM30n6R4M1boFMz8ZdmWwlbDbQ2v14KuWra+UL3L8+/HLgFpamJPYkYvZpG2gRZ8Ke8qScSG7hE1i4jnmqR+qezU7u0GYLxkU3pI+JoRefpR/0TG3bdckbWjUrnb4="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
   function u8(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
   function say(h) { document.getElementById('wait').style.display = 'none'; var b = document.getElementById('box'); b.innerHTML = h + (typeof VIS !== 'undefined' && VIS ? '<p style="margin-top:14px;font-size:.9rem">👁 Visitor view. <a href="' + location.pathname + '?visitor=0">Leave visitor view</a></p>' : ''); b.style.display = 'block'; }
   function login() { location.replace('/login/?next=' + encodeURIComponent(here)); }
+  function showPv() { document.open(); document.write(te.decode(u8(P.pv))); document.close(); }   // visitors: the lesson's outline and step 1 (25 Nov 2026)
   function open(k) {
     return crypto.subtle.importKey('raw', u8(k), 'AES-GCM', false, ['decrypt'])
       .then(function (key) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8(P.iv) }, key, u8(P.ct)); })
@@ -49,8 +50,10 @@ var P = {"v": "1d5badf4", "iv": "0hDinsuWqrxFuo+7", "ct": "pjDBhD7nyZqZh/M6CMihz
     var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
       if (x && x.data) return open(x.data);
+      if (P.pv) return showPv();
       say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
+    if (!s && P.pv) return showPv();
     if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
