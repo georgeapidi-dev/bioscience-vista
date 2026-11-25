@@ -108,10 +108,25 @@
         S.db.rpc('request_material', { lid: k.getAttribute('data-ask'), cid: k.getAttribute('data-cls') }).then(function (x) { if (x.error) { k.disabled = false; alert(S.nice(x.error)); return; } requests(); }); });
       app.addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('[data-grade]') : null; if (!b) return; grade = b.getAttribute('data-grade'); try { localStorage.setItem('bv-grade', grade); } catch (x) {} draw(); });
       window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (h && subjects.some(function (z) { return z.slug === h; })) { cur = h; q = ''; draw(); } });
+      // Subject tabs grouped by programme, then level, then subject (George, 25 Nov 2026: "organise the buttons well")
+      var FAM = [['IB', /^(myp|ib)[- ]|^ib\b/], ['Cambridge', /cambridge|igcse|a-level|lower-secondary|checkpoint|^cam-/], ['Pearson Edexcel', /edexcel|^edx/], ['Kenya CBE', /kenya|^cbe|^cks/]];
+      function famOf(z) { var k = (z.slug + ' ' + z.name).toLowerCase(); for (var i = 0; i < FAM.length; i++) if (FAM[i][1].test(k)) return i; return FAM.length; }
+      function lvl(z) { var n = z.name.toLowerCase(); return /myp|lower secondary|junior|ks3|ilowersecondary/.test(n) ? 0 : /igcse|international gcse|senior/.test(n) ? 1 : 2; }
+      var ORD = ['science', 'biology', 'chemistry', 'physics', 'environmental', 'math', 'computer', 'computing', 'pre-technical', 'digital'];
+      function sub(z) { var n = z.name.toLowerCase(); for (var i = 0; i < ORD.length; i++) if (n.indexOf(ORD[i]) >= 0) return i; return ORD.length; }
+      function short(z) { return z.name.replace(/^(Kenya CBE |Pearson Edexcel |Edexcel |Cambridge Lower Secondary |IB Diploma |IB )/, function (m) { return /Lower Secondary/.test(m) ? 'Lower Secondary ' : /^IB Diploma/.test(m) ? 'DP ' : ''; }); }
+      function subjTabs(s) {
+        var groups = {}; subjects.forEach(function (z) { var f = famOf(z); (groups[f] = groups[f] || []).push(z); });
+        return '<nav class="lc-subjects" aria-label="Courses">' + Object.keys(groups).map(Number).sort(function (a, b) { return a - b; }).map(function (f) {
+          var list = groups[f].slice().sort(function (a, b) { return lvl(a) - lvl(b) || sub(a) - sub(b) || a.name.localeCompare(b.name); });
+          var label = FAM[f] ? FAM[f][0] : 'Other';
+          return '<div class="lc-fam"><span class="lc-fam-h">' + E(label) + '</span><div class="tabs" role="tablist" aria-label="' + E(label) + '">' + list.map(function (z) {
+            return '<button role="tab" aria-selected="' + (z === s) + '" data-s="' + E(z.slug) + '" title="' + E(z.name) + '" style="' + (z === s ? 'background:' + E(z.colour) + ';color:#fff' : '') + '">' + E(short(z)) + '</button>'; }).join('') + '</div></div>'; }).join('') + '</nav>';
+      }
       function draw() {
         var s = subjects.filter(function (z) { return z.slug === cur; })[0] || subjects[0];
         var il = orphanIL.length ? '<section class="grp"><h3 class="sec-h">📘 Interactive lessons for your class</h3><div class="lgrid">' + orphanIL.map(function (q2) {
-          var row = lessons.filter(function (l) { return l.external_id === 'IL-' + q2.id; })[0] || { id: null, title: q2.title, url: '/lesson/#' + q2.id, external_id: 'IL-' + q2.id, summary: (q2.instructions || '').split('\n')[0] };
+          var row = lessons.filter(function (l) { return l.external_id === 'IL-' + q2.id; })[0] || { id: null, title: q2.title, url: '/lesson/#' + q2.id, external_id: 'IL-' + q2.id, summary: ((q2.instructions || '').split('\n').map(function (x) { return x.replace(/^[\s•\-–*·]+/, '').trim(); }).filter(Boolean)[0] || '').replace(/^./, function (c) { return c.toUpperCase(); }) };
           return lessonCard(row); }).join('') + '</div></section>' : '';
         if (!s) { app.innerHTML = il || '<p class="emptybox">No learning content has been published yet.</p>'; return; }
         var all0 = topics.filter(function (t) { return t.subject_id === s.id && !t.parent_id; });
@@ -119,11 +134,11 @@
         var grades = s.slug === 'myp-science' ? all0.map(function (t) { return t.programme; }).filter(function (g, i, a) { return g && a.indexOf(g) === i; }).sort() : [];
         if (grades.length > 1 && grades.indexOf(grade) < 0) grade = grades[0];
         var tops = all0.filter(function (t) { return grades.length < 2 || q || t.programme === grade; }).filter(match).filter(function (t) { return (me && me.staff) ? (!onlyLessons || count(t)) : count(t); });   // students only see topics with lessons (George, 21 Nov 2026: nothing "coming soon")
-        var bar = '<div class="lc-bar"><b>' + E(s.name) + '</b><a class="btn sm" href="/quizzes/">📝 Exam-style questions</a><a class="btn sm" href="/exams/">🧪 Examinations</a><a class="btn sm" href="/simulations/">🔬 Virtual labs</a>' + (MORE[s.slug] ? '<a class="btn sm" href="' + MORE[s.slug] + '">📚 Subject page: all levels</a>' : '') + '</div>' +
+        var bar = '<div class="lc-bar"><b>' + E(s.name) + '</b><a class="btn sm" href="/quizzes/">📝 Exam-style questions</a><a class="btn sm" href="/exams/">🧪 Examinations</a><a class="btn sm" href="/simulations/">🔬 Virtual labs</a>' + (MORE[s.slug] ? '<a class="btn sm" href="' + MORE[s.slug] + '">📚 Subject page: all levels</a>' : /^edx-/.test(s.slug) ? '<a class="btn sm" href="/' + E(s.slug) + '/">📘 Edexcel course page</a>' : '') + '</div>' +
           (grades.length > 1 ? '<div class="lc-grades" role="group" aria-label="Grade">' + grades.map(function (g) { var n = +String(g).replace(/\D/g, ''); return '<button type="button" data-grade="' + E(g) + '" aria-pressed="' + (g === grade) + '">Grade ' + (n + 5) + ' <span class="small">· ' + E(g) + '</span></button>'; }).join('') + '</div>' : '');
         var make = me.staff ? '<div class="panel tint row2 lmake"><span><b>Teachers:</b> turn any file (PDF, Word, PowerPoint, Excel, web page, text or pictures) into an interactive six-step lesson. Use <b>＋ Add lesson</b> in a subtopic to file it there.</span><a class="btn main sm" href="/staff/#lessons/new">✨ Create an interactive lesson from a file</a></div>' : '';
         var addHere = function (t) { return me.staff ? '<a class="addles small" href="/staff/#lessons/new/' + t.id + '">＋ Add lesson</a>' : ''; };
-        app.innerHTML = make + il + '<div class="tabs" role="tablist">' + subjects.map(function (z) { return '<button role="tab" aria-selected="' + (z === s) + '" data-s="' + E(z.slug) + '" style="' + (z === s ? 'background:' + E(z.colour) + ';color:#fff' : '') + '">' + E(z.name) + '</button>'; }).join('') + '</div>' +
+        app.innerHTML = make + il + subjTabs(s) +
           bar + '<div class="row2"><input id="q" type="search" placeholder="Search topics and lessons" value="' + E(q) + '" style="max-width:340px" aria-label="Search topics and lessons">' +
           '<label class="chk small"><input type="checkbox" id="only"' + (onlyLessons ? ' checked' : '') + '> Only show topics with lessons</label></div>' +
           (tops.length ? tops.map(function (t) {
