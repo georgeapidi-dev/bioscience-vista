@@ -1,1 +1,46 @@
-(function(){function c(t){var n=t.parentNode,e=document.createElement("div");e.style.cssText="position:absolute;top:0;right:0;width:64px;height:64px;z-index:2;background:transparent",n.appendChild(e)}document.addEventListener("click",function(t){var n=t.target.closest&&t.target.closest("[data-play]");if(n){var e=n.parentNode,i=document.createElement("iframe");i.src="https://drive.google.com/file/d/"+encodeURIComponent(n.getAttribute("data-play"))+"/preview",i.allow="autoplay; fullscreen",i.setAttribute("allowfullscreen",""),i.title=n.getAttribute("data-title")||"Lesson video",i.style.cssText="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:10px",e.innerHTML="",e.appendChild(i),c(i);var r=e.closest(".lv-v");r&&(r.classList.add("on"),r.scrollIntoView({block:"nearest",behavior:"smooth"}))}}),document.addEventListener("contextmenu",function(t){t.target.closest&&t.target.closest(".lv-media")&&t.preventDefault()});var a=null;function u(){return a||(a=new Promise(function(t,n){var e=document.createElement("script");e.src="/assets/pdfjs/pdf.min.js",e.onload=function(){window.pdfjsLib.GlobalWorkerOptions.workerSrc="/assets/pdfjs/pdf.worker.min.js",t(window.pdfjsLib)},e.onerror=n,document.head.appendChild(e)}),a)}document.addEventListener("click",function(t){var n=t.target.closest&&t.target.closest("[data-slides]");if(n){var e=n.closest(".lv-media").querySelector(".lv-slides"),i=n.getAttribute("data-slides");e.hidden=!1,e.innerHTML='<p class="small">Loading slides…</p>',u().then(function(r){return r.getDocument({url:i}).promise}).then(function(r){e.innerHTML='<p class="small muted">'+r.numPages+" slides · scroll to read</p>";var o=0;(function p(){++o>r.numPages||r.getPage(o).then(function(l){var h=Math.min(e.clientWidth||800,900),f=l.getViewport({scale:1}),m=h/f.width,d=l.getViewport({scale:m*(window.devicePixelRatio||1)}),s=document.createElement("canvas");s.width=d.width,s.height=d.height,s.style.cssText="width:100%;height:auto;display:block;margin:0 0 10px;border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.15)",s.setAttribute("aria-label","Slide "+o),e.appendChild(s),l.render({canvasContext:s.getContext("2d"),viewport:d}).promise.then(p)})})()}).catch(function(){e.innerHTML='<p class="small">The slides could not load. Check your connection and try again.</p>'})}})})();
+/* VistaEd · lesson videos and slides shown inside the lesson (no download buttons). Videos stream from the
+   creator's files; slides are drawn page by page with PDF.js from this site. Both credit their creators. */
+(function () {
+  function overlay(fr) {   // cover the player's "open in new window" corner so the video stays in the lesson
+    var w = fr.parentNode, c = document.createElement('div');
+    c.style.cssText = 'position:absolute;top:0;right:0;width:64px;height:64px;z-index:2;background:transparent'; w.appendChild(c);
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-play]'); if (!b) return;
+    var box = b.parentNode, fr = document.createElement('iframe');
+    fr.src = 'https://drive.google.com/file/d/' + encodeURIComponent(b.getAttribute('data-play')) + '/preview';
+    fr.allow = 'autoplay; fullscreen'; fr.setAttribute('allowfullscreen', ''); fr.title = b.getAttribute('data-title') || 'Lesson video';
+    fr.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:10px';
+    box.innerHTML = ''; box.appendChild(fr); overlay(fr);
+    var card = box.closest('.lv-v'); if (card) { card.classList.add('on'); card.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }   // the playing video fills the row
+  });
+  document.addEventListener('contextmenu', function (e) { if (e.target.closest && e.target.closest('.lv-media')) e.preventDefault(); });
+  var lib = null;
+  function pdfjs() {
+    if (lib) return lib;
+    lib = new Promise(function (ok, bad) {
+      var s = document.createElement('script'); s.src = '/assets/pdfjs/pdf.min.js';
+      s.onload = function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = '/assets/pdfjs/pdf.worker.min.js'; ok(window.pdfjsLib); };
+      s.onerror = bad; document.head.appendChild(s);
+    });
+    return lib;
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-slides]'); if (!b) return;
+    var view = b.closest('.lv-media').querySelector('.lv-slides'), url = b.getAttribute('data-slides');
+    view.hidden = false; view.innerHTML = '<p class="small">Loading slides…</p>';
+    pdfjs().then(function (P) { return P.getDocument({ url: url }).promise; }).then(function (doc) {
+      view.innerHTML = '<p class="small muted">' + doc.numPages + ' slides · scroll to read</p>';
+      var n = 0;
+      (function next() {
+        if (++n > doc.numPages) return;
+        doc.getPage(n).then(function (pg) {
+          var w = Math.min(view.clientWidth || 800, 900), vp0 = pg.getViewport({ scale: 1 }), sc = w / vp0.width, vp = pg.getViewport({ scale: sc * (window.devicePixelRatio || 1) });
+          var c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; c.style.cssText = 'width:100%;height:auto;display:block;margin:0 0 10px;border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.15)';
+          c.setAttribute('aria-label', 'Slide ' + n); view.appendChild(c);
+          pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise.then(next);
+        });
+      })();
+    }).catch(function () { view.innerHTML = '<p class="small">The slides could not load. Check your connection and try again.</p>'; });
+  });
+})();

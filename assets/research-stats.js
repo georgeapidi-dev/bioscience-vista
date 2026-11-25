@@ -1,1 +1,224 @@
-(function(P){"use strict";var s={},d=function(e){return(e||[]).map(Number).filter(function(t){return isFinite(t)})};s.clean=d;function g(e){var t=7,r=[.9999999999998099,676.5203681218851,-1259.1392167224028,771.3234287776531,-176.6150291621406,12.507343278686905,-.13857109526572012,9984369578019572e-21,15056327351493116e-23];if(e<.5)return Math.log(Math.PI/Math.abs(Math.sin(Math.PI*e)))-g(1-e);e-=1;for(var n=r[0],a=e+t+.5,i=1;i<9;i++)n+=r[i]/(e+i);return .5*Math.log(2*Math.PI)+(e+.5)*Math.log(a)-a+Math.log(n)}s.lgamma=g;function S(e,t,r){var n=1e-300,a=e+t,i=e+1,u=e-1,l=1,o=1-a*r/i;Math.abs(o)<n&&(o=n),o=1/o;for(var h=o,c=1;c<=300;c++){var m=2*c,f=c*(t-c)*r/((u+m)*(e+m));o=1+f*o,Math.abs(o)<n&&(o=n),l=1+f/l,Math.abs(l)<n&&(l=n),o=1/o,h*=o*l,f=-(e+c)*(a+c)*r/((e+m)*(i+m)),o=1+f*o,Math.abs(o)<n&&(o=n),l=1+f/l,Math.abs(l)<n&&(l=n),o=1/o;var p=o*l;if(h*=p,Math.abs(p-1)<3e-16)break}return h}function w(e,t,r){if(e<=0)return 0;if(e>=1)return 1;var n=Math.exp(g(t+r)-g(t)-g(r)+t*Math.log(e)+r*Math.log(1-e));return e<(t+1)/(t+r+2)?n*S(t,r,e)/t:1-n*S(r,t,1-e)/r}s.ibeta=w;function y(e,t){if(t<=0)return 0;if(t<e+1){for(var r=e,n=1/e,a=n,i=0;i<1e3&&(r+=1,a*=t/r,n+=a,!(Math.abs(a)<Math.abs(n)*1e-16));i++);return n*Math.exp(-t+e*Math.log(t)-g(e))}return 1-W(e,t)}function W(e,t){for(var r=1e-300,n=t+1-e,a=1/r,i=1/n,u=i,l=1;l<1e3;l++){var o=-l*(l-e);n+=2,i=o*i+n,Math.abs(i)<r&&(i=r),a=n+o/a,Math.abs(a)<r&&(a=r),i=1/i;var h=i*a;if(u*=h,Math.abs(h-1)<3e-16)break}return Math.exp(-t+e*Math.log(t)-g(e))*u}s.gammaP=y;function O(e){var t=e<0?-1:1;return t*y(.5,e*e)}s.normCdf=function(e){return .5*(1+O(e/Math.SQRT2))},s.tCdf=function(e,t){var r=t/(t+e*e),n=.5*w(r,t/2,.5);return e>0?1-n:n},s.tTwo=function(e,t){return w(t/(t+e*e),t/2,.5)},s.fSurv=function(e,t,r){return e<=0?1:w(r/(r+t*e),r/2,t/2)},s.chiSurv=function(e,t){return e<=0?1:1-y(t/2,e/2)};function q(e,t,r,n){for(var a=0;a<200;a++){var i=(r+n)/2;e(i)<t?r=i:n=i}return(r+n)/2}s.tInv=function(e,t){return q(function(r){return s.tCdf(r,t)},e,-1e4,1e4)},s.chiInv=function(e,t){return q(function(r){return 1-s.chiSurv(r,t)},e,0,1e5)},s.sum=function(e){return d(e).reduce(function(t,r){return t+r},0)},s.mean=function(e){return e=d(e),e.length?s.sum(e)/e.length:NaN},s.median=function(e){e=d(e).sort(function(r,n){return r-n});var t=e.length;return t?t%2?e[(t-1)/2]:(e[t/2-1]+e[t/2])/2:NaN},s.modes=function(e){var t={},r=0;return d(e).forEach(function(n){t[n]=(t[n]||0)+1,r=Math.max(r,t[n])}),r<2?[]:Object.keys(t).filter(function(n){return t[n]===r}).map(Number).sort(function(n,a){return n-a})},s.variance=function(e){e=d(e);var t=e.length;if(t<2)return NaN;var r=s.mean(e);return e.reduce(function(n,a){return n+(a-r)*(a-r)},0)/(t-1)},s.sd=function(e){return Math.sqrt(s.variance(e))},s.se=function(e){return e=d(e),s.sd(e)/Math.sqrt(e.length)},s.quantile=function(e,t){if(e=d(e).sort(function(a,i){return a-i}),!e.length)return NaN;var r=(e.length-1)*t,n=Math.floor(r);return e[n]+(r-n)*(e[Math.min(n+1,e.length-1)]-e[n])},s.describe=function(e,t){e=d(e),t=t||.95;var r=e.length,n=s.mean(e),a=r>1?s.sd(e):NaN,i=r>1?a/Math.sqrt(r):NaN,u=r>1?s.tInv(1-(1-t)/2,r-1):NaN;return{n:r,mean:n,median:s.median(e),modes:s.modes(e),min:r?Math.min.apply(null,e):NaN,max:r?Math.max.apply(null,e):NaN,range:r?Math.max.apply(null,e)-Math.min.apply(null,e):NaN,sd:a,se:i,cv:a/n*100,q1:s.quantile(e,.25),q3:s.quantile(e,.75),ci:[n-u*i,n+u*i],conf:t}},s.pctChange=function(e,t){return(t-e)/e*100},s.pctError=function(e,t){return Math.abs(e-t)/Math.abs(t)*100},s.unc=function(e,t){return{value:e,abs:Math.abs(t),rel:Math.abs(t/e),pct:Math.abs(t/e)*100}},s.halfRange=function(e){return e=d(e),e.length?(Math.max.apply(null,e)-Math.min.apply(null,e))/2:NaN},s.prop={add:function(e,t){return Math.abs(e)+Math.abs(t)},mulRel:function(e,t,r,n){return Math.abs(t/e)+Math.abs(n/r)},powRel:function(e,t,r){return Math.abs(r)*Math.abs(t/e)}};function M(e){for(var t=e.map(function(l,o){return[l,o]}).sort(function(l,o){return l[0]-o[0]}),r=new Array(e.length),n=0;n<t.length;){for(var a=n;a+1<t.length&&t[a+1][0]===t[n][0];)a++;for(var i=(n+a)/2+1,u=n;u<=a;u++)r[t[u][1]]=i;n=a+1}return r}function k(e){var t={};return e.forEach(function(r){t[r]=(t[r]||0)+1}),Object.keys(t).reduce(function(r,n){var a=t[n];return r+a*a*a-a},0)}s.ranks=M,s.pearson=function(e,t){var r=b(e,t);e=r[0],t=r[1];var n=e.length;if(n<3)return{name:"Pearson correlation",error:"At least three pairs are needed."};for(var a=s.mean(e),i=s.mean(t),u=0,l=0,o=0,h=0;h<n;h++)u+=(e[h]-a)*(t[h]-i),l+=(e[h]-a)*(e[h]-a),o+=(t[h]-i)*(t[h]-i);var c=u/Math.sqrt(l*o);c=Math.max(-1,Math.min(1,c));var m=n-2,f=Math.abs(c)>=1?1/0:c*Math.sqrt(m/(1-c*c));return{name:"Pearson correlation",stat:c,statName:"r",r2:c*c,t:f,df:m,n,p:isFinite(f)?s.tTwo(f,m):0}},s.spearman=function(e,t){var r=b(e,t);e=r[0],t=r[1];var n=e.length;if(n<3)return{name:"Spearman rank correlation",error:"At least three pairs are needed."};var a=s.pearson(M(e),M(t));return{name:"Spearman rank correlation",stat:a.stat,statName:"rₛ",df:n-2,n,p:a.p,t:a.t}},s.regression=function(e,t){var r=b(e,t);e=r[0],t=r[1];var n=e.length;if(n<3)return{error:"At least three points are needed."};for(var a=s.mean(e),i=s.mean(t),u=0,l=0,o=0,h=0;h<n;h++)u+=(e[h]-a)*(t[h]-i),l+=(e[h]-a)*(e[h]-a),o+=(t[h]-i)*(t[h]-i);var c=u/l,m=i-c*a,f=0;for(h=0;h<n;h++){var p=t[h]-(c*e[h]+m);f+=p*p}var v=n-2,T=f/v,E=Math.sqrt(T/l),F=Math.sqrt(T*(1/n+a*a/l)),A=c/E;return{name:"Linear regression",slope:c,intercept:m,r2:o?1-f/o:1,seSlope:E,seIntercept:F,df:v,n,t:A,p:s.tTwo(A,v),stat:c,statName:"gradient"}};function b(e,t){for(var r=[],n=[],a=0;a<Math.min(e.length,t.length);a++){var i=Number(e[a]),u=Number(t[a]);e[a]!==""&&t[a]!==""&&e[a]!=null&&t[a]!=null&&isFinite(i)&&isFinite(u)&&(r.push(i),n.push(u))}return[r,n]}s.tTest=function(e,t,r){e=d(e),t=d(t),r=r||{};var n=e.length,a=t.length;if(n<2||a<2)return{name:"t-test",error:"Each group needs at least two values."};var i=s.variance(e),u=s.variance(t),l=s.mean(e),o=s.mean(t),h,c;if(r.equal){var m=((n-1)*i+(a-1)*u)/(n+a-2);h=(l-o)/Math.sqrt(m*(1/n+1/a)),c=n+a-2}else{var f=i/n,p=u/a;h=(l-o)/Math.sqrt(f+p),c=(f+p)*(f+p)/(f*f/(n-1)+p*p/(a-1))}return{name:r.equal?"Student's t-test (independent, equal variances)":"Welch's t-test (independent, unequal variances)",stat:h,statName:"t",df:c,p:s.tTwo(h,c),mean1:l,mean2:o,n1:n,n2:a}},s.pairedT=function(e,t){var r=b(e,t),n=r[0].map(function(l,o){return l-r[1][o]}),a=n.length;if(a<2)return{name:"Paired t-test",error:"At least two complete pairs are needed."};var i=s.sd(n);if(!i)return{name:"Paired t-test",error:"Every difference is the same, so the test cannot be calculated."};var u=s.mean(n)/(i/Math.sqrt(a));return{name:"Paired t-test",stat:u,statName:"t",df:a-1,p:s.tTwo(u,a-1),meanDiff:s.mean(n),n:a}},s.mannWhitney=function(e,t){e=d(e),t=d(t);var r=e.length,n=t.length;if(!r||!n)return{name:"Mann–Whitney U test",error:"Both groups need values."};for(var a=e.concat(t),i=M(a),u=0,l=0;l<r;l++)u+=i[l];var o=u-r*(r+1)/2,h=r*n-o,c=r+n,m=r*n/2,f=Math.sqrt(r*n/12*(c+1-k(a)/(c*(c-1)))),p=f?(Math.max(o,h)-m-.5)/f:0;return{name:"Mann–Whitney U test",stat:o,statName:"U",u2:h,z:p,p:Math.min(1,2*(1-s.normCdf(p))),n1:r,n2:n,approx:!0}},s.wilcoxon=function(e,t){var r=b(e,t),n=r[0].map(function(p,v){return p-r[1][v]}).filter(function(p){return p!==0}),a=n.length;if(a<1)return{name:"Wilcoxon signed-rank test",error:"Every pair is the same."};var i=n.map(Math.abs),u=M(i),l=0,o=0;n.forEach(function(p,v){p>0?l+=u[v]:o+=u[v]});var h=Math.min(l,o),c=a*(a+1)/4,m=Math.sqrt(a*(a+1)*(2*a+1)/24-k(i)/48),f=m?(h-c)/m:0;return{name:"Wilcoxon signed-rank test",stat:h,statName:"W",z:f,p:Math.min(1,2*s.normCdf(-Math.abs(f))),n:a,approx:!0}},s.anova=function(e){e=e.map(d).filter(function(c){return c.length});var t=e.length;if(t<2)return{name:"One-way ANOVA",error:"At least two groups are needed."};var r=[].concat.apply([],e),n=r.length,a=s.mean(r),i=0,u=0;e.forEach(function(c){var m=s.mean(c);i+=c.length*(m-a)*(m-a),c.forEach(function(f){u+=(f-m)*(f-m)})});var l=t-1,o=n-t;if(o<1)return{name:"One-way ANOVA",error:"Each group needs more than one value."};var h=i/l/(u/o);return{name:"One-way ANOVA",stat:h,statName:"F",df:[l,o],p:s.fSurv(h,l,o),ssb:i,ssw:u,k:t,N:n}},s.kruskal=function(e){e=e.map(d).filter(function(o){return o.length});var t=e.length;if(t<2)return{name:"Kruskal–Wallis H test",error:"At least two groups are needed."};var r=[].concat.apply([],e),n=r.length,a=M(r),i=0,u=0;e.forEach(function(o){for(var h=0,c=0;c<o.length;c++)h+=a[u+c];u+=o.length,i+=h*h/o.length}),i=12/(n*(n+1))*i-3*(n+1);var l=1-k(r)/(n*n*n-n);return l>0&&(i/=l),{name:"Kruskal–Wallis H test",stat:i,statName:"H",df:t-1,p:s.chiSurv(i,t-1),approx:!0}},s.chiSquare=function(e){var t=e.map(function(h){return h.map(Number)}),r=t.map(s.sum),n=t[0].map(function(h,c){return s.sum(t.map(function(m){return m[c]}))}),a=s.sum(r),i=0,u=[],l=0;t.forEach(function(h,c){u.push(h.map(function(m,f){var p=r[c]*n[f]/a;return p<5&&l++,i+=(m-p)*(m-p)/p,p}))});var o=(t.length-1)*(n.length-1);return{name:"Chi-squared test of independence",stat:i,statName:"χ²",df:o,p:s.chiSurv(i,o),expected:u,smallExpected:l}},s.chiGoodness=function(e,t){e=d(e);var r=s.sum(e),n=d(t),a=s.sum(n);n=n.map(function(l){return l*r/a});var i=e.reduce(function(l,o,h){return l+(o-n[h])*(o-n[h])/n[h]},0),u=e.length-1;return{name:"Chi-squared goodness of fit",stat:i,statName:"χ²",df:u,p:s.chiSurv(i,u),expected:n,smallExpected:n.filter(function(l){return l<5}).length}},s.shapiroHint=function(e){e=d(e);var t=e.length;if(t<3)return null;var r=s.mean(e),n=s.sd(e),a=e.reduce(function(i,u){return i+Math.pow((u-r)/n,3)},0)*t/((t-1)*(t-2));return{skew:a,looksSkewed:Math.abs(a)>1}},s.chooseTest=function(e){var t=[],r,n,a=[];if(e.data==="counts"||e.goal==="association"||e.goal==="fit")r=e.goal==="fit"?"chiGoodness":"chiSquare",t.push("Your data are counts (frequencies) in categories, so a chi-squared test compares observed with expected counts."),a=["Observations are independent: each individual is counted once.","Every expected count should be 5 or more; merge categories or collect more data if not.","Use raw counts, never percentages or means."];else if(e.goal==="relationship"){var i=e.data==="continuous"&&e.normal==="yes";r=i?"pearson":"spearman",n=i?"spearman":null,t.push("You are looking for a relationship between two measured variables, so you need a correlation."),t.push(i?"Both variables are continuous and roughly normal with a straight-line pattern, so Pearson's r fits.":"The data are ranked, skewed or the pattern is curved but consistently rising or falling, so Spearman's rank correlation fits."),a=i?["Pairs are independent.","The relationship is linear (check the scatter graph).","Both variables are roughly normally distributed; no extreme outliers."]:["Pairs are independent.","The relationship is monotonic (always rising or always falling)."],(e.n||0)<5&&t.push("With fewer than 5 pairs any correlation is unreliable; aim for at least 5, ideally 10 or more.")}else{var u=e.data==="continuous"&&e.normal==="yes"&&(e.n||0)>=5;e.groups>=3?(r=u?"anova":"kruskal",n=u?"kruskal":null,t.push("You are comparing three or more groups, so a single test across all groups avoids the false positives of many separate t-tests.")):e.paired?(r=u?"pairedT":"wilcoxon",n=u?"wilcoxon":null,t.push("The same individuals or samples are measured twice (paired data), so the test works on the differences within each pair.")):(r=u?"tTest":"mannWhitney",n=u?"mannWhitney":null,t.push("You are comparing two independent groups.")),t.push(u?"The data are continuous, roughly normal, and each group has at least 5 values, so a parametric test fits.":"The data are ordinal, skewed, uncertain in distribution or the groups are small, so a non-parametric (rank) test is safer."),a=u?["Observations are independent (except the pairing, for a paired test).","Data in each group are roughly normal; check a histogram or box plot.",r==="anova"?"Group variances are similar (largest SD less than about twice the smallest).":"Welch's version does not need equal variances."]:["Observations are independent.","The groups have similar shaped distributions if you compare medians."],(r==="anova"||r==="kruskal")&&a.push("A significant result says at least one group differs; it does not say which. Look at the means and error bars, or ask your teacher about a post-hoc test.")}return{test:r,alt:n,why:t,assume:a}},s.interpret=function(e,t){if(t=t||.05,!e||e.error)return e&&e.error;var r=e.p<t,n=e.p<.001?"p < 0.001":"p = "+e.p.toFixed(3),a=e.name+": "+(e.statName||"statistic")+" = "+N(e.stat)+(e.df!=null?", df = "+(Array.isArray(e.df)?e.df.map(N).join(", "):N(e.df)):"")+", "+n+". ";return a+=r?"Because p is below "+t+", the null hypothesis can be rejected at the "+Math.round(t*100)+"% significance level: a result this extreme would be unlikely if there were no real difference or relationship. ":"Because p is not below "+t+", the null hypothesis cannot be rejected: the data do not give strong enough evidence of a difference or relationship (this is not proof that there is none). ",a+="Statistical significance does not show that the effect is large or biologically important, and it does not by itself prove cause and effect: look at the size of the difference, the uncertainties and the design.",e.approx&&(a+=" The p-value uses the normal approximation, which is less exact for very small samples."),e.smallExpected&&(a+=" Warning: "+e.smallExpected+" expected count(s) are below 5, so the chi-squared result is not reliable."),a};function N(e){if(e==null||!isFinite(e))return String(e);var t=Math.abs(e);return t!==0&&(t<.001||t>=1e6)?e.toExponential(3):(Math.round(e*1e3)/1e3).toString()}s.fmt=N,s.sig=function(e,t){return!isFinite(e)||e===0?String(e):Number(e.toPrecision(t||3)).toString()},typeof module<"u"&&module.exports?module.exports=s:P.RStats=s})(this);
+/* VistaEd · VISTA Research Hub · statistics library (pure functions, no page code).
+   Descriptive statistics, uncertainty, correlation, regression and significance tests with exact p-values from the
+   regularised incomplete beta and gamma functions. Checked against SciPy 1.18 by tests/research_stats_check.js.
+   Every test returns {name, stat, df, p, ...} and never decides biology for the student: it only reports numbers. */
+(function (root) {
+  'use strict';
+  var R = {};
+  var num = function (a) { return (a || []).map(Number).filter(function (x) { return isFinite(x); }); };
+  R.clean = num;
+
+  /* ---------- special functions ---------- */
+  function lgamma(x) {   // Lanczos approximation, |error| < 1e-14 for x > 0
+    var g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) return Math.log(Math.PI / Math.abs(Math.sin(Math.PI * x))) - lgamma(1 - x);
+    x -= 1; var a = c[0], t = x + g + 0.5;
+    for (var i = 1; i < 9; i++) a += c[i] / (x + i);
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  R.lgamma = lgamma;
+  function betacf(a, b, x) {   // continued fraction for the incomplete beta (Numerical Recipes, modified Lentz)
+    var FPMIN = 1e-300, qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) d = FPMIN; d = 1 / d; var h = d;
+    for (var m = 1; m <= 300; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN; c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN; d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN; c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN; d = 1 / d;
+      var del = d * c; h *= del; if (Math.abs(del - 1) < 3e-16) break;
+    }
+    return h;
+  }
+  function ibeta(x, a, b) {   // regularised incomplete beta I_x(a, b)
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    var bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    return x < (a + 1) / (a + b + 2) ? bt * betacf(a, b, x) / a : 1 - bt * betacf(b, a, 1 - x) / b;
+  }
+  R.ibeta = ibeta;
+  function gammaP(a, x) {   // regularised lower incomplete gamma P(a, x)
+    if (x <= 0) return 0;
+    if (x < a + 1) { var ap = a, sum = 1 / a, del = sum; for (var n = 0; n < 1000; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-16) break; } return sum * Math.exp(-x + a * Math.log(x) - lgamma(a)); }
+    return 1 - gammaQcf(a, x);
+  }
+  function gammaQcf(a, x) {
+    var FPMIN = 1e-300, b = x + 1 - a, c = 1 / FPMIN, d = 1 / b, h = d;
+    for (var i = 1; i < 1000; i++) { var an = -i * (i - a); b += 2; d = an * d + b; if (Math.abs(d) < FPMIN) d = FPMIN; c = b + an / c; if (Math.abs(c) < FPMIN) c = FPMIN; d = 1 / d; var del = d * c; h *= del; if (Math.abs(del - 1) < 3e-16) break; }
+    return Math.exp(-x + a * Math.log(x) - lgamma(a)) * h;
+  }
+  R.gammaP = gammaP;
+  function erf(x) { var s = x < 0 ? -1 : 1; return s * gammaP(0.5, x * x); }
+  R.normCdf = function (z) { return 0.5 * (1 + erf(z / Math.SQRT2)); };
+  R.tCdf = function (t, df) { var x = df / (df + t * t), p = 0.5 * ibeta(x, df / 2, 0.5); return t > 0 ? 1 - p : p; };
+  R.tTwo = function (t, df) { return ibeta(df / (df + t * t), df / 2, 0.5); };            // two-tailed p
+  R.fSurv = function (f, d1, d2) { return f <= 0 ? 1 : ibeta(d2 / (d2 + d1 * f), d2 / 2, d1 / 2); };   // P(F > f)
+  R.chiSurv = function (x, df) { return x <= 0 ? 1 : 1 - gammaP(df / 2, x / 2); };          // P(chi2 > x)
+  function invert(cdf, p, lo, hi) { for (var i = 0; i < 200; i++) { var m = (lo + hi) / 2; if (cdf(m) < p) lo = m; else hi = m; } return (lo + hi) / 2; }
+  R.tInv = function (p, df) { return invert(function (t) { return R.tCdf(t, df); }, p, -1e4, 1e4); };   // quantile, e.g. tInv(0.975, df)
+  R.chiInv = function (p, df) { return invert(function (x) { return 1 - R.chiSurv(x, df); }, p, 0, 1e5); };
+
+  /* ---------- descriptive ---------- */
+  R.sum = function (a) { return num(a).reduce(function (s, x) { return s + x; }, 0); };
+  R.mean = function (a) { a = num(a); return a.length ? R.sum(a) / a.length : NaN; };
+  R.median = function (a) { a = num(a).sort(function (x, y) { return x - y; }); var n = a.length; return !n ? NaN : n % 2 ? a[(n - 1) / 2] : (a[n / 2 - 1] + a[n / 2]) / 2; };
+  R.modes = function (a) { var c = {}, best = 0; num(a).forEach(function (x) { c[x] = (c[x] || 0) + 1; best = Math.max(best, c[x]); }); if (best < 2) return []; return Object.keys(c).filter(function (k) { return c[k] === best; }).map(Number).sort(function (x, y) { return x - y; }); };
+  R.variance = function (a) { a = num(a); var n = a.length; if (n < 2) return NaN; var m = R.mean(a); return a.reduce(function (s, x) { return s + (x - m) * (x - m); }, 0) / (n - 1); };   // sample (n − 1)
+  R.sd = function (a) { return Math.sqrt(R.variance(a)); };
+  R.se = function (a) { a = num(a); return R.sd(a) / Math.sqrt(a.length); };
+  R.quantile = function (a, q) { a = num(a).sort(function (x, y) { return x - y; }); if (!a.length) return NaN; var h = (a.length - 1) * q, lo = Math.floor(h); return a[lo] + (h - lo) * ((a[Math.min(lo + 1, a.length - 1)]) - a[lo]); };   // linear, as SciPy/NumPy default
+  R.describe = function (a, conf) {
+    a = num(a); conf = conf || 0.95; var n = a.length, m = R.mean(a), s = n > 1 ? R.sd(a) : NaN, se = n > 1 ? s / Math.sqrt(n) : NaN;
+    var t = n > 1 ? R.tInv(1 - (1 - conf) / 2, n - 1) : NaN;
+    return { n: n, mean: m, median: R.median(a), modes: R.modes(a), min: n ? Math.min.apply(null, a) : NaN, max: n ? Math.max.apply(null, a) : NaN,
+      range: n ? Math.max.apply(null, a) - Math.min.apply(null, a) : NaN, sd: s, se: se, cv: s / m * 100, q1: R.quantile(a, 0.25), q3: R.quantile(a, 0.75),
+      ci: [m - t * se, m + t * se], conf: conf };
+  };
+  R.pctChange = function (from, to) { return (to - from) / from * 100; };
+  R.pctError = function (measured, accepted) { return Math.abs(measured - accepted) / Math.abs(accepted) * 100; };
+  /* uncertainty: absolute (±), relative and percentage; a mean's uncertainty as half the range of the trials */
+  R.unc = function (value, abs) { return { value: value, abs: Math.abs(abs), rel: Math.abs(abs / value), pct: Math.abs(abs / value) * 100 }; };
+  R.halfRange = function (a) { a = num(a); return a.length ? (Math.max.apply(null, a) - Math.min.apply(null, a)) / 2 : NaN; };
+  R.prop = {   // propagation of uncertainties as taught in the IB sciences: add absolute for + and −, add relative for × and ÷, multiply relative by n for powers
+    add: function (u1, u2) { return Math.abs(u1) + Math.abs(u2); },
+    mulRel: function (v1, u1, v2, u2) { return Math.abs(u1 / v1) + Math.abs(u2 / v2); },
+    powRel: function (v, u, n) { return Math.abs(n) * Math.abs(u / v); }
+  };
+
+  /* ---------- ranks ---------- */
+  function ranks(a) {   // average ranks for ties
+    var idx = a.map(function (x, i) { return [x, i]; }).sort(function (p, q) { return p[0] - q[0]; }), r = new Array(a.length), i = 0;
+    while (i < idx.length) { var j = i; while (j + 1 < idx.length && idx[j + 1][0] === idx[i][0]) j++; var avg = (i + j) / 2 + 1; for (var k = i; k <= j; k++) r[idx[k][1]] = avg; i = j + 1; }
+    return r;
+  }
+  function tieSum(a) { var c = {}; a.forEach(function (x) { c[x] = (c[x] || 0) + 1; }); return Object.keys(c).reduce(function (s, k) { var t = c[k]; return s + t * t * t - t; }, 0); }
+  R.ranks = ranks;
+
+  /* ---------- correlation and regression ---------- */
+  R.pearson = function (x, y) {
+    var pr = pairs(x, y); x = pr[0]; y = pr[1]; var n = x.length; if (n < 3) return { name: 'Pearson correlation', error: 'At least three pairs are needed.' };
+    var mx = R.mean(x), my = R.mean(y), sxy = 0, sxx = 0, syy = 0;
+    for (var i = 0; i < n; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); syy += (y[i] - my) * (y[i] - my); }
+    var r = sxy / Math.sqrt(sxx * syy); r = Math.max(-1, Math.min(1, r)); var df = n - 2, t = Math.abs(r) >= 1 ? Infinity : r * Math.sqrt(df / (1 - r * r));
+    return { name: 'Pearson correlation', stat: r, statName: 'r', r2: r * r, t: t, df: df, n: n, p: isFinite(t) ? R.tTwo(t, df) : 0 };
+  };
+  R.spearman = function (x, y) {
+    var pr = pairs(x, y); x = pr[0]; y = pr[1]; var n = x.length; if (n < 3) return { name: 'Spearman rank correlation', error: 'At least three pairs are needed.' };
+    var res = R.pearson(ranks(x), ranks(y));   // with ties, Spearman's rho is Pearson's r on the ranks (as SciPy); p from the t approximation
+    return { name: 'Spearman rank correlation', stat: res.stat, statName: 'rₛ', df: n - 2, n: n, p: res.p, t: res.t };
+  };
+  R.regression = function (x, y) {
+    var pr = pairs(x, y); x = pr[0]; y = pr[1]; var n = x.length; if (n < 3) return { error: 'At least three points are needed.' };
+    var mx = R.mean(x), my = R.mean(y), sxy = 0, sxx = 0, sst = 0;
+    for (var i = 0; i < n; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); sst += (y[i] - my) * (y[i] - my); }
+    var m = sxy / sxx, c = my - m * mx, sse = 0; for (i = 0; i < n; i++) { var e = y[i] - (m * x[i] + c); sse += e * e; }
+    var df = n - 2, s2 = sse / df, seM = Math.sqrt(s2 / sxx), seC = Math.sqrt(s2 * (1 / n + mx * mx / sxx)), t = m / seM;
+    return { name: 'Linear regression', slope: m, intercept: c, r2: sst ? 1 - sse / sst : 1, seSlope: seM, seIntercept: seC, df: df, n: n, t: t, p: R.tTwo(t, df), stat: m, statName: 'gradient' };
+  };
+  function pairs(x, y) { var a = [], b = []; for (var i = 0; i < Math.min(x.length, y.length); i++) { var p = Number(x[i]), q = Number(y[i]); if (x[i] !== '' && y[i] !== '' && x[i] != null && y[i] != null && isFinite(p) && isFinite(q)) { a.push(p); b.push(q); } } return [a, b]; }
+
+  /* ---------- comparing groups ---------- */
+  R.tTest = function (a, b, opts) {   // independent samples; equal:true for Student's, otherwise Welch's (the safer default)
+    a = num(a); b = num(b); opts = opts || {}; var n1 = a.length, n2 = b.length;
+    if (n1 < 2 || n2 < 2) return { name: 't-test', error: 'Each group needs at least two values.' };
+    var v1 = R.variance(a), v2 = R.variance(b), m1 = R.mean(a), m2 = R.mean(b), t, df;
+    if (opts.equal) { var sp = ((n1 - 1) * v1 + (n2 - 1) * v2) / (n1 + n2 - 2); t = (m1 - m2) / Math.sqrt(sp * (1 / n1 + 1 / n2)); df = n1 + n2 - 2; }
+    else { var q1 = v1 / n1, q2 = v2 / n2; t = (m1 - m2) / Math.sqrt(q1 + q2); df = (q1 + q2) * (q1 + q2) / (q1 * q1 / (n1 - 1) + q2 * q2 / (n2 - 1)); }
+    return { name: opts.equal ? "Student's t-test (independent, equal variances)" : "Welch's t-test (independent, unequal variances)", stat: t, statName: 't', df: df, p: R.tTwo(t, df), mean1: m1, mean2: m2, n1: n1, n2: n2 };
+  };
+  R.pairedT = function (a, b) {
+    var pr = pairs(a, b), d = pr[0].map(function (x, i) { return x - pr[1][i]; }), n = d.length;
+    if (n < 2) return { name: 'Paired t-test', error: 'At least two complete pairs are needed.' };
+    var sd = R.sd(d); if (!sd) return { name: 'Paired t-test', error: 'Every difference is the same, so the test cannot be calculated.' };
+    var t = R.mean(d) / (sd / Math.sqrt(n));
+    return { name: 'Paired t-test', stat: t, statName: 't', df: n - 1, p: R.tTwo(t, n - 1), meanDiff: R.mean(d), n: n };
+  };
+  R.mannWhitney = function (a, b) {   // two-sided, normal approximation with tie and continuity correction (SciPy method='asymptotic')
+    a = num(a); b = num(b); var n1 = a.length, n2 = b.length; if (!n1 || !n2) return { name: 'Mann–Whitney U test', error: 'Both groups need values.' };
+    var all = a.concat(b), r = ranks(all), r1 = 0; for (var i = 0; i < n1; i++) r1 += r[i];
+    var u1 = r1 - n1 * (n1 + 1) / 2, u2 = n1 * n2 - u1, n = n1 + n2, mu = n1 * n2 / 2;
+    var sigma = Math.sqrt(n1 * n2 / 12 * ((n + 1) - tieSum(all) / (n * (n - 1))));
+    var z = sigma ? (Math.max(u1, u2) - mu - 0.5) / sigma : 0;
+    return { name: 'Mann–Whitney U test', stat: u1, statName: 'U', u2: u2, z: z, p: Math.min(1, 2 * (1 - R.normCdf(z))), n1: n1, n2: n2, approx: true };
+  };
+  R.wilcoxon = function (a, b) {   // signed-rank, zero differences dropped, normal approximation with tie correction (SciPy method='approx', no continuity correction)
+    var pr = pairs(a, b), d = pr[0].map(function (x, i) { return x - pr[1][i]; }).filter(function (x) { return x !== 0; }), n = d.length;
+    if (n < 1) return { name: 'Wilcoxon signed-rank test', error: 'Every pair is the same.' };
+    var abs = d.map(Math.abs), r = ranks(abs), wp = 0, wm = 0; d.forEach(function (x, i) { if (x > 0) wp += r[i]; else wm += r[i]; });
+    var w = Math.min(wp, wm), mu = n * (n + 1) / 4, sigma = Math.sqrt(n * (n + 1) * (2 * n + 1) / 24 - tieSum(abs) / 48), z = sigma ? (w - mu) / sigma : 0;
+    return { name: 'Wilcoxon signed-rank test', stat: w, statName: 'W', z: z, p: Math.min(1, 2 * R.normCdf(-Math.abs(z))), n: n, approx: true };
+  };
+  R.anova = function (groups) {   // one-way ANOVA
+    groups = groups.map(num).filter(function (g) { return g.length; }); var k = groups.length; if (k < 2) return { name: 'One-way ANOVA', error: 'At least two groups are needed.' };
+    var all = [].concat.apply([], groups), N = all.length, gm = R.mean(all), ssb = 0, ssw = 0;
+    groups.forEach(function (g) { var m = R.mean(g); ssb += g.length * (m - gm) * (m - gm); g.forEach(function (x) { ssw += (x - m) * (x - m); }); });
+    var d1 = k - 1, d2 = N - k; if (d2 < 1) return { name: 'One-way ANOVA', error: 'Each group needs more than one value.' };
+    var f = (ssb / d1) / (ssw / d2);
+    return { name: 'One-way ANOVA', stat: f, statName: 'F', df: [d1, d2], p: R.fSurv(f, d1, d2), ssb: ssb, ssw: ssw, k: k, N: N };
+  };
+  R.kruskal = function (groups) {   // Kruskal–Wallis H, the non-parametric alternative to one-way ANOVA
+    groups = groups.map(num).filter(function (g) { return g.length; }); var k = groups.length; if (k < 2) return { name: 'Kruskal–Wallis H test', error: 'At least two groups are needed.' };
+    var all = [].concat.apply([], groups), N = all.length, r = ranks(all), h = 0, pos = 0;
+    groups.forEach(function (g) { var s = 0; for (var i = 0; i < g.length; i++) s += r[pos + i]; pos += g.length; h += s * s / g.length; });
+    h = 12 / (N * (N + 1)) * h - 3 * (N + 1); var c = 1 - tieSum(all) / (N * N * N - N); if (c > 0) h /= c;
+    return { name: 'Kruskal–Wallis H test', stat: h, statName: 'H', df: k - 1, p: R.chiSurv(h, k - 1), approx: true };
+  };
+  R.chiSquare = function (table) {   // contingency table (r × c, r and c ≥ 2): test of independence; expected values from the margins
+    var rows = table.map(function (r) { return r.map(Number); }), rs = rows.map(R.sum), cs = rows[0].map(function (_, j) { return R.sum(rows.map(function (r) { return r[j]; })); }), N = R.sum(rs);
+    var x2 = 0, exp = [], small = 0;
+    rows.forEach(function (r, i) { exp.push(r.map(function (o, j) { var e = rs[i] * cs[j] / N; if (e < 5) small++; x2 += (o - e) * (o - e) / e; return e; })); });
+    var df = (rows.length - 1) * (cs.length - 1);
+    return { name: 'Chi-squared test of independence', stat: x2, statName: 'χ²', df: df, p: R.chiSurv(x2, df), expected: exp, smallExpected: small };
+  };
+  R.chiGoodness = function (obs, expected) {   // goodness of fit; expected counts (or ratios scaled to the total)
+    obs = num(obs); var tot = R.sum(obs), e = num(expected), es = R.sum(e); e = e.map(function (x) { return x * tot / es; });
+    var x2 = obs.reduce(function (s, o, i) { return s + (o - e[i]) * (o - e[i]) / e[i]; }, 0), df = obs.length - 1;
+    return { name: 'Chi-squared goodness of fit', stat: x2, statName: 'χ²', df: df, p: R.chiSurv(x2, df), expected: e, smallExpected: e.filter(function (x) { return x < 5; }).length };
+  };
+  R.shapiroHint = function (a) {   // not a formal test: skewness and the mean–median gap, as a prompt to look at the histogram
+    a = num(a); var n = a.length; if (n < 3) return null; var m = R.mean(a), s = R.sd(a), sk = a.reduce(function (t, x) { return t + Math.pow((x - m) / s, 3); }, 0) * n / ((n - 1) * (n - 2));
+    return { skew: sk, looksSkewed: Math.abs(sk) > 1 };
+  };
+
+  /* ---------- choosing a test: a decision, with the reasons, from the design (never from what is available) ---------- */
+  R.chooseTest = function (d) {
+    // d: {goal:'difference'|'relationship'|'association'|'fit', data:'continuous'|'ordinal'|'counts', groups:2|3, paired:true|false, normal:'yes'|'no'|'unsure', n: smallest group size}
+    var why = [], test, alt, assume = [];
+    if (d.data === 'counts' || d.goal === 'association' || d.goal === 'fit') {
+      test = d.goal === 'fit' ? 'chiGoodness' : 'chiSquare';
+      why.push('Your data are counts (frequencies) in categories, so a chi-squared test compares observed with expected counts.');
+      assume = ['Observations are independent: each individual is counted once.', 'Every expected count should be 5 or more; merge categories or collect more data if not.', 'Use raw counts, never percentages or means.'];
+    } else if (d.goal === 'relationship') {
+      var par = d.data === 'continuous' && d.normal === 'yes';
+      test = par ? 'pearson' : 'spearman'; alt = par ? 'spearman' : null;
+      why.push('You are looking for a relationship between two measured variables, so you need a correlation.');
+      why.push(par ? 'Both variables are continuous and roughly normal with a straight-line pattern, so Pearson\'s r fits.' : 'The data are ranked, skewed or the pattern is curved but consistently rising or falling, so Spearman\'s rank correlation fits.');
+      assume = par ? ['Pairs are independent.', 'The relationship is linear (check the scatter graph).', 'Both variables are roughly normally distributed; no extreme outliers.'] : ['Pairs are independent.', 'The relationship is monotonic (always rising or always falling).'];
+      if ((d.n || 0) < 5) why.push('With fewer than 5 pairs any correlation is unreliable; aim for at least 5, ideally 10 or more.');
+    } else {
+      var para = d.data === 'continuous' && d.normal === 'yes' && (d.n || 0) >= 5;
+      if (d.groups >= 3) { test = para ? 'anova' : 'kruskal'; alt = para ? 'kruskal' : null; why.push('You are comparing three or more groups, so a single test across all groups avoids the false positives of many separate t-tests.'); }
+      else if (d.paired) { test = para ? 'pairedT' : 'wilcoxon'; alt = para ? 'wilcoxon' : null; why.push('The same individuals or samples are measured twice (paired data), so the test works on the differences within each pair.'); }
+      else { test = para ? 'tTest' : 'mannWhitney'; alt = para ? 'mannWhitney' : null; why.push('You are comparing two independent groups.'); }
+      why.push(para ? 'The data are continuous, roughly normal, and each group has at least 5 values, so a parametric test fits.' : 'The data are ordinal, skewed, uncertain in distribution or the groups are small, so a non-parametric (rank) test is safer.');
+      assume = para ? ['Observations are independent (except the pairing, for a paired test).', 'Data in each group are roughly normal; check a histogram or box plot.', test === 'anova' ? 'Group variances are similar (largest SD less than about twice the smallest).' : 'Welch\'s version does not need equal variances.'] : ['Observations are independent.', 'The groups have similar shaped distributions if you compare medians.'];
+      if (test === 'anova' || test === 'kruskal') assume.push('A significant result says at least one group differs; it does not say which. Look at the means and error bars, or ask your teacher about a post-hoc test.');
+    }
+    return { test: test, alt: alt, why: why, assume: assume };
+  };
+
+  R.interpret = function (res, alpha) {   // careful words: significance is not importance and not proof of cause
+    alpha = alpha || 0.05; if (!res || res.error) return res && res.error;
+    var sig = res.p < alpha, ps = res.p < 0.001 ? 'p < 0.001' : 'p = ' + res.p.toFixed(3);
+    var s = res.name + ': ' + (res.statName || 'statistic') + ' = ' + fmt(res.stat) + (res.df != null ? ', df = ' + (Array.isArray(res.df) ? res.df.map(fmt).join(', ') : fmt(res.df)) : '') + ', ' + ps + '. ';
+    s += sig ? 'Because p is below ' + alpha + ', the null hypothesis can be rejected at the ' + Math.round(alpha * 100) + '% significance level: a result this extreme would be unlikely if there were no real difference or relationship. '
+             : 'Because p is not below ' + alpha + ', the null hypothesis cannot be rejected: the data do not give strong enough evidence of a difference or relationship (this is not proof that there is none). ';
+    s += 'Statistical significance does not show that the effect is large or biologically important, and it does not by itself prove cause and effect: look at the size of the difference, the uncertainties and the design.';
+    if (res.approx) s += ' The p-value uses the normal approximation, which is less exact for very small samples.';
+    if (res.smallExpected) s += ' Warning: ' + res.smallExpected + ' expected count(s) are below 5, so the chi-squared result is not reliable.';
+    return s;
+  };
+  function fmt(x) { if (x == null || !isFinite(x)) return String(x); var a = Math.abs(x); return a !== 0 && (a < 0.001 || a >= 1e6) ? x.toExponential(3) : (Math.round(x * 1000) / 1000).toString(); }
+  R.fmt = fmt;
+  R.sig = function (x, s) { if (!isFinite(x) || x === 0) return String(x); return Number(x.toPrecision(s || 3)).toString(); };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = R; else root.RStats = R;
+})(this);

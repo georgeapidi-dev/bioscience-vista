@@ -1,1 +1,132 @@
-(function(){var l=typeof window.SPEC=="object"&&typeof window.modelsHtml=="function",k=window.mark||window.markStep,b=window.BV_MODELS;function O(e){var t=k(e);if(Array.isArray(t)){var r=0,o=0;t.forEach(function(n){r+=+n.got||0,o+=+n.max||0}),t={items:t,score:r,max:o}}return t}if(!(l||b)||typeof k!="function"||typeof window.store!="object")return;var h={},m=store.get("repeats")||{};function y(e){return typeof window.esc=="function"?esc(e):String(e).replace(/[&<>"]/g,function(t){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[t]})}function S(e){if(l)return window.__bvOrigModels(e);var t=b[e];return!t||!t.length?"":'<details class="model bv-model" open><summary><b>Model answers: check your work against them</b></summary><ul>'+t.map(function(r){return"<li><b>"+y(r[0])+"</b> "+y(r[1])+"</li>"}).join("")+"</ul></details>"}l&&(window.__bvOrigModels=window.modelsHtml);var R=S;function q(e){if(typeof window.tipsOf=="function")try{return tipsOf(e)}catch{}return(e.items||[]).filter(function(t){return t.tip||t.tips&&t.tips.length}).map(function(t){return(t.q?t.q+": ":"")+(t.tip||t.tips.join(" "))})}function j(e){if(typeof window.lead=="function")try{return lead(e)}catch{}var t=e.max?e.score/e.max:0;return t===1?"Excellent: full marks.":t>=.6?"Good work. To reach full marks:":t>0?"A start. To improve:":"Not there yet. Use these to improve:"}function x(e){return document.getElementById("step"+e)}function M(e){var t=x(e);return t?[].slice.call(t.querySelectorAll("textarea, select")).filter(function(r){return!r.closest(".bv-rep, .bv-tans, .sx-q")&&!r.disabled&&r.offsetParent!==null}).every(function(r){return String(r.value||"").trim().length>1}):!0}function B(e){if(!(l||!b||!b[e])){var t=document.getElementById("fb"+e),r=t&&!t.classList.contains("hidden")?t:null;if(!r&&(r=document.getElementById("bvm"+e),!r)){r=document.createElement("div"),r.id="bvm"+e,r.className="bv-mbox";var o=document.getElementById("st"+e),n=document.querySelector('button[data-step="'+e+'"]'),s=o||n;if(s)s.insertAdjacentElement("afterend",r);else if(x(e))x(e).appendChild(r);else return}var c=r.querySelector(".bv-model, .bv-lock");c&&c.remove();var a=document.createElement("div"),u=M(e)||(store.get("shown")||{})[e];if(a.innerHTML=u?S(e):'<p class="bv-lock small">🔒 Model answers appear when you have answered every question in this step. Fill in the empty boxes and press Save again.</p>',u){var d=store.get("shown")||{};d[e]=1,store.set("shown",d)}r.appendChild(a.firstChild),u&&g(e)}}var I=document.createElement("style");I.textContent=".bv-tans{margin:14px 0;border:2px solid #7c3aed;border-radius:14px;background:#f5f3ff;padding:10px 14px;color:#2e1065}.bv-tans>h4{margin:0 0 6px;color:#5b21b6}.bv-rep{margin:12px 0;border:2px solid #c2410c;border-left-width:6px;border-radius:12px;background:#fff7ed;padding:10px 14px;color:#431407}.bv-rep h4{margin:0 0 4px;color:#9a3412}.bv-repbtn{width:auto!important;max-width:max-content!important;display:inline-block!important;margin-top:10px;border:2px solid #c2410c;background:#fff;color:#9a3412;border-radius:999px;padding:8px 16px;font:700 .95rem inherit;cursor:pointer}.bv-repbtn:hover{background:#ffedd5}.bv-repres{margin-top:12px}.bv-mbox{margin-top:10px}.bv-model{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:10px 14px;margin-top:10px}.bv-lock{color:#9a3412}",document.head.appendChild(I);function N(){window.__bvTeacherShown||(window.__bvTeacherShown=!0,Object.keys(l?SPEC.models||{}:b).forEach(function(e){var t=document.getElementById("step"+e),r=R(Number(e));if(!(!t||!r)){var o=document.createElement("div");o.className="bv-tans",o.innerHTML='<h4>👩‍🏫 Teacher view: model answers for this step</h4><p class="small">Students see these after they answer every question and press Save step.</p>'+r.replace(/<summary>[\s\S]*?<\/summary>/,"<summary><b>Model answers and marking points</b></summary>");var n=t.querySelector("button[data-step]"),s=n?n.closest(".savecard")||n.parentNode:null;s&&s.parentNode?s.parentNode.insertBefore(o,s):t.appendChild(o)}}))}document.addEventListener("bv-teacher",N),window.BV_TEACHER&&N();function C(e){return[].slice.call(e.querySelectorAll(l?"[data-save]":"textarea, select, input[type=text], input[type=number], input:not([type])")).filter(function(t){return!t.closest(".bv-rep, .bv-tans, .sx-q")})}function L(e){return C(e).map(function(t){return{k:t.getAttribute("data-save"),v:t.type==="checkbox"||t.type==="radio"?t.checked?t.value||"on":"":t.value,label:t.getAttribute("data-label")||""}})}function _(e){C(e).forEach(function(t){t.type==="checkbox"||t.type==="radio"?t.checked=!1:t.value="",t.dispatchEvent(new Event("input",{bubbles:!0})),t.dispatchEvent(new Event("change",{bubbles:!0}))})}function g(e){var t=document.getElementById("fb"+e);if((!t||t.classList.contains("hidden")||!l)&&(t=document.getElementById("bvm"+e)||t),!(!t||t.querySelector(".bv-repbtn"))){var r=document.createElement("button");r.type="button",r.className="bv-repbtn",r.textContent="↻ Repeat this step"+(m[e]?" again (done "+m[e]+")":""),r.onclick=function(){T(e)},t.appendChild(r)}}function T(e){var t=document.getElementById("step"+e);if(t){var r=(m[e]||0)+1,o=store.get("first"+e);o||(o=L(t),store.set("first"+e,o)),h[e]=r,_(t);var n=t.querySelector(".bv-rep.banner");n&&n.remove();var s=(window.marks||{})[e],c=document.createElement("div");c.className="bv-rep banner",c.innerHTML="<h4>↻ Repeat "+r+" of this step</h4><div>Answer again without looking at the model answers. "+(s&&s.max?"Your first mark (<b>"+s.score+" / "+s.max+"</b>) still counts; ":"Your first answers still count; ")+"this repeat is marked and sent to your teacher labelled <b>Repeat "+r+'</b>.</div><details class="small"><summary>See my first answers</summary><ul>'+o.filter(function(i){return i.v}).map(function(i){return"<li>"+y((i.label?i.label+": ":"")+i.v)+"</li>"}).join("")+"</ul></details>",t.insertBefore(c,t.children[1]||null);var a=document.getElementById("fb"+e);a&&a.classList.add("hidden");var u=document.getElementById("bvm"+e);u&&(u.hidden=!0);var d=document.getElementById("rep"+e);d&&d.remove();var f=document.getElementById("st"+e);f&&(f.className="status",f.textContent="Repeat "+r+": answer every question, then press Save step."),c.scrollIntoView({behavior:"smooth",block:"start"})}}function P(e,t){var r=h[e],o=document.getElementById("step"+e),n=document.getElementById("st"+e),s=nameEl.value.trim(),c=clsEl.value.trim();if(!s||!c){n.className="status err",n.textContent="Type your name and class at the top first.",nameEl.focus();return}var a=O(e);if(a&&a.missing||!l&&!M(e)){n.className="status err",n.textContent="Repeat "+r+": answer every question first"+(a&&a.missing?" ("+a.missing+" still empty).":".");return}m[e]=r,store.set("repeats",m),delete h[e];var u=o.querySelector(".bv-rep.banner");u&&u.remove();var d=document.createElement("div");d.className="bv-rep bv-repres",d.id="rep"+e;var f=a?q(a):[];d.innerHTML="<h4>↻ Repeat "+r+(a?": "+a.score+" / "+a.max:"")+"</h4>"+(a?"<div>"+y(j(a))+"</div>":"<div>Repeat saved.</div>")+(f.length?"<ul>"+f.map(function(p){return"<li>"+y(p)+"</li>"}).join("")+"</ul>":"")+R(e)+'<div class="small">Practice only: your first mark'+((window.marks||{})[e]&&marks[e].max?" ("+marks[e].score+" / "+marks[e].max+")":"")+" is the one that counts.</div>";var i=document.getElementById("fb"+e),E=document.getElementById("bvm"+e);E?(E.hidden=!1,i&&!i.innerHTML.trim()?i.classList.add("hidden"):i&&i.classList.remove("hidden"),E.insertAdjacentElement("afterend",d)):i?(i.classList.remove("hidden"),i.parentNode.insertBefore(d,i.nextSibling)):o.appendChild(d);var w=document.createElement("button");w.type="button",w.className="bv-repbtn",w.textContent="↻ Repeat again",w.onclick=function(){T(e)},d.appendChild(w);var H=L(o).filter(function(p){return p.v}).map(function(p){return(p.label||p.k)+": "+String(p.v).replace(/\s*\n\s*/g," / ")}),F="[REPEAT "+r+" · practice, not counted"+(a?" · "+a.score+"/"+a.max:"")+"] "+H.join("  ‖  "),v=new URLSearchParams;v.append(FORM.lesson,LESSON_ID),v.append(FORM.name,s),v.append(FORM.cls,c),v.append(FORM.step,e+" · Repeat "+r),v.append(FORM.answers,F),t.disabled=!0,n.className="status",n.textContent="Sending Repeat "+r+"...";var V=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});fetch(FORM.url,{method:"POST",mode:"no-cors",body:v}).then(function(){t.disabled=!1,n.className="status ok",n.textContent="Repeat "+r+" marked and sent to your teacher at "+V+"."}).catch(function(){t.disabled=!1,n.className="status err",n.textContent="Repeat "+r+" not sent. Check your internet and press Save step again.",m[e]=r-1,store.set("repeats",m),h[e]=r}),d.scrollIntoView({behavior:"smooth",block:"start"})}document.querySelectorAll("button[data-step]").forEach(function(e){e.addEventListener("click",function(t){var r=Number(e.getAttribute("data-step"));if(h[r]){t.stopImmediatePropagation(),t.preventDefault(),P(r,e);return}setTimeout(function(){l?g(r):B(r)},30)},!0)});var A=window.show;l&&typeof A=="function"&&(window.show=function(e,t){A(e,t),g(e)});var D=Object.keys(window.marks||{}).concat(Object.keys(store.get("saved")||{}),Object.keys(store.get("shown")||{}));setTimeout(function(){D.forEach(function(e){l?g(Number(e)):B(Number(e))})},600)})();
+/* VistaEd · lesson add-on for the six-step lesson pages
+   1. Teacher view: a signed-in teacher sees the model answers in every step, all the time.
+   2. Repeat: after a step is saved (and its model answers shown), a student can repeat it. Each repeat is marked,
+      labelled "Repeat 1", "Repeat 2"… and sent to the teacher, but the first mark stays the one that counts. */
+(function () {
+  var TEMPLATE = typeof window.SPEC === 'object' && typeof window.modelsHtml === 'function';
+  var MARK0 = window.mark || window.markStep, DATA = window.BV_MODELS;
+  function MARK(n) { var m = MARK0(n); if (Array.isArray(m)) { var sc = 0, mx = 0; m.forEach(function (i) { sc += +i.got || 0; mx += +i.max || 0; }); m = { items: m, score: sc, max: mx }; } return m; }
+  if (!(TEMPLATE || DATA) || typeof MARK0 !== 'function' || typeof window.store !== 'object') return;
+  var REP = {}, counts = store.get('repeats') || {};
+  function E2(t) { return typeof window.esc === 'function' ? esc(t) : String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function MODELS(n) {   // model answers for a step, in the template's own style
+    if (TEMPLATE) return window.__bvOrigModels(n);
+    var md = DATA[n]; if (!md || !md.length) return '';
+    return '<details class="model bv-model" open><summary><b>Model answers: check your work against them</b></summary><ul>' +
+      md.map(function (x) { return '<li><b>' + E2(x[0]) + '</b> ' + E2(x[1]) + '</li>'; }).join('') + '</ul></details>';
+  }
+  if (TEMPLATE) window.__bvOrigModels = window.modelsHtml;
+  var ORIG_MODELS = MODELS;
+  function TIPS(m) { if (typeof window.tipsOf === 'function') try { return tipsOf(m); } catch (e) {} return (m.items || []).filter(function (i) { return i.tip || (i.tips && i.tips.length); }).map(function (i) { return (i.q ? i.q + ': ' : '') + (i.tip || i.tips.join(' ')); }); }
+  function LEAD(m) { if (typeof window.lead === 'function') try { return lead(m); } catch (e) {} var p = m.max ? m.score / m.max : 0; return p === 1 ? 'Excellent: full marks.' : p >= 0.6 ? 'Good work. To reach full marks:' : p > 0 ? 'A start. To improve:' : 'Not there yet. Use these to improve:'; }
+  function stepEl(n) { return document.getElementById('step' + n); }
+  function complete(n) {   // every answer box in the step is filled in
+    var sec = stepEl(n); if (!sec) return true;
+    return [].slice.call(sec.querySelectorAll('textarea, select')).filter(function (e) { return !e.closest('.bv-rep, .bv-tans, .sx-q') && !e.disabled && e.offsetParent !== null; })
+      .every(function (e) { return String(e.value || '').trim().length > 1; });
+  }
+  function ensureModels(n) {   // older lessons: show the model answers once the step is complete and saved
+    if (TEMPLATE || !DATA || !DATA[n]) return;
+    var fb = document.getElementById('fb' + n), host = fb && !fb.classList.contains('hidden') ? fb : null;
+    if (!host) { host = document.getElementById('bvm' + n); if (!host) { host = document.createElement('div'); host.id = 'bvm' + n; host.className = 'bv-mbox'; var st = document.getElementById('st' + n), btn = document.querySelector('button[data-step="' + n + '"]'); var at = st || btn; if (at) at.insertAdjacentElement('afterend', host); else if (stepEl(n)) stepEl(n).appendChild(host); else return; } }
+    var old = host.querySelector('.bv-model, .bv-lock'); if (old) old.remove();
+    var div = document.createElement('div'), done = complete(n) || (store.get('shown') || {})[n];
+    div.innerHTML = done ? MODELS(n) : '<p class="bv-lock small">🔒 Model answers appear when you have answered every question in this step. Fill in the empty boxes and press Save again.</p>';
+    if (done) { var sh = store.get('shown') || {}; sh[n] = 1; store.set('shown', sh); }
+    host.appendChild(div.firstChild); if (done) addButton(n);
+  }
+  var css = document.createElement('style');
+  css.textContent = '.bv-tans{margin:14px 0;border:2px solid #7c3aed;border-radius:14px;background:#f5f3ff;padding:10px 14px;color:#2e1065}.bv-tans>h4{margin:0 0 6px;color:#5b21b6}' +
+    '.bv-rep{margin:12px 0;border:2px solid #c2410c;border-left-width:6px;border-radius:12px;background:#fff7ed;padding:10px 14px;color:#431407}.bv-rep h4{margin:0 0 4px;color:#9a3412}' +
+    '.bv-repbtn{width:auto!important;max-width:max-content!important;display:inline-block!important;margin-top:10px;border:2px solid #c2410c;background:#fff;color:#9a3412;border-radius:999px;padding:8px 16px;font:700 .95rem inherit;cursor:pointer}.bv-repbtn:hover{background:#ffedd5}' +
+    '.bv-repres{margin-top:12px}.bv-mbox{margin-top:10px}.bv-model{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:10px 14px;margin-top:10px}.bv-lock{color:#9a3412}';
+  document.head.appendChild(css);
+
+  /* ---------- 1. teacher view ---------- */
+  function teacherView() {
+    if (window.__bvTeacherShown) return; window.__bvTeacherShown = true;
+    Object.keys(TEMPLATE ? SPEC.models || {} : DATA).forEach(function (n) {
+      var sec = document.getElementById('step' + n), html = ORIG_MODELS(Number(n)); if (!sec || !html) return;
+      var box = document.createElement('div'); box.className = 'bv-tans';
+      box.innerHTML = '<h4>👩‍🏫 Teacher view: model answers for this step</h4><p class="small">Students see these after they answer every question and press Save step.</p>' + html.replace(/<summary>[\s\S]*?<\/summary>/, '<summary><b>Model answers and marking points</b></summary>');
+      var btn = sec.querySelector('button[data-step]'), anchor = btn ? (btn.closest('.savecard') || btn.parentNode) : null;
+      if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(box, anchor); else sec.appendChild(box);
+    });
+  }
+  document.addEventListener('bv-teacher', teacherView);
+  if (window.BV_TEACHER) teacherView();
+
+  /* ---------- 2. repeat a step ---------- */
+  function fields(sec) { return [].slice.call(sec.querySelectorAll(TEMPLATE ? '[data-save]' : 'textarea, select, input[type=text], input[type=number], input:not([type])')).filter(function (e) { return !e.closest('.bv-rep, .bv-tans, .sx-q'); }); }
+  function snapshot(sec) { return fields(sec).map(function (e) { return { k: e.getAttribute('data-save'), v: e.type === 'checkbox' || e.type === 'radio' ? (e.checked ? e.value || 'on' : '') : e.value, label: e.getAttribute('data-label') || '' }; }); }
+  function clear(sec) {
+    fields(sec).forEach(function (e) {
+      if (e.type === 'checkbox' || e.type === 'radio') e.checked = false; else e.value = '';
+      e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+  function addButton(n) {
+    var box = document.getElementById('fb' + n); if (!box || box.classList.contains('hidden') || !TEMPLATE) box = document.getElementById('bvm' + n) || box;
+    if (!box || box.querySelector('.bv-repbtn')) return;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'bv-repbtn';
+    b.textContent = '↻ Repeat this step' + (counts[n] ? ' again (done ' + counts[n] + ')' : '');
+    b.onclick = function () { start(n); }; box.appendChild(b);
+  }
+  function start(n) {
+    var sec = document.getElementById('step' + n); if (!sec) return;
+    var k = (counts[n] || 0) + 1, first = store.get('first' + n);
+    if (!first) { first = snapshot(sec); store.set('first' + n, first); }   // keep the student's first answers
+    REP[n] = k; clear(sec);
+    var old = sec.querySelector('.bv-rep.banner'); if (old) old.remove();
+    var m = (window.marks || {})[n], ban = document.createElement('div'); ban.className = 'bv-rep banner';
+    ban.innerHTML = '<h4>↻ Repeat ' + k + ' of this step</h4><div>Answer again without looking at the model answers. ' +
+      (m && m.max ? 'Your first mark (<b>' + m.score + ' / ' + m.max + '</b>) still counts; ' : 'Your first answers still count; ') + 'this repeat is marked and sent to your teacher labelled <b>Repeat ' + k + '</b>.</div>' +
+      '<details class="small"><summary>See my first answers</summary><ul>' + first.filter(function (f) { return f.v; }).map(function (f) { return '<li>' + E2((f.label ? f.label + ': ' : '') + f.v) + '</li>'; }).join('') + '</ul></details>';
+    sec.insertBefore(ban, sec.children[1] || null);
+    var box = document.getElementById('fb' + n); if (box) box.classList.add('hidden');
+    var bm = document.getElementById('bvm' + n); if (bm) bm.hidden = true;
+    var res = document.getElementById('rep' + n); if (res) res.remove();
+    var st = document.getElementById('st' + n); if (st) { st.className = 'status'; st.textContent = 'Repeat ' + k + ': answer every question, then press Save step.'; }
+    ban.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function finishRepeat(n, btn) {
+    var k = REP[n], sec = document.getElementById('step' + n), st = document.getElementById('st' + n);
+    var name = nameEl.value.trim(), cls = clsEl.value.trim();
+    if (!name || !cls) { st.className = 'status err'; st.textContent = 'Type your name and class at the top first.'; nameEl.focus(); return; }
+    var m = MARK(n);
+    if (m && m.missing || (!TEMPLATE && !complete(n))) { st.className = 'status err'; st.textContent = 'Repeat ' + k + ': answer every question first' + (m && m.missing ? ' (' + m.missing + ' still empty).' : '.'); return; }
+    counts[n] = k; store.set('repeats', counts); delete REP[n];
+    var ban = sec.querySelector('.bv-rep.banner'); if (ban) ban.remove();
+    var res = document.createElement('div'); res.className = 'bv-rep bv-repres'; res.id = 'rep' + n;
+    var tips = m ? TIPS(m) : [];
+    res.innerHTML = '<h4>↻ Repeat ' + k + (m ? ': ' + m.score + ' / ' + m.max : '') + '</h4>' + (m ? '<div>' + E2(LEAD(m)) + '</div>' : '<div>Repeat saved.</div>') +
+      (tips.length ? '<ul>' + tips.map(function (x) { return '<li>' + E2(x) + '</li>'; }).join('') + '</ul>' : '') + ORIG_MODELS(n) +
+      '<div class="small">Practice only: your first mark' + ((window.marks || {})[n] && marks[n].max ? ' (' + marks[n].score + ' / ' + marks[n].max + ')' : '') + ' is the one that counts.</div>';
+    var fb = document.getElementById('fb' + n), bm2 = document.getElementById('bvm' + n);
+    if (bm2) { bm2.hidden = false; if (fb && !fb.innerHTML.trim()) fb.classList.add('hidden'); else if (fb) fb.classList.remove('hidden'); bm2.insertAdjacentElement('afterend', res); }
+    else if (fb) { fb.classList.remove('hidden'); fb.parentNode.insertBefore(res, fb.nextSibling); } else sec.appendChild(res);
+    var again = document.createElement('button'); again.type = 'button'; again.className = 'bv-repbtn'; again.textContent = '↻ Repeat again'; again.onclick = function () { start(n); }; res.appendChild(again);
+    var parts = snapshot(sec).filter(function (f) { return f.v; }).map(function (f) { return (f.label || f.k) + ': ' + String(f.v).replace(/\s*\n\s*/g, ' / '); });
+    var line = '[REPEAT ' + k + ' · practice, not counted' + (m ? ' · ' + m.score + '/' + m.max : '') + '] ' + parts.join('  ‖  ');
+    var body = new URLSearchParams();
+    body.append(FORM.lesson, LESSON_ID); body.append(FORM.name, name); body.append(FORM.cls, cls); body.append(FORM.step, n + ' · Repeat ' + k); body.append(FORM.answers, line);
+    btn.disabled = true; st.className = 'status'; st.textContent = 'Sending Repeat ' + k + '...';
+    var time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    fetch(FORM.url, { method: 'POST', mode: 'no-cors', body: body })
+      .then(function () { btn.disabled = false; st.className = 'status ok'; st.textContent = 'Repeat ' + k + ' marked and sent to your teacher at ' + time + '.'; })
+      .catch(function () { btn.disabled = false; st.className = 'status err'; st.textContent = 'Repeat ' + k + ' not sent. Check your internet and press Save step again.'; counts[n] = k - 1; store.set('repeats', counts); REP[n] = k; });
+    res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  // during a repeat, Save step marks the repeat instead of the (locked) first attempt
+  document.querySelectorAll('button[data-step]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      var n = Number(btn.getAttribute('data-step'));
+      if (REP[n]) { e.stopImmediatePropagation(); e.preventDefault(); finishRepeat(n, btn); return; }
+      setTimeout(function () { if (TEMPLATE) addButton(n); else ensureModels(n); }, 30);   // first save: show answers (older lessons) and offer a repeat
+    }, true);
+  });
+  var origShow = window.show;
+  if (TEMPLATE && typeof origShow === 'function') window.show = function (n, m) { origShow(n, m); addButton(n); };
+  var savedSteps = Object.keys(window.marks || {}).concat(Object.keys(store.get('saved') || {}), Object.keys(store.get('shown') || {}));
+  setTimeout(function () { savedSteps.forEach(function (n) { if (TEMPLATE) addButton(Number(n)); else ensureModels(Number(n)); }); }, 600);
+})();

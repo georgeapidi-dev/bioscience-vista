@@ -1,1 +1,88 @@
-(function(){if(window.top!==window||document.getElementById("bvhelp-stack"))return;var k=document.currentScript&&document.currentScript.src||"",h=location.pathname;if(/^\/(tutor|messages|login|register|live)\//.test(h))return;var y=/[?&]help=1/.test(k)||/^\/(simulations|library|lesson|learn)\//.test(h)||!!window.SPEC||!!document.querySelector("[data-sim]"),w=window.BV||{},c=w.sbUrl||window.SB_URL,A=w.sbKey||window.SB_KEY;function E(){try{var e=new URL(c).hostname.split(".")[0],t=JSON.parse(localStorage.getItem("sb-"+e+"-auth-token")||"null");if(t&&t.access_token&&(!t.expires_at||t.expires_at*1e3>Date.now()-864e5))return t.access_token}catch{}return null}var v=!!(c&&E()),L=!/^\/(donate|admin|staff)\//.test(h),p=document.createElement("style");p.textContent="#bvhelp-stack{position:fixed;left:calc(14px + env(safe-area-inset-left,0px));z-index:2147483000;display:flex;flex-direction:column;align-items:flex-start;gap:8px}#bvhelp-stack button{position:relative;display:inline-flex!important;align-items:center;gap:6px;width:auto!important;max-width:max-content!important;margin:0!important;border:0;border-radius:999px;padding:10px 15px;color:#fff;font:700 14px/1.1 system-ui,Arial,sans-serif;box-shadow:0 6px 18px rgba(15,23,42,.28);cursor:pointer;text-transform:none!important}#bvhelp-stack .h{background:linear-gradient(120deg,#f97316,#ec4899)}#bvhelp-stack .m{background:linear-gradient(120deg,#7c3aed,#2563eb)}#bvhelp-stack .g{background:linear-gradient(120deg,#16a34a,#0d9488)}#bvhelp-stack button:hover{filter:brightness(1.08)}#bvhelp-stack .n{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:999px;background:#ef4444;color:#fff;font:700 12px/20px system-ui,Arial;text-align:center;padding:0 5px;border:2px solid #fff}#bvhelp{position:fixed;inset:0;z-index:2147483001;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:12px}#bvhelp.on{display:flex}#bvhelp .bx{background:#fff;border-radius:16px;width:min(900px,100%);height:min(92vh,960px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}#bvhelp .br{display:flex;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid #e2e8f0;background:#f8fafc;font:700 15px system-ui,Arial,sans-serif;color:#0f172a}#bvhelp .br b{margin-right:auto}#bvhelp .br button{width:auto!important;margin:0!important;border:0;background:#0f172a;color:#fff;border-radius:999px;padding:7px 13px;font:600 13px system-ui,Arial,sans-serif;cursor:pointer}#bvhelp iframe{flex:1;border:0;width:100%;background:#fff}@media print{#bvhelp-stack,#bvhelp{display:none!important}}@media(max-width:560px){#bvhelp-stack button{padding:9px 12px;font-size:13px}#bvhelp{padding:0}#bvhelp .bx{height:100vh;border-radius:0}}",p.textContent+="#bvhelp-stack .bvf-list{display:none;flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:2px}#bvhelp-stack.bvf-on .bvf-list{display:flex;animation:bvfin .18s ease-out}@keyframes bvfin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}#bvhelp-stack .bvf{width:54px!important;height:54px;max-width:none!important;justify-content:center;padding:0!important;border-radius:18px;background:linear-gradient(135deg,#0d9488,#2563eb 55%,#7c3aed);box-shadow:0 8px 22px rgba(37,99,235,.35)}#bvhelp-stack .bvf svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}#bvhelp-stack.bvf-on .bvf svg{transform:rotate(45deg)}#bvhelp-stack #bvdock-btn{position:static!important;left:auto!important;bottom:auto!important}#bvhelp-stack #bvdock-btn::before{content:none!important}";var o=document.createElement("div");o.id="bvhelp-stack";var r=document.createElement("div");r.className="bvf-list",r.id="bvf-list";var i=document.createElement("button");i.type="button",i.className="bvf",i.setAttribute("aria-expanded","false"),i.setAttribute("aria-controls","bvf-list"),i.setAttribute("aria-label","Quick tools: help desk, messages, graph and draw, donate"),i.title="Quick tools",i.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="n" hidden></span>',i.addEventListener("click",function(){var e=!o.classList.contains("bvf-on");o.classList.toggle("bvf-on",e),i.setAttribute("aria-expanded",e?"true":"false")}),document.addEventListener("click",function(e){o.classList.contains("bvf-on")&&!o.contains(e.target)&&(o.classList.remove("bvf-on"),i.setAttribute("aria-expanded","false"))});var d=document.createElement("button");d.type="button",d.className="h",d.innerHTML="❓ Help Desk",d.title="Ask a science question without leaving this page";var s=document.createElement("button");s.type="button",s.className="m",s.innerHTML='✉️ Messages <span class="n" hidden></span>',s.title="Messages with your teachers";var l=document.createElement("button");if(l.type="button",l.className="g",l.innerHTML="💚 Donate",l.title="70% of every donation goes to charity",l.addEventListener("click",function(){location.href="/donate/"}),y&&r.appendChild(d),v&&r.appendChild(s),L&&r.appendChild(l),o.appendChild(r),o.appendChild(i),!L&&!v&&!y)return;var n=document.createElement("div");n.id="bvhelp",n.setAttribute("role","dialog"),n.setAttribute("aria-modal","true"),n.innerHTML='<div class="bx"><div class="br"><b></b><button type="button" class="x">✕ Back to the page</button></div><iframe></iframe></div>';var f=n.querySelector("iframe"),u="";f.addEventListener("load",function(){try{var e=f.contentDocument,t=e.createElement("style");t.textContent="header.top,footer.site,#offbar,.installbar,#install,#bvhelp-stack,#bvdock-btn{display:none!important}main{padding-top:8px!important}.hero{padding:10px 0!important}.hero p.muted{display:none}",e.head.appendChild(t)}catch{}});function x(e){var t=e==="help"?"❓ Science Help Desk":"✉️ Messages";n.querySelector("b").textContent=t,n.setAttribute("aria-label",t);var a=e==="help"?"/tutor/":"/messages/";u!==a&&(u=a,f.src=a,f.title=t),n.classList.add("on"),document.documentElement.style.overflow="hidden",n.querySelector(".x").focus()}function g(){n.classList.remove("on"),document.documentElement.style.overflow="",u==="/messages/"&&(u="",b())}d.addEventListener("click",function(){x("help")}),s.addEventListener("click",function(){x("msg")}),n.addEventListener("click",function(e){(e.target.closest(".x")||e.target===n)&&g()}),document.addEventListener("keydown",function(e){e.key==="Escape"&&n.classList.contains("on")&&g()}),window.BVHelp={open:x,close:g};function _(){try{var e=new URL(c).hostname.split(".")[0],t=JSON.parse(localStorage.getItem("sb-"+e+"-auth-token")||"null");return t&&t.access_token&&(!t.expires_at||t.expires_at*1e3>Date.now()+15e3)?t.access_token:null}catch{return null}}function b(e){var t=_();if(window.fetch){if(!t){!e&&E()&&setTimeout(function(){b(!0)},5e3);return}fetch(c+"/rest/v1/rpc/unread_messages",{method:"POST",headers:{apikey:A,Authorization:"Bearer "+t,"Content-Type":"application/json"},body:"{}"}).then(function(a){return a.ok?a.json():0}).then(function(a){var C=s.querySelector(".n"),S=i.querySelector(".n");a=+a||0,C.textContent=S.textContent=a>99?"99+":a,C.hidden=S.hidden=!a}).catch(function(){})}}function M(){var e=document.getElementById("bvdock-btn");e&&e.parentNode!==r&&!/[?&]help=1/.test(k)&&r.insertBefore(e,r.firstChild),o.style.bottom="calc(16px + env(safe-area-inset-bottom,0px))"}function m(){document.body&&(document.head.contains(p)||document.head.appendChild(p),document.body.contains(o)||document.body.appendChild(o),document.body.contains(n)||document.body.appendChild(n),M())}m(),document.addEventListener("DOMContentLoaded",m),window.addEventListener("load",m),setInterval(m,1500),v&&(b(),setInterval(b,6e4))})();
+/* VistaEd · Help Desk and Messages buttons.
+   ❓ Help Desk appears in every interactive lesson, simulation and lab: it opens the Science Help Desk over the page,
+   so students can ask a question without leaving their work. ✉️ Messages appears on every page for signed-in users
+   (students, teachers, admin), with the number of unread messages. */
+(function () {
+  if (window.top !== window || document.getElementById('bvhelp-stack')) return;
+  var me = document.currentScript && document.currentScript.src || '', path = location.pathname;
+  if (/^\/(tutor|messages|login|register|live)\//.test(path)) return;   // not over a live lesson
+  var HELP = /[?&]help=1/.test(me) || /^\/(simulations|library|lesson|learn)\//.test(path) || !!window.SPEC || !!document.querySelector('[data-sim]');
+  var cfg = window.BV || {}, URL_ = cfg.sbUrl || window.SB_URL, KEY = cfg.sbKey || window.SB_KEY;
+  function token() {
+    try { var ref = new URL(URL_).hostname.split('.')[0], t = JSON.parse(localStorage.getItem('sb-' + ref + '-auth-token') || 'null');
+      if (t && t.access_token && (!t.expires_at || t.expires_at * 1000 > Date.now() - 864e5)) return t.access_token; } catch (e) {}
+    return null;
+  }
+  var signed = !!(URL_ && token());
+  var GIVE = !/^\/(donate|admin|staff)\//.test(path);   // 💚 Donate shows for everyone, signed in or not
+
+  var css = document.createElement('style');
+  css.textContent = '#bvhelp-stack{position:fixed;left:calc(14px + env(safe-area-inset-left,0px));z-index:2147483000;display:flex;flex-direction:column;align-items:flex-start;gap:8px}' +
+    '#bvhelp-stack button{position:relative;display:inline-flex!important;align-items:center;gap:6px;width:auto!important;max-width:max-content!important;margin:0!important;border:0;border-radius:999px;padding:10px 15px;color:#fff;font:700 14px/1.1 system-ui,Arial,sans-serif;box-shadow:0 6px 18px rgba(15,23,42,.28);cursor:pointer;text-transform:none!important}' +
+    '#bvhelp-stack .h{background:linear-gradient(120deg,#f97316,#ec4899)}#bvhelp-stack .m{background:linear-gradient(120deg,#7c3aed,#2563eb)}#bvhelp-stack .g{background:linear-gradient(120deg,#16a34a,#0d9488)}#bvhelp-stack button:hover{filter:brightness(1.08)}' +
+    '#bvhelp-stack .n{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:999px;background:#ef4444;color:#fff;font:700 12px/20px system-ui,Arial;text-align:center;padding:0 5px;border:2px solid #fff}' +
+    '#bvhelp{position:fixed;inset:0;z-index:2147483001;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:12px}#bvhelp.on{display:flex}' +
+    '#bvhelp .bx{background:#fff;border-radius:16px;width:min(900px,100%);height:min(92vh,960px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}' +
+    '#bvhelp .br{display:flex;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid #e2e8f0;background:#f8fafc;font:700 15px system-ui,Arial,sans-serif;color:#0f172a}#bvhelp .br b{margin-right:auto}' +
+    '#bvhelp .br button{width:auto!important;margin:0!important;border:0;background:#0f172a;color:#fff;border-radius:999px;padding:7px 13px;font:600 13px system-ui,Arial,sans-serif;cursor:pointer}' +
+    '#bvhelp iframe{flex:1;border:0;width:100%;background:#fff}@media print{#bvhelp-stack,#bvhelp{display:none!important}}' +
+    '@media(max-width:560px){#bvhelp-stack button{padding:9px 12px;font-size:13px}#bvhelp{padding:0}#bvhelp .bx{height:100vh;border-radius:0}}';
+  css.textContent += '#bvhelp-stack .bvf-list{display:none;flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:2px}#bvhelp-stack.bvf-on .bvf-list{display:flex;animation:bvfin .18s ease-out}' +
+    '@keyframes bvfin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}' +
+    '#bvhelp-stack .bvf{width:54px!important;height:54px;max-width:none!important;justify-content:center;padding:0!important;border-radius:18px;background:linear-gradient(135deg,#0d9488,#2563eb 55%,#7c3aed);box-shadow:0 8px 22px rgba(37,99,235,.35)}' +
+    '#bvhelp-stack .bvf svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}#bvhelp-stack.bvf-on .bvf svg{transform:rotate(45deg)}' +
+    '#bvhelp-stack #bvdock-btn{position:static!important;left:auto!important;bottom:auto!important}#bvhelp-stack #bvdock-btn::before{content:none!important}';
+  var stack = document.createElement('div'); stack.id = 'bvhelp-stack';
+  var list = document.createElement('div'); list.className = 'bvf-list'; list.id = 'bvf-list';
+  var fab = document.createElement('button'); fab.type = 'button'; fab.className = 'bvf'; fab.setAttribute('aria-expanded', 'false'); fab.setAttribute('aria-controls', 'bvf-list');
+  fab.setAttribute('aria-label', 'Quick tools: help desk, messages, graph and draw, donate'); fab.title = 'Quick tools';
+  fab.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="n" hidden></span>';
+  fab.addEventListener('click', function () { var on = !stack.classList.contains('bvf-on'); stack.classList.toggle('bvf-on', on); fab.setAttribute('aria-expanded', on ? 'true' : 'false'); });
+  document.addEventListener('click', function (e) { if (stack.classList.contains('bvf-on') && !stack.contains(e.target)) { stack.classList.remove('bvf-on'); fab.setAttribute('aria-expanded', 'false'); } });
+  var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'h'; hb.innerHTML = '❓ Help Desk'; hb.title = 'Ask a science question without leaving this page';
+  var mb = document.createElement('button'); mb.type = 'button'; mb.className = 'm'; mb.innerHTML = '✉️ Messages <span class="n" hidden></span>'; mb.title = 'Messages with your teachers';
+  var gb = document.createElement('button'); gb.type = 'button'; gb.className = 'g'; gb.innerHTML = '💚 Donate'; gb.title = '70% of every donation goes to charity';
+  gb.addEventListener('click', function () { location.href = '/donate/'; });
+  if (HELP) list.appendChild(hb); if (signed) list.appendChild(mb); if (GIVE) list.appendChild(gb); stack.appendChild(list); stack.appendChild(fab);
+  if (!GIVE && !signed && !HELP) return;
+  var box = document.createElement('div'); box.id = 'bvhelp'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
+  box.innerHTML = '<div class="bx"><div class="br"><b></b><button type="button" class="x">✕ Back to the page</button></div><iframe></iframe></div>';
+  var frame = box.querySelector('iframe'), cur = '';
+  frame.addEventListener('load', function () {   // only the Help Desk or Messages inside the panel: no site header, footer or hero
+    try { var d = frame.contentDocument, s = d.createElement('style');
+      s.textContent = 'header.top,footer.site,#offbar,.installbar,#install,#bvhelp-stack,#bvdock-btn{display:none!important}main{padding-top:8px!important}.hero{padding:10px 0!important}.hero p.muted{display:none}';
+      d.head.appendChild(s); } catch (e) {}
+  });
+  function open(kind) {
+    var title = kind === 'help' ? '❓ Science Help Desk' : '✉️ Messages';
+    box.querySelector('b').textContent = title; box.setAttribute('aria-label', title);
+    var src = kind === 'help' ? '/tutor/' : '/messages/';
+    if (cur !== src) { cur = src; frame.src = src; frame.title = title; }
+    box.classList.add('on'); document.documentElement.style.overflow = 'hidden'; box.querySelector('.x').focus();
+  }
+  function close() { box.classList.remove('on'); document.documentElement.style.overflow = ''; if (cur === '/messages/') { cur = ''; unread(); } }
+  hb.addEventListener('click', function () { open('help'); });
+  mb.addEventListener('click', function () { open('msg'); });
+  box.addEventListener('click', function (e) { if (e.target.closest('.x') || e.target === box) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && box.classList.contains('on')) close(); });
+  window.BVHelp = { open: open, close: close };
+  function fresh() { try { var ref = new URL(URL_).hostname.split('.')[0], t = JSON.parse(localStorage.getItem('sb-' + ref + '-auth-token') || 'null'); return t && t.access_token && (!t.expires_at || t.expires_at * 1000 > Date.now() + 15000) ? t.access_token : null; } catch (e) { return null; } }
+  function unread(again) {   // only with a token that has not expired; the page renews an old one within seconds, so try once more
+    var t = fresh(); if (!window.fetch) return; if (!t) { if (!again && token()) setTimeout(function () { unread(true); }, 5000); return; }
+    fetch(URL_ + '/rest/v1/rpc/unread_messages', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: '{}' })
+      .then(function (r) { return r.ok ? r.json() : 0; }).then(function (n) { var b = mb.querySelector('.n'), f = fab.querySelector('.n'); n = +n || 0; b.textContent = f.textContent = n > 99 ? '99+' : n; b.hidden = f.hidden = !n; }).catch(function () {});
+  }
+  function place() {   // the Graph & Draw button of lessons joins the same menu
+    var d = document.getElementById('bvdock-btn'); if (d && d.parentNode !== list && !/[?&]help=1/.test(me)) list.insertBefore(d, list.firstChild);   // lessons keep it in their tool rail
+    stack.style.bottom = 'calc(16px + env(safe-area-inset-bottom,0px))';
+  }
+  function mount() {
+    if (!document.body) return;
+    if (!document.head.contains(css)) document.head.appendChild(css);
+    if (!document.body.contains(stack)) document.body.appendChild(stack);
+    if (!document.body.contains(box)) document.body.appendChild(box);
+    place();
+  }
+  mount(); document.addEventListener('DOMContentLoaded', mount); window.addEventListener('load', mount); setInterval(mount, 1500);
+  if (signed) { unread(); setInterval(unread, 60000); }
+})();

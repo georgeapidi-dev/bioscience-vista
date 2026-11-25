@@ -1,3 +1,232 @@
-(function(){var b=window.BV=window.BV||{},t=window.BVS={};t.on=!!(b.sbUrl&&b.sbKey&&window.supabase),t.db=t.on?window.supabase.createClient(b.sbUrl,b.sbKey,{auth:{persistSession:!0,autoRefreshToken:!0,detectSessionInUrl:!0}}):null,t.E=function(e){return b.esc?b.esc(e):String(e??"")},t.notReady=function(e){e.innerHTML='<section class="panel tint"><h2>Accounts are being switched on</h2><p>Student accounts are not connected yet. In the meantime use <a href="/progress/">My learning</a> with your personal code.</p></section>'};var y=null;t.me=function(){if(!t.on)return Promise.resolve(null);if(y&&Date.now()-y.t<8e3)return y.p;var e=E();return y={t:Date.now(),p:e},e.then(null,function(){y=null}),e};function E(){return t.db.auth.getSession().then(function(e){var a=e.data.session&&e.data.session.user;return a?Promise.all([t.db.from("profiles").select("*").eq("id",a.id).maybeSingle(),t.db.from("user_roles").select("role").eq("user_id",a.id),t.db.rpc("my_access").then(function(n){return n},function(){return{data:null}})]).then(function(n){if(!n[0].error&&!n[0].data)return t.db.auth.signOut().then(function(){return null});var o=(n[1].data||[]).map(function(s){return s.role}),r=n[0].data||{},i={user:a,profile:r,roles:o,admin:o.indexOf("admin")>=0,staff:o.indexOf("admin")>=0,parent:o.indexOf("parent")>=0,cls:null},c=i.access=n[2].data||{premium:!1,classes:[]};return i.school=!i.staff&&(o.indexOf("school_teacher")>=0||r.account_type==="teacher"),i.classes=(c.classes||[]).filter(function(s){return s.status==="approved"}),i.ok=i.staff||i.parent||(i.school?!!c.premium&&o.indexOf("school_teacher")>=0:!!c.premium&&i.classes.length>0),r.class_id?t.db.from("classes").select("id,name,programme").eq("id",r.class_id).maybeSingle().then(function(s){return i.cls=s.data,i}):i}):null})}t.guard=function(e,a){return a=a||{},t.on?(e.innerHTML='<p class="muted">Loading…</p>',t.me().then(function(n){if(!n)throw location.href="/login/?next="+encodeURIComponent(location.pathname+location.search),"signed-out";if(a.staff&&!n.staff)throw e.innerHTML='<section class="panel"><h2>Teachers only</h2><p>This area is for teachers. <a href="/dashboard/">Go to your dashboard</a>.</p></section>',"not-staff";if(n.parent&&!n.staff&&!a.parent&&!a.anyone)throw location.href="/parent/","parent";if(n.school&&!a.school&&!a.anyone)throw location.href="/teach/","school";if(a.parent&&!n.parent&&!n.staff)throw e.innerHTML='<section class="panel"><h2>Parents only</h2><p>This page is for parents. <a href="/dashboard/">Go to your dashboard</a>.</p></section>',"not-parent";if(!a.allowPending&&!n.ok)throw t.updateNav(n),e.innerHTML=t.pendingBox(n),"pending";return t.updateNav(n),n.admin&&t.areaBar(e),t.prefsPull(n).then(function(){return n})})):(t.notReady(e),Promise.reject("off"))};var f=null,g=null,x=null;function _(e){return{cc:"bv-cc-prefs-"+e,dhide:"bv-dhide-"+e,a11y:"bv-a11y"}}function w(e,a){var n="bv-prefs-at-"+e;try{return a&&localStorage.setItem(n,JSON.stringify(a)),JSON.parse(localStorage.getItem(n)||"{}")}catch{return{}}}t.prefsPull=function(e){if(!e||!e.user||e.view||e.preview||g===e.user.id&&f)return Promise.resolve();g=e.user.id;var a=t.db.from("ui_prefs").select("prefs").eq("user_id",g).maybeSingle().then(function(n){if(n.error){f=null;return}f=n.data&&n.data.prefs||{};var o=_(g),r=w(g),i=!1;Object.keys(o).forEach(function(c){var s=f[c],l=null;try{l=localStorage.getItem(o[c])}catch{}if(s&&+s.at>(+r[c]||0)){try{s.v==null?localStorage.removeItem(o[c]):localStorage.setItem(o[c],String(s.v))}catch{}r[c]=+s.at,c==="a11y"&&window.BV&&b.a11y&&b.a11y(s.v?String(s.v).split(","):[],!0)}else!s&&l!=null&&(f[c]={v:l,at:+r[c]||Date.now()},r[c]=f[c].at,i=!0)}),w(g,r),i&&t.prefsSave()},function(){});return Promise.race([a,new Promise(function(n){setTimeout(n,1500)})])},t.prefsPush=function(e,a){if(g){var n=w(g);n[e]=Date.now(),w(g,n),f&&(f[e]={v:a==null?null:String(a),at:n[e]},clearTimeout(x),x=setTimeout(t.prefsSave,800))}},t.prefsGet=function(e){return f&&f[e]?f[e].v:null},t.prefsSave=function(){!g||!f||t.db.from("ui_prefs").upsert({user_id:g,prefs:f,updated_at:new Date().toISOString()}).then(function(){},function(){})},t.AREAS=[["/admin/approvals/","✅ APPROVAL CENTRE","Registrations, subjects, memberships, security"],["/admin/","🛠 Admin","Members, payments, settings"],["/staff/","🌐 Main site","Main-site courses, lessons, quizzes and their classes"],["/teach/","🏫 My classes","Classes you teach, like any teacher"]],t.areaBar=function(e){var a=location.pathname;if(!(!t.AREAS.some(function(r){return a.indexOf(r[0])===0})||document.getElementById("areabar"))){var n=document.createElement("nav");n.id="areabar",n.setAttribute("aria-label","Admin areas"),n.style.cssText="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px";var o=t.AREAS.map(function(r){return r[0]}).filter(function(r){return a.indexOf(r)===0}).sort(function(r,i){return i.length-r.length})[0];n.innerHTML=t.AREAS.map(function(r){var i=r[0]===o;return'<a href="'+r[0]+'" title="'+t.E(r[2])+'" style="flex:1;min-width:150px;text-align:center;padding:10px 14px;border-radius:12px;font-weight:700;text-decoration:none;border:1px solid var(--line,#dde3ea);'+(i?"background:linear-gradient(120deg,#7c3aed,#2563eb);color:#fff;border-color:transparent":"background:var(--card,#fff);color:inherit")+'"'+(i?' aria-current="page"':"")+">"+r[1]+"</a>"}).join(""),e.parentNode.insertBefore(n,e)}},t.pendingBox=function(e){var a=e.access||{},n=a.status;if(n&&n!=="approved"){var o={pending:["Waiting for approval","The VistaEd admin checks every new account. You will get an email when yours is approved."+(a.verified?"":" Please verify your email address first.")],info_requested:["The admin needs more information",t.E(a.info_request||"")+" Answer it on your Account page."],suspended:["Your account is paused","Learning materials are closed. Contact VistaEd if you think this is a mistake."],rejected:["Your registration was not approved","Contact VistaEd if you think this is a mistake."]}[n]||["Not open yet",""];return'<section class="panel tint"><p class="label">My account</p><h2>'+o[0]+"</h2><p>"+o[1]+'</p><div class="cta"><a class="btn main sm" href="/account/">My account</a></div><p class="small muted">Signed in as '+t.E(e.user.email)+' · <a href="#" onclick="BVS.signOut();return false">Log out</a></p></section>'}var r=e.access||{},i=(r.classes||[]).filter(function(s){return s.status==="pending"}),c=[];return(!e.classes||!e.classes.length)&&c.push(i.length?"your teacher to approve you for <b>"+i.map(function(s){return t.E(s.name)}).join(", ")+"</b>":r.learner_kind==="independent"?'an authorised subject: see <a href="/account/">My account</a>':'your class: <a href="/join/">type the class code your teacher gave you</a>'),r.premium||c.push('<a href="/premium/">premium access</a>'),'<section class="panel tint"><p class="label">Almost there</p><h2>Not open yet</h2><p>Lessons, quizzes and simulations open when your account has '+(c.length?"these: "+c.join(" and "):"an approved class and premium access")+'.</p><div class="cta"><a class="btn main sm" href="/dashboard/">My dashboard</a>'+(r.premium?"":'<a class="btn sm" href="/premium/">Get premium</a>')+'</div><p class="small muted">Signed in as '+t.E(/@students\.biosciencevista\.com$/.test(e.user.email||"")?e.profile&&e.profile.full_name||"student":e.user.email)+' · <a href="#" onclick="BVS.signOut();return false">Log out</a></p></section>'},t.logVisit=function(){if(t.on){var e;try{e=localStorage.getItem("bv-vid"),e||(e=crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2),localStorage.setItem("bv-vid",e))}catch{}var a=/Mobi|Android|iPhone/i.test(navigator.userAgent)?"phone":/iPad|Tablet/i.test(navigator.userAgent)?"tablet":"computer",n=document.referrer&&document.referrer.indexOf(location.origin)!==0?document.referrer.split("?")[0]:null;t.db.rpc("log_visit",{page:location.pathname,ref:n,dev:a,vid:e||null}).then(function(){},function(){})}},t.acctStrip=function(e,a){if(!(!e||e.view||e.preview||!a||document.getElementById("acct-strip"))){var n=e.access||{},o=(n.courses||[]).filter(function(u){return u.status==="approved"}),r=(n.courses||[]).filter(function(u){return u.status==="requested"}),i=(n.classes||[]).filter(function(u){return u.status==="pending"&&!u.self}),c={cambridge:"Cambridge International",ib:"International Baccalaureate"},s={ks3:"KS3",igcse:"IGCSE",alevel:"A Level",myp:"MYP",ibdp:"IBDP"},l={};o.forEach(function(u){l[c[u.pathway]+" · "+s[u.section]]=1});var h=n.free?"Premium":n.premium&&!(n.until&&new Date(n.until)>new Date)?"Premium · school licence":n.premium?"Premium until "+new Date(n.until).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):n.until&&new Date(n.until)<new Date?"Free (Premium ended "+new Date(n.until).toLocaleDateString()+")":"Free",d=document.createElement("section");d.id="acct-strip",d.style.cssText="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 14px;margin:0 0 12px;border-radius:14px;background:linear-gradient(90deg,#eef2ff,#fdf2f8);border:1px solid #e0e7ff;font-size:.9rem",d.innerHTML="<b>"+(Object.keys(l).map(t.E).join(" · ")||"No authorised subject yet")+"</b>"+(o.length?"<span>📚 "+o.map(function(u){return t.E(u.name)}).join(", ")+"</span>":"")+(r.length?"<span>⏳ "+r.length+" subject"+(r.length>1?"s":"")+" waiting for the admin</span>":"")+(i.length?"<span>📨 Waiting for your teacher: "+i.map(function(u){return t.E(u.name)}).join(", ")+"</span>":"")+"<span>⭐ "+t.E(h)+"</span>"+(n.verified===!1?'<span style="color:#b45309;font-weight:700">✉️ Please verify your email: <button type="button" class="btn sm" data-vsend style="margin-left:4px">Send me the link</button></span>':"")+'<span style="margin-left:auto;display:flex;gap:6px">'+(e.school?'<a class="btn sm" href="/teach/classes/">Class codes and requests</a>':n.learner_kind==="independent"?"":'<a class="btn sm" href="/join/">Join a class</a>')+'<a class="btn sm" href="/account/">👤 My account</a></span>',a.parentNode.insertBefore(d,a);var m=d.querySelector("[data-vsend]");m&&(m.onclick=function(){m.disabled=!0,m.textContent="Sending…",t.db.rpc("resend_verification").then(function(u){if(u.error)return m.disabled=!1,m.textContent="Send me the link",alert(t.nice(u.error));m.parentNode.innerHTML=u.data==="verified"?"✅ Your email is verified":"✉️ Link sent to "+t.E(e.user&&e.user.email||"your email")+". Open it within 7 days (check spam)."})}),(e.school||e.admin||(e.roles||[]).indexOf("teacher")>=0)&&t.db.rpc("my_schools").then(function(u){var p=u&&u.data||[];if(!(!p.length||e.admin)){var v=d.querySelector('span[style*="margin-left:auto"]'),S=document.createElement("a");S.className="btn sm",S.href="/school/",S.textContent="🏫 "+(p.length===1?p[0].name:"My schools"),v.insertBefore(S,v.firstChild)}},function(){})}},t.signOut=function(){t.db.auth.signOut().then(function(){location.href="/"})},t.err=function(e){if(e&&e.error)throw new Error(e.error.message||"Something went wrong.");return e?e.data:null},t.all=function(e,a,n){return a=a||0,n=n||[],e().range(a,a+999).then(function(o){if(o.error)return n.length?{data:n}:o;var r=o.data||[];return n=n.concat(r),r.length===1e3?t.all(e,a+1e3,n):{data:n}})},t.nice=function(e){var a=e&&(e.message||e.error_description||e)||"Something went wrong.";return String(a).replace(/^.*?ERROR:\s*/,"")},t.updateNav=function(e){var a=document.querySelector(".cta-nav");if(!(!a||!e)){var n=document.querySelector(".nav-signin");n&&n.remove(),[].forEach.call(document.querySelectorAll("[data-guest]"),function(o){o.remove()}),!t._trialShown&&t.db&&(t._trialShown=1,t.db.rpc("my_trial").then(function(o){var r=o&&o.data;if(!(!r||r.staff||r.exempt||r.paid||r.all_free||!r.trial_ends)){var i=Math.ceil((new Date(r.trial_ends)-new Date)/864e5),c=document.createElement("div");c.className="trialbar",c.setAttribute("role","status"),c.innerHTML=(i>0?"🎁 Free trial: <b>"+i+" day"+(i===1?"":"s")+" left</b>.":"⏳ Your free trial has ended.")+' <a href="/premium/">Go Premium</a> to keep every lesson, lab and exam.';var s=document.querySelector("header.top");s&&s.parentNode&&s.parentNode.insertBefore(c,s.nextSibling)}},function(){})),a.textContent=e.admin?"My dashboards":e.staff||e.school?"Teacher dashboard":e.parent?"My child's progress":"My dashboard",a.href=e.admin?"/teach/":e.staff?"/staff/":e.school?"/teach/":e.parent?"/parent/":"/dashboard/"}},t.quizSubjectCol=function(){return t._qsc||(t._qsc=t.db.from("quizzes").select("subject").limit(1).then(function(e){return!e.error},function(){return!1})),t._qsc},t.subjectLookup=function(e,a){var n=function(s){return(s||[]).filter(function(l,h,d){return l&&d.indexOf(l)===h})},o=Promise.resolve({data:[]}),r=function(s){return s.then(function(l){return l.error?{data:[]}:l},function(){return{data:[]}})},i=n(e),c=n(a);return Promise.all([r(t.db.from("topics").select("id,name,programme,parent_id")),i.length?r(t.db.from("lessons").select("id,topic_id").in("id",i)):o,c.length?t.quizSubjectCol().then(function(s){return r(t.db.from("quizzes").select("id,topic_id"+(s?",subject":"")).in("id",c))}):o]).then(function(s){var l={},h={},d={};(s[0].data||[]).forEach(function(u){l[u.id]=u}),(s[1].data||[]).forEach(function(u){h[u.id]=u.topic_id}),(s[2].data||[]).forEach(function(u){d[u.id]=u});var m=function(u){var p=l[u]||{};return p.programme||(l[p.parent_id]||{}).programme||""};return{lesson:function(u,p){return b.subj.of((l[h[u]]||{}).name,p)},quiz:function(u,p){var v=d[u]||{};return b.subj.of(v.subject,(l[v.topic_id]||{}).name,p)},myp:function(u,p,v){return/^MYP/.test(m(u==="quiz"?(d[p]||{}).topic_id:h[p]))||/\bgrade (6|7|8|9|10)\b/i.test(v||"")}}})},t.del=function(e,a,n){return'<span class="adm-del" role="button" tabindex="0" data-dk="'+t.E(e)+'" data-di="'+t.E(a)+'" data-dt="'+t.E(n||"")+'" title="Delete (admin)" aria-label="Delete '+t.E(n||"this item")+'">🗑</span>'},function(){if(document.getElementById("adm-del-css"))return;var e=document.createElement("style");e.id="adm-del-css",e.textContent=".adm-del{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;border-radius:9px;background:#fee2e2;border:1px solid #fca5a5;color:#b91c1c;cursor:pointer;font-size:15px;line-height:1;margin-left:6px;transition:transform .1s}.adm-del:hover,.adm-del:focus-visible{background:#ef4444;color:#fff;transform:scale(1.08);outline:none}.adm-gone{opacity:.25;filter:grayscale(1);pointer-events:none;transition:opacity .4s}",(document.head||document.documentElement).appendChild(e);var a={quiz:"This goes to the 🗑 Bin for 30 days. You can restore it from Teacher dashboard → Bin.",lesson:"This goes to the 🗑 Bin for 30 days. You can restore it from Teacher dashboard → Bin.",resource:"It will be hidden from everyone (unpublished). You can publish it again under Teacher dashboard → Content.",simulation:"It will be hidden from everyone (unpublished). You can publish it again under Teacher dashboard → Content.",classmat:"It is taken out of this class only. The material itself stays on the site."};function n(r){var i=r.getAttribute("data-dk"),c=r.getAttribute("data-di"),s=r.getAttribute("data-dt")||"this item";if(confirm("Delete “"+s+`”?
+/* VistaEd · Supabase helper (public anon key only; security comes from Row Level Security) */
+(function () {
+  var BV = window.BV = window.BV || {}, S = window.BVS = {};
+  S.on = !!(BV.sbUrl && BV.sbKey && window.supabase);
+  S.db = S.on ? window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
+  S.E = function (s) { return BV.esc ? BV.esc(s) : String(s == null ? '' : s); };
+  S.notReady = function (el) {
+    el.innerHTML = '<section class="panel tint"><h2>Accounts are being switched on</h2><p>Student accounts are not connected yet. In the meantime use <a href="/progress/">My learning</a> with your personal code.</p></section>';
+  };
+  /* who is signed in: {user, profile, roles[], staff, admin, cls} */
+  var ME = null;   // one account lookup shared by every script that asks while the page opens (23 Nov 2026): saves repeat requests
+  S.me = function () {
+    if (!S.on) return Promise.resolve(null);
+    if (ME && Date.now() - ME.t < 8000) return ME.p;
+    var p = meNow(); ME = { t: Date.now(), p: p }; p.then(null, function () { ME = null; }); return p;
+  };
+  function meNow() {
+    return S.db.auth.getSession().then(function (r) {
+      var u = r.data.session && r.data.session.user; if (!u) return null;
+      return Promise.all([
+        S.db.from('profiles').select('*').eq('id', u.id).maybeSingle(),
+        S.db.from('user_roles').select('role').eq('user_id', u.id),
+        S.db.rpc('my_access').then(function (r) { return r; }, function () { return { data: null }; })
+      ]).then(function (x) {
+        if (!x[0].error && !x[0].data) { return S.db.auth.signOut().then(function () { return null; }); }   // account was deleted
+        var roles = (x[1].data || []).map(function (r) { return r.role; }), p = x[0].data || {};
+        var me = { user: u, profile: p, roles: roles, admin: roles.indexOf('admin') >= 0, staff: roles.indexOf('admin') >= 0,   /* only admins edit the main site (migration 024) */ parent: roles.indexOf('parent') >= 0, cls: null };
+        var a = me.access = x[2].data || { premium: false, classes: [] };   // premium access and the classes this account joined (migration 022)
+        me.school = !me.staff && (roles.indexOf('school_teacher') >= 0 || p.account_type === 'teacher');   // a teacher from another school: own classes only
+        me.classes = (a.classes || []).filter(function (c) { return c.status === 'approved'; });
+        me.ok = me.staff || me.parent || (me.school ? !!a.premium && roles.indexOf('school_teacher') >= 0 : !!a.premium && me.classes.length > 0);
+        if (!p.class_id) return me;
+        return S.db.from('classes').select('id,name,programme').eq('id', p.class_id).maybeSingle().then(function (c) { me.cls = c.data; return me; });
+      });
+    });
+  }
 
-`+(a[i]||""))){var l=function(d){if(d&&d.error){alert(t.nice(d.error));return}var m=r.closest("[data-delcard], .lcard, .course, .qc-card, .task, li, tr")||r;m.classList.add("adm-gone"),r.remove(),setTimeout(function(){m.style.display="none"},450)},h=i==="quiz"||i==="lesson"?t.db.rpc("bin_item",{kind:i,item:c}):i==="resource"?t.db.from("resources").update({published:!1}).eq("id",c):i==="simulation"?t.db.from("simulations").update({published:!1}).eq("id",c):i==="classmat"?t.db.from("class_materials").delete().eq("class_id",c.split("|")[0]).eq("path",c.split("|").slice(1).join("|")):null;h&&h.then(l,function(d){alert(t.nice(d))})}}var o=function(r){var i=r.target&&r.target.closest?r.target.closest(".adm-del"):null;i&&(r.type==="keydown"&&r.key!=="Enter"&&r.key!==" "||(r.preventDefault(),r.stopPropagation(),n(i)))};document.addEventListener("click",o,!0),document.addEventListener("keydown",o,!0)}(),t.pct=function(e,a){return a?Math.round(100*e/a):null},t.when=function(e){return e?new Date(e).toLocaleString([],{dateStyle:"medium",timeStyle:"short"}):""},t.on&&(t.me().then(t.updateNav).catch(function(){}),t.logVisit())})();
+  /* page guard: redirects to login when signed out; staff:true requires teacher/admin */
+  S.guard = function (el, opts) {
+    opts = opts || {};
+    if (!S.on) { S.notReady(el); return Promise.reject('off'); }
+    el.innerHTML = '<p class="muted">Loading…</p>';
+    return S.me().then(function (me) {
+      if (!me) { location.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); throw 'signed-out'; }
+      if (opts.staff && !me.staff) { el.innerHTML = '<section class="panel"><h2>Teachers only</h2><p>This area is for teachers. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; throw 'not-staff'; }
+      if (me.parent && !me.staff && !opts.parent && !opts.anyone) { location.href = '/parent/'; throw 'parent'; }   // parents have their own page
+      if (me.school && !opts.school && !opts.anyone) { location.href = '/teach/'; throw 'school'; }   // teachers from other schools have their own portal
+      if (opts.parent && !me.parent && !me.staff) { el.innerHTML = '<section class="panel"><h2>Parents only</h2><p>This page is for parents. <a href="/dashboard/">Go to your dashboard</a>.</p></section>'; throw 'not-parent'; }
+      if (!opts.allowPending && !me.ok) { S.updateNav(me); el.innerHTML = S.pendingBox(me); throw 'pending'; }
+      S.updateNav(me); if (me.admin) S.areaBar(el); return S.prefsPull(me).then(function () { return me; });
+    });
+  };
+  /* Settings that follow the account (migration 068, ui_prefs): teacher dashboard layout (cc), student dashboard sections (dhide)
+     and reading settings (a11y). The browser keeps a copy; the newer of the two wins, key by key. Never waits more than 1.5 s. */
+  var PREFS = null, PUID = null, PT = null;
+  function pkeys(uid) { return { cc: 'bv-cc-prefs-' + uid, dhide: 'bv-dhide-' + uid, a11y: 'bv-a11y' }; }
+  function pstamps(uid, set) { var k = 'bv-prefs-at-' + uid; try { if (set) localStorage.setItem(k, JSON.stringify(set)); return JSON.parse(localStorage.getItem(k) || '{}'); } catch (e) { return {}; } }
+  S.prefsPull = function (me) {
+    if (!me || !me.user || me.view || me.preview) return Promise.resolve();
+    if (PUID === me.user.id && PREFS) return Promise.resolve();
+    PUID = me.user.id;
+    var work = S.db.from('ui_prefs').select('prefs').eq('user_id', PUID).maybeSingle().then(function (r) {
+      if (r.error) { PREFS = null; return; }
+      PREFS = (r.data && r.data.prefs) || {};
+      var K = pkeys(PUID), at = pstamps(PUID), up = false;
+      Object.keys(K).forEach(function (k) {
+        var rem = PREFS[k], loc = null; try { loc = localStorage.getItem(K[k]); } catch (e) {}
+        if (rem && +rem.at > (+at[k] || 0)) {   // the account has a newer setting: use it here
+          try { if (rem.v == null) localStorage.removeItem(K[k]); else localStorage.setItem(K[k], String(rem.v)); } catch (e) {}
+          at[k] = +rem.at;
+          if (k === 'a11y' && window.BV && BV.a11y) BV.a11y(rem.v ? String(rem.v).split(',') : [], true);
+        } else if (!rem && loc != null) { PREFS[k] = { v: loc, at: +at[k] || Date.now() }; at[k] = PREFS[k].at; up = true; }   // first time: keep what this device has
+      });
+      pstamps(PUID, at); if (up) S.prefsSave();
+    }, function () {});
+    return Promise.race([work, new Promise(function (ok) { setTimeout(ok, 1500); })]);
+  };
+  S.prefsPush = function (k, v) {
+    if (!PUID) return; var at = pstamps(PUID); at[k] = Date.now(); pstamps(PUID, at);
+    if (!PREFS) return; PREFS[k] = { v: v == null ? null : String(v), at: at[k] };
+    clearTimeout(PT); PT = setTimeout(S.prefsSave, 800);
+  };
+  S.prefsGet = function (k) { return PREFS && PREFS[k] ? PREFS[k].v : null; };
+  S.prefsSave = function () {
+    if (!PUID || !PREFS) return;
+    S.db.from('ui_prefs').upsert({ user_id: PUID, prefs: PREFS, updated_at: new Date().toISOString() }).then(function () {}, function () {});
+  };
+  /* the admin works in three separate places: running the site, the main-site courses, and their own classes */
+  S.AREAS = [['/admin/approvals/', '✅ APPROVAL CENTRE', 'Registrations, subjects, memberships, security'], ['/admin/', '🛠 Admin', 'Members, payments, settings'], ['/staff/', '🌐 Main site', 'Main-site courses, lessons, quizzes and their classes'], ['/teach/', '🏫 My classes', 'Classes you teach, like any teacher']];
+  S.areaBar = function (el) {
+    var here = location.pathname; if (!S.AREAS.some(function (a) { return here.indexOf(a[0]) === 0; }) || document.getElementById('areabar')) return;
+    var bar = document.createElement('nav'); bar.id = 'areabar'; bar.setAttribute('aria-label', 'Admin areas');
+    bar.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px';
+    var best = S.AREAS.map(function (a) { return a[0]; }).filter(function (k) { return here.indexOf(k) === 0; }).sort(function (x, y) { return y.length - x.length; })[0];
+    bar.innerHTML = S.AREAS.map(function (a) { var on = a[0] === best;
+      return '<a href="' + a[0] + '" title="' + S.E(a[2]) + '" style="flex:1;min-width:150px;text-align:center;padding:10px 14px;border-radius:12px;font-weight:700;text-decoration:none;border:1px solid var(--line,#dde3ea);' +
+        (on ? 'background:linear-gradient(120deg,#7c3aed,#2563eb);color:#fff;border-color:transparent' : 'background:var(--card,#fff);color:inherit') + '"' + (on ? ' aria-current="page"' : '') + '>' + a[1] + '</a>'; }).join('');
+    el.parentNode.insertBefore(bar, el);
+  };
+  S.pendingBox = function (me) {
+    var a0 = me.access || {}, stt = a0.status;
+    if (stt && stt !== 'approved') {   // the account itself waits for the admin (migration 078)
+      var t = { pending: ['Waiting for approval', 'The VistaEd admin checks every new account. You will get an email when yours is approved.' + (a0.verified ? '' : ' Please verify your email address first.')],
+                info_requested: ['The admin needs more information', S.E(a0.info_request || '') + ' Answer it on your Account page.'],
+                suspended: ['Your account is paused', 'Learning materials are closed. Contact VistaEd if you think this is a mistake.'],
+                rejected: ['Your registration was not approved', 'Contact VistaEd if you think this is a mistake.'] }[stt] || ['Not open yet', ''];
+      return '<section class="panel tint"><p class="label">My account</p><h2>' + t[0] + '</h2><p>' + t[1] + '</p><div class="cta"><a class="btn main sm" href="/account/">My account</a></div>' +
+        '<p class="small muted">Signed in as ' + S.E(me.user.email) + ' · <a href="#" onclick="BVS.signOut();return false">Log out</a></p></section>';
+    }
+    var a = me.access || {}, waiting = (a.classes || []).filter(function (c) { return c.status === 'pending'; });
+    var need = [];
+    if (!me.classes || !me.classes.length) need.push(waiting.length ? 'your teacher to approve you for <b>' + waiting.map(function (c) { return S.E(c.name); }).join(', ') + '</b>' : (a.learner_kind === 'independent' ? 'an authorised subject: see <a href="/account/">My account</a>' : 'your class: <a href="/join/">type the class code your teacher gave you</a>'));
+    if (!a.premium) need.push('<a href="/premium/">premium access</a>');
+    return '<section class="panel tint"><p class="label">Almost there</p><h2>Not open yet</h2><p>Lessons, quizzes and simulations open when your account has ' + (need.length ? 'these: ' + need.join(' and ') : 'an approved class and premium access') + '.</p>' +
+      '<div class="cta"><a class="btn main sm" href="/dashboard/">My dashboard</a>' + (a.premium ? '' : '<a class="btn sm" href="/premium/">Get premium</a>') + '</div>' +
+      '<p class="small muted">Signed in as ' + S.E(/@students\.biosciencevista\.com$/.test(me.user.email || '') ? ((me.profile && me.profile.full_name) || 'student') : me.user.email) + ' · <a href="#" onclick="BVS.signOut();return false">Log out</a></p></section>';
+  };
+  /* anonymous visit log: page, where they came from, device type; a random id in this browser counts unique visitors (no IP address is kept) */
+  S.logVisit = function () {
+    if (!S.on) return; var vid;
+    try { vid = localStorage.getItem('bv-vid'); if (!vid) { vid = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)); localStorage.setItem('bv-vid', vid); } } catch (e) {}
+    var dev = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'phone' : /iPad|Tablet/i.test(navigator.userAgent) ? 'tablet' : 'computer';
+    var ref = document.referrer && document.referrer.indexOf(location.origin) !== 0 ? document.referrer.split('?')[0] : null;
+    S.db.rpc('log_visit', { page: location.pathname, ref: ref, dev: dev, vid: vid || null }).then(function () {}, function () {});
+  };
+  /* A strip at the top of the student and teacher dashboards: authorised pathway, section and subjects, membership and expiry,
+     class requests, email verification, and links to My account and (teachers) class codes and join requests (migration 078). */
+  S.acctStrip = function (me, el) {
+    if (!me || me.view || me.preview || !el || document.getElementById('acct-strip')) return;
+    var a = me.access || {}, cs = (a.courses || []).filter(function (c) { return c.status === 'approved'; }), wait = (a.courses || []).filter(function (c) { return c.status === 'requested'; });
+    var pend = (a.classes || []).filter(function (c) { return c.status === 'pending' && !c.self; });
+    var PW = { cambridge: 'Cambridge International', ib: 'International Baccalaureate' }, SEC = { ks3: 'KS3', igcse: 'IGCSE', alevel: 'A Level', myp: 'MYP', ibdp: 'IBDP' };
+    var pws = {}; cs.forEach(function (c) { pws[PW[c.pathway] + ' · ' + SEC[c.section]] = 1; });
+    var prem = a.free ? 'Premium' : a.premium && !(a.until && new Date(a.until) > new Date()) ? 'Premium · school licence' : a.premium ? 'Premium until ' + new Date(a.until).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : (a.until && new Date(a.until) < new Date() ? 'Free (Premium ended ' + new Date(a.until).toLocaleDateString() + ')' : 'Free');
+    var d = document.createElement('section'); d.id = 'acct-strip';
+    d.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 14px;margin:0 0 12px;border-radius:14px;background:linear-gradient(90deg,#eef2ff,#fdf2f8);border:1px solid #e0e7ff;font-size:.9rem';
+    d.innerHTML = '<b>' + (Object.keys(pws).map(S.E).join(' · ') || 'No authorised subject yet') + '</b>' +
+      (cs.length ? '<span>📚 ' + cs.map(function (c) { return S.E(c.name); }).join(', ') + '</span>' : '') + (wait.length ? '<span>⏳ ' + wait.length + ' subject' + (wait.length > 1 ? 's' : '') + ' waiting for the admin</span>' : '') +
+      (pend.length ? '<span>📨 Waiting for your teacher: ' + pend.map(function (c) { return S.E(c.name); }).join(', ') + '</span>' : '') +
+      '<span>⭐ ' + S.E(prem) + '</span>' + (a.verified === false ? '<span style="color:#b45309;font-weight:700">✉️ Please verify your email: <button type="button" class="btn sm" data-vsend style="margin-left:4px">Send me the link</button></span>' : '') +
+      '<span style="margin-left:auto;display:flex;gap:6px">' + (me.school ? '<a class="btn sm" href="/teach/classes/">Class codes and requests</a>' : (a.learner_kind === 'independent' ? '' : '<a class="btn sm" href="/join/">Join a class</a>')) + '<a class="btn sm" href="/account/">👤 My account</a></span>';
+    el.parentNode.insertBefore(d, el);
+    var vb = d.querySelector('[data-vsend]'); if (vb) vb.onclick = function () { vb.disabled = true; vb.textContent = 'Sending…';   // verification link, from the strip (25 Nov 2026)
+      S.db.rpc('resend_verification').then(function (r) { if (r.error) { vb.disabled = false; vb.textContent = 'Send me the link'; return alert(S.nice(r.error)); }
+        vb.parentNode.innerHTML = r.data === 'verified' ? '✅ Your email is verified' : '✉️ Link sent to ' + S.E(me.user && me.user.email || 'your email') + '. Open it within 7 days (check spam).'; }); };
+    if (me.school || me.admin || (me.roles || []).indexOf('teacher') >= 0) S.db.rpc('my_schools').then(function (r) {   // school coordinators (migration 087)
+      var L = (r && r.data) || []; if (!L.length || me.admin) return; var box = d.querySelector('span[style*="margin-left:auto"]'), x = document.createElement('a');
+      x.className = 'btn sm'; x.href = '/school/'; x.textContent = '🏫 ' + (L.length === 1 ? L[0].name : 'My schools'); box.insertBefore(x, box.firstChild); }, function () {});
+  };
+  S.signOut = function () { S.db.auth.signOut().then(function () { location.href = '/'; }); };
+  S.err = function (r) { if (r && r.error) { throw new Error(r.error.message || 'Something went wrong.'); } return r ? r.data : null; };
+  /* every row of a query, 1000 at a time: the API returns at most 1000 rows per request (there are over 1300 lessons, 22 Nov 2026) */
+  S.all = function (build, from, acc) {
+    from = from || 0; acc = acc || [];
+    return build().range(from, from + 999).then(function (r) {
+      if (r.error) return acc.length ? { data: acc } : r;
+      var rows = r.data || []; acc = acc.concat(rows);
+      return rows.length === 1000 ? S.all(build, from + 1000, acc) : { data: acc };
+    });
+  };
+  S.nice = function (e) { var m = (e && (e.message || e.error_description || e)) || 'Something went wrong.'; return String(m).replace(/^.*?ERROR:\s*/, ''); };
+  S.updateNav = function (me) {
+    var a = document.querySelector('.cta-nav'); if (!a || !me) return;
+    var si = document.querySelector('.nav-signin'); if (si) si.remove();
+    [].forEach.call(document.querySelectorAll('[data-guest]'), function (g) { g.remove(); });
+    if (!S._trialShown && S.db) { S._trialShown = 1; S.db.rpc('my_trial').then(function (r) {   // 30-day free trial banner (migration 097)
+      var t = r && r.data; if (!t || t.staff || t.exempt || t.paid || t.all_free || !t.trial_ends) return;
+      var left = Math.ceil((new Date(t.trial_ends) - new Date()) / 864e5), bar = document.createElement('div');
+      bar.className = 'trialbar'; bar.setAttribute('role', 'status');
+      bar.innerHTML = (left > 0 ? '🎁 Free trial: <b>' + left + ' day' + (left === 1 ? '' : 's') + ' left</b>.' : '⏳ Your free trial has ended.') + ' <a href="/premium/">Go Premium</a> to keep every lesson, lab and exam.';
+      var h = document.querySelector('header.top'); if (h && h.parentNode) h.parentNode.insertBefore(bar, h.nextSibling);
+    }, function () {}); }
+    a.textContent = me.admin ? 'My dashboards' : me.staff || me.school ? 'Teacher dashboard' : me.parent ? "My child's progress" : 'My dashboard'; a.href = me.admin ? '/teach/' : me.staff ? '/staff/' : me.school ? '/teach/' : me.parent ? '/parent/' : '/dashboard/';
+  };
+  /* Grade 6 to 10 science: each question set and exam says its subject (Biology, Chemistry or Physics) in quizzes.subject (migration 036).
+     Resolves true when that column exists; before the migration the subject is read from the set's topic and title (BV.subj.of). */
+  S.quizSubjectCol = function () { if (!S._qsc) S._qsc = S.db.from('quizzes').select('subject').limit(1).then(function (r) { return !r.error; }, function () { return false; }); return S._qsc; };
+  /* Which subject a lesson or a question set belongs to, for pages that list a student's work (dashboard, parent view).
+     Give the lesson ids and quiz ids on the page; resolves { lesson(id, title), quiz(id, title), myp(kind, id, title) }. */
+  S.subjectLookup = function (lessonIds, quizIds) {
+    var uniq = function (a) { return (a || []).filter(function (v, i, x) { return v && x.indexOf(v) === i; }); }, none = Promise.resolve({ data: [] });
+    var soft = function (q) { return q.then(function (r) { return r.error ? { data: [] } : r; }, function () { return { data: [] }; }); };
+    var lids = uniq(lessonIds), qids = uniq(quizIds);
+    return Promise.all([soft(S.db.from('topics').select('id,name,programme,parent_id')), lids.length ? soft(S.db.from('lessons').select('id,topic_id').in('id', lids)) : none,
+      qids.length ? S.quizSubjectCol().then(function (has) { return soft(S.db.from('quizzes').select('id,topic_id' + (has ? ',subject' : '')).in('id', qids)); }) : none]).then(function (y) {
+      var T = {}, lt = {}, qz = {}; (y[0].data || []).forEach(function (t) { T[t.id] = t; }); (y[1].data || []).forEach(function (l) { lt[l.id] = l.topic_id; }); (y[2].data || []).forEach(function (q) { qz[q.id] = q; });
+      var prog = function (tid) { var t = T[tid] || {}; return t.programme || (T[t.parent_id] || {}).programme || ''; };
+      return { lesson: function (id, title) { return BV.subj.of((T[lt[id]] || {}).name, title); },
+        quiz: function (id, title) { var q = qz[id] || {}; return BV.subj.of(q.subject, (T[q.topic_id] || {}).name, title); },
+        myp: function (kind, id, title) { return /^MYP/.test(prog(kind === 'quiz' ? (qz[id] || {}).topic_id : lt[id])) || /\bgrade (6|7|8|9|10)\b/i.test(title || ''); } };
+    });
+  };
+  /* 🗑 admin delete button for any material (added 16 Nov 2026). S.del(kind, id, title) gives the button's HTML; one click handler for the whole site.
+     quiz / lesson → the 🗑 Bin for 30 days (bin_item, migration 042; restore from Teacher dashboard → Bin);
+     resource / simulation → unpublished (hidden from everyone; publish it again under Content); classmat → taken out of that class only (id = class id|path). */
+  S.del = function (kind, id, title) {
+    return '<span class="adm-del" role="button" tabindex="0" data-dk="' + S.E(kind) + '" data-di="' + S.E(id) + '" data-dt="' + S.E(title || '') + '" title="Delete (admin)" aria-label="Delete ' + S.E(title || 'this item') + '">🗑</span>';
+  };
+  (function () {
+    if (document.getElementById('adm-del-css')) return;
+    var st = document.createElement('style'); st.id = 'adm-del-css';
+    st.textContent = '.adm-del{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;border-radius:9px;background:#fee2e2;border:1px solid #fca5a5;color:#b91c1c;cursor:pointer;font-size:15px;line-height:1;margin-left:6px;transition:transform .1s}.adm-del:hover,.adm-del:focus-visible{background:#ef4444;color:#fff;transform:scale(1.08);outline:none}.adm-gone{opacity:.25;filter:grayscale(1);pointer-events:none;transition:opacity .4s}';
+    (document.head || document.documentElement).appendChild(st);
+    var NAMES = { quiz: 'This goes to the 🗑 Bin for 30 days. You can restore it from Teacher dashboard → Bin.', lesson: 'This goes to the 🗑 Bin for 30 days. You can restore it from Teacher dashboard → Bin.',
+      resource: 'It will be hidden from everyone (unpublished). You can publish it again under Teacher dashboard → Content.', simulation: 'It will be hidden from everyone (unpublished). You can publish it again under Teacher dashboard → Content.',
+      classmat: 'It is taken out of this class only. The material itself stays on the site.' };
+    function run(el) {
+      var k = el.getAttribute('data-dk'), id = el.getAttribute('data-di'), t = el.getAttribute('data-dt') || 'this item';
+      if (!confirm('Delete “' + t + '”?\n\n' + (NAMES[k] || ''))) return;
+      var done = function (r) {
+        if (r && r.error) { alert(S.nice(r.error)); return; }
+        var card = el.closest('[data-delcard], .lcard, .course, .qc-card, .task, li, tr') || el; card.classList.add('adm-gone'); el.remove();
+        setTimeout(function () { card.style.display = 'none'; }, 450);
+      };
+      var p = k === 'quiz' || k === 'lesson' ? S.db.rpc('bin_item', { kind: k, item: id })
+        : k === 'resource' ? S.db.from('resources').update({ published: false }).eq('id', id)
+        : k === 'simulation' ? S.db.from('simulations').update({ published: false }).eq('id', id)
+        : k === 'classmat' ? S.db.from('class_materials').delete().eq('class_id', id.split('|')[0]).eq('path', id.split('|').slice(1).join('|'))
+        : null;
+      if (p) p.then(done, function (e) { alert(S.nice(e)); });
+    }
+    var handle = function (e) {
+      var el = e.target && e.target.closest ? e.target.closest('.adm-del') : null; if (!el) return;
+      if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault(); e.stopPropagation(); run(el);
+    };
+    document.addEventListener('click', handle, true); document.addEventListener('keydown', handle, true);
+  })();
+  S.pct = function (s, m) { return m ? Math.round(100 * s / m) : null; };
+  S.when = function (t) { return t ? new Date(t).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : ''; };
+  if (S.on) { S.me().then(S.updateNav).catch(function () {}); S.logVisit(); }
+})();
