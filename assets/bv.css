@@ -518,3 +518,4 @@ html.bvnav .navdd-list a{display:flex!important;border-radius:12px!important;mar
 .brand span.bvw small{display:block;margin-top:3px;font:700 .3em/1 Outfit,system-ui,sans-serif;letter-spacing:.32em;text-transform:uppercase;color:#64748b;-webkit-text-fill-color:#64748b}
 @media (max-width:560px){.brand span.bvw small{display:none}}
 .mainnav a.nav-signin{font-weight:700}
+.trialbar{text-align:center;padding:8px 14px;font-weight:600;background:linear-gradient(90deg,#fef3c7,#fce7f3);color:#4a1d3a}.trialbar a{font-weight:800;color:#7c3aed}
