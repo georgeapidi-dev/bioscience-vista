@@ -27,7 +27,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "wLd/vFbLtXMrRiXT", "ct": "Pb87Sdzba9EwuS0L4Y/eO0evdXw77Fc/bwQC1KN069WpZ/oxOsHw0HKqMpX8ok3wTqlmOXNGKnPpoqhykYEis1zbMrVJI9uiNxd2u1kXEju5Fa17TXjKQMTvQbUFTRoG41b4mJNl5rZEuWTpQqSH2fCGlHfVKD9c7QF0wJfU7LcMMyr9bVaXFI4mlXNudt9SgOYubBYj6euFLW06DpDji3a5gAV27bOQWJmYPjqW8Y77OrwSYIYDeXS2/5fT3v6UZIHez5iHe4Aw1kkcaOdEsIoTlZsyPdWgK8HXMeFgsRp2cUlrkNYhATBSxj9rwcOgbubnSydmNRWgRaTi3xQRpKzjK8xGr49lcYC5YgV9DkOeg4kGyX8qJU3v/1hOdK+p35e/58zzsmAlC0aJ7eR18wu/edmYh6Ae4nn075WTYQKJUAAhMuO83CFE6A9fsv4iUwiw0VbxoxLFIrMSo5gkdX79b4zGxP/IbVPuQ9V92EUbA3Y2ZmUuJn0uB3GGBsqBj+vIlWsY32nNFMlm9w9kw74GToM3iNpRIWLtP3K65KHRICJ7lJcuAzrH1W0KlMTN1qBmP5IEPGI="};
+var P = {"v": "1d5badf4", "iv": "zM0RQq/aqgRaa+Bn", "ct": "RY2EsYTjBdKtBIRNAmswbMpy38qCJUeVc//OHnE5x4FsSLPkwSablEmXolT4ImhPPLZ/bwMXF+SJHR2a/wb4LSLM+0v0Xz4wOyOPEmzQF0+Q0ZAj0FQwHwXwHVyymOivjyLN1quXViS92HRuEK8+YIUCcaB4Lu3sDgWJmOiU7if9eYHXA0ndYhFpq1FVZpxx1FedqbUOpzVsO9hfYDEUdsbw7dHWnVBD0mMpF3r2+7e1EGngh8fGtGYcUBkmGDDIKf9GoYB0ivRSH9xY4A+2JTLWdBcPSKiNHkE2HgVXjblK7SxUycm/nYVeDYmLHo2nyrDtpkXeHyWzXMaSzbQxvCKiwwKQU74U1FqlwNiKa0O1roGDJ+Gkq1R5LRbs66fHe2Y2i+ZImsrDvtCIiPb44dEEPc8WiFwMTq5B1LcR21FWsKPqXZ6o5kseHVOttx2nCJYf78TGUKFXUK/Q2LNwMcB3HMVAhBm064pdFIAUpLgUtUVea4glvGbOcguBJAeqzR+xpA39Vl9ksDGTk37JCQ4VMlW1t2NOCotNHXCKjX1SGhlsRXMDWVxqKGgjBochNswvPYy6sKU="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -53,7 +53,7 @@ var P = {"v": "1d5badf4", "iv": "wLd/vFbLtXMrRiXT", "ct": "Pb87Sdzba9EwuS0L4Y/eO
       if (P.pv) return showPv();
       say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
-    if (!s && P.pv) return showPv();
+    if (!s && P.pv) { try { sessionStorage.removeItem('bvpv-member'); } catch (e) {} return showPv(); }
     if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
@@ -63,7 +63,8 @@ var P = {"v": "1d5badf4", "iv": "wLd/vFbLtXMrRiXT", "ct": "Pb87Sdzba9EwuS0L4Y/eO
       return (P.p ? db.rpc('page_key', { p: P.p }) : db.rpc('site_key')).then(function (x) {
         if (x.error) throw x.error;
         if (!x.data) return db.rpc('admin_ok').then(function (ok) { if (ok.data === false) return say('<h1>⏳ Waiting for approval</h1><p>Thank you for signing up. The site admin checks every new account before it can open materials. You will be able to open this page as soon as your account is approved.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>'); notOpen(); }, notOpen);
-        function notOpen() { return say(P.p ? '<h1>This page is not in your courses</h1><p>You open the courses you chose and your class\'s materials, during your 30-day free trial or with Premium. To open this page, add its course on your Account page, or go Premium if your free trial has ended. Your work and results are kept.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'
+        function notOpen() { if (P.pv) { try { sessionStorage.setItem('bvpv-member', '1'); } catch (e) {} return showPv(); }   // view mode: signed in, no Premium for this page (25 Nov 2026)
+          return say(P.p ? '<h1>This page is not in your courses</h1><p>You open the courses you chose and your class\'s materials, during your 30-day free trial or with Premium. To open this page, add its course on your Account page, or go Premium if your free trial has ended. Your work and results are kept.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'
           : '<h1>Not open yet</h1><p>You are signed in. Materials open when the admin has approved your account and subjects, and your membership or class allows them.</p><a class="btn" href="/account/">My account</a><a class="btn alt" href="/premium/">Premium access</a>'); }
         return open(x.data).then(function () { try { sessionStorage.setItem(C, x.data); } catch (e) {} },
           function () { say('<h1>This page was updated</h1><p>Reload to open the newest version.</p><a class="btn" href="' + here + '">Reload</a>'); });
