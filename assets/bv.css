@@ -519,3 +519,20 @@ html.bvnav .navdd-list a{display:flex!important;border-radius:12px!important;mar
 @media (max-width:560px){.brand span.bvw small{display:none}}
 .mainnav a.nav-signin{font-weight:700}
 .trialbar{text-align:center;padding:8px 14px;font-weight:600;background:linear-gradient(90deg,#fef3c7,#fce7f3);color:#4a1d3a}.trialbar a{font-weight:800;color:#7c3aed}
+/* Results pulse (teacher overview, 25 Nov 2026) */
+.rp-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 20px;align-items:flex-end;margin:4px 0 12px}
+.rp-k{display:block;font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b}
+.rp-big{font-size:2.1rem;line-height:1;margin-right:8px;background:linear-gradient(90deg,#0891b2,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rp-up,.rp-dn,.rp-eq{font-weight:800;font-size:.9rem;margin-left:6px}.rp-up{color:#15803d}.rp-dn{color:#b91c1c}.rp-eq{color:#475569}
+.rp-key{display:flex;gap:12px;font-size:.8rem;color:#475569}.rp-key i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.rp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.rp-task{border:1px solid #e2e8f0;border-radius:14px;padding:10px 12px;background:#fff;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+.rp-task.weak{border-color:#fecaca;background:#fff7f7}
+.rp-t{font-weight:700;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rp-m{display:flex;align-items:baseline;gap:8px;margin:4px 0 6px}.rp-m b{font-size:1.4rem}.rp-m span{font-size:.8rem;color:#64748b}
+.rp-bar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:#f1f5f9;gap:2px}.rp-bar i{display:block;min-width:4px}
+.rp-flag,.rp-good,.rp-ok{font-size:.8rem;font-weight:700;margin-top:6px}.rp-flag{color:#b91c1c}.rp-good{color:#15803d}.rp-ok{color:#92400e}
+.rp-people{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px}.rp-people h4{margin:0 0 6px}
+.rp-chip{display:inline-block;margin:0 6px 6px 0;padding:5px 10px;border-radius:999px;font-size:.85rem;text-decoration:none;color:#0f172a}
+.rp-chip.warn{background:#fee2e2}.rp-chip.good{background:#dcfce7}.rp-chip b{margin-right:4px}
+[data-theme=dark] .rp-task{background:#0f172a;border-color:#334155}[data-theme=dark] .rp-chip{color:#0f172a}
