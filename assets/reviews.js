@@ -1,13 +1,1 @@
-/* VistaEd · reviews on the home page: only reviews from real students, parents and teachers that the admin has published. */
-document.addEventListener('DOMContentLoaded', function () {
-  var box = document.getElementById('reviews'), S = window.BVS; if (!box || !S || !S.db) return;
-  S.db.from('reviews').select('who,display_name,school,rating,body,created_at').eq('status', 'approved').order('created_at', { ascending: false }).limit(12).then(function (r) {
-    var rows = r.data || [], E = S.E;
-    // no invented testimonials: until the admin publishes a real review the section stays hidden
-    if (!rows.length) { if (box.hasAttribute('hidden')) return; box.querySelector('.rv-list').innerHTML = '<p class="muted">Be one of the first to review VistaEd: open <a href="/dashboard/">your dashboard</a> after a lesson and press ⭐ Review VistaEd.</p>'; return; }
-    box.hidden = false;
-    box.querySelector('.rv-list').innerHTML = rows.map(function (v) {
-      return '<figure class="rv"><div class="rv-st" aria-label="' + v.rating + ' out of 5 stars">' + '★'.repeat(v.rating) + '<span>' + '★'.repeat(5 - v.rating) + '</span></div><blockquote>' + E(v.body) + '</blockquote><figcaption><b>' + E(v.display_name) + '</b> · ' + E(v.who) + (v.school ? ', ' + E(v.school) : '') + '</figcaption></figure>';
-    }).join('');
-  });
-});
+document.addEventListener("DOMContentLoaded",function(){var t=document.getElementById("reviews"),a=window.BVS;!t||!a||!a.db||a.db.from("reviews").select("who,display_name,school,rating,body,created_at").eq("status","approved").order("created_at",{ascending:!1}).limit(12).then(function(o){var n=o.data||[],r=a.E;if(!n.length){if(t.hasAttribute("hidden"))return;t.querySelector(".rv-list").innerHTML='<p class="muted">Be one of the first to review VistaEd: open <a href="/dashboard/">your dashboard</a> after a lesson and press ⭐ Review VistaEd.</p>';return}t.hidden=!1,t.querySelector(".rv-list").innerHTML=n.map(function(e){return'<figure class="rv"><div class="rv-st" aria-label="'+e.rating+' out of 5 stars">'+"★".repeat(e.rating)+"<span>"+"★".repeat(5-e.rating)+"</span></div><blockquote>"+r(e.body)+"</blockquote><figcaption><b>"+r(e.display_name)+"</b> · "+r(e.who)+(e.school?", "+r(e.school):"")+"</figcaption></figure>"}).join("")})});
