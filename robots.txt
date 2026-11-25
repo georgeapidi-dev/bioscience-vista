@@ -43,5 +43,7 @@ Allow: /cbe10-phys-10/$
 Allow: /cbe10-maths-10/$
 Allow: /cbe10-comp-10/$
 Allow: /cbe9-sci-1/$
+Allow: /sitemap.xml$
+Allow: /assets/sb-lesson.js
 Disallow: /
 Sitemap: https://biosciencevista.com/sitemap.xml
