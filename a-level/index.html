@@ -27,7 +27,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "eVZ77ouIddchWcAe", "ct": "XL/rW8gtInHwFsQ9MibOIucZw/N5vwwKfGEtnnTN59DP/J/igCo5K8ZxCeSPzega3yp3qBFpZPk9i0qzIDFNewG3YqU1JDtTgGsYUC/wQEOWUMKl8pm8KnAaU1uu/XEO+zZnHBehjCK9ccIdaGQqZxml15TKJAegcf/l1TyZNGVAIxGqeCPxoAHQoLQT20L7N7kPDx3u4K/9GUxYMiQL9s8SfMbUgwS2PPwtaX1DLIU4AFjUM1DE7/0HaKDMWQ7/g70FvBZmbMb472MgmyzOMh5e5Loe4baqDMutOqaUHBdFYG1XIig8GxeM2pfvvdGLKHuigJ5wDNc3Rr7QvTXpjIx0sx+9zzVWGz0zJ3WTLz8YaoehRuDQVHSeDNTKEiFV0cIr6uxERxU2aNPtsbWWHZMMmVrogamsU2wElq4="};
+var P = {"v": "1d5badf4", "iv": "qnFHhmoNyGb9NpY4", "ct": "xeeYLMtLrqkl/rYrebyPYxKphCYtKE+jht6DI38qhWU2Riu2GVLMOtdZXEt1Wa+3IaT/bhpObjoGfifWxT9n3cpB6sS5iXnn2rgaEyrTKQhrq1YSnpEdwSwn0qhB0mRsFvieoJ7myDePwZZ4hn5svgt4GUgb7H8Y8M7g7a8qhfCjreaVr6U+lM0/gBQ4shgva69UXfgr/6U7kWVx0i82zfRwbwZraYG2ZWX90gAtdkrBGV5DG1Pm6SKpi5yM1VGKS5wrmB37ykZUI7tOlTB/+bOrx9QCxz6R+as+TIDU6FaYw3SEh9So6SuXOuDqJVAxzIPiNtT9f7pSbsvHA3QZLX+G49Wz5QL+09zscc6BT+/gSr24qg56t3qwVUM/tGubEWeM/X/FaZmGqOgORXOQgA+Bi8HaOM3QuTzGjYc="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -37,7 +37,7 @@ var P = {"v": "1d5badf4", "iv": "eVZ77ouIddchWcAe", "ct": "XL/rW8gtInHwFsQ9MibOI
   function open(k) {
     return crypto.subtle.importKey('raw', u8(k), 'AES-GCM', false, ['decrypt'])
       .then(function (key) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8(P.iv) }, key, u8(P.ct)); })
-      .then(function (pt) { var html = te.decode(pt); document.open(); document.write(html); document.close(); });
+      .then(function (pt) { var html = te.decode(pt); if (/[?&]edx=/.test(location.search)) html += '<script>(function(){var q=new URLSearchParams(location.search),c=q.get(\'edx\'),t=q.get(\'t\');if(!c)return;fetch(\'/assets/edx-labels.json\').then(function(r){return r.json();}).then(function(L){var x=L[c];if(!x)return;var tp=(t&&x.topics[t])?(t+\' \'+x.topics[t]):\'\';var m=document.querySelector(\'.hero .meta\');if(m)m.textContent=x.code+(tp?\' · \'+tp:\'\')+\' · Prepared by VistaEd\';var h=document.querySelector(\'h1\');if(h){var b=document.createElement(\'p\');b.textContent=\'📘 Pearson Edexcel · \'+x.name+(tp?\' · \'+tp:\'\');b.style.cssText=\'display:inline-block;margin:0 0 8px;padding:4px 12px;border-radius:999px;background:#1d4ed8;color:#fff;font-weight:700;font-size:.9rem\';h.parentNode.insertBefore(b,h);}document.title=document.title.replace(/ · [^·]*$/,\'\')+\' · Edexcel \'+x.name;}).catch(function(){});})();<\/script>'; document.open(); document.write(html); document.close(); });
   }
   if (!window.crypto || !crypto.subtle) { say('<h1>Browser not supported</h1><p>Please use Chrome, Edge, Safari or Firefox.</p>'); return; }
   var BV = window.BV || {};

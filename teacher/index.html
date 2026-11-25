@@ -27,7 +27,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "cQzF38G1Kdcv9Q9B", "ct": "K1xwF0jsg+CPmJjPaS8BDG88n39bwao9u4jZAN0WY7ykNsPIkfoY2avEmduSOTDyVNqJZ4eXmxXDU8LwHvbpdZmqrD99Xe8i7l7jeKn6vrHv2gS6Vtn72w9PNi3QTDUUEJVvfQPRpdawqQisKsvtLcWq/w9C4U9v9g3su/KZ+6OV4qngLVlSGasWl/HMmsyyzYGl2BjkpeLA6cQpqxy/IKjB3chORRasr+mBrxAx93zDBUWkH/BFAP4trHazjkvV1pQwlRrTqTAv+w4eR7vHirItawYHYB5TSw/dfKfZLKXdO9e2JerDYQixbKNh/I7vcO9ZKwOZdjsxru4jePsI1Ng+jFZVbs/q8UbNs9RJ3Nf3uRN0LFJ22qBvWhgnvJIzjr9Cex4kwEKHY3AzWUIoVTAFiJCynRrA35jaj+evbaDqBHbkCO6hyBpl9oERbWDKewVcr/KzovkmDy5vCp3UnMWJJyad1FBUql5Q9JdU5SaKAHziV06pGaNjGY0i1A0+jpHeGheTUjn676t/j8SlnRa4m85WhyXAdaxTatepfJ1fr0Mu"};
+var P = {"v": "1d5badf4", "iv": "z0dHFoge9cPpoQPp", "ct": "1Fs5BppI8n/Svd40VrkuBLTWyCXWdc/kSbOVBNHHcr5W1aDyZufIa55A++R1zBOXFWPiRMK5n14DbBnSosl7kyQcxmqMIb9PcqJ+kBbNe7lru0zDkg7DFOqhYhdxGTnDxPQTngUYnvn5DRdiZfB8DCSK0+PKd1IO8yVeGMgNV+w5dNZAP5+27kgWuV9kBdSdwISL8FXZUdUO1bRLYJUDM7EYoPgQzNY2IZO8UTmfyQT4kAKB0fz1xkX84YDNWxFzAakINXCUUcYfinhwphpwDqDABVr7pvQQilfRQkWMpuSe7R0OEn/TWxNbXpf46ZJXqWg2HN5n5re611IBjOQayNY1cQ6fJyY/EOuNtQEsiCOEF8uxvHtVVaIFACzMHjW4MASA8OWZ7jALJJV4++/cdeQdjECAlkqg29L+lyGLrBQ+brgc8JLaAqUzaQ9oksOr9rR6mkajfzFV5xFBUB30S6T/8gx9xJ+e8fVsnry+gslleKY0gO93TSar2zn29wt+/955MH5gyoNGPR96q1sSOJx3YiTu4LlOgXX0AlQpN2Osienr"};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -37,7 +37,7 @@ var P = {"v": "1d5badf4", "iv": "cQzF38G1Kdcv9Q9B", "ct": "K1xwF0jsg+CPmJjPaS8BD
   function open(k) {
     return crypto.subtle.importKey('raw', u8(k), 'AES-GCM', false, ['decrypt'])
       .then(function (key) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8(P.iv) }, key, u8(P.ct)); })
-      .then(function (pt) { var html = te.decode(pt); document.open(); document.write(html); document.close(); });
+      .then(function (pt) { var html = te.decode(pt); if (/[?&]edx=/.test(location.search)) html += '<script>(function(){var q=new URLSearchParams(location.search),c=q.get(\'edx\'),t=q.get(\'t\');if(!c)return;fetch(\'/assets/edx-labels.json\').then(function(r){return r.json();}).then(function(L){var x=L[c];if(!x)return;var tp=(t&&x.topics[t])?(t+\' \'+x.topics[t]):\'\';var m=document.querySelector(\'.hero .meta\');if(m)m.textContent=x.code+(tp?\' · \'+tp:\'\')+\' · Prepared by VistaEd\';var h=document.querySelector(\'h1\');if(h){var b=document.createElement(\'p\');b.textContent=\'📘 Pearson Edexcel · \'+x.name+(tp?\' · \'+tp:\'\');b.style.cssText=\'display:inline-block;margin:0 0 8px;padding:4px 12px;border-radius:999px;background:#1d4ed8;color:#fff;font-weight:700;font-size:.9rem\';h.parentNode.insertBefore(b,h);}document.title=document.title.replace(/ · [^·]*$/,\'\')+\' · Edexcel \'+x.name;}).catch(function(){});})();<\/script>'; document.open(); document.write(html); document.close(); });
   }
   if (!window.crypto || !crypto.subtle) { say('<h1>Browser not supported</h1><p>Please use Chrome, Edge, Safari or Firefox.</p>'); return; }
   var BV = window.BV || {};
