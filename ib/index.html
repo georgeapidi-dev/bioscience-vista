@@ -27,7 +27,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "ussZms788OY9NjZC", "ct": "ao1sOsaayvqsihcLlBJbVgZwbdg9lenXPah660QKs2Rh/j9E2UvkYvfMV98jqmnszzYFmJfN4y/f2RwLSVE6WqO5JnCwSwWCmUyyYSbtsfjIhtbLbxibnPdxYk/QFuqV7D6PJ3rfM6Eh+H6FyJlyMNKE72bmbtV5MqtUVEVu7p/0hsNhrFA3b5wO6RTJf+R4hQIfvW6KFYmKB5ozYH2FBWQFAGhRDmVQTitbe8eKRQrwCLsQyV94xNqnoAQRSf7R4/21aIftfs9uMLPJXsfp07leCTs8/oW1ASX/KBT68zqcYyQlRN47/Ecxr5cJSZ8ohl2pDiPfsgAkCYLyF6zZ/U3DMY6JRG1bDfKem2WIBsRueX9NRcmMvKpe8orZ6UL+vjDF8Fv98hlb/VQ1+XBhUCfkOet+7//mqMzIUk0="};
+var P = {"v": "1d5badf4", "iv": "VdggCiIAcXUIvFgZ", "ct": "GxP4WYsuj5LYFWAq+G9HSL8uGK4TC4U+BZIvJFBMGVkZZwRulylba6Jqp1DwGcNu4MJTEg80LEElUo6+xJZNOoh2GrDLxXnodgiyXSjXbL1+bTnGUdotM9R/qO6kfMKHhLHfTXqcB2iYipQMETvFa+XLDAEWx1vNhENaNK5l5w62X0Q28po4eLMoLs0NGOk9hrg/HJPDY8lw5P9NIcm90CewsTUuXTT1NJtDEKN1MVa9q8m3pvz5bk5K92ng+5h+cr+AyLatGbzuOiSDen3EtFBj7d4t6wAhesB5e7y9lg2qUCxAl1zfnZEvcmqiDzl4kg1+Ns/3AsqNwMqhaqH4djU6zIz9iTD1A13Jprkc+3IPjelwuKd9edvOe44hytBHAQkpM1GjKU5Uq3ddLuZteCeeqzd02RrOqgIDmSk="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -59,7 +59,7 @@ var P = {"v": "1d5badf4", "iv": "ussZms788OY9NjZC", "ct": "ao1sOsaayvqsihcLlBJbV
       return (P.p ? db.rpc('page_key', { p: P.p }) : db.rpc('site_key')).then(function (x) {
         if (x.error) throw x.error;
         if (!x.data) return db.rpc('admin_ok').then(function (ok) { if (ok.data === false) return say('<h1>⏳ Waiting for approval</h1><p>Thank you for signing up. The site admin checks every new account before it can open materials. You will be able to open this page as soon as your account is approved.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>'); notOpen(); }, notOpen);
-        function notOpen() { return say(P.p ? '<h1>Go Premium to open this page</h1><p>Your 30-day free trial has ended, or this page is outside your membership. Premium opens every course, lesson, lab, exam-style question set and examination, and your teacher\'s class materials. Your work and results are kept.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'
+        function notOpen() { return say(P.p ? '<h1>This page is not in your courses</h1><p>You open the courses you chose and your class\'s materials, during your 30-day free trial or with Premium. To open this page, add its course on your Account page, or go Premium if your free trial has ended. Your work and results are kept.</p><a class="btn" href="/dashboard/">Go to my dashboard</a><a class="btn alt" href="/premium/">Premium access</a>'
           : '<h1>Not open yet</h1><p>You are signed in. Materials open when the admin has approved your account and subjects, and your membership or class allows them.</p><a class="btn" href="/account/">My account</a><a class="btn alt" href="/premium/">Premium access</a>'); }
         return open(x.data).then(function () { try { sessionStorage.setItem(C, x.data); } catch (e) {} },
           function () { say('<h1>This page was updated</h1><p>Reload to open the newest version.</p><a class="btn" href="' + here + '">Reload</a>'); });
