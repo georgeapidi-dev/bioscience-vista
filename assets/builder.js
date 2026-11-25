@@ -29,8 +29,8 @@
     ['Response', [['audio', '🎙️', 'Spoken (audio) answer'], ['video', '🎬', 'Video answer'], ['upload', '📎', 'File upload']]],
     ['Content', [['group', '🧩', 'Group: passage, diagram or data with sub-questions'], ['info', '📖', 'Text, picture or video']]]];
   var RESP = { audio: 'audio', video: 'video', upload: 'file' };   // builder kind → answer style of a written question (marked by the teacher)
-  var PROGS = ['IB MYP', 'IB DP', 'Cambridge IGCSE', 'Cambridge A Level'];
-  var GRADES = { 'IB MYP': ['MYP 1 (Grade 6)', 'MYP 2 (Grade 7)', 'MYP 3 (Grade 8)', 'MYP 4 (Grade 9)', 'MYP 5 (Grade 10)'], 'IB DP': ['DP 1 (Grade 11)', 'DP 2 (Grade 12)'], 'Cambridge IGCSE': ['Year 10', 'Year 11'], 'Cambridge A Level': ['AS (Year 12)', 'A2 (Year 13)'] };
+  var PROGS = ['IB MYP', 'IB DP', 'Cambridge IGCSE', 'Cambridge A Level', 'Edexcel International GCSE', 'Edexcel International A Level', 'Kenya CBE'];
+  var GRADES = { 'IB MYP': ['MYP 1 (Grade 6)', 'MYP 2 (Grade 7)', 'MYP 3 (Grade 8)', 'MYP 4 (Grade 9)', 'MYP 5 (Grade 10)'], 'IB DP': ['DP 1 (Grade 11)', 'DP 2 (Grade 12)'], 'Cambridge IGCSE': ['Year 10', 'Year 11'], 'Cambridge A Level': ['AS (Year 12)', 'A2 (Year 13)'], 'Edexcel International GCSE': ['Year 10', 'Year 11'], 'Edexcel International A Level': ['AS (Year 12)', 'A2 (Year 13)'], 'Kenya CBE': ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'] };
   var SUBJECTS = ['Biology', 'Chemistry', 'Physics', 'Sciences (integrated)', 'Environmental Systems and Societies', 'Mathematics'];
   var MARKING = [['points', 'Points-based marking'], ['myp_criteria', 'MYP criteria A–D (marks per criterion)'], ['myp_levels', 'MYP achievement levels (0–8 per criterion)'], ['dp', 'IB DP examination-style (mark scheme)'], ['cambridge', 'Cambridge examination marking (mark scheme)']];
   var PURPOSE = [['practice', 'Practice'], ['formative', 'Formative'], ['summative', 'Summative']];

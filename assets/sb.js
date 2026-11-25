@@ -129,7 +129,7 @@
     if (!me || me.view || me.preview || !el || document.getElementById('acct-strip')) return;
     var a = me.access || {}, cs = (a.courses || []).filter(function (c) { return c.status === 'approved'; }), wait = (a.courses || []).filter(function (c) { return c.status === 'requested'; });
     var pend = (a.classes || []).filter(function (c) { return c.status === 'pending' && !c.self; });
-    var PW = { cambridge: 'Cambridge International', ib: 'International Baccalaureate' }, SEC = { ks3: 'KS3', igcse: 'IGCSE', alevel: 'A Level', myp: 'MYP', ibdp: 'IBDP' };
+    var PW = { cambridge: 'Cambridge International', ib: 'International Baccalaureate', edexcel: 'Pearson Edexcel', kenya: 'Kenya CBE' }, SEC = { ks3: 'KS3', igcse: 'IGCSE', alevel: 'A Level', myp: 'MYP', ibdp: 'IBDP', ial: 'International AS & A Level', 'cbe-junior': 'Junior School', 'cbe-senior': 'Senior School' };
     var pws = {}; cs.forEach(function (c) { pws[PW[c.pathway] + ' · ' + SEC[c.section]] = 1; });
     var prem = a.free ? 'Premium' : a.premium && !(a.until && new Date(a.until) > new Date()) ? 'Premium · school licence' : a.premium ? 'Premium until ' + new Date(a.until).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : (a.until && new Date(a.until) < new Date() ? 'Free (Premium ended ' + new Date(a.until).toLocaleDateString() + ')' : 'Free');
     var d = document.createElement('section'); d.id = 'acct-strip';

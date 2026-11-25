@@ -4,7 +4,7 @@
 (function () {
   var S = window.BVS, E = S.E, app = document.getElementById('app'), ME = null, NOTES = null, LESSONS = {}, MINE = [], FAQ = [];
   var COURSES = ['IB MYP', 'IB Diploma Biology', 'IB Diploma Chemistry', 'IB Environmental Systems and Societies',
-    'Cambridge IGCSE Biology', 'Cambridge IGCSE Chemistry', 'Cambridge A-Level Biology', 'Cambridge A-Level Chemistry', 'General Science'];
+    'Cambridge IGCSE Biology', 'Cambridge IGCSE Chemistry', 'Cambridge A-Level Biology', 'Cambridge A-Level Chemistry', 'Edexcel International GCSE Biology', 'Edexcel International GCSE Chemistry', 'Edexcel International GCSE Physics', 'Edexcel International A Level Biology', 'Edexcel International A Level Chemistry', 'Edexcel International A Level Physics', 'Kenya CBE Senior School Biology', 'Kenya CBE Senior School Chemistry', 'Kenya CBE Senior School Physics', 'General Science'];
   var STOP = ('a an the and or but if of to in on at by for with from as is are was were be been being it its this that these those what which who whom why how when where ' +
     'do does did done can could should would will shall may might must i me my we our you your he she they them their there here than then so not no yes ' +
     'about into out up down over under again more most some any each other such only own same very just also explain describe state define give name list ' +

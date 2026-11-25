@@ -144,6 +144,9 @@
     cambridge_ks3: [['/cambridge/', '📗', 'Cambridge Lower Secondary'], ['/simulations/', '🔬', 'Virtual Lab investigations'], ['/practice/', '🃏', 'Practice and revision']],
     igcse: [['/cambridge/', '📗', 'IGCSE courses'], ['/exams/', '📝', 'Exam-style practice'], ['/practice/', '🃏', 'Flashcards and practice']],
     a_level: [['/a-level/', '📕', 'AS and A Level courses'], ['/exams/', '📝', 'Exam-style practice'], ['/research/', '🧪', 'Research and practical skills']],
+    edx_igcse: [['/edexcel/', '📘', 'Pearson Edexcel International GCSE'], ['/exams/', '📝', 'Exam-style practice'], ['/practice/', '🃏', 'Flashcards and practice']],
+    edx_ial: [['/edexcel/', '📘', 'Pearson Edexcel International AS & A Level'], ['/exams/', '📝', 'Exam-style practice'], ['/research/', '🧪', 'Practical skills']],
+    kenya_cbe: [['/cbe/', '🇰🇪', 'Kenya CBE courses'], ['/quizzes/', '📝', 'Exam-style questions'], ['/simulations/', '🔬', 'Virtual Lab']],
     other: [['/explore/', '🌍', 'Explore every topic'], ['/simulations/', '🔬', 'Virtual Lab'], ['/practice/', '🃏', 'Practice and revision']]
   };
   var TOPIC = { cells: 'Cells', molecular: 'Enzymes and molecules', genetics: 'Genetics', evolution: 'Evolution', ecology: 'Ecology', physiology: 'The human body', plants: 'Plants', biotech: 'Biotechnology', reactions: 'Chemical reactions', acids: 'Acids and bases', organic: 'Organic chemistry', 'ess-climate': 'Climate change', 'ess-biodiversity': 'Conservation', 'phys-motion': 'Forces and motion', 'phys-electric': 'Electricity', 'math-stats': 'Statistics', 'math-algebra': 'Algebra', 'general-investigation': 'Experiments and data' };

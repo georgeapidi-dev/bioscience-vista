@@ -250,7 +250,15 @@
   function learningPlan(me, prog) {
     var box = app.querySelector('#plan'); if (!box) return;
     var ids = (me.classes || []).map(function (c) { return c.id; }); if (!ids.length) { box.remove(); return; }
-    S.db.from('class_materials').select('class_id,path,sort,materials(title,unit,subject)').in('class_id', ids).order('sort').then(function (r) {
+    Promise.all([S.db.from('class_materials').select('class_id,path,sort,materials(title,unit,subject)').in('class_id', ids).order('sort'),
+      S.db.from('classes').select('id,site_slug,follows').in('id', ids).then(function (r) { return r; }, function () { return { data: [] }; }),
+      fetch('/assets/edx-labels.json').then(function (r) { return r.json(); }, function () { return {}; }).catch(function () { return {}; })]).then(function (z) {
+      var r = z[0], EDX = z[2] || {}, cpage = {};
+      (z[1].data || []).forEach(function (c) { var sl = c.site_slug || c.follows || ''; if (/^edx-/.test(sl)) cpage[c.id] = sl.replace(/-(as|a2)$/, ''); });
+      // Edexcel classes: lessons borrowed from other courses show their Edexcel name and topic, and open with the Edexcel label (25 Nov 2026)
+      (r.data || []).forEach(function (m) { var pg = cpage[m.class_id], L = pg && EDX[pg]; if (!L) return; var key = String(m.path).replace(/^\/|\/$/g, ''), code = L.codes && L.codes[key];
+        if (L.titles && L.titles[key]) m.materials = Object.assign({}, m.materials || {}, { title: (code ? code + ' · ' : '') + L.titles[key], unit: 'Pearson Edexcel ' + L.name + (code && L.topics[code] ? ' · ' + L.topics[code] : '') });
+        m.href = m.path + (m.path.indexOf('?') < 0 ? '?' : '&') + 'edx=' + encodeURIComponent(pg) + (code ? '&t=' + encodeURIComponent(code) : ''); });
       var mats = r.data || [], byPath = {}, seen = {};
       prog.forEach(function (p) { var u = p.lessons && p.lessons.url; if (u) { var k = u.replace(/^https?:\/\/[^/]+/, '').replace(/[?#].*$/, ''); if (k.slice(-1) !== '/') k += '/'; byPath[k] = p; } });
       var going = [], next = [];
@@ -262,7 +270,7 @@
       var sj = function (x) { var t = x.m.materials || {}; return /^MYP /.test(t.subject || '') ? BV.subj.of(t.subject, t.unit) : ''; };
       var perClass = {}; next = next.filter(function (x) { var k = x.m.class_id + '|' + sj(x); perClass[k] = (perClass[k] || 0) + 1; return perClass[k] <= (sj(x) ? 2 : 3); });
       var total = Object.keys(seen).length, done = Object.keys(seen).filter(function (k) { return byPath[k] && byPath[k].status === 'completed'; }).length;
-      var row = function (x, tag) { var t = x.m.materials || {}; return '<p>📘 <a href="' + E(x.m.path) + '">' + E(t.title || x.m.path) + '</a> <span class="small muted">' + E(t.unit || '') + (tag ? ' · ' + tag : '') + '</span></p>'; };
+      var row = function (x, tag) { var t = x.m.materials || {}; return '<p>📘 <a href="' + E(x.m.href || x.m.path) + '">' + E(t.title || x.m.path) + '</a> <span class="small muted">' + E(t.unit || '') + (tag ? ' · ' + tag : '') + '</span></p>'; };
       var rows = function (list, tagOf, max) { return BV.subj.split(list, sj, function (part, name) { return part.slice(0, name ? 3 : max).map(function (x) { return row(x, tagOf && tagOf(x)); }).join(''); }); };
       box.innerHTML = '<h3>🧭 My learning plan</h3><p class="small muted">Chosen for you from your classes and your progress. Each lesson gives instant feedback on every step; your learning profile below shows what to practise.</p>' +
         '<div class="bar"><i style="width:' + (total ? Math.round(100 * done / total) : 0) + '%"></i></div><p class="small">' + done + ' of ' + total + ' lessons in your classes completed</p>' +

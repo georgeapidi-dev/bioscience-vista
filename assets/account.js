@@ -20,7 +20,7 @@
     .catch(function (e) { if (typeof e !== 'string') app.innerHTML = '<p class="msg">' + E(S.nice(e)) + '</p>'; });
 
   function load() {
-    return Promise.all([S.db.rpc('my_sessions'), S.db.rpc('my_pin_status'), S.db.auth.mfa.listFactors(), S.db.rpc('academic_tree')]).then(function (x) { draw(x[0].data || [], x[1].data || {}, (x[2].data && x[2].data.totp) || [], x[3].data || { courses: [], sections: [] }); });
+    return Promise.all([S.db.rpc('my_sessions'), S.db.rpc('my_pin_status'), S.db.auth.mfa.listFactors(), S.db.rpc('academic_tree')]).then(function (x) { draw(x[0].data || [], x[1].data || {}, (x[2].data && x[2].data.totp) || [], (function (T) { if (!T || T._edx) return T; T._edx = 1; T.sections = T.sections || []; T.courses = T.courses || []; T.courses.forEach(function (c) { if (c.pathway === 'edexcel' && !/^edx-/.test(c.section)) c.section = 'edx-' + c.section; }); [['edx-ks3', 'iLowerSecondary (KS3)'], ['edx-igcse', 'International GCSE'], ['edx-ial', 'International AS & A Level']].forEach(function (s) { T.sections.push({ section: s[0], name: s[1], pathway: 'edexcel' }); }); return T; })(x[3].data || { courses: [], sections: [] })); });
   }
   function draw(sess, pin, totp, tree) {
     var p = ME.profile || {}, stt = A.status || (A.premium ? 'approved' : 'pending'), s = STATUS[stt] || STATUS.pending;
@@ -37,10 +37,10 @@
     var mine = A.courses || [], have = {}; mine.forEach(function (c) { have[c.course] = c.status; });
     var secName = {}; (tree.sections || []).forEach(function (x) { secName[x.section] = x.name; });
     h += '<section class="ac-card"><h2>📚 My subjects</h2>' + (mine.length ? mine.map(function (c) {
-        return '<div class="ac-row"><span><b>' + E(c.name) + '</b><br><span class="ac-m">' + E(c.pathway === 'ib' ? 'International Baccalaureate' : c.pathway === 'kenya' ? 'Kenya Competency-Based Education (KICD)' : 'Cambridge International') + ' · ' + E(secName[c.section] || '') + '</span></span>' +
+        return '<div class="ac-row"><span><b>' + E(c.name) + '</b><br><span class="ac-m">' + E(c.pathway === 'ib' ? 'International Baccalaureate' : c.pathway === 'kenya' ? 'Kenya Competency-Based Education (KICD)' : c.pathway === 'edexcel' ? 'Pearson Edexcel' : 'Cambridge International') + ' · ' + E(secName[c.section] || '') + '</span></span>' +
           (c.status === 'approved' ? pill('Authorised', 'p-ok') : c.status === 'requested' ? pill('Waiting for admin', 'p-wait') : pill('Not authorised', 'p-no')) + '</div>'; }).join('') : '<p class="ac-m">No subjects yet.</p>') +
       (ME.parent ? '' : '<label class="f" for="rqs">Ask for another subject</label><select id="rqs"><option value="">Choose…</option>' + (tree.courses || []).filter(function (c) { return !have[c.slug] || have[c.slug] === 'rejected'; })
-        .map(function (c) { return '<option value="' + E(c.slug) + '">' + E((c.pathway === 'ib' ? 'IB' : c.pathway === 'kenya' ? 'Kenya CBE' : 'Cambridge') + ' · ' + (secName[c.section] || '') + ' · ' + c.name) + '</option>'; }).join('') + '</select><button class="btn sm" id="rqb">Ask the admin</button><p class="msg" id="rqm"></p>') + '</section>';
+        .map(function (c) { return '<option value="' + E(c.slug) + '">' + E((c.pathway === 'ib' ? 'IB' : c.pathway === 'kenya' ? 'Kenya CBE' : c.pathway === 'edexcel' ? 'Edexcel' : 'Cambridge') + ' · ' + (secName[c.section] || '') + ' · ' + c.name) + '</option>'; }).join('') + '</select><button class="btn sm" id="rqb">Ask the admin</button><p class="msg" id="rqm"></p>') + '</section>';
     // membership
     var prem = A.premium, until = A.until, from = A.from;
     h += '<section class="ac-card"><h2>⭐ Membership</h2><p>' + (A.free ? pill('Premium (given by the admin)', 'p-prem') : prem ? pill('Premium', 'p-prem') : pill('Free', 'p-info')) + '</p>' +

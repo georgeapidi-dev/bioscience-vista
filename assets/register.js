@@ -44,7 +44,7 @@
   function sectionsOf(pw) { return TREE.sections.filter(function (s) { return pw.indexOf(s.pathway) >= 0; }); }
   function coursesOf(secs) { return TREE.courses.filter(function (c) { return secs.indexOf(c.section) >= 0; }); }
   var SUBJ = { biology: 'Biology', chemistry: 'Chemistry', physics: 'Physics', mathematics: 'Mathematics', 'maths-aa': 'Mathematics: Analysis and Approaches', 'maths-ai': 'Mathematics: Applications and Interpretation', ess: 'Environmental Systems and Societies (ESS)', 'computer-science': 'Computer Science', 'digital-society': 'Digital Society', science: 'MYP Science' };
-  var PW = { cambridge: ['Cambridge International', 'KS3 · IGCSE · A Level', '🎓'], ib: ['International Baccalaureate', 'MYP · IBDP', '🌍'], kenya: ['Kenya CBE (KICD)', 'Junior School · Senior School', '🇰🇪'] };
+  var PW = { cambridge: ['Cambridge International', 'KS3 · IGCSE · A Level', '🎓'], ib: ['International Baccalaureate', 'MYP · IBDP', '🌍'], kenya: ['Kenya CBE (KICD)', 'Junior School · Senior School', '🇰🇪'], edexcel: ['Pearson Edexcel', 'iLowerSecondary · International GCSE · International AS & A Level', '📘'] };
 
   function draw() { [details, pathway, section, subjects, review, classCode][STEP](); }
 
@@ -176,7 +176,7 @@
     app.innerHTML = '<p class="muted">Loading…</p>';
     S.db.rpc('academic_tree').then(function (r) {
       if (r.error || !r.data) { app.innerHTML = '<p class="msg">Registration could not load. Please refresh the page.</p>'; return; }
-      TREE = r.data; TREE.courses = TREE.courses || []; TREE.sections = TREE.sections || [];
+      TREE = (function (T) { if (!T || T._edx) return T; T._edx = 1; T.sections = T.sections || []; T.courses = T.courses || []; var has = {}; T.courses.forEach(function (c) { if (c.pathway === 'edexcel' && !/^edx-/.test(c.section)) c.section = 'edx-' + c.section; if (c.pathway === 'edexcel') has[c.section] = 1; }); [['edx-ks3', 'iLowerSecondary (KS3)', 'Pearson Edexcel iLowerSecondary, Years 7–9', 80], ['edx-igcse', 'International GCSE', 'Pearson Edexcel International GCSE (9–1)', 81], ['edx-ial', 'International AS & A Level', 'Pearson Edexcel International AS & A Level', 82]].forEach(function (s) { if (has[s[0]] && !T.sections.some(function (x) { return x.section === s[0]; })) T.sections.push({ section: s[0], name: s[1], blurb: s[2], pathway: 'edexcel', sort: s[3] }); }); return T; })(r.data); TREE.courses = TREE.courses || []; TREE.sections = TREE.sections || [];   // Pearson Edexcel levels kept apart from Cambridge KS3/IGCSE (25 Nov 2026)
       var pre = new URLSearchParams(location.search).get('pathway'); if (pre && PW[pre]) F.pathways = [pre];
       draw();
     });
