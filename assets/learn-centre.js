@@ -15,6 +15,12 @@
     });
   }
 
+  /* Lessons in a topic in teaching order (George, 25 Nov 2026): set order first, then the lesson number in the address
+     (…-lesson1, …-lesson2; cbe11-bio-1, -2; a11-lesson3), then the syllabus code in the title, then the title. */
+  function teachKey(l) { var u = (l.url || '').split('?')[0], t = l.title || '';
+    var m = t.match(/^([A-Z]{0,3}\s?[0-9]+(?:\.[0-9]+)*)/); return [l.sort_order || 0, u, m ? m[1] : '~', t]; }
+  function teachOrder(G) { Object.keys(G).forEach(function (k) { G[k].sort(function (a, b) { var x = teachKey(a), y = teachKey(b);
+      return (x[0] - y[0]) || x[2].localeCompare(y[2], undefined, { numeric: true }) || x[1].localeCompare(y[1], undefined, { numeric: true }) || x[3].localeCompare(y[3], undefined, { numeric: true }); }); }); return G; }
   /* Learning centre: subject → topic → subtopic, following each syllabus; interactive lessons sit in their subtopic */
   function centre(me) {
     return Promise.all([
@@ -36,7 +42,7 @@
       var VIS = x[8] && Array.isArray(x[8].data) ? x[8].data : null; if (VIS && !me.staff) { var vs = {}; VIS.forEach(function (p) { vs[p] = 1; }); lessons = lessons.filter(function (l) { return !/^\/[a-z0-9-]+\/$/.test(l.url || '') || vs[l.url] || /^IL-/.test(l.external_id || ''); });
         topics = topics.filter(function (t) { return lessons.some(function (l) { return l.topic_id === t.id; }) || topics.some(function (k) { return k.parent_id === t.id && lessons.some(function (l) { return l.topic_id === k.id; }); }); }); }
       var by = function (list, k) { var m = {}; list.forEach(function (o) { (m[o[k]] = m[o[k]] || []).push(o); }); return m; };
-      var L = by(lessons, 'topic_id'), R = by((x[3].data || []).filter(function (r) { return r.published; }), 'topic_id'), SIM = by(x[6].data || [], 'topic_id'), KIDS = by(topics.filter(function (t) { return t.parent_id; }), 'parent_id');
+      var L = teachOrder(by(lessons, 'topic_id')), R = by((x[3].data || []).filter(function (r) { return r.published; }), 'topic_id'), SIM = by(x[6].data || [], 'topic_id'), KIDS = by(topics.filter(function (t) { return t.parent_id; }), 'parent_id');
       var orphanIL = Object.keys(mineIL).filter(function (k) { return !lessons.some(function (l) { return l.external_id === k && l.topic_id; }); }).map(function (k) { return mineIL[k]; });
       subjects = subjects.filter(function (s) { return topics.some(function (t) { return t.subject_id === s.id; }); });
       /* Student Learning Centre phase 3: pick up where you stopped, and open on the subject you are working in */
