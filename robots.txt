@@ -36,5 +36,12 @@ Allow: /assets/apple-touch-icon.png
 Allow: /assets/share/
 Allow: /manifest.webmanifest
 Allow: /assets/fonts/
+Allow: /g8-factors-affecting-enzyme-activity/$
+Allow: /cbe10-bio-10/$
+Allow: /cbe10-chem-10/$
+Allow: /cbe10-phys-10/$
+Allow: /cbe10-maths-10/$
+Allow: /cbe10-comp-10/$
+Allow: /cbe9-sci-1/$
 Disallow: /
 Sitemap: https://biosciencevista.com/sitemap.xml
