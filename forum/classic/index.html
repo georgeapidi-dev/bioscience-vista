@@ -1,16 +1,16 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>the new forum · BioscienceVista</title>
-<meta name="description" content="the new forum — an interactive lesson with questions, activities and feedback on BioscienceVista.">
+<title>the new forum · VistaEd</title>
+<meta name="description" content="the new forum — an interactive lesson with questions, activities and feedback on VistaEd.">
 <link rel="canonical" href="https://biosciencevista.com/forum/classic/">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="BioscienceVista">
+<meta property="og:site_name" content="VistaEd">
 <meta property="og:title" content="the new forum">
-<meta property="og:description" content="the new forum — an interactive lesson with questions, activities and feedback on BioscienceVista.">
+<meta property="og:description" content="the new forum — an interactive lesson with questions, activities and feedback on VistaEd.">
 <meta property="og:url" content="https://biosciencevista.com/forum/classic/">
 <meta property="og:image" content="https://biosciencevista.com/assets/share/generic.png">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="BioscienceVista — Science you can explore">
+<meta property="og:image:alt" content="VistaEd — Science you can explore">
 <meta name="twitter:card" content="summary_large_image"><meta name="robots" content="noindex">
 <style>
 :root{--bg:#f6f8f6;--card:#fff;--ink:#1f2a24;--muted:#5d6b62;--green:#1b6b3a;--line:#d5e0d8}
@@ -27,7 +27,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "B2buZys8QVBluF65", "ct": "d7Wylygf2sEU6YQE5LVsVGokkzpC3Cnj8RaCopIsnG2c8aQvZTIfOLJ415Rcvr/9Fq2z3MroebSxs+7D6xseYlO2+KWtv+ksJMM+c6VQmvQSxOezdz+PSHE4NogM9H8m+alHbyNw73fjtR8f8DzYfUuhdD+YfXnl/Pn2voyzYvp+13VSzPgOcfqnmL2u4NXK0JnszwimI6PSajOmkZRELsC6AUvBhIqAzniSKcaA4PUHqdtQxAaBgjPU4G1qBFOTfEuc0V0fuWEaUs09/nhjTLGXajCk6EdUyIBIK+9cU6E1rjjx8Q8tPwog2ggH2EykVoFeV+DQ9WmSRIKY/eIwEVt2FshqRIvukuvKDepTIG6t7ZtmZI8cFlWDhTYxLClZ9+TZGAqgGS9O/DtwybZcSNbVrVnPpwvbsnvldldUS6OOrgSv5H0QEmf9m1aRusCLnSALWl35CLBrZNndlB1ShBczPtxzOgMgw74jB5wVp2CYwNc0URNHqYeO7d4PUg6NDihUnh9RcXldD0MPngwCjJx0pzjSO8pdqchKKxdKVfxjrBi0xgdG7xfZkAEq7VQiaSI="};
+var P = {"v": "1d5badf4", "iv": "9A3FDEXFJv/4tYcZ", "ct": "QZbXHteJ3XlCzr4zWrIGpmvQiRlq/WXPZ5Ab7lxTXFB2ZVSJa3++TFgTMJKIYMWCnab0Dq4Cd/QNhqbF1pBjb/+dwxRoMUG/JvFrhzSiqiOkriOR3TGl0+DOBvOgTosSUjba3x1Km9cuyup+lMMa0ftQeDfAGJ0hcwZ99QXf37Kg7pJhJ/qZZPnryCdM39duszYvOLWEcTW8qW0yzMPfViO7Bh3mRbN8LOYayHH9lqA8jXz98xUUTBTfh298LTKn7hVkcR94UDExBf6h/IU4zkUv6VTL5qZ55kiUhdH7pZWha2x3VWd8zM9nq3nVc9u4NdM3S506aZP21khbPsGsuLGh86pa7hZn5e9ICT+p8T6o8D/0cwlLJlHgt7GHOj5J3QO+xzYjN//qDk0ddJQYZvY543QAF0RHZehVVwJYeAc9TExwQa1Og0xpat2XtRG1KGEBtxV6dEcbrBvLfzd2GSHNRMNa8ykKgpcHeKzf3JtB5Lm6SFMb5LqFp8avuiN43vaP9mRXBBvcAQcorU2XVSloZ+YSLoHd7ctuXvjbYXxDoOuSdR/jkW5m"};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -45,12 +45,12 @@ var P = {"v": "1d5badf4", "iv": "B2buZys8QVBluF65", "ct": "d7Wylygf2sEU6YQE5LVsV
   try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('mas-key-') === 0) localStorage.removeItem(k); }); } catch (e) {}
   var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } });
   db.auth.getSession().then(function (r) {
-    var s = r.data && r.data.session, T = (document.title || '').replace(/ · BioscienceVista$/, '').replace(/</g, '&lt;');
+    var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
       if (x && x.data) return open(x.data);
-      say('<h1>🔒 ' + T + '</h1><p>This material is for members of BioscienceVista. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+      say('<h1>🔒 ' + T + '</h1><p>This material is for members of VistaEd. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
-    if (!s) return say('<h1>🔒 ' + T + '</h1><p>This material is for members of BioscienceVista. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+    if (!s) return say('<h1>🔒 ' + T + '</h1><p>This material is for members of VistaEd. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
     if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });

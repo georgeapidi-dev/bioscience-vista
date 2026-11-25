@@ -1,6 +1,6 @@
 {
- "name": "BioscienceVista",
- "short_name": "BioscienceVista",
+ "name": "Vista Education (VistaEd)",
+ "short_name": "VistaEd",
  "description": "Interactive science lessons, quizzes, exams and tools from biosciencevista.com.",
  "id": "/",
  "start_url": "/?source=app",

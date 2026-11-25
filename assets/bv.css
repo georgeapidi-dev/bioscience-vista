@@ -1,4 +1,4 @@
-/* BioscienceVista theme · by BioscienceVista */
+/* VistaEd theme · by VistaEd */
 :root{
   --bg:#f7f6f2;--raised:#ffffff;--surface:#efede6;--ink:#172033;--muted:#5a6478;--line:#e3e0d7;
   --accent:#0f766e;--accent-ink:#ffffff;--warm:#d9480f;--sun:#b7791f;--sky:#2563eb;--violet:#7c3aed;--leaf:#15803d;--pink:#be185d;--coral:#e4572e;
@@ -508,7 +508,7 @@ html.bvnav .navdd-list a{display:flex!important;border-radius:12px!important;mar
 @media (max-width:420px){.bv-tiles{grid-template-columns:1fr}}
 @media print{.bvdir{display:none!important}}
 
-/* the BioscienceVista wordmark (16 Nov 2026, admin: "make the website name unique and attractive"):
+/* the VistaEd wordmark (16 Nov 2026, admin: "make the website name unique and attractive"):
    "Bio" in leaf green, "science" in deep ink, "Vista" in an italic serif with the sunrise gradient of the logo, a small rising sun over it, and the motto underneath */
 .brand span.bvw{display:inline-block;line-height:1;padding-bottom:0;font-family:Outfit,var(--display),system-ui,sans-serif;font-weight:900;letter-spacing:-.035em;color:var(--ink,#13213c)}
 .brand span.bvw::after{content:none}

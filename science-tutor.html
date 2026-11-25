@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Science Help Desk · BioscienceVista</title><meta name="robots" content="noindex">
+<title>Science Help Desk · VistaEd</title><meta name="robots" content="noindex">
 <style>
 :root{--bg:#f6f8f6;--card:#fff;--ink:#1f2a24;--muted:#5d6b62;--green:#1b6b3a;--line:#d5e0d8}
 @media (prefers-color-scheme:dark){:root{--bg:#111714;--card:#1a221d;--ink:#e6efe9;--muted:#9fb0a5;--green:#5fbf83;--line:#2f3d34}}
@@ -16,7 +16,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "dA4zrBqTyWTe2BoI", "ct": "vhjW4SWDLgoc3IpXKRSVwMi3psFg/NBnY9AqI1XxoLPhw4OhCAbpgfrujTywrfq+caPcen5d7wfEVJQx4UT0Nlfxi7CwKSL6P39wIKPfy+azwYlHrdueil6OlQKsFOjb26Wshb9IAYA+d5QNqQtWIyBRVHT5RhDfUbNuerHwCyMPzApYW9KLSL5PeX0fQapCV3ybpBkPoWDAq0yZtGtKQuRzZeBnh6Z17v8rQKUdJGAvUQOFjjJComJpqlQEcRT/aRM24EojwsyX5fUbQJD5BACtL/VME8LwZ0k1gWdTR4c7R398x78VMvDDM2uS8MurMNZ1K7ajI5bvYDBePyW8aMX+JwR8FKXod6Suo41OeEZESGIZRevkQE7quiaChzPTNn7+2brbsAdKk5q/H3IwpUxa/ktQYkc6ajC/901nFjOK2tFGCdrrzeI0eJjXwOhl3L+yENOnRcNH2jHHrdckJRg1xrCgqz6yywTqDSp8KgTjPnG7bZEl0xy/FnfhrOBE9OZWB4dbf5GxrzCWatx9zTUwMbnV4gPvEAbYgjWJYHreqNLq1KeY8TjyWCsJpiek5ufjhvepsJaYmU87rJF8c9udhx7jQE3qwZJl/aIyJUXH5Tctpa54zYxj1LkzlzYhyvCmPA3PikgXPfpBlnyPwCFQZlTVKicapN6YVjAR4KaNfaS5yikeH/U4RLQIYSgtQq9eZ5VQMTB0ZV9p0TzbMRY="};
+var P = {"v": "1d5badf4", "iv": "dkl10XtTm13ixkci", "ct": "XP2VItWEBqzicaKJu6KzZKcg6Y4Ful3R1wlCLREaEjraRAbVRVHYa5RqRlh0p27VQHNaorSJ9HUsxqR9Ur7h/n74D81R1XPKBF+AwG2SxBNKUnsa1PtEkCtT1m3CHLSNMYTp6cKyWZIV1m5DPW6zkLSz0tKf83uZmFXCQL9BfJC2tft/AjBeE+aZXlVhPAiQvcW1ipNc5EdwcDEAXnjCUqJuHHpKkiKWAER0+lSicF0dGz1/lod2lkttIZ96ccRq9ourPHoTbhxvKm+01wdKnPMgrIba3gqfAHbF8jSfnroIwJz+de6J22KDQCqiDTN+JQRD5EQMSIP8OL4h7+1aD/qbQ8ilmJTHXbw6te0YVKMdxHig6AIhMhM4vfRcAmhIOmDxO1qwZUwgMV6dNL5k9msLF0KnysMu4kGTnPIXWFo2crIFjU8CM8sq+V1OciqaCosgkGthwAFedWwh/be5kRbWuo5434ajz74aFT8F5Al8Pl8DfHrUzaj5f7vePWoy/lBMCrmDoAaN9FHSiSb93u4pDoL11HYj0COL+9a1WrdJoQ33SKBE7m5KHDyaLZdlGQ7TOVVrtSxuJM9WilnjCY1Z1bnDu3Xrk4xz/S9cgXDgAnPvU1duarvZEOu4KbONBgIGGBo6z9ZkFbBkIsxs7iN470sro83rR2v1VNDTKllxOPqFiUwvyJSOIvH+eQFbxzuNJVlXMLzi"};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -34,12 +34,12 @@ var P = {"v": "1d5badf4", "iv": "dA4zrBqTyWTe2BoI", "ct": "vhjW4SWDLgoc3IpXKRSVw
   try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('mas-key-') === 0) localStorage.removeItem(k); }); } catch (e) {}
   var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } });
   db.auth.getSession().then(function (r) {
-    var s = r.data && r.data.session, T = (document.title || '').replace(/ · BioscienceVista$/, '').replace(/</g, '&lt;');
+    var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
       if (x && x.data) return open(x.data);
-      say('<h1>🔒 ' + T + '</h1><p>This material is for members of BioscienceVista. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+      say('<h1>🔒 ' + T + '</h1><p>This material is for members of VistaEd. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
-    if (!s) return say('<h1>🔒 ' + T + '</h1><p>This material is for members of BioscienceVista. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+    if (!s) return say('<h1>🔒 ' + T + '</h1><p>This material is for members of VistaEd. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
     if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });
