@@ -27,7 +27,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "yY3zwH3yA7rEAxFh", "ct": "nvEE6aDDLas/owSSUQ7kI+q+PL/bGFtiOolYW0btf/SpPw5qGsB8WObccaFOQvYVrLd8hl1PYJrcI4pZoZAL9yG+QBQu1gJkEDV8drzApNAzUPSBUp/o9aXjYDgAvcv4xip+9rXvGr43f54Veuy0SlBi2Gkdiep+uuhyuLJ554XRUvjQClq/fxU0Ut+UNNLf4rY6A/y4tzWM/qHlhp4i0fCzW5vZJDCfUF1ZUy38g+iS3g2emQ60c6tSY3msbvU1eJvw8f2RbPViYiB2hpYqjRa3fuAPSjYhjUHYQB0mW0cGxsdH4VKlr8fuXNKsSS9oBb4ezXfBjwjv6k5+zmTRXFpT9Z3+Jxvc+nEbwAHWH2NO+NVnBZTx4b3y4bF/X8eGqkI4VHcKTs4MAeztX3w4jRFA8nXXeJBNMKS5Cau7qeuCfz4SYmBgAWFsqBGDrigPnR0iaK/Y8qCPtEneirIZU/EXpcW361Ya8g+1+Ui0Cc65JzWUvXcSWXbeyUzYKsblPyFDL7e+euj3Us/hnObA/tMB800FmJmRsfiuU9tVWc2jnLLmRV+v8nUZ"};
+var P = {"v": "1d5badf4", "iv": "avVnxKnrmfdUL28l", "ct": "jSfN0b2vNRzFzmsChmJGoIpUM6ucFHQBSRv4tU/hqhJ3mji0dhZaFd50GuzNJjr3MDWxFaof8HA75EUfvE2ZO2VIIH+rCzV3CwsVQAPgsb4ZTm/1RxmnYlctWX4soIXEkmCTznbeBvWvtPkMqaJMqLaqq6MoLjIJSh7To+hu7lRWNlbrS6Bxhyt/JCUNKNn6qK57Xv+5CPExBnMn477XB2ZNd5W+fX6wXA/Gb21ymXW8nrM3Cm7jnJv7ewLeDkSO+tOnYL9CHdXt5VvRLkBMraMxcDHuIIqzJxSk9476+4Nax3khHuocm/3vPhjs3R2s1m2KUd68zsivVKXHYtCOnBT6+zscjGfmMwxhjcQ7wYBQ434+Hc5UFtvT3oXkt1SvoJTJ1pu68y7ZtooJk6ztLybswVwJdepl9aSMsG453yPzqchw733x8k166i4YB1YE2xquGlM3hxHZn+A+AhSpDhLY131Xe1SbKhpw+ZdRnCUU7UAzZ2Mpo+9vKJNoond71cRzARDOQhjp0pvfwE2AsOlcBD8zee/MOWqRxUnr2Haiyl5Z81Q7I9V0"};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -49,9 +49,9 @@ var P = {"v": "1d5badf4", "iv": "yY3zwH3yA7rEAxFh", "ct": "nvEE6aDDLas/owSSUQ7kI
     var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
       if (x && x.data) return open(x.data);
-      say('<h1>🔒 ' + T + '</h1><p>This material is for members of VistaEd. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+      say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
-    if (!s) return say('<h1>🔒 ' + T + '</h1><p>This material is for members of VistaEd. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+    if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
     if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });

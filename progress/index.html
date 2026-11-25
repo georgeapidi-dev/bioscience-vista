@@ -27,7 +27,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "gKI0f18jkRNOLyH1", "ct": "/PbeHsEqSq8X9jgKQKkMv2SjBfXm35LB/1+6QCWAxe9GOK9HT14Fiod3qyLQXt9vh8gbHgaUvNqde0/vB2o9iB/ZdWM8NU7ECRdUCNTJHA3bnXmVVTnsuJWzjmjfNcAUAqLhuJA4mu+B3Pw5lkrLc7ijN/mIJJBwRjq3F0Ow4WUnAebAieo1VDisIOYj/3vs9mKAGJlv4EhD2wECIUwAArXNCqsRlmKZX/1M2//xF3N1PhC19uiCA719XGtR3K8qcH8PY8zbKxJI5yQyEAp08NginPALZ+23y0+gWEHFAIcyCIHda0haP9N3RS6a8Q5qFokeuwVv6GXfw7BnnSpiHCvjXKtdizWtfKh/pvOEwzDqMo+dj3fpVEgIRL8La7NMDFQWmdINJ/9dff44cT/77d290IftJsSM6+wBaLp+oPNMqoqYokBvg+sCIlKnlJ9psHAhJZKAd+yruVBLi+JtAk6v37SkTiH+7VTht/Wo+70Ul00fz+ZjZtbx39zPvqLaW/bBcur7x6JCNaQ2uR1eZJZSng5wRNIoCyaHd0jzQuCQheWuZ8QTtATe8XPKyftsbsZxYulH860="};
+var P = {"v": "1d5badf4", "iv": "A+GC4d/96nzrW14S", "ct": "C17RQ7cg92xm9jbImV6z4XrPAOvff3xewKmSyvPTTdY+Xu7u2DY9lX7BFqxAXqMVGCEZVubPm93lB9nP0ud6SjbINSp3YF/CeIIQi3WM2gbknG6hUo3yQmtwQXIR5VVY2wwYN9sDNbpPJKaSFTHz56OB4kl9YxV3RzMs36vDAB9h4hA/1liAJVvNeCxNIOauyz3blApJ6kzivqAIkdoYhp1HnjOmeBqam0EMo3ECXRZSwTBsmVRFqX7JBQzgZylupHGMIk6ayrlbor4DaKttXNsDzDidztAepwegnwvcVYYxwdxJsNuautIdHmc1Buj4yXORUdfwIzVgoG5mCRFYJEY0FU+NIhOeGvw7eVWWNN7LHDOlYmn/bnwIqYGhNs9Cgv/B3b8BVL3HKWsWW/8W/Ddg1tnHbaIbBaxUDyPu3BV6+skfABQh1uhoPHkmxJBvAfUTuh6hGRGSsjfTGjMgawjEPttD825NaOZWMPLBBoqV73+kvpNYzcQ3/0UJU5ZIEtOPk6Nj3B2d01nAbm4D6t0ueA5ML39Ps1o5uCUhOU8virLh7LiHk1wt+EAqb2v7zScsWxW4PjA="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -49,9 +49,9 @@ var P = {"v": "1d5badf4", "iv": "gKI0f18jkRNOLyH1", "ct": "/PbeHsEqSq8X9jgKQKkMv
     var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
       if (x && x.data) return open(x.data);
-      say('<h1>🔒 ' + T + '</h1><p>This material is for members of VistaEd. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+      say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
-    if (!s) return say('<h1>🔒 ' + T + '</h1><p>This material is for members of VistaEd. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+    if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
     if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });

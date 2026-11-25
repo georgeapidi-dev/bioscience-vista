@@ -27,7 +27,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "MZrep/qtdN2Gjaa1", "ct": "DJ/EZVtrhzsD+oZnzTR5SQTUdoT9RrExjZS0MZV/InO7TPDbIH419p+P6/JcanDZTZ0xlvoWVQNuhHTwue0uzl7QG6Pa3V9dWp78DiVCI6F02edz5zJ2s9mqtWtyUjoz60E0GTldt/qEulTwpT/9vwa4KCNJhbMqen4jXCR2R2ezElYbv5Cpm6YecjjEtZWNjwDWtkksASEUNDSlFvkOAIClhgIEFEucCWnF14cWeq5fk31/Oki/f0fP3H5sPdLOsr1nBXOytvK41GoC2kZtizuQw77CtcrybN7G9ekXhbEiRZjL4LFZ4aYOZ7Iyj/2hwSD9A6S85sCJIXAJ1QbHfVYxRjqLHY/5kkpxCw1ERvE69a5DSo5s7eiNWVN+4FdvSQ/2oqj9TaLNFkod1QUicqAK71e4/SBSB72B7LI="};
+var P = {"v": "1d5badf4", "iv": "wjsgslX9yP+IQZZo", "ct": "HtiiYv1msF0Pk4n6A+xiDF/Zth2HU+74X0fgxU6atR8n0R+n3jUJYAmt+xbqy2POdyRCZX710llG7p4rhoS9JQ2y3kk+X/+373OgGESllpa2cKAd8DxBxK+oNGY5nkWk6I1M3vO9FFIAmoPFSCj18pE+9URz2tD0li0KJYWwvxNUFMn0l6d3wPK28ws5eXfQFisshCLOZ3WrRf0JDt1BKVsmqZXdKfBEJTZZP7lVwP8IzhNHus3kNC8hUMFvgAbVV5hdwmfcY6Gqh38ATg+bmu6hcPRTGypQiTkF+0WaSa4XfMjDewK2+akYu8VYBBzgbgp7sWyvyRKLHxxbD7pOZQmH1JG2+sIEap16gTt3Ekn4CD1lZ0i/8OEYfTPTUiNWx3ByNBdWvoFNUliTHWVRFU8UlQKM63wJKdjYKaU="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -49,9 +49,9 @@ var P = {"v": "1d5badf4", "iv": "MZrep/qtdN2Gjaa1", "ct": "DJ/EZVtrhzsD+oZnzTR5S
     var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
       if (x && x.data) return open(x.data);
-      say('<h1>🔒 ' + T + '</h1><p>This material is for members of VistaEd. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+      say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
-    if (!s) return say('<h1>🔒 ' + T + '</h1><p>This material is for members of VistaEd. Sign in with an account that the site admin has approved to open it.</p><a class="btn" href="/login/?next=' + encodeURIComponent(here) + '">Sign in</a><a class="btn alt" href="/register/">Create an account</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+    if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
     if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });
