@@ -1,7 +1,7 @@
 {
  "name": "Vista Education (VistaEd)",
  "short_name": "VistaEd",
- "description": "Interactive science lessons, quizzes, exams and tools from biosciencevista.com.",
+ "description": "Vista Education: interactive lessons, virtual labs, exam practice and an AI tutor for sciences, mathematics and computing (IB, Cambridge and Kenya CBE).",
  "id": "/",
  "start_url": "/?source=app",
  "scope": "/",
