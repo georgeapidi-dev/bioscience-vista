@@ -27,12 +27,12 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "17EMyzf/nliCrcYf", "ct": "dNqXf3vI4/yY8ZkJooxD3eyw7GWhUgynCgnQ4GOkCpmgnldF2ZxMryXVILP/ZmSZ7/cn4ShyOQBplkzXI0DJjuPxJG60ispjdTzVY3skJtpJalJZc+up3V5jIYg4aDOH+I5+tR5Lj2QPQ2IsMc8Ke74d3ZM6fv1f77nLy1fUB8ZGAhTar6JKvVY5qgJ1oOsjuxlgsXhO9/wjidSnAodkZ2g3INyKvuodANyI7h1wyZ4SaBetE8jnkYbOEKzKnGu5ZthXsJ4Whr2LE3eQJLl2/w6pSVawYzMbnQpvxavmrake528UORyi7V2XksPpg+dXyL6mQZKs3SJOnoYiHQ3BnhmNm1Z09Je5KhuRKZFZcleTdZkyA5h0YYAEbmD+1nCRC6Uw9VFb2sMPbAPNYDnTn+DbYAAMer35aVpikJI="};
+var P = {"v": "1d5badf4", "iv": "NQeG9hHw7glUnlOC", "ct": "1uOgIHT3K2LPPXhr6DTnvItXZbUXhWnh0CPmpbqkknLKx9KW/rDknk0IPSffqKXnWN7CN9Wd1PGoFrTF/nTBqBMCNL7OvKH2dibMTd5cMzOgsuf8PKJQNqradw/LeCMjLzMYqfdfnHhTKhHzJRT/RJaBwMr5yKA5hGJ0Q5aW6nuojuLqXp4iAPLFz55521hregA2MiptYXDEjxKJRfPNc82+zuO7vXstFggyZXffK3UqPLKDuYAQq6JvYlNdbi8mhhe6BMpCT32HbrojC8AuWWetUHOFkRsHP0V1RnmV5U+G8XvUADNf/eY3WR+xH63ugO+a4pzD3kIQsz/QXY7Pf99MFdRusOKUhW255MHR55O61KmNz34PECehqg1qrPxCyqXMjCN77C9ybZxsqS8YJenbXpJ7KrHbNhj8e4o="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
   function u8(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
-  function say(h) { document.getElementById('wait').style.display = 'none'; var b = document.getElementById('box'); b.innerHTML = h; b.style.display = 'block'; }
+  function say(h) { document.getElementById('wait').style.display = 'none'; var b = document.getElementById('box'); b.innerHTML = h + (typeof VIS !== 'undefined' && VIS ? '<p style="margin-top:14px;font-size:.9rem">👁 Visitor view. <a href="' + location.pathname + '?visitor=0">Leave visitor view</a></p>' : ''); b.style.display = 'block'; }
   function login() { location.replace('/login/?next=' + encodeURIComponent(here)); }
   function open(k) {
     return crypto.subtle.importKey('raw', u8(k), 'AES-GCM', false, ['decrypt'])
@@ -43,7 +43,8 @@ var P = {"v": "1d5badf4", "iv": "17EMyzf/nliCrcYf", "ct": "dNqXf3vI4/yY8ZkJooxD3
   var BV = window.BV || {};
   if (!window.supabase || !BV.sbUrl) { say('<h1>Could not open this page</h1><p>Check your internet connection and reload.</p>'); return; }
   try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('mas-key-') === 0) localStorage.removeItem(k); }); } catch (e) {}
-  var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } });
+  var VIS = (function(){try{if(/[?&]visitor=1/.test(location.search))sessionStorage.setItem('bv-visitor','1');if(/[?&]visitor=0/.test(location.search))sessionStorage.removeItem('bv-visitor');return sessionStorage.getItem('bv-visitor')==='1';}catch(e){return false;}})();   // visitor view (admin): no saved sign-in in this tab
+  var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, VIS ? { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'bv-visitor-view' } } : { auth: { persistSession: true, autoRefreshToken: true } });
   db.auth.getSession().then(function (r) {
     var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)

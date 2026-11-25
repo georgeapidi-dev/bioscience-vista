@@ -16,12 +16,12 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "tq5wZdOV6xb9glhE", "ct": "EhPP/Fuf1MTAV7YdpJnQDc1qmTlxsjeqfvXXBqp5xtlEeoYWhrTWINbouiEWlAIx2JJwNEXbVUdMQCCdoU8OGzRO52w7nujHaFPkKE8A7aKMKBxAezkSRpiCg1lvWWxm32Pd7uQptn4mRR2Kf0paEp71FYwek0dfutOI5w+A3GNsgiqIPew0LpcBlpYStgCG3qNEzj1cS0Xai5/qwodWCO+WRWZDGXvGEM1eT8TcgUjA3QgX8TNuxBcWRAozMCirz8WPbkABg2qgu/W8INA7I42i9lRGXX4IVV+jfJW3+IhvjUBueRqSV4PBRMJF8exAZCmzaH+T7FwZExHsAb1U+NJaLCg6jUvmjfxtRerIfAxcgAMZrh8f8Zib+VsRJU6iNakSaRKuVjmQAdE4n2gBUzZQDxmLbkRvazK4C/jqXJGc7qa9moV3oeQO0XWCn8kCUWbvUfCfj6JwYZV3p59viIO+f2Z0A2YJGdj7y6krq15LVaxQrNoHybI6zrQahC358Y56+zMUoreqHpY6/mW7q5T7yqyC1ynHhU53f5snOYSd3s9stMBoLFfYdogGcUMcKTozkr2I/Fr+WwF0dbInI5DjlFJCqG6quyUyJz7mJNt3TMPo6sWPYYN74toxAiSgEZ5lxruKbB6qeZmbnOazzvcIaARl/qtg+VYjJTng1nN7qsqDCSfQGlte++br2SZoWJ9ZigyjstKN"};
+var P = {"v": "1d5badf4", "iv": "udg+UxINF+B7giCy", "ct": "q8nCKgEMbAT9IQa/NhiyO5RQgGM/dHeOWykc2OjvCUjr0JqSUE3eFMgkxGIodntLKwoTCCu/A0EC/RELZIE/5DlKoTtZ2m6gJKwn3AXlCfwSdtcuM0GQ2/UWF23sCwT9PSK/KQZ4EWEqA0goIZ1DIMjX14Fl5AsbLodowzvPMRUgV8gZM7V89ryVi7vro5mBL6g7/hHa8UqHkRfxGhvP8cY3FaLWeVC5Doo1A0akA+Ye5BsiO6t4i2eBoQE/65Jfj0JNwhH5kYPL7Jsun+Uf82qzLeZAtvGc6shFYqkiGM1iXLjKdQ4jiyGj8eLKCImbIQloIF/ATn8LaGnhEBZ2WveJLroV2OsBgt+eBte51d+lb9yy632+YaJfr/R/wBjtk38k+bEiM7sXPG7e8DX2xa4rf/FB0SEGDWUe2HPqhi9bhlqXsH8xH1TPJP43/NVaPcmXhufnippC/lvbGsKeCUa/55HOx+X1hQCflxg7fVVCbLNMuK0Axy6QsgBfkMF85y2445Hyao8Qhq5/cVHqIYYJ2wpb1Dgut63iAlcjzb6Phad7sAnPGvr12PH4baV3pjr9wF4r3NB1RjwGLbypQIus03PEhzig4tO1Ne1tJww7QqlXa1VawvEprA+ycRERrzdlnEmBmeV4D+VivCFUWYPfObEatRcHC+QNCGDQMhFrdfv+IBJ2Cb8xZVDq4iV2odxfoSh2MEYU"};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
   function u8(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
-  function say(h) { document.getElementById('wait').style.display = 'none'; var b = document.getElementById('box'); b.innerHTML = h; b.style.display = 'block'; }
+  function say(h) { document.getElementById('wait').style.display = 'none'; var b = document.getElementById('box'); b.innerHTML = h + (typeof VIS !== 'undefined' && VIS ? '<p style="margin-top:14px;font-size:.9rem">👁 Visitor view. <a href="' + location.pathname + '?visitor=0">Leave visitor view</a></p>' : ''); b.style.display = 'block'; }
   function login() { location.replace('/login/?next=' + encodeURIComponent(here)); }
   function open(k) {
     return crypto.subtle.importKey('raw', u8(k), 'AES-GCM', false, ['decrypt'])
@@ -32,7 +32,8 @@ var P = {"v": "1d5badf4", "iv": "tq5wZdOV6xb9glhE", "ct": "EhPP/Fuf1MTAV7YdpJnQD
   var BV = window.BV || {};
   if (!window.supabase || !BV.sbUrl) { say('<h1>Could not open this page</h1><p>Check your internet connection and reload.</p>'); return; }
   try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('mas-key-') === 0) localStorage.removeItem(k); }); } catch (e) {}
-  var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } });
+  var VIS = (function(){try{if(/[?&]visitor=1/.test(location.search))sessionStorage.setItem('bv-visitor','1');if(/[?&]visitor=0/.test(location.search))sessionStorage.removeItem('bv-visitor');return sessionStorage.getItem('bv-visitor')==='1';}catch(e){return false;}})();   // visitor view (admin): no saved sign-in in this tab
+  var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, VIS ? { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'bv-visitor-view' } } : { auth: { persistSession: true, autoRefreshToken: true } });
   db.auth.getSession().then(function (r) {
     var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)

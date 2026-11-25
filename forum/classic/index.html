@@ -27,12 +27,12 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "FmYMH+IuWoT9O75u", "ct": "vXm9MzYx4HeVeJA0UruVwt8r1W41yegBxcUQs/xE8ME/8VknXPV/rjZexeZhIkaVl8md4jogOA8rjmeWsUglmNN2yGjaOcprvxlNZFYGTk9Rn+nS58ypWVu2d9HcMUEqnFW54T7Ewoubfgr9lI3yG/EOmS10ZfpSMWadlSrQ/FyZ3sbARIQUUhB2ZT0EpykZRQw2LnGtdhgpamrlqYO5yQPCIO1/r2k/EsTe4y2KF7xFAjfd8uAJ6DIqJBP82/uStExcan62sh70bRaf5FdmvNGr4rtbmJrltcfIVAUAnJG1vSDwc58WDEhIhAfRtQRBB7DbI1fwhIrUfSUsBoeLE3virpbYsRWhkGMnjgTPzw8WIz/6UMpLYIzUd/Si002a4uICxtvQsNV9Nvoqm7PnXSmu6nR5fHM0eu/dDjLzJ1u+HmjLE0t1EvobGOV61/QxiX38T2LJQxE6wKbN1I8Xn/oFxDdr543kCHbNBfdhM3NQcg50gIK3psayY+JAfPSOsk/wpdVgbB2kQialQZE+cuy+EV9S8GMBPTtNvJm2iy2fwUlKZGPFl/pM"};
+var P = {"v": "1d5badf4", "iv": "yY3zwH3yA7rEAxFh", "ct": "nvEE6aDDLas/owSSUQ7kI+q+PL/bGFtiOolYW0btf/SpPw5qGsB8WObccaFOQvYVrLd8hl1PYJrcI4pZoZAL9yG+QBQu1gJkEDV8drzApNAzUPSBUp/o9aXjYDgAvcv4xip+9rXvGr43f54Veuy0SlBi2Gkdiep+uuhyuLJ554XRUvjQClq/fxU0Ut+UNNLf4rY6A/y4tzWM/qHlhp4i0fCzW5vZJDCfUF1ZUy38g+iS3g2emQ60c6tSY3msbvU1eJvw8f2RbPViYiB2hpYqjRa3fuAPSjYhjUHYQB0mW0cGxsdH4VKlr8fuXNKsSS9oBb4ezXfBjwjv6k5+zmTRXFpT9Z3+Jxvc+nEbwAHWH2NO+NVnBZTx4b3y4bF/X8eGqkI4VHcKTs4MAeztX3w4jRFA8nXXeJBNMKS5Cau7qeuCfz4SYmBgAWFsqBGDrigPnR0iaK/Y8qCPtEneirIZU/EXpcW361Ya8g+1+Ui0Cc65JzWUvXcSWXbeyUzYKsblPyFDL7e+euj3Us/hnObA/tMB800FmJmRsfiuU9tVWc2jnLLmRV+v8nUZ"};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
   function u8(b) { var s = atob(b), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
-  function say(h) { document.getElementById('wait').style.display = 'none'; var b = document.getElementById('box'); b.innerHTML = h; b.style.display = 'block'; }
+  function say(h) { document.getElementById('wait').style.display = 'none'; var b = document.getElementById('box'); b.innerHTML = h + (typeof VIS !== 'undefined' && VIS ? '<p style="margin-top:14px;font-size:.9rem">👁 Visitor view. <a href="' + location.pathname + '?visitor=0">Leave visitor view</a></p>' : ''); b.style.display = 'block'; }
   function login() { location.replace('/login/?next=' + encodeURIComponent(here)); }
   function open(k) {
     return crypto.subtle.importKey('raw', u8(k), 'AES-GCM', false, ['decrypt'])
@@ -43,7 +43,8 @@ var P = {"v": "1d5badf4", "iv": "FmYMH+IuWoT9O75u", "ct": "vXm9MzYx4HeVeJA0UruVw
   var BV = window.BV || {};
   if (!window.supabase || !BV.sbUrl) { say('<h1>Could not open this page</h1><p>Check your internet connection and reload.</p>'); return; }
   try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('mas-key-') === 0) localStorage.removeItem(k); }); } catch (e) {}
-  var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, { auth: { persistSession: true, autoRefreshToken: true } });
+  var VIS = (function(){try{if(/[?&]visitor=1/.test(location.search))sessionStorage.setItem('bv-visitor','1');if(/[?&]visitor=0/.test(location.search))sessionStorage.removeItem('bv-visitor');return sessionStorage.getItem('bv-visitor')==='1';}catch(e){return false;}})();   // visitor view (admin): no saved sign-in in this tab
+  var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, VIS ? { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'bv-visitor-view' } } : { auth: { persistSession: true, autoRefreshToken: true } });
   db.auth.getSession().then(function (r) {
     var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
