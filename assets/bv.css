@@ -545,3 +545,15 @@ html.bvnav .navdd-list a{display:flex!important;border-radius:12px!important;mar
 @media (max-width:640px){.lc-fam{grid-template-columns:1fr;gap:4px}.lc-fam-h{padding-top:0}}
 .lcard .go{display:inline-block;padding:6px 14px;border-radius:999px;background:var(--c);color:#fff;font-size:.9rem;align-self:center}
 .lcard .small.muted{display:block;margin-top:2px;line-height:1.35}
+
+/* Curricula on every page (26 Nov 2026, George: "every page should show the Cambridge system, Edexcel, CBE, IB") */
+.curbar{background:linear-gradient(90deg,#fdf2f8,#eff6ff 35%,#f0fdf4 65%,#eef2ff);border-bottom:1px solid #e2e8f0}
+.curbar-in{max-width:1240px;margin:0 auto;padding:6px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.curbar-in>span{font-size:.8rem;font-weight:800;color:#475569;margin-right:2px}
+.curbar a{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;font-size:.84rem;font-weight:800;text-decoration:none;color:#fff;box-shadow:0 2px 6px rgba(15,23,42,.12)}
+.curbar a:hover,.curbar a:focus-visible{filter:brightness(1.08);transform:translateY(-1px)}.curbar a:focus-visible{outline:3px solid #0f172a;outline-offset:2px}
+.curbar a[aria-current]{outline:3px solid #0f172a;outline-offset:1px}
+.cb-ib{background:linear-gradient(120deg,#be123c,#db2777)}.cb-cam{background:linear-gradient(120deg,#0369a1,#0ea5e9)}.cb-cbe{background:linear-gradient(120deg,#15803d,#b91c1c)}.cb-edx{background:linear-gradient(120deg,#1e3a8a,#2563eb)}
+@media (max-width:640px){.curbar-in{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}.curbar-in>span{display:none}.curbar a{flex:none;font-size:.8rem}}
+html[data-theme=dark] .curbar{background:#0f172a;border-color:#1e293b}html[data-theme=dark] .curbar-in>span{color:#cbd5e1}
+@media print{.curbar{display:none}}
