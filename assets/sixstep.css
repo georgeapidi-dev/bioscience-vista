@@ -61,3 +61,18 @@ body.sx-support .sx-pathnow{background:#ecfdf5;border-left:4px solid #059669}bod
 html[data-theme=dark] .sx-route,html[data-theme=dark] .sx-extcard{background:transparent}
 .sx-extobj{display:inline-block;margin-bottom:4px;font-size:.88em;color:#6d28d9}
 .sx-rec{margin:4px 0 0;padding:6px 10px;border-radius:10px;background:#fefce8;border:1px solid #fde68a}
+/* exam-style questions compulsory (28 Nov 2026) */
+.sx-exreq{margin:0 0 10px;padding:8px 12px;border-radius:10px;background:#fff7ed;border:1px solid #fdba74;color:#7c2d12}
+.sx-exdone .sx-exreq{background:#ecfdf5;border-color:#6ee7b7;color:#065f46}
+.sx-exnag{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:60;background:#7c2d12;color:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:94vw;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sx-exnag[hidden]{display:none}
+.sx-exnag .btn{background:#fff;color:#7c2d12}
+.sx-pulse{animation:sxpulse 1.2s ease 2}
+@keyframes sxpulse{50%{box-shadow:0 0 0 6px rgba(124,58,237,.35)}}
+@media (prefers-reduced-motion:reduce){.sx-pulse{animation:none}}
+.sx-dqhint{margin:8px 0}
+.sx-dqmodel{margin:6px 0}
+.sx-dqans{background:#f0fdf4;border-left:6px solid #16a34a;margin-top:8px}
+.sx-dqans ul{margin:6px 0 6px 18px}
+.sx-kwl>.sx-dqhint,.sx-kwl>.sx-dqmodel{grid-column:1/-1}
+.sx-exnag{bottom:76px}
