@@ -76,3 +76,12 @@ html[data-theme=dark] .sx-route,html[data-theme=dark] .sx-extcard{background:tra
 .sx-dqans ul{margin:6px 0 6px 18px}
 .sx-kwl>.sx-dqhint,.sx-kwl>.sx-dqmodel{grid-column:1/-1}
 .sx-exnag{bottom:76px}
+/* answer boxes: students can stretch them (drag the corner or press ⤢), and they grow as you type (28 Nov 2026) */
+.q textarea,.sx-q textarea{resize:vertical;min-height:96px;line-height:1.5}
+#sx-pred{min-height:150px;font-size:1.02rem}
+.sx-kwl{grid-template-columns:1fr}
+.sx-tawrap{position:relative}
+.sx-grow{position:absolute;right:6px;bottom:8px;border:1px solid var(--line,#cbd5e1);background:var(--bg,#fff);color:inherit;border-radius:8px;font-size:.8rem;padding:2px 8px;cursor:pointer;opacity:.85}
+.sx-grow:hover,.sx-grow:focus-visible{opacity:1}
+textarea.sx-big{min-height:320px!important}
+textarea.cell{min-height:60px}
