@@ -85,8 +85,12 @@ html[data-theme=dark] .sx-route,html[data-theme=dark] .sx-extcard{background:tra
 .sx-grow:hover,.sx-grow:focus-visible{opacity:1}
 textarea.sx-big{min-height:320px!important}
 textarea.cell{min-height:60px}
-.sx-mic{right:84px}
+.sx-mic{}
 .sx-mic.on{background:#fee2e2;border-color:#ef4444;color:#991b1b}
 .sx-recall{border-left:6px solid #0ea5e9;background:#f0f9ff}
 .sx-recall h3{margin:0 0 4px}
 #sx-rcans ol{margin:8px 0 6px 20px}
+.sx-lang{border:1px solid var(--line,#cbd5e1);background:var(--card,#fff);color:inherit;border-radius:999px;padding:4px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.bv-sw{font-size:.8em;opacity:.8;font-style:italic}
+.sx-tabtns{position:absolute;right:6px;bottom:8px;display:flex;gap:6px}
+.sx-tabtns .sx-grow{position:static}
