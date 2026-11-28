@@ -557,3 +557,8 @@ html.bvnav .navdd-list a{display:flex!important;border-radius:12px!important;mar
 @media (max-width:640px){.curbar-in{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}.curbar-in>span{display:none}.curbar a{flex:none;font-size:.8rem}}
 html[data-theme=dark] .curbar{background:#0f172a;border-color:#1e293b}html[data-theme=dark] .curbar-in>span{color:#cbd5e1}
 @media print{.curbar{display:none}}
+/* home: exam-style questions still to do (28 Nov 2026) */
+.dx-todo{margin:14px 0 0;padding:12px 14px;border-radius:14px;background:#fff7ed;border:1px solid #fdba74}
+.dx-todo .vx-eye{margin:0 0 6px;color:#9a3412}
+.dx-todo a{display:block;padding:8px 10px;margin:4px 0;border-radius:10px;background:#fff;color:#7c2d12;text-decoration:none;font-weight:600}
+.dx-todo a:hover,.dx-todo a:focus-visible{background:#ffedd5}
