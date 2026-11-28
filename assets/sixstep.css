@@ -53,3 +53,11 @@ body.sx-support .sx-pathnow{background:#ecfdf5;border-left:4px solid #059669}bod
 .sx-check li.done{color:#047857;text-decoration:line-through}.sx-check li.done::marker{content:"✓ ";color:#047857}
 .sx-lvnote{color:#475569;font-style:italic}
 @media print{.sx-pathnow,.sx-say,.sx-check{display:none!important}}
+/* differentiation engine (28 Nov 2026) */
+.sx-route{border-left:5px solid #0ea5e9!important;background:#f0f9ff}.sx-route h3{margin:0 0 6px}.sx-route ol{margin:0;padding-left:20px}.sx-route li{margin:3px 0}
+.sx-guided{border-left:5px solid #0ea5e9!important}.sx-guided ol{padding-left:20px}
+.sx-extcard{border-left:5px solid #7c3aed!important;background:#faf5ff}.sx-extfb{margin-top:8px}.sx-extfb summary{cursor:pointer;font-weight:700;color:#6d28d9}.sx-extfb ul{margin:6px 0 0;padding-left:20px}
+.sx-tryfirst{color:#0369a1;font-weight:600}.sx-pwfb{margin:10px 0 0;padding:8px 10px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0}
+html[data-theme=dark] .sx-route,html[data-theme=dark] .sx-extcard{background:transparent}
+.sx-extobj{display:inline-block;margin-bottom:4px;font-size:.88em;color:#6d28d9}
+.sx-rec{margin:4px 0 0;padding:6px 10px;border-radius:10px;background:#fefce8;border:1px solid #fde68a}
