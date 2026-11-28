@@ -85,3 +85,8 @@ html[data-theme=dark] .sx-route,html[data-theme=dark] .sx-extcard{background:tra
 .sx-grow:hover,.sx-grow:focus-visible{opacity:1}
 textarea.sx-big{min-height:320px!important}
 textarea.cell{min-height:60px}
+.sx-mic{right:84px}
+.sx-mic.on{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+.sx-recall{border-left:6px solid #0ea5e9;background:#f0f9ff}
+.sx-recall h3{margin:0 0 4px}
+#sx-rcans ol{margin:8px 0 6px 20px}
