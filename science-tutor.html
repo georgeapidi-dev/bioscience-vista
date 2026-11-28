@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Science Help Desk · VistaEd</title><meta name="robots" content="noindex">
+<title>Science Help Desk · EduVista Science</title><meta name="robots" content="noindex">
 <style>
 :root{--bg:#f6f8f6;--card:#fff;--ink:#1f2a24;--muted:#5d6b62;--green:#1b6b3a;--line:#d5e0d8}
 @media (prefers-color-scheme:dark){:root{--bg:#111714;--card:#1a221d;--ink:#e6efe9;--muted:#9fb0a5;--green:#5fbf83;--line:#2f3d34}}
@@ -16,7 +16,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "zIPgRK1squs1bslE", "ct": "kBsW8UylTifPBn43c6lFoD7wLz6EM1UMzeGVfNw6LYbrX8IiYlGrTBNHCuUS1wHO4+58KI0GckRKqEZYoaJSur3h1NPtwQILmLx8Q/ruvcvhx2E5M28GHnTh+CyXJea0l5DGe+zXT9eGGszIFSczVhmS5uGT2/jNNr5NYJlh6RWRnlKedZqgL3n4Phn17OZCXRC3v4Bij7hDFA/XQkRKpz2DwZr1rhQpNTwJvHbZMCn0w00/Z4YQn5XYE1te+UcRgN3s6Zk0d+spMOvVWC+ZunXW2sBSXRpIyNGdlqAtb+vIdbLsqx86B+3ncIg0Z0PNF/ay5bxK6M4SNxYmDR7lnSF7FpJNqrauuWCv5grf2CZe0o+i7rgu8qMzI4ywViY7/cbCa+ijEsTdj+5nFDRhkFm2y4f7wuuB0PzUywC4rPcvWOCQU6CYDFAjdcXDlTNvVY+WnVnXdQ7//i3eTwDGBbmsXP/NyzqzfSNHnQ2pXNmVKskqFgX2j0O0w8j/QWP6MJJMg4ChRprDRInxrAUyS2zhh3X16iu6NMAqTzKDqSiECwdxUohbUN1dur+tqm2e9wRrGVxyUhpkRQq6mHTajuzbmxAlGB/84oqINuvtiEtij3K7S0liUptEngf/1Zvw9h4HQc0RpqwYiHoAlz/qDbDgUPVgULa4HNX84xDv3vZqCVFZ8l1AyoW8wqpeKlNEKSOXkv9gsx5s"};
+var P = {"v": "1d5badf4", "iv": "ZDoV+kGGpVzFsJWO", "ct": "tGS3gjnn4fZnvZlBZBXNx7iCIBj/MguZA0Kz7cu1Pjfhl8eOH+SKTnBwM/p8Q8rSGqU56k1gAO8JNgAWrELRrdwUszr9GjlARFbBFQm1Oq3l2NEfQNZ82m8SGvGQ6H8NKO81D2JJaUAgKzeC0KI3Xp723zUQ8rf6HlAKiWh9af/m6SdGpKrDL3AoHNraMXFcPAJCJUbtHyZcNZYwNniR3ZvBgjna9xJBg4M5w58S1dkIybomjIK+0I0dwo4PpiY71v6qnIC9HM+i4wYaHLNvMzMzVa9g/zEOPwNzgrTqs40NBT9zgVQPH81x/FNXEOpv9q9mJruxxy1/74OI1+qHrwcXz49x+7gqz5uG5AuN0ti7wj2Nrt7TxbvKdgKQw05/w/vok56KuS/TV+0PA6nFjy7S4ueITL2gwSdPtfPESya3C2tvH+gD3vV09ZhkUq9F6Ll+z4ZDRkrR99LyUMHZ0O/ym8IC+k8+OOikchiqfLzrHc4vA/aLa4Ja5H2pFsT22vtS9ZKMfsY2BojYeC9QlAmqpiq0jL03T9erf8i/dUtbq1ToxoxttZKT6h5GREnme0GgMMrkNABaHXdKznMRHbiA3FMfbbTn3q07ID4MLrgQ481W1JdhEgicoTEWWJocwO6GsyX178oJmI+Z2EE+dhrgOt1grYqMIoqHpgwprvwIwC3NiIgDQYIQn6bcBs5mExy6CINzTvFXc3giHviN3s4i"};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -36,14 +36,14 @@ var P = {"v": "1d5badf4", "iv": "zIPgRK1squs1bslE", "ct": "kBsW8UylTifPBn43c6lFo
   var VIS = (function(){try{if(/[?&]visitor=1/.test(location.search))sessionStorage.setItem('bv-visitor','1');if(/[?&]visitor=0/.test(location.search))sessionStorage.removeItem('bv-visitor');return sessionStorage.getItem('bv-visitor')==='1';}catch(e){return false;}})();   // visitor view (admin): no saved sign-in in this tab
   var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, VIS ? { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'bv-visitor-view' } } : { auth: { persistSession: true, autoRefreshToken: true } });
   db.auth.getSession().then(function (r) {
-    var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
+    var s = r.data && r.data.session, T = (document.title || '').replace(/ · EduVista$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
       if (x && x.data) return open(x.data);
       if (P.pv) return showPv();
-      say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+      say('<h1>🔒 ' + T + '</h1><p>Create a free EduVista account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
     if (!s && P.pv) { try { sessionStorage.removeItem('bvpv-member'); } catch (e) {} return showPv(); }
-    if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+    if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free EduVista account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
     if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });

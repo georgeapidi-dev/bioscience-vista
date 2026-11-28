@@ -1,16 +1,16 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Biology · VistaEd</title>
-<meta name="description" content="Biology — an interactive lesson with questions, activities and feedback on VistaEd.">
+<title>Biology · EduVista</title>
+<meta name="description" content="Biology — an interactive lesson with questions, activities and feedback on EduVista.">
 <link rel="canonical" href="https://biosciencevista.com/a-level/">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="VistaEd">
+<meta property="og:site_name" content="EduVista">
 <meta property="og:title" content="Biology">
-<meta property="og:description" content="Biology — an interactive lesson with questions, activities and feedback on VistaEd.">
+<meta property="og:description" content="Biology — an interactive lesson with questions, activities and feedback on EduVista.">
 <meta property="og:url" content="https://biosciencevista.com/a-level/">
 <meta property="og:image" content="https://biosciencevista.com/assets/share/generic.png">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="VistaEd — Science you can explore">
+<meta property="og:image:alt" content="EduVista — Science you can explore">
 <meta name="twitter:card" content="summary_large_image"><meta name="robots" content="noindex">
 <style>
 :root{--bg:#f6f8f6;--card:#fff;--ink:#1f2a24;--muted:#5d6b62;--green:#1b6b3a;--line:#d5e0d8}
@@ -27,7 +27,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "4FQoLFM+PPLQAm1h", "ct": "l09DywhPOb0IMMy2+2Nni0ZS8CH/XRzD0Nly61iFWpL0IfYNg0eGyIRNAqoGAyoZ2+Vt9+5Yq40C+JLfr8yAjnNYQv93RxCsw4XgLjmA2BpqTfj0/Ua/yZpOBShYEqWORu7daZnnbUTQztTnKIyvpqJ3n6vL6sKsv1yQc3Kosn2q2hFzNLUMysdZWSKDrauYUeNSIrnRNoZecT5zy+sW5B3BwfanlwqW0HixQeEnPOKe4F/VikSAKZA0UH15PTSOTlBdk1VuM/+aVUKkcbMUvDpDCq8RhPxdcmVex/K8Onz+Yjx127UHWBeu7BJ5ZwqVXIBstVvPef5lV0gS/IqreHPzg4xG3z2+fQZWOj+eVcxl264QIel8ERK0zu8o8uQUdPudDvzSNq3AsRDpDtAW49YlK5xW8DXdZuUrYwQ="};
+var P = {"v": "1d5badf4", "iv": "GbW83VSMRyNHy/GW", "ct": "mGkVscH3nt3DI1kmoqcEDXCbvIDu0v1NEyMIWYA6ak/iGi0nAd6xrKAllgposLgJUzSbDrEXafwlEmOIypYBUU7VkH6hgCC6Qft8szzSqnJ50cHhj6ofUKPsPPTWnTWffimDQDzpTi4Cv+OcpTpwLWpRuYDP9e8J8nO4YeFBCrExIC84aja+ZtRP7VgwB5O7GlmhYCgv2hhpLAb0zOMyLU8XtWtf24Y+uqlDYhcoo/XLJOaPfR0MaskFLlfR6Y2XXRvcWu3ylhDl9tLrjc92m7Q1KOY1SUXMe1XUv1wQoUIk74oSE8rHmQKK8y87b3UPi6LcNZenZHUivP4X26Ja9nA8ucSnAX1yaDVbgAfVbF8w+LK/Qh5rftuVXb4V6aIEUMqDrtOVdnna7GCxcH7P/N2FWB0TILopVRN6nxNK"};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -47,14 +47,14 @@ var P = {"v": "1d5badf4", "iv": "4FQoLFM+PPLQAm1h", "ct": "l09DywhPOb0IMMy2+2Nni
   var VIS = (function(){try{if(/[?&]visitor=1/.test(location.search))sessionStorage.setItem('bv-visitor','1');if(/[?&]visitor=0/.test(location.search))sessionStorage.removeItem('bv-visitor');return sessionStorage.getItem('bv-visitor')==='1';}catch(e){return false;}})();   // visitor view (admin): no saved sign-in in this tab
   var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, VIS ? { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'bv-visitor-view' } } : { auth: { persistSession: true, autoRefreshToken: true } });
   db.auth.getSession().then(function (r) {
-    var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
+    var s = r.data && r.data.session, T = (document.title || '').replace(/ · EduVista$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
       if (x && x.data) return open(x.data);
       if (P.pv) return showPv();
-      say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+      say('<h1>🔒 ' + T + '</h1><p>Create a free EduVista account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
     if (!s && P.pv) { try { sessionStorage.removeItem('bvpv-member'); } catch (e) {} return showPv(); }
-    if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+    if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free EduVista account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
     if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });

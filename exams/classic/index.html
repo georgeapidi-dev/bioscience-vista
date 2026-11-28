@@ -1,16 +1,16 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Online exams · VistaEd</title>
-<meta name="description" content="Online exams — an interactive lesson with questions, activities and feedback on VistaEd.">
+<title>Online exams · EduVista Schools</title>
+<meta name="description" content="Online exams — an interactive lesson with questions, activities and feedback on EduVista.">
 <link rel="canonical" href="https://biosciencevista.com/exams/classic/">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="VistaEd">
+<meta property="og:site_name" content="EduVista">
 <meta property="og:title" content="Online exams">
-<meta property="og:description" content="Online exams — an interactive lesson with questions, activities and feedback on VistaEd.">
+<meta property="og:description" content="Online exams — an interactive lesson with questions, activities and feedback on EduVista.">
 <meta property="og:url" content="https://biosciencevista.com/exams/classic/">
 <meta property="og:image" content="https://biosciencevista.com/assets/share/generic.png">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="VistaEd — Science you can explore">
+<meta property="og:image:alt" content="EduVista — Science you can explore">
 <meta name="twitter:card" content="summary_large_image"><meta name="robots" content="noindex">
 <style>
 :root{--bg:#f6f8f6;--card:#fff;--ink:#1f2a24;--muted:#5d6b62;--green:#1b6b3a;--line:#d5e0d8}
@@ -27,7 +27,7 @@ a.btn.alt{background:transparent;color:var(--green);border:1px solid var(--line)
 <div id="wait">Opening…</div><div id="box" role="alert"></div>
 <script src="/assets/site-config.js"></script><script src="/assets/supabase.js"></script>
 <script>
-var P = {"v": "1d5badf4", "iv": "ToxeZLyxYEbUvtD+", "ct": "3Xs42Io5wRteo9Y1QQnuucnIUVGbVyIdC1MbqS3YeesWximeAido9SUiXLrz8e/Sj3SYBr8lfk9Nnr/mUImb0CGe+k4vRChgX7KOwB+2mtXmJYWwfb5dIPc1YUxvygN30Vj1YPX0z0BYUTE/nKpvELJlkqCqolgoGz4Fq3F3njEnQwrda5OXfMZ/v18oIW/N/230YcnzbSibU3u9rKduoVowzmbl+gdjGUim6wP4TG1/oSB8+I6a27FxoIN34AuLCqVUIo/5mkySza64h0blGtQgQszZfCEeqexWn8sTqvWbN261ielKgE0jS8bDAwQj2gvlqDevg3Z0/hrZUkxJReEcviKt8Rbm8TGHo4w4D18qQH8HtvEBKywFTrArdogflmyLq2YbghCFA/AIsLCI8BHqqwi4UmBUUYpA/wmT9uVpKOHYU2dW0tljNsUU/GmgijPN2CrVtAJZHfrSfbdfRk6le/JRmx/lQYkVJUTr9KjE3g7/DZmAvl5HKeYnwkAcch4WDamehXil3b93EOZo/GPlOcShmrIA9Klav528t0HsIuBvtzbd6g=="};
+var P = {"v": "1d5badf4", "iv": "gC7wISsxSKwNcOsB", "ct": "Y9smqdXZOBJ+0HhPOSnBy2ImPkIg6wrXyeIXS2ojY3Pe1mtAu5eXjsQooDVxEmwhVfsGo7w+J6sR/E1RGz/iHJ4mU36qoGCZi4XKMvRQDTkQyVH2d1vMK860XomjAMlyBwKbtgAZCzNmnutI4K2Lh8UXf/QExzaqY7eIjf3vS9AsI38Uir3knJEb1RR3mkbZgGwRKhwQmRHVjAY0mi/psyN2U/tQ+HNYUiKdwSSgIif272t4PTgh6u811HG6PYtzyqBS+jWmeiPmkgtbAxo+Tp+vUMDXow8x1I62seFOym6isBZCXZCX5PNIS7CgLNKXn7l7vFA2dxrK6XKSu/F5GFtCi/QxyoX4QVWpj7CTnQfC7XFrg+VKaQHpQ5GaGr03e5tl2KgVwT6rjGOuGn3qFLjymN+efAS09mJJUaJ8d4E3usswXXL62mSrqsJu6xNT2MO5cC5pJ5Xf1xjmzDUaMvfGCJeUEt9nlT1OLb5/xuF+wMv2klfAAt5kMbMV3RHKp/87Z363V1WckbVmiUIuSxLVVsm20eis3OYYwtGKV2OpFTePIPb98UWTehiQcJDQWg=="};
 (function () {
   if (location.protocol === 'http:' && location.hostname !== 'localhost') { location.replace('https:' + location.href.slice(5)); return; }
   var te = new TextDecoder(), here = location.pathname + location.search + location.hash;
@@ -47,14 +47,14 @@ var P = {"v": "1d5badf4", "iv": "ToxeZLyxYEbUvtD+", "ct": "3Xs42Io5wRteo9Y1QQnuu
   var VIS = (function(){try{if(/[?&]visitor=1/.test(location.search))sessionStorage.setItem('bv-visitor','1');if(/[?&]visitor=0/.test(location.search))sessionStorage.removeItem('bv-visitor');return sessionStorage.getItem('bv-visitor')==='1';}catch(e){return false;}})();   // visitor view (admin): no saved sign-in in this tab
   var db = window.supabase.createClient(BV.sbUrl, BV.sbKey, VIS ? { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'bv-visitor-view' } } : { auth: { persistSession: true, autoRefreshToken: true } });
   db.auth.getSession().then(function (r) {
-    var s = r.data && r.data.session, T = (document.title || '').replace(/ · VistaEd$/, '').replace(/</g, '&lt;');
+    var s = r.data && r.data.session, T = (document.title || '').replace(/ · EduVista$/, '').replace(/</g, '&lt;');
     if (!s && P.p) return db.rpc('page_key', { p: P.p }).then(function (x) {   // a page the admin made Public opens without an account (migration 078)
       if (x && x.data) return open(x.data);
       if (P.pv) return showPv();
-      say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+      say('<h1>🔒 ' + T + '</h1><p>Create a free EduVista account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     }, function () { login(); });
     if (!s && P.pv) { try { sessionStorage.removeItem('bvpv-member'); } catch (e) {} return showPv(); }
-    if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free VistaEd account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
+    if (!s) return say('<h1>🔒 ' + T + '</h1><p>Create a free EduVista account to open this page. It takes about a minute, needs no payment, and you can start straight away. Your answers and progress are saved.</p><a class="btn" href="/register/">Create a free account</a><a class="btn alt" href="/login/?next=' + encodeURIComponent(here) + '">I already have an account: sign in</a><a class="btn alt" href="/catalogue/">Browse the catalogue</a>');
     var C = 'lv-k-' + P.v + '-' + s.user.id + (P.p || '*'), k = null;
     try { k = sessionStorage.getItem(C); } catch (e) {}
     if (k) return open(k).catch(function () { try { sessionStorage.removeItem(C); } catch (e) {} fetchKey(); });

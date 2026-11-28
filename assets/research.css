@@ -1,4 +1,4 @@
-/* VISTA Research Hub · VistaEd (site_assets/research.css). Uses the site's colour variables, so light and dark themes follow bv.css. */
+/* EduVista Research Hub · EduVista (site_assets/research.css). Uses the site's colour variables, so light and dark themes follow bv.css. */
 body.t-research{--c:var(--accent)}
 body.t-research .wrap{max-width:1360px}
 .rh{display:grid;grid-template-columns:230px minmax(0,1fr);gap:22px;align-items:start}
