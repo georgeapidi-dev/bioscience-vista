@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 520" class="vd-svg" role="img" aria-labelledby="cl2-title cl2-desc" font-family="system-ui,Segoe UI,Arial,sans-serif" data-interactive="1" data-vd-play="cl2-play" data-vd-play-label="Play: cold then hot" data-vd-steps="[[0, &quot;Chlorine with sodium hydroxide: disproportionation.&quot;], [1, &quot;Cold: chloride and chlorate(I).&quot;], [5.5, &quot;Hot: chloride and chlorate(V).&quot;], [10, &quot;In water: HClO kills bacteria.&quot;]]" data-vd-dur="14">
+<title id="cl2-title">Reactions of chlorine</title><desc id="cl2-desc">Chlorine with cold dilute sodium hydroxide gives chloride and chlorate one with oxidation numbers minus one and plus one; with hot concentrated sodium hydroxide gives chloride and chlorate five; chlorine in water forms chloric one acid that kills bacteria.</desc>
+<style>
+.vd-svg .part{cursor:pointer;transition:filter .15s}
+.vd-svg .part:hover,.vd-svg .part:focus{filter:brightness(1.06) drop-shadow(0 0 3px #2563eb)}
+.vd-svg .part.on{filter:drop-shadow(0 0 5px #2563eb) brightness(1.04)}
+.vd-svg .lbl text{font-size:17px;fill:#1f2937}
+.vd-svg .lbl line,.vd-svg .lbl polyline{stroke:#334155;stroke-width:1.3;fill:none}
+.vd-svg .lbl circle{fill:#334155}
+.vd-svg.hide-labels .lbl{opacity:0}
+.vd-svg.hide-labels .lbl.shown{opacity:1}
+.vd-svg .lbl.on text{fill:#1d4ed8;font-weight:600}
+.vd-svg .note{font-size:14px;fill:#475569;font-style:italic}
+.vd-svg .head{font-size:18px;font-weight:700;fill:#111827}
+@media (prefers-reduced-motion: reduce){.vd-svg .anim{display:none}}
+</style>
+<rect width="1100" height="520" fill="#ffffff"/>
+<g aria-hidden="true"><animate id="cl2-play" attributeName="opacity" from="1" to="1" dur="0.01s" begin="indefinite"/></g>
+<text class="head" x="30" y="34">Chlorine: cold, hot and in water</text><text class="note" x="30" y="56">Oxidation numbers of Cl shown in brackets.</text>
+<g class="part" data-part="cold" data-name="Cold dilute NaOH" data-info="Cl₂ + 2NaOH → NaCl + NaClO + H₂O: Cl goes 0 → −1 and 0 → +1 (disproportionation). NaClO is bleach." tabindex="0" role="button" aria-label="Cold dilute NaOH"><g><animate attributeName="opacity" keyTimes="0.0000;0.0714;0.0929;1.0000" values="0;0;1;1" dur="14s" begin="cl2-play.begin+0s" fill="freeze"/><rect x="40" y="90" width="500" height="190" rx="16" fill="#fff" stroke="#0369a1" stroke-width="2"/><text x="290" y="120" text-anchor="middle" font-size="15" font-weight="800" fill="#0369a1">cold, dilute NaOH</text><text x="290" y="170" text-anchor="middle" font-size="14" font-weight="800" fill="#111827">Cl₂ + 2NaOH → NaCl + NaClO + H₂O</text><text x="290" y="220" text-anchor="middle" font-size="14" font-weight="800" fill="#0369a1">(0) → (−1) + (+1)</text></g></g>
+<g class="part" data-part="hot" data-name="Hot concentrated NaOH" data-info="3Cl₂ + 6NaOH → 5NaCl + NaClO₃ + 3H₂O: Cl goes 0 → −1 and 0 → +5." tabindex="0" role="button" aria-label="Hot concentrated NaOH"><g><animate attributeName="opacity" keyTimes="0.0000;0.3929;0.4143;1.0000" values="0;0;1;1" dur="14s" begin="cl2-play.begin+0s" fill="freeze"/><rect x="560" y="90" width="500" height="190" rx="16" fill="#fff" stroke="#b91c1c" stroke-width="2"/><text x="810" y="120" text-anchor="middle" font-size="15" font-weight="800" fill="#b91c1c">hot, concentrated NaOH</text><text x="810" y="170" text-anchor="middle" font-size="14" font-weight="800" fill="#111827">3Cl₂ + 6NaOH → 5NaCl + NaClO₃ + 3H₂O</text><text x="810" y="220" text-anchor="middle" font-size="14" font-weight="800" fill="#b91c1c">(0) → (−1) + (+5)</text></g></g>
+<g class="part" data-part="water" data-name="Water purification" data-info="Cl₂ + H₂O ⇌ HCl + HClO: chloric(I) acid kills bacteria. Benefits (safe drinking water) versus risks (toxic gas, chlorinated organic compounds)." tabindex="0" role="button" aria-label="Water purification"><g><animate attributeName="opacity" keyTimes="0.0000;0.7143;0.7357;1.0000" values="0;0;1;1" dur="14s" begin="cl2-play.begin+0s" fill="freeze"/><rect x="40" y="310" width="1020" height="190" rx="16" fill="#f0fdf4" stroke="#86efac"/><text x="550" y="340" text-anchor="middle" font-size="15" font-weight="800" fill="#15803d">water purification</text><text x="550" y="384" text-anchor="middle" font-size="18" font-weight="800" fill="#111827">Cl₂ + H₂O ⇌ HCl + HClO</text><text x="550" y="424" text-anchor="middle" font-size="13" font-weight="800" fill="#15803d">HClO (chloric(I) acid) kills bacteria</text><text x="550" y="462" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">benefit: safe drinking water · risks: toxic gas, chlorinated hydrocarbons</text></g></g>
+</svg>
