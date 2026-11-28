@@ -42,3 +42,14 @@ body.sx-focusmode .sx-hide{display:none!important}
 body.a11y-hc .sx-bar,html.a11y-hc .sx-bar,body.a11y-hc .sx-st,body.a11y-hc .sx-purpose,body.a11y-hc .sx-vocab,body.a11y-hc .sx-starter,body.a11y-hc .sx-extcard,body.a11y-hc details.worked{background:#000!important;color:#fff!important;border-color:#fff!important}
 body.a11y-hc .sx-st small{color:#fff}
 @media print{.sx-bar,.sx-nav{display:none}body.sx-focusmode .sx-hide{display:block!important}.sx-only-support,.sx-only-ext{display:none!important}}
+
+/* pathways (28 Nov 2026) */
+.sx-pathnow{margin:8px 0 0;padding:6px 10px;border-radius:10px;background:#f1f5f9;font-size:.86rem;color:#1f2937}
+body.sx-support .sx-pathnow{background:#ecfdf5;border-left:4px solid #059669}body.sx-ext .sx-pathnow{background:#faf5ff;border-left:4px solid #7c3aed}body.sx-core .sx-pathnow{border-left:4px solid #2563eb}
+.sx-path button[data-path=support][aria-checked=true]{background:#059669;border-color:#059669}.sx-path button[data-path=extension][aria-checked=true]{background:#7c3aed;border-color:#7c3aed}.sx-path button[data-path=core][aria-checked=true]{background:#2563eb;border-color:#2563eb}
+.sx-only-support-inline{display:none}body.sx-support .sx-only-support-inline{display:inline-block}
+.sx-say{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:0 8px;cursor:pointer;font-size:.9rem;vertical-align:middle}
+.sx-check{margin:0 0 10px;padding:8px 12px;border:2px dashed #059669;border-radius:12px;background:#f0fdf4;font-size:.9rem}.sx-check ol{margin:6px 0 0;padding-left:22px}.sx-check li{margin:2px 0}
+.sx-check li.done{color:#047857;text-decoration:line-through}.sx-check li.done::marker{content:"✓ ";color:#047857}
+.sx-lvnote{color:#475569;font-style:italic}
+@media print{.sx-pathnow,.sx-say,.sx-check{display:none!important}}
